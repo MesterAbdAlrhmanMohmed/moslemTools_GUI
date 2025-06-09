@@ -1,0 +1,19 @@
+{
+    "سُنَن أبي داوود": "abudawud.json",
+    "صحيح البخاري": "bukhari.json",
+    "الأربعون نووية": "nawawi40.json",
+    "الأربعون قُدسية": "qudsi40.json",
+    "مسند الإمام أحمد بن حنبل": "ahmed.json",
+    "الأدب المفرد": "aladab_almufrad.json",
+    "بلوغ المرام": "bulugh_almaram.json",
+    "سنن الدارمي": "darimi.json",
+    "سنن ابن ماجه": "ibnmajah.json",
+    "موطأ مالك": "malik.json",
+    "مشكاة المصابيح": "mishkat_almasabih.json",
+    "صحيح مسلم": "muslim.json",
+    "سنن النسائي": "nasai.json",
+    "رياض الصالحين": "riyad_assalihin.json",
+    "أربعون ولي الله الدهلوي": "shahwaliullah40.json",
+    "الشمائل المحمدية": "shamail_muhammadiyah.json",
+    "جامع الترمذي": "tirmidhi.json"
+}

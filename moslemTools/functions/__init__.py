@@ -1,0 +1,1 @@
+from.import removeManager,quranJsonControl,tafseer,iarab,tanzil,translater,ahadeeth,bookMarksManager,islamicBooks

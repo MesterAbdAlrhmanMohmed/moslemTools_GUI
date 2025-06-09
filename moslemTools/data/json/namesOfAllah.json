@@ -1,0 +1,790 @@
+{
+    "ar": [
+        {
+            "name": "اللَّهُ",
+            "meaning": "وهو الاسم الأعظم الذي تفرد به الحق سبحانه وخص به نفسه وجعله أول أسمائه، وأضافها كلها إليه فهو علم على ذاته سبحانه"
+        },
+        {
+            "name": "الرَّحْمَنُ",
+            "meaning": "كثير الرحمة وهو اسم مقصور على الله عز وجل ولا يجوز أن يقال رحمن لغير الله، وذلك لأن رحمته وسعت كل شيء وهو أرحم الراحمين"
+        },
+        {
+            "name": "الرَّحِيم",
+            "meaning": "هو المنعم أبدا، المتفضل دوما، فرحمته لا تنتهي"
+        },
+        {
+            "name": "المَلِك",
+            "meaning": "هو الله، ملك الملوك، له الملك، وهو مالك يوم الدين، ومليك الخلق فهو المالك المطلق"
+        },
+        {
+            "name": "الْقُدُّوس",
+            "meaning": "هو الطاهر المنزه عن العيوب والنقائص وعن كل ما تحيط به العقول"
+        },
+        {
+            "name": "السَّلَام",
+            "meaning": "هو ناشر السلام بين الأنام وهو الذي سلمت ذاته من النقص والعيب والفناء"
+        },
+        {
+            "name": "المُؤْمِن",
+            "meaning": "هو الذي سلم أوليائه من عذابه، والذي يصدق عباده ما وعدهم"
+        },
+        {
+            "name": "الْمُهَيْمِن",
+            "meaning": "هو الرقيب الحافظ لكل شيء، القائم على خلقه بأعمالهم، وأرزاقهم وآجالهم، والمطلع على خفايا الأمور وخبايا الصدور"
+        },
+        {
+            "name": "الْعَزِيز",
+            "meaning": "هو المنفرد بالعزة، الظاهر الذي لا يقهر، القوي الممتنع فلا يغلبه شيء وهو غالب كل شيء"
+        },
+        {
+            "name": "الْجَبَّار",
+            "meaning": "هو الذي تنفذ مشيئته، ولا يخرج أحد عن تقديره، وهو القاهر لخلقه على ما أراد"
+        },
+        {
+            "name": "الْمُتَكَبِّر",
+            "meaning": "هو المتعالى عن صفات الخلق المنفرد بالعظمة والكبرياء"
+        },
+        {
+            "name": "الْخَالِق",
+            "meaning": "هو الفاطر المبدع لكل شيء، والمقدر له والموجد للأشياء من العدم، فهو خالق كل صانع وصنعته"
+        },
+        {
+            "name": "الْبَارِئ",
+            "meaning": "هو الذي خلق الخلق بقدرته لا عن مثال سابق، القادر على إبراز ما قدره إلى الوجود"
+        },
+        {
+            "name": "الْمُصَوِّر",
+            "meaning": "هو الذي صور جميع الموجودات، ورتبها فأعطى كل شيء منها صورة خاصة، وهيئة منفردة، يتميز بها على اختلافها وكثرتها"
+        },
+        {
+            "name": "اَلْغَفَّار",
+            "meaning": "هو وحده الذي يغفر الذنوب ويستر العيوب في الدنيا والآخرة"
+        },
+        {
+            "name": "الْقَهَّار",
+            "meaning": "هو الغالب الذي قهر خلقه بسلطانه وقدرته، وخضعت له الرقاب وذلت له الجبابرة، وصرف خلقه على ما أراد طوعا وكرها، وعنت الوجوه له"
+        },
+        {
+            "name": "الْوَهَّاب",
+            "meaning": "هو المنعم على العباد، الذي يهب بغير عوض ويعطي الحاجة بغير سؤال، كثير النعم، دائم العطاء"
+        },
+        {
+            "name": "الرَّزَّاق",
+            "meaning": "هو الذي خلق الأرزاق وأعطى كل الخلائق أرزاقها، ويمد كل كائن لما يحتاجه، ويحفظ عليه حياته ويصلحه"
+        },
+        {
+            "name": "الْفَتَّاح",
+            "meaning": "هو الذي يفتح مغلق الأمور، ويسهل العسير، وبيده مفاتيح السماوات والأرض"
+        },
+        {
+            "name": "الْعَلِيم",
+            "meaning": "هو الذي يعلم تفاصيل الأمور، ودقائق الأشياء وخفايا الضمائر، والنفوس، لا يعزب عنه مثقال ذرة، فعلمه يحيط بجميع الأشياء"
+        },
+        {
+            "name": "الْقَابِضُ",
+            "meaning": "هو الذي يقبض الرزق عمن يشاء من الخلق بعدله وحكمته، والذي يوسع الرزق لمن يشاء من عباده بجوده ورحمته فهو سبحانه القابض الباسط"
+        },
+        {
+            "name": "الْبَاسِطُ",
+            "meaning": "هو الذي يقبض الرزق عمن يشاء من الخلق بعدله وحكمته، والذي يوسع الرزق لمن يشاء من عباده بجوده ورحمته فهو سبحانه القابض الباسط"
+        },
+        {
+            "name": "الخافض",
+            "meaning": "هو الذي يخفض الأذلال لكل من طغى وتجبر وخرج على شريعته وتمرد، وهو الذي يرفع عباده المؤمنين بالطاعات ويرفعهم على عدوهم فينصرهم وهو رافع السماوات السبع"
+        },
+        {
+            "name": "الرَّافِعُ",
+            "meaning": "هو الذي يخفض الأذلال لكل من طغى وتجبر وخرج على شريعته وتمرد، وهو الذي يرفع عباده المؤمنين بالطاعات ويرفعهم على عدوهم فينصرهم وهو رافع السماوات السبع"
+        },
+        {
+            "name": "المعز",
+            "meaning": "هو الذي يهب القوة والغلبة والشدة لمن شاء فيعزه، وينزعها عمن يشاء فيذله"
+        },
+        {
+            "name": "المذل",
+            "meaning": "هو الذي يهب القوة والغلبة والشدة لمن شاء فيعزه، وينزعها عمن يشاء فيذله"
+        },
+        {
+            "name": "السَّمِيعُ",
+            "meaning": "ومعناه سمعه لجميع الأصوات الظاهرة والباطنة الخفية والجلية، وإحاطته التامة بها، ومعناه أيضًا: سمع الإجابة منه للسائلين والداعين والعابدين فيجيبهم ويثيبهم"
+        },
+        {
+            "name": "الْبَصِير",
+            "meaning": "هو الذي يرى الأشياء كلها ظاهرها وباطنها وهو المحيط بكل شيء علماً"
+        },
+        {
+            "name": "الْحَكَم",
+            "meaning": "هو الذي يفصل بين مخلوقاته بما شاء ويفصل بين الحق والباطل لا راد لقضائه ولا معقب لحكمه"
+        },
+        {
+            "name": "العدل",
+            "meaning": "هو الذي حرم الظلم على نفسه، وجعله على عباده محرما، فهو المنزه عن الظلم والجور في أحكامه وأفعاله الذي يعطي كل ذي حق حقه"
+        },
+        {
+            "name": "اللَّطِيفُ",
+            "meaning": "هو البر الرفيق بعباده، يرزق وييسر ويحسن إليهم، ويرفق بهم ويتفضل عليهم"
+        },
+        {
+            "name": "الْخَبِيرُ",
+            "meaning": "هو العليم بدقائق الأمور، لا تخفى عليه خافية، ولا يغيب عن علمه شيء فهو العالم بما كان ويكون"
+        },
+        {
+            "name": "الْحَلِيمُ",
+            "meaning": "هو الحليم الذي لا يعاجل العصاة بالنقمة، بل يعفوا ويؤخر، ولا يسرع بالفعل قبل أوانه"
+        },
+        {
+            "name": "الْعَظِيمُ",
+            "meaning": "هو العظيم في كل شئ، عظيم في ذاته وأسمائه وصفاته، عظيم في رحمته، عظيم في قدرته، عظيم في حكمته، عظيم في جبروته وكبريائه، عظيم في هبته وعطائه، عظيم في خبرته ولطفه، عظيم في بره وإحسانه، عظيم في عزته وعدله وحمده، فهو العظيم المطلق، فلا أحد يساويه"
+        },
+        {
+            "name": "الْغَفُورُ",
+            "meaning": "هو الساتر لذنوب عباده المتجاوز عن خطاياهم وذنوبهم. الفرق بين هذا الاسم واسم الغفار أن اسم الغفور يكون للدلالة على مغفرة الذنب مهما عظم وأيس صاحبه من المغفرة أما الغفار فتدل على مغفرة الله المستمرة للذنوب المختلفة لأن الإنسان خطاء فالله غفار"
+        },
+        {
+            "name": "الشَّكُورُ",
+            "meaning": "هو الذي يزكو عنده القليل من أعمال العباد، فيتقبلها ويضاعف أجرها"
+        },
+        {
+            "name": "الْعَلِيُّ",
+            "meaning": "هو الرفيع القدر فلا يحيط به وصف الواصفين المتعالي عن الأنداد والأضداد، فكل معاني العلو ثابتة له ذاتا وقهرا وشأنا"
+        },
+        {
+            "name": "الْكَبِيرُ",
+            "meaning": "هو العظيم الجليل ذو الكبرياء في صفاته وأفعاله فلا يحتاج إلى شيء ولا يعجزه شيء (ليس كمثله شيء)"
+        },
+        {
+            "name": "الْحَفِيظُ",
+            "meaning": "هو الذي لا يغرب عن حفظه شيء ولو كمثقال الذر فحفظه لا يتبدل ولا يزول ولا يعتريه التبديل"
+        },
+        {
+            "name": "المُقِيت",
+            "meaning": "هو المتكفل بإيصال أقوات الخلق إليهم وهو الحفيظ والمقتدر والقدير والمقدر والممدد"
+        },
+        {
+            "name": "الْحَسِيبُ",
+            "meaning": "هو الكافي الذي منه كفاية العباد وهو الذي عليه الاعتماد يكفي العباد بفضله"
+        },
+        {
+            "name": "الجليل",
+            "meaning": "هو العظيم المطلق المتصف بجميع صفات الكمال والمنعوت بكمالها المنزه عن كل نقص"
+        },
+        {
+            "name": "الْكَرِيمُ",
+            "meaning": "هو الكثير الخير الجواد المعطي الذي لا ينفذ عطاؤه وهو الكريم المطلق الجامع لأنواع الخير والشرف والفضائل المحمود بفعاله"
+        },
+        {
+            "name": "الرَّقِيبُ",
+            "meaning": "هو الرقيب الذي يراقب أحوال العباد ويعلم أقوالهم ويحصي أعمالهم وهو الحافظ الذي لا يغيب عنه شيء"
+        },
+        {
+            "name": "الْمُجِيبُ",
+            "meaning": "هو الذي يجيب دعاء من دعاه، وسؤال من سأله، ويقابله بالعطاء والقبول، ولا يسأل أحد سواه"
+        },
+        {
+            "name": "الْوَاسِعُ",
+            "meaning": "هو الذي وسع رزقه جميع خلقه، وسعت رحمته كل شيء المحيط بكل شيء"
+        },
+        {
+            "name": "اَلْحَكِيمُ",
+            "meaning": "هو المحق في تدبيره اللطيف في تقديره الخبير بحقائق الأمور العليم بحكمه المقدور فجميع خلقه وقضاه خير وحكمة وعدل"
+        },
+        {
+            "name": "الْوَدُودُ",
+            "meaning": "هو المحب لعباده، والمحبوب في قلوب أوليائه"
+        },
+        {
+            "name": "الْمَجِيدُ",
+            "meaning": "هو الله تمجَّد بفعاله، ومجَّده خلقه لعظمته، والمجيد هو واسع الكرم، ووصف نفسه بالمجيد وهو متضمن كثرة صفات كماله وسعتها، وعدم إحصاء الخلق لها، وسعة أفعاله وكثرة خيره ودوامه. وتعني أيضاً البالغ النهاية في المجد، الكثير الإحسان الجزيل العطاء العظيم البر. تمجد"
+        },
+        {
+            "name": "الباعث",
+            "meaning": "هو باعث الخلق يوم القيامة، وباعث رسله إلى العباد، وباعث المعونة إلى العبد"
+        },
+        {
+            "name": "الشَّهِيدُ",
+            "meaning": "هو الحاضر الذي لا يغيب عنه شيء، فهو المطلع على كل شيء مشاهد له عليم بتفاصيله"
+        },
+        {
+            "name": "الْحَقُّ",
+            "meaning": "هو الذي يحق الحق بكلماته ويؤيد أولياءه فهو المستحق للعبادة"
+        },
+        {
+            "name": "الْوَكِيلُ",
+            "meaning": "هو الكفيل بالخلق القائم بأمورهم فمن توكل عليه تولاه وكفاه، ومن استغنى به أغناه وأرضاه"
+        },
+        {
+            "name": "الْقَوِيّ",
+            "meaning": "هو صاحب القدرة التامة البالغة الكمال غالب لا يُغلب فقوته فوق كل قوة، ولايرد قضاءه راد، ينفذ أمره، ويمضي قضاؤه في خلقه، شديد عقابه لمن كفر بآياته وجحد حججه"
+        },
+        {
+            "name": "الْمَتِينُ",
+            "meaning": "هو الشديد الذي لا يحتاج في إمضاء حكمه إلى جند أو مدد ولا إلى معين، فهو المتناهي في القوة، التي لاتلحق أفعاله مشقة، ولايمسه فيها لغوب"
+        },
+        {
+            "name": "الْوَلِيُّ",
+            "meaning": "هو المحب الناصر لمن أطاعه، ينصر أولياءه، ويقهر أعداءه، والمتولي الأمور الخلائق ويحفظهم"
+        },
+        {
+            "name": "الْحَمِيدُ",
+            "meaning": "هو المستحق للحمد والثناء له منتهى الحمد وأطيبه على ذاته وصفاته وعلى نعمه التي لا تحصى"
+        },
+        {
+            "name": "الْـمُحصِي",
+            "meaning": "هو الذي أحصى كل شيء بعلمه، فلا يفوته منها دقيق ولا جليل"
+        },
+        {
+            "name": "المبدئ",
+            "meaning": "هو الذي أنشأ الأشياء، واخترعها ابتداء من غير سابق مثال"
+        },
+        {
+            "name": "المعيد",
+            "meaning": "هو الذي يعيد الخلق بعد الحياة إلى الممات في الدنيا، وبعد الممات إلى الحياة يوم القيامة"
+        },
+        {
+            "name": "المُحيي",
+            "meaning": "هو خالق الحياة ومعطيها لمن شاء، يحيي الخلق من العدم ثم يحييهم بعد الموت"
+        },
+        {
+            "name": "المميت",
+            "meaning": "هو مقدر الموت على كل من أماته ولا مميت سواه، قهر عباده بالموت متى شاء وكيف شاء"
+        },
+        {
+            "name": "الْحَيُّ",
+            "meaning": "هو المتصف بالحياة الأبدية التي لا بداية لها ولا نهاية فهو الباقي أزلا وأبدا وهو الحي الذي لا يموت"
+        },
+        {
+            "name": "الْقَيُّومُ",
+            "meaning": "هو القائم بنفسه، الغني عن غيره، وهو القائم بتدبير أمر خلقه في إنشائهم ورزقهم"
+        },
+        {
+            "name": "الواجد",
+            "meaning": "هو الذي لا يعوزه شيء ولا يعجزه شيء يجد كل ما يطلبه، ويدرك كل ما يريده"
+        },
+        {
+            "name": "الماجد",
+            "meaning": "هو الذي له الكمال المتناهي والعز الباهي، له العز في الأوصاف والأفعال الذي يعامل العباد بالجود والرحمة"
+        },
+        {
+            "name": "الْوَاحِدُ",
+            "meaning": "هو الفرد المتفرد في ذاته وصفائه وأفعاله، واحد في ملكه لا ينازعه أحد، لا شريك له سبحانه"
+        },
+        {
+            "name": "الصَّمَدُ",
+            "meaning": "هو المطاع الذي لا يقضى دونه أمر، الذي يقصد إليه في الحوائج فهو مقصد عباده في مهمات دينهم ودنياهم"
+        },
+        {
+            "name": "الْقَادِرُ",
+            "meaning": "هو الذي يقدر على إيجاد المعدوم وإعدام الموجود على قدر ما تقتضي الحكمة، لا زائدا عليه ولا ناقصا عنه"
+        },
+        {
+            "name": "الْمُقْتَدِرُ",
+            "meaning": "هو الذي يقدر على إصلاح الخلائق على وجه لا يقدر عليه غيره"
+        },
+        {
+            "name": "الْمُقَدِّمُ",
+            "meaning": "هو الذي يقدم الأشياء ويضعها في مواضعها، فمن استحق التقديم قدمه"
+        },
+        {
+            "name": "الْمُؤَخِّرُ",
+            "meaning": "هو الذي يؤخر الأشياء فيضعها في مواضعها المؤخر لمن شاء من الفجار والكفار وكل من يستحق التأخير"
+        },
+        {
+            "name": "الْأَوَّلُ",
+            "meaning": "هو الذي لم يسبقه في الوجود شيء فهو أول قبل الوجود"
+        },
+        {
+            "name": "الْآخِرُ",
+            "meaning": "هو الباقي بعد فناء خلقه، البقاء الأبدي يفنى الكل وله البقاء وحده، فليس بعده شيء"
+        },
+        {
+            "name": "الظَّاهِرُ",
+            "meaning": "هو الذي ظهر فوق كل شيء وعلا عليه، الظاهر وجوده لكثرة دلائله"
+        },
+        {
+            "name": "الْبَاطِنُ",
+            "meaning": "هو العالم ببواطن الأمور وخفاياها، وهو أقرب إلينا من حبل الوريد"
+        },
+        {
+            "name": "الوالي",
+            "meaning": "هو المالك للأشياء المتصرف فيها بمشيئته وحكمته، ينفذ فيها أمره، ويجري عليها حكمه"
+        },
+        {
+            "name": "الْمُتَعَالِ",
+            "meaning": "هو الذي جل عن إفك المفترين، وتنزه عن وساوس المتحيرين"
+        },
+        {
+            "name": "الْبَرُّ",
+            "meaning": "هو العطوف على عباده ببره ولطفه، ومن على السائلين بحسن عطائه، وهو الصدق فيما وعد"
+        },
+        {
+            "name": "التَّوَّابُ",
+            "meaning": "هو الذي يوفق عباده للتوبة حتى يتوب عليهم ويقبل توبتهم فيقابل الدعاء بالعطاء، والتوبة بغفران الذنوب"
+        },
+        {
+            "name": "الْمُنْتَقِمُ",
+            "meaning": "هو الذي يقصم ظهور الطغاة، ويشدد العقوبة على العصاة، وذلك بعد الإعذار والإنذار"
+        },
+        {
+            "name": "العَفُو",
+            "meaning": "هو الذي يترك المؤاخدة على الذنوب ولا يذكرك بالعيوب فهو يمحو السيئات ويتجاوز عن المعاصي"
+        },
+        {
+            "name": "الرَّؤُوفُ",
+            "meaning": "هو المتعطف على المذنبين بالتوبة، الذي جاد بلطفه ومَنَّ بتعطفه، يستر العيوب ثم يعفو عنها"
+        },
+        {
+            "name": "مَالِكُ الْمُلْكِ",
+            "meaning": "هو المتصرف في ملكه كيف يشاء لا راد لحكمه، ولا معقب لأمره"
+        },
+        {
+            "name": "ذُو الْجَلَالِ والْإكْرَامِ",
+            "meaning": "هو المنفرد بصفات الجلال والكمال والعظمة، المختص بالإكرام والكرامة وهو أهل لأن يجل"
+        },
+        {
+            "name": "المقسط",
+            "meaning": "هو العادل في حكمه، الذي ينتصف للمظلوم من الظالم، ثم يكمل عدله فيرضي الظالم بعد إرضاء المظلوم"
+        },
+        {
+            "name": "الْجَامِعُ",
+            "meaning": "هو الذي جمع الكمالات كلها، ذاتا ووصفا وفعلا، الذي يجمع بين الخلائق المتماثلة والمتباينة، والذي يجمع الأولين والآخرين"
+        },
+        {
+            "name": "الْغَنِيُّ",
+            "meaning": "هو الذي لا يحتاج إلى شيء، وهو المستغني عن كل ما سواه، المفتقر إليه كل من عاداه"
+        },
+        {
+            "name": "المغني",
+            "meaning": "هو معطي الغنى لعباده، يغني من يشاء غناه، وهو الكافي لمن شاء من عباده"
+        },
+        {
+            "name": "الْمُعْطِي",
+            "meaning": "هو الذي أعطى كل شيء"
+        },
+        {
+            "name": "المانع",
+            "meaning": "يمنع العطاء عن من يشاء ابتلاء أو حماية"
+        },
+        {
+            "name": "الضار",
+            "meaning": "هو المقدر للضر على من أراد كيف أراد"
+        },
+        {
+            "name": "النافع",
+            "meaning": "مقدر النفع والخير لمن أراد كيف أراد كل ذلك على مقتضى حكمته سبحانه"
+        },
+        {
+            "name": "النُّورُ",
+            "meaning": "هو الهادي الرشيد الذي يرشد بهدايته من يشاء فيبين له الحق، ويلهمه اتباعه، الظاهر في ذاته، المظهر لغيره"
+        },
+        {
+            "name": "الْهَادِي",
+            "meaning": "هو المبين للخلق طريق الحق بكلامه يهدي القلوب إلى معرفته، والنفوس إلى طاعته"
+        },
+        {
+            "name": "الْبَدِيعُ",
+            "meaning": "هو الذي لا يماثله أحد في صفاته ولا في حكم من أحكامه، أو أمر من أموره، فهو المحدث الموجد على غير مثال"
+        },
+        {
+            "name": "الباقي",
+            "meaning": "هو وحده له البقاء، الدائم الوجود الموصوف بالبقاء الأزلي، غير قابل للفناء فهو الباقي بلا انتهاء"
+        },
+        {
+            "name": "الْوَارِثُ",
+            "meaning": "هو الأبقى الدائم الذي يرث الخلائق بعد فناء الخلق، وهو يرث الأرض ومن عليها"
+        },
+        {
+            "name": "الرشيد",
+            "meaning": "هو الذي أسعد من شاء بإرشاده، وأشقى من شاء بإبعاده، عظيم الحكمة بالغ الرشاد"
+        },
+        {
+            "name": "الصبور",
+            "meaning": "هو الصبور الذي يمهل ولا يهمل، ويستر الذنوب، ويؤخر العقوبة، فيرزق العاصي كما يرزق المطيع"
+        }
+    ],
+    "en": [
+        {
+            "name": "Allah",
+            "meaning": "The greatest name, unique to Him, encompassing all His attributes"
+        },
+        {
+            "name": "Ar-Rahman",
+            "meaning": "The Most Gracious, whose mercy is vast and all-encompassing"
+        },
+        {
+            "name": "Ar-Rahim",
+            "meaning": "The Most Merciful, whose blessings never cease"
+        },
+        {
+            "name": "Al-Malik",
+            "meaning": "The King and Absolute Ruler of all creation"
+        },
+        {
+            "name": "Al-Quddus",
+            "meaning": "The Pure, free from all imperfections"
+        },
+        {
+            "name": "As-Salam",
+            "meaning": "The Source of Peace, whose being is free from any flaw"
+        },
+        {
+            "name": "Al-Mu’min",
+            "meaning": "The Guardian of Faith, who grants security and trust"
+        },
+        {
+            "name": "Al-Muhaymin",
+            "meaning": "The All-Preserver, who watches over everything"
+        },
+        {
+            "name": "Al-Aziz",
+            "meaning": "The Almighty, unbeatable in power"
+        },
+        {
+            "name": "Al-Jabbar",
+            "meaning": "The Compeller, enforcing His will upon creation"
+        },
+        {
+            "name": "Al-Mutakabbir",
+            "meaning": "The Supreme, above all attributes of creation"
+        },
+        {
+            "name": "Al-Khaliq",
+            "meaning": "The Creator, bringing existence from nothingness"
+        },
+        {
+            "name": "Al-Bari",
+            "meaning": "The Evolver, creating with precision and purpose"
+        },
+        {
+            "name": "Al-Musawwir",
+            "meaning": "The Fashioner, giving everything its unique form"
+        },
+        {
+            "name": "Al-Ghaffar",
+            "meaning": "The Constant Forgiver, who covers sins abundantly"
+        },
+        {
+            "name": "Al-Qahhar",
+            "meaning": "The All-Prevailing One, dominant over all creation"
+        },
+        {
+            "name": "Al-Wahhab",
+            "meaning": "The Supreme Bestower, who grants gifts freely"
+        },
+        {
+            "name": "Ar-Razzaq",
+            "meaning": "The Provider, sustaining all beings"
+        },
+        {
+            "name": "Al-Fattah",
+            "meaning": "The Supreme Solver, who opens doors of success"
+        },
+        {
+            "name": "Al-Alim",
+            "meaning": "The All-Knowing, aware of everything hidden and apparent"
+        },
+        {
+            "name": "Al-Qabid",
+            "meaning": "The Withholder, who constricts sustenance wisely"
+        },
+        {
+            "name": "Al-Basit",
+            "meaning": "The Extender, who expands blessings as He wills"
+        },
+        {
+            "name": "Al-Khafid",
+            "meaning": "The Reducer, who abases the arrogant"
+        },
+        {
+            "name": "Ar-Rafi",
+            "meaning": "The Exalter, who elevates the righteous"
+        },
+        {
+            "name": "Al-Mu’izz",
+            "meaning": "The Honourer, who grants dignity and power"
+        },
+        {
+            "name": "Al-Mudhill",
+            "meaning": "The Dishonourer, who humiliates the proud"
+        },
+        {
+            "name": "As-Sami",
+            "meaning": "The All-Hearing, who hears every sound and prayer"
+        },
+        {
+            "name": "Al-Basir",
+            "meaning": "The All-Seeing, who observes all things"
+        },
+        {
+            "name": "Al-Hakam",
+            "meaning": "The Impartial Judge, who settles all disputes justly"
+        },
+        {
+            "name": "Al-Adl",
+            "meaning": "The Utterly Just, who never oppresses"
+        },
+        {
+            "name": "Al-Latif",
+            "meaning": "The Subtle One, who is kind and gentle in His ways"
+        },
+        {
+            "name": "Al-Khabir",
+            "meaning": "The All-Aware, knowing the finest details"
+        },
+        {
+            "name": "Al-Halim",
+            "meaning": "The Most Forbearing, who does not punish hastily"
+        },
+        {
+            "name": "Al-Azim",
+            "meaning": "The Magnificent, infinitely great in every aspect"
+        },
+        {
+            "name": "Al-Ghaffur",
+            "meaning": "The Great Forgiver, who covers sins repeatedly"
+        },
+        {
+            "name": "Ash-Shakur",
+            "meaning": "The Most Appreciative, who rewards even small deeds"
+        },
+        {
+            "name": "Al-Aliyy",
+            "meaning": "The Most High, exalted above everything"
+        },
+        {
+            "name": "Al-Kabir",
+            "meaning": "The Most Great, above all limitations"
+        },
+        {
+            "name": "Al-Hafiz",
+            "meaning": "The Preserver, who safeguards everything"
+        },
+        {
+            "name": "Al-Muqit",
+            "meaning": "The Sustainer, who provides nourishment"
+        },
+        {
+            "name": "Al-Hasib",
+            "meaning": "The Reckoner, who takes full account"
+        },
+        {
+            "name": "Al-Jalil",
+            "meaning": "The Majestic, possessing immense glory"
+        },
+        {
+            "name": "Al-Karim",
+            "meaning": "The Most Generous, granting boundless gifts"
+        },
+        {
+            "name": "Ar-Raqib",
+            "meaning": "The Watchful, observing all deeds"
+        },
+        {
+            "name": "Al-Mujib",
+            "meaning": "The Responsive One, answering all supplications"
+        },
+        {
+            "name": "Al-Wasi",
+            "meaning": "The All-Encompassing, whose mercy embraces all"
+        },
+        {
+            "name": "Al-Hakim",
+            "meaning": "The All-Wise, perfectly judicious in all affairs"
+        },
+        {
+            "name": "Al-Wadud",
+            "meaning": "The Most Loving, full of warmth and kindness"
+        },
+        {
+            "name": "Al-Majid",
+            "meaning": "The Glorious, possessing infinite honor and dignity"
+        },
+        {
+            "name": "Al-Ba’ith",
+            "meaning": "The Resurrector, who brings the dead back to life"
+        },
+        {
+            "name": "Ash-Shahid",
+            "meaning": "The All-and-Ever Witnessing One"
+        },
+        {
+            "name": "Al-Haqq",
+            "meaning": "The Absolute Truth, whose existence is undeniable"
+        },
+        {
+            "name": "Al-Wakil",
+            "meaning": "The Trustee, who manages all affairs perfectly"
+        },
+        {
+            "name": "Al-Qawiyy",
+            "meaning": "The All-Strong, possessing limitless power"
+        },
+        {
+            "name": "Al-Matin",
+            "meaning": "The Firm One, unshakable in His strength"
+        },
+        {
+            "name": "Al-Waliyy",
+            "meaning": "The Protecting Associate, aiding His loyal servants"
+        },
+        {
+            "name": "Al-Hamid",
+            "meaning": "The Most Praiseworthy, deserving all gratitude"
+        },
+        {
+            "name": "Al-Muhsi",
+            "meaning": "The All-Enumerating One, knowing every detail"
+        },
+        {
+            "name": "Al-Mubdi",
+            "meaning": "The Originator, bringing everything into existence"
+        },
+        {
+            "name": "Al-Muid",
+            "meaning": "The Restorer, who resurrects after death"
+        },
+        {
+            "name": "Al-Muhyi",
+            "meaning": "The Giver of Life, who grants existence"
+        },
+        {
+            "name": "Al-Mumit",
+            "meaning": "The Creator of Death, who decides when life ends"
+        },
+        {
+            "name": "Al-Hayy",
+            "meaning": "The Ever-Living, who never dies"
+        },
+        {
+            "name": "Al-Qayyum",
+            "meaning": "The Sustainer, who depends on none but all depend on Him"
+        },
+        {
+            "name": "Al-Wajid",
+            "meaning": "The Perceiver, who finds whatever He wills"
+        },
+        {
+            "name": "Al-Majid",
+            "meaning": "The Glorious One, infinitely noble and majestic"
+        },
+        {
+            "name": "Al-Wahid",
+            "meaning": "The One, uniquely without any partner"
+        },
+        {
+            "name": "As-Samad",
+            "meaning": "The Absolute, who is self-sufficient"
+        },
+        {
+            "name": "Al-Qadir",
+            "meaning": "The Omnipotent, having power over everything"
+        },
+        {
+            "name": "Al-Muqtadir",
+            "meaning": "The Creator of All Power, dominating over all"
+        },
+        {
+            "name": "Al-Muqaddim",
+            "meaning": "The Expediter, who brings forward what He wills"
+        },
+        {
+            "name": "Al-Mu’akhkhir",
+            "meaning": "The Delayer, who sets things in perfect timing"
+        },
+        {
+            "name": "Al-Awwal",
+            "meaning": "The First, existing before anything else"
+        },
+        {
+            "name": "Al-Akhir",
+            "meaning": "The Last, existing beyond everything"
+        },
+        {
+            "name": "Az-Zahir",
+            "meaning": "The Manifest, apparent in His signs"
+        },
+        {
+            "name": "Al-Batin",
+            "meaning": "The Hidden, beyond human comprehension"
+        },
+        {
+            "name": "Al-Wali",
+            "meaning": "The Sole Governor, ruling over all affairs"
+        },
+        {
+            "name": "Al-Muta’ali",
+            "meaning": "The Self Exalted, free from any deficiency"
+        },
+        {
+            "name": "Al-Barr",
+            "meaning": "The Source of All Goodness, kind and beneficent"
+        },
+        {
+            "name": "At-Tawwab",
+            "meaning": "The Ever-Pardoning, who accepts all repentance"
+        },
+        {
+            "name": "Al-Muntaqim",
+            "meaning": "The Just Requiter, who punishes the wrongdoers"
+        },
+        {
+            "name": "Al-Afuww",
+            "meaning": "The Supreme Pardoner, who erases sins completely"
+        },
+        {
+            "name": "Ar-Ra’uf",
+            "meaning": "The Most Kind, extremely compassionate"
+        },
+        {
+            "name": "Malik-ul-Mulk",
+            "meaning": "Master of the Kingdom, absolute ruler"
+        },
+        {
+            "name": "Dhul-Jalali Wal-Ikram",
+            "meaning": "Possessor of Glory and Honour"
+        },
+        {
+            "name": "Al-Muqsit",
+            "meaning": "The Just One, rewarding and punishing accordingly"
+        },
+        {
+            "name": "Al-Jami",
+            "meaning": "The Gatherer, who unites all things"
+        },
+        {
+            "name": "Al-Ghani",
+            "meaning": "The Self-Sufficient, free from all needs"
+        },
+        {
+            "name": "Al-Mughni",
+            "meaning": "The Bestower of Wealth, enriching whom He wills"
+        },
+        {
+            "name": "An-Nur",
+            "meaning": "The Light, illuminating all existence"
+        },
+        {
+            "name": "Al-Hadi",
+            "meaning": "The Guide, directing towards righteousness"
+        },
+        {
+            "name": "Al-Badi",
+            "meaning": "The Incomparable Originator, unmatched in greatness"
+        },
+        {
+            "name": "Al-Baqi",
+            "meaning": "The Ever-Surviving, who remains after everything"
+        },
+        {
+            "name": "Al-Warith",
+            "meaning": "The Inheritor, remaining after all perishes"
+        },
+        {
+            "name": "Ar-Rashid",
+            "meaning": "The Guide, leading to the right path"
+        },
+        {
+            "name": "As-Sabur",
+            "meaning": "The Most Patient, enduring all things wisely"
+        }
+    ]
+}
