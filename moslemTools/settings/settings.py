@@ -61,10 +61,7 @@ class settings(qt.QDialog):
         frame_geometry.moveCenter(screen_center)        
         self.move(frame_geometry.topLeft())
     def fok(self):
-        aa = 0
-        if settings_handler.get("g", "lang") != str(language.lang()[self.layout1.language.currentText()]):
-            aa = 1
-        settings_handler.set("g", "lang", str(language.lang()[self.layout1.language.currentText()]))
+        aa = 0        
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
         settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
         settings_handler.set("prayerTimes","volume",str(self.prayerTimesSettings.Sound_level.value()))
