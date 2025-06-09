@@ -3,7 +3,7 @@ from settings import settings_handler
 from .textViewer import TextViewer
 def check(p):
     try:
-        r=requests.get("https://raw.githubusercontent.com/mesteranas/moslemTools_GUI/main/message.json")
+        r=requests.get("https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/main/message.json")
         data=r.json()
         with open(os.path.join(os.getenv('appdata'),settings_handler.appName,"message.json"),"w",encoding="utf-8") as file:
             json.dump(data,file,ensure_ascii=False,indent=4)
