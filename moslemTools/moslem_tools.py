@@ -112,7 +112,7 @@ class main(qt.QMainWindow):
         moreOptionsMenu.addAction(action_about_devs)
         action_release_date = qt1.QAction("تاريخ نشر البرنامج", self)
         action_release_date.setShortcut("ctrl+d")
-        action_release_date.triggered.connect(lambda: guiTools.MessageBox.view(self, "تاريخ نشر البرنامج", "2 ديسمبر 2024,1 جُمادى الآخِرة 1446"))
+        action_release_date.triggered.connect(lambda: guiTools.MessageBox.view(self, "تاريخ نشر البرنامج", "غير معروف حتى الآن"))
         moreOptionsMenu.addAction(action_release_date)
         donateAction=qt1.QAction("تبرع",self)
         moreOptionsMenu.addAction(donateAction)
@@ -257,6 +257,9 @@ class main(qt.QMainWindow):
         font.setBold(True)
         menu.setAccessibleName("اختر طريقة")
         menu.setFocus()
+        vodafone_cash_action=qt1.QAction("نسخ رقم vodafone cash",self)
+        vodafone_cash_action.triggered.connect(self.VFC)
+        menu.addAction(vodafone_cash_action)
         instaPayAction=qt1.QAction("نسخ رابط حساب InstaPay",self)
         menu.addAction(instaPayAction)
         instaPayAction.triggered.connect(self.instaPay)
@@ -265,6 +268,9 @@ class main(qt.QMainWindow):
     def instaPay(self):
         pyperclip.copy("https://ipn.eg/S/av369852/instapay/23Mu5Z")
         winsound.Beep(1000, 100)    
+    def VFC(self):
+        pyperclip.copy("+201022701463")
+        guiTools.MessageBox.view(self,"تنبيه","تم نسخ رقم vodafone cash لكن هذا الرقم للتحويلات فقط، يمنع الإتصال بهذا الرقم أو مراسلته بأي شكل")
     def delete_program_data_with_confirmation(self):    
         confirm = guiTools.QQuestionMessageBox.view(
             self,
@@ -304,11 +310,7 @@ class main(qt.QMainWindow):
                     f"حدث خطأ غير متوقع: {e}"
                 )
         else:
-            guiTools.MessageBox.view(
-                self,
-                "تم الإلغاء",
-                "تم إلغاء عملية حذف بيانات البرنامج."
-            )
+            return
 App = qt.QApplication([])
 default_font = qt1.QFont()
 default_font.setBold(True)

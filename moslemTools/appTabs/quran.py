@@ -87,7 +87,7 @@ class Quran(qt.QWidget):
         layout1.addWidget(self.type)
         self.custom_laybol=qt.QLabel("CTRL+C")
         self.custom_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.custom = guiTools.QPushButton("مخصص")
+        self.custom = guiTools.QPushButton("التصفح المخصص")
         self.custom.setObjectName("customButton")
         self.custom.setShortcut("ctrl+c")
         self.custom.setAccessibleDescription("control plus c")

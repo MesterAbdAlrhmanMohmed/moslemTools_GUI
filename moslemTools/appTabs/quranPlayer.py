@@ -7,22 +7,34 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
+    cancelled = qt2.pyqtSignal()
     def __init__(self, url, filepath):
         super().__init__()
         self.url = url
         self.filepath = filepath
+        self.is_cancelled = False
     def run(self):
-        response = requests.get(self.url, stream=True)
-        total_size = int(response.headers.get('content-length', 0))
-        downloaded_size = 0
-        with open(self.filepath, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
-                    downloaded_size += len(chunk)
-                    progress_percent = int((downloaded_size / total_size) * 100)
-                    self.progress.emit(progress_percent)
+        try:
+            response = requests.get(self.url, stream=True)
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded_size = 0
+            with open(self.filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if self.is_cancelled:
+                        self.cancelled.emit()
+                        return
+                    if chunk:
+                        f.write(chunk)
+                        downloaded_size += len(chunk)
+                        if total_size > 0:
+                            progress_percent = int((downloaded_size / total_size) * 100)
+                            self.progress.emit(progress_percent)
             self.finished.emit()
+        except Exception as e:
+            print(f"Error during download or file writing: {e}")
+            self.cancelled.emit()
+    def cancel(self):
+        self.is_cancelled = True
 class QuranPlayer(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -81,7 +93,25 @@ class QuranPlayer(qt.QWidget):
         self.recitersListWidget.addItems(self.recitersList)
         self.progressBar = qt.QProgressBar()
         self.progressBar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.progressBar.setVisible(False)
+        self.progressBar.setVisible(False)        
+        self.cancel_download_button = qt.QPushButton("إلغاء التنزيل")
+        self.cancel_download_button.setShortcut("ctrl+c")
+        self.cancel_download_button.setAccessibleDescription("control plus c")
+        self.cancel_download_button.setDefault(True)
+        self.cancel_download_button.setVisible(False)
+        self.cancel_download_button.clicked.connect(self.cancel_current_download)        
+        self.cancel_download_button.setStyleSheet("""
+            QPushButton {
+                background-color: #8B0000;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #A52A2A;
+            }
+        """)
         self.mp = QMediaPlayer()
         self.au = QAudioOutput()
         self.mp.setAudioOutput(self.au)
@@ -163,6 +193,7 @@ class QuranPlayer(qt.QWidget):
             "backspace: حذف الموضع المحدد وإيقاف التكرار\n"
             "الضغط على زر التطبيقات على شريط مدة المقطع يسمح بإضافة علامة مرجعية للموضع الحالي\n"
             "ctrl+shift+b: فتح نافذة العلامات المرجعية\n"
+            "ctrl+c: إلغاء التنزيل\n"
             "ctrl+f1: دليل الاختصارات"
         ).exec())
         recitersLayout = qt.QVBoxLayout()
@@ -186,8 +217,11 @@ class QuranPlayer(qt.QWidget):
         layout.addWidget(self.Slider)
         layout.addWidget(self.play_all_to_end)
         layout.addWidget(self.play_all_to_start)
-        layout.addWidget(self.repeat_surah_button)
-        layout.addWidget(self.progressBar)
+        layout.addWidget(self.repeat_surah_button)        
+        progress_cancel_layout = qt.QHBoxLayout()        
+        progress_cancel_layout.addWidget(self.cancel_download_button)
+        progress_cancel_layout.addWidget(self.progressBar)
+        layout.addLayout(progress_cancel_layout)
         layout1 = qt.QHBoxLayout()
         layout1.addWidget(self.user_guide)
         layout1.addWidget(self.duration)
@@ -199,6 +233,19 @@ class QuranPlayer(qt.QWidget):
             self.on_reciter_selected()
         self.surahListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.surahListWidget.customContextMenuRequested.connect(self.open_context_menu)
+        self.cleanup_pending_deletions()
+    def cleanup_pending_deletions(self):        
+        quran_reciters_dir = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters")
+        if os.path.exists(quran_reciters_dir):
+            for root, _, files in os.walk(quran_reciters_dir):
+                for file in files:
+                    if file.endswith(".delete_me"):
+                        filepath = os.path.join(root, file)
+                        try:
+                            os.remove(filepath)
+                            print(f"Cleaned up deleted file: {filepath}")
+                        except Exception as e:
+                            print(f"Could not delete {filepath} on startup: {e}")
     def update_button_style(self, button, checked):
         if checked:
             button.setStyleSheet("background-color: blue; color: white;")
@@ -351,12 +398,17 @@ class QuranPlayer(qt.QWidget):
                     guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "السورة محملة بالفعل.")
                     return
                 self.progressBar.setVisible(True)
+                self.cancel_download_button.setVisible(True)
+                self.current_download_filename = selected_item.text()
+                self.current_download_reciter = reciter
                 self.download_thread = DownloadThread(url, filepath)
                 self.download_thread.progress.connect(self.progressBar.setValue)
                 self.download_thread.finished.connect(self.download_audio_complete)
+                self.download_thread.cancelled.connect(self.on_download_cancelled)
                 self.download_thread.start()
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء تحميل المقطع: " + str(e))
+            self.cancel_download_button.setVisible(False)
     def download_all_audios_to_app(self):
         try:
             selected_reciter_item = self.recitersListWidget.currentItem()
@@ -382,30 +434,45 @@ class QuranPlayer(qt.QWidget):
                 app_folder = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter)
                 os.makedirs(app_folder, exist_ok=True)
                 self.save_folder = app_folder
+                self.cancel_download_button.setVisible(True)
+                self.current_download_reciter = reciter
                 self.download_next_audio_to_app()
             else:
-                guiTools.qMessageBox.MessageBox.view(self, "إلغاء العملية", "تم إلغاء تحميل السور.")
+                return
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء بدء التحميل: " + str(e))
+            self.cancel_download_button.setVisible(False)
     def is_audio_downloaded(self, filepath):
         return os.path.exists(filepath)
     def download_next_audio_to_app(self):
         if self.current_file_index < len(self.files_to_download):
             file_name, url = self.files_to_download[self.current_file_index]
-            filepath = os.path.join(self.save_folder, f"{file_name}.mp3")
+            filepath = os.path.join(self.save_folder, f"{file_name}.mp3")                        
+            if self.is_audio_downloaded(filepath):
+                self.current_file_index += 1
+                self.download_next_audio_to_app()
+                return
             self.current_file_index += 1
             self.progressBar.setVisible(True)
+            self.current_download_filename = file_name
             self.download_thread = DownloadThread(url, filepath)
             self.download_thread.progress.connect(self.progressBar.setValue)
             self.download_thread.finished.connect(self.download_next_audio_to_app)
+            self.download_thread.cancelled.connect(self.on_download_cancelled_batch_internal)
             self.download_thread.start()
         else:
             self.progressBar.setVisible(False)
+            self.cancel_download_button.setVisible(False)
             guiTools.qMessageBox.MessageBox.view(self, "تم", "تم تحميل جميع السور بنجاح.")
     def download_audio_complete(self):
         self.progressBar.setValue(100)
         self.progressBar.setVisible(False)
-        guiTools.qMessageBox.MessageBox.view(self, "تم", "تم تحميل السورة بنجاح.")
+        self.cancel_download_button.setVisible(False)
+        guiTools.qMessageBox.MessageBox.view(self, "تم", "تم تحميل السورة بنجاح.")        
+        if hasattr(self, 'current_download_filename'):
+            del self.current_download_filename
+        if hasattr(self, 'current_download_reciter'):
+            del self.current_download_reciter
     def download_all_soar(self):
         selected_reciter_item = self.recitersListWidget.currentItem()
         if not selected_reciter_item:
@@ -420,29 +487,84 @@ class QuranPlayer(qt.QWidget):
             "هل أنت متأكد من تحميل جميع السور؟","نعم","لا")
         if response == 0:
             self.save_folder = save_folder
+            self.cancel_download_button.setVisible(True)
             self.download_next_sora()
         else:
-            guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء التحميل.")
+            return
     def download_next_sora(self):
         if self.current_file_index < len(self.files_to_download):
             file_name, url = self.files_to_download[self.current_file_index]
-            filepath = f"{self.save_folder}/{file_name}.mp3"
+            filepath = os.path.join(self.save_folder, f"{file_name}.mp3")
             self.current_file_index += 1
+            self.progressBar.setVisible(True)
+            self.current_download_filename = file_name
             self.download_thread = DownloadThread(url, filepath)
             self.download_thread.progress.connect(self.update_progress)
             self.download_thread.finished.connect(self.download_finished)
+            self.download_thread.cancelled.connect(self.on_download_cancelled_batch_external)
             self.download_thread.start()
         else:
             self.progressBar.setVisible(False)
+            self.cancel_download_button.setVisible(False)
             guiTools.qMessageBox.MessageBox.view(self, "تم التحميل", "تم تحميل جميع السور.")
     def update_progress(self, progress_percent):
         self.progressBar.setValue(progress_percent)
     def download_finished(self):
-        self.progressBar.setVisible(True)
+        self.progressBar.setValue(100)        
         self.download_next_sora()
     def download_complete(self):
+        self.progressBar.setValue(100)
         self.progressBar.setVisible(False)
+        self.cancel_download_button.setVisible(False)
         guiTools.qMessageBox.MessageBox.view(self, "تم", "تم تحميل السورة")
+        if hasattr(self, 'current_download_filename'):
+            del self.current_download_filename
+    def cancel_current_download(self):
+        if hasattr(self, 'download_thread') and self.download_thread.isRunning():
+            self.download_thread.cancel()            
+    def on_download_cancelled(self):        
+        self.progressBar.setVisible(False)
+        self.cancel_download_button.setVisible(False)
+        if hasattr(self, 'current_download_filename') and hasattr(self, 'current_download_reciter'):
+            self.mark_for_deletion(self.current_download_filename, self.current_download_reciter, app_internal=True)
+            del self.current_download_filename
+            del self.current_download_reciter
+        guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل السورة.")
+    def on_download_cancelled_batch_internal(self):        
+        self.progressBar.setVisible(False)
+        self.cancel_download_button.setVisible(False)        
+        if hasattr(self, 'current_download_filename') and hasattr(self, 'current_download_reciter'):
+            self.mark_for_deletion(self.current_download_filename, self.current_download_reciter, app_internal=True)
+            del self.current_download_filename
+            del self.current_download_reciter        
+        self.current_file_index = len(self.files_to_download)
+        guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل جميع السور، لكن سيتم حذف آخر سورة كان يتم تحميلها")
+    def on_download_cancelled_batch_external(self):        
+        self.progressBar.setVisible(False)
+        self.cancel_download_button.setVisible(False)
+        if hasattr(self, 'current_download_filename'):
+            filepath = os.path.join(self.save_folder, f"{self.current_download_filename}.mp3")            
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            except Exception as e:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"تعذر حذف الملف الذي تم إلغاء تنزيله: {self.current_download_filename}.mp3\nالرجاء حذفه يدوياً. {e}")
+            del self.current_download_filename        
+        self.current_file_index = len(self.files_to_download)
+        guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل جميع السور، لكن سيتم حذف آخر سورة كان يتم تحميلها")
+    def mark_for_deletion(self, file_name, reciter, app_internal=False):        
+        if app_internal:
+            filepath = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter, f"{file_name}.mp3")
+        else:                        
+            filepath = os.path.join(self.save_folder, f"{file_name}.mp3") 
+        if os.path.exists(filepath):
+            try:
+                os.rename(filepath, filepath + ".delete_me")
+                print(f"Marked for deletion: {filepath}. Will be deleted on next startup.")
+            except Exception as e:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"تعذر وضع علامة للحذف على الملف: {file_name}.mp3. قد تحتاج إلى حذفه يدوياً بعد إغلاق التطبيق. {e}")
+        else:
+            print(f"File not found to mark for deletion: {filepath}")
     def on_reciter_selected(self):
         self.mp.stop()
         self.surahListWidget.clear()
@@ -502,12 +624,30 @@ class QuranPlayer(qt.QWidget):
                 filepath, _ = qt.QFileDialog.getSaveFileName(self, "save surah", "", "Audio Files (*.mp3)")
                 if filepath:
                     self.progressBar.setVisible(True)
+                    self.cancel_download_button.setVisible(True)
+                    self.save_folder = os.path.dirname(filepath)
+                    self.current_download_filename = os.path.splitext(os.path.basename(filepath))[0]
                     self.download_thread = DownloadThread(url, filepath)
                     self.download_thread.progress.connect(self.progressBar.setValue)
                     self.download_thread.finished.connect(self.download_complete)
+                    self.download_thread.cancelled.connect(self.on_download_cancelled_external_single)
                     self.download_thread.start()
-        except:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "حدث خطأ ما")
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "حدث خطأ ما: " + str(e))
+            self.cancel_download_button.setVisible(False)
+    def on_download_cancelled_external_single(self):        
+        self.progressBar.setVisible(False)
+        self.cancel_download_button.setVisible(False)
+        if hasattr(self, 'current_download_filename') and hasattr(self, 'save_folder'):
+            filepath = os.path.join(self.save_folder, f"{self.current_download_filename}.mp3")
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            except Exception as e:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"تعذر حذف الملف الذي تم إلغاء تنزيله: {self.current_download_filename}.mp3\nالرجاء حذفه يدوياً. {e}")
+            del self.current_download_filename
+            del self.save_folder
+        guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل السورة.")
     def open_context_menu(self, position):
         menu = qt.QMenu(self)
         menu.setAccessibleName("خيارات السورة")
