@@ -1,6 +1,6 @@
-import guiTools, update, functions,gui
+import guiTools, update, functions,gui,subprocess
 import sys
-import os, shutil, gettext
+import os, shutil
 from . import settings_handler, app, tabs
 import PyQt6.QtWidgets as qt
 import sys
@@ -9,7 +9,7 @@ from PyQt6.QtCore import Qt
 class settings(qt.QDialog):
     def __init__(self, p):
         super().__init__(p)
-        self.resize(600,400)
+        self.resize(420,430)
         self.center()
         self.setWindowTitle("الإعدادات")
         self.p = p         
@@ -93,7 +93,8 @@ class settings(qt.QDialog):
         if aa == 1:
             mb = guiTools.QQuestionMessageBox.view(self,"تم تحديث الإعدادات","يجب عليك إعادة تشغيل البرنامج لتطبيق التغييرات. هل تريد إعادة التشغيل الآن؟","إعادة التشغيل الآن","إعادة التشغيل لاحقا")
             if mb==0:
-                os.execl(sys.executable, sys.executable, *sys.argv)
+                subprocess.Popen([sys.executable] + sys.argv)
+                sys.exit()
             else:
                 self.close()
         else:

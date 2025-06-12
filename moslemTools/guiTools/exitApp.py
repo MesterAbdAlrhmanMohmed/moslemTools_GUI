@@ -1,5 +1,6 @@
+import sys,subprocess
 from . import QPushButton
-import os, sys
+import os
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from PyQt6.QtCore import Qt
@@ -43,7 +44,9 @@ class ExitApp(qt.QDialog):
         elif ec == 1:
             sys.exit()
         elif ec == 2:
-            os.execl(sys.executable, sys.executable, *sys.argv)
+            subprocess.Popen([sys.executable] + sys.argv)
+            sys.exit()
+
     def fcan(self):
         self.cancel1=True
         self.close()

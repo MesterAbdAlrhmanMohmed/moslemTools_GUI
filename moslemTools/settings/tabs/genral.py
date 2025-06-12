@@ -10,45 +10,50 @@ startUpPath = os.path.join(os.getenv('appdata'), "Microsoft", "Windows", "Start 
 class Genral(qt.QWidget):
     def __init__(self, p):
         super().__init__()
-        self.setStyleSheet("""            
-            }
-            QComboBox, QCheckBox {                
+        self.setStyleSheet("""         
+            QComboBox, QCheckBox {          
                 color: #e0e0e0;
                 border: 1px solid #555;
                 padding: 4px;
             }
-        """)                
+        """)                           
+        main_layout = qt.QVBoxLayout(self)        
         self.ExitDialog = qt.QCheckBox("عرض نافذة الخروج عند الخروج من البرنامج")
         self.ExitDialog.setChecked(p.cbts(settings_handler.get("g", "exitDialog")))
-        layout1 = qt.QVBoxLayout(self)        
-        layout1.addWidget(self.ExitDialog)
+        main_layout.addWidget(self.ExitDialog)        
         self.startup = qt.QCheckBox("بدء تشغيل البرنامج عند بدء تشغيل النظام")
         self.startup.setChecked(self.check_in_startup())
         self.startup.checkStateChanged.connect(self.onStartupChanged)
-        layout1.addWidget(self.startup)        
+        main_layout.addWidget(self.startup)               
+        reciter_section_layout = qt.QVBoxLayout()
+        reciter_section_layout.setContentsMargins(0, 0, 0, 0) # Remove any extra margins
+        reciter_section_layout.setSpacing(5) # Reduce spacing between items in this specific layout
+        reciter_laybol = qt.QLabel("تحديد القارئ لتبويبة القرآن الكريم مكتوب")
+        reciter_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        reciter_section_layout.addWidget(reciter_laybol)        
+        delete_laybol = qt.QLabel("لحذف القارئ المحدد قم بالضغط على زر الحذف أو زر التطبيقات")
+        delete_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        reciter_section_layout.addWidget(delete_laybol)         
         self.search_bar = qt.QLineEdit()
         self.search_bar.setPlaceholderText("البحث عن قارئ")
         self.search_bar.textChanged.connect(self.onsearch)
-        self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
+        self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)         
+        reciter_section_layout.addWidget(self.search_bar)
         self.reciter = qt.QComboBox()
         font = qt1.QFont()
-        font.setBold(True)        
+        font.setBold(True)         
         self.reciter.addItems(gui.reciters.keys())
         self.reciter.setCurrentIndex(int(settings_handler.get("g", "reciter")))
-        self.reciter.setAccessibleName("تحديد القارئ للقرآن المكتوب")
+        self.reciter.setAccessibleName("تحديد القارئ لتبويبة القرآن الكريم مكتوب")
         self.reciter.setAccessibleDescription("لحذف القارئ المحدد قم بالضغط على زر الحذف أو زر التطبيقات")
         self.reciter.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.reciter.customContextMenuRequested.connect(self.onDelete)
         self.reciter.setFont(font)
         qt1.QShortcut("delete", self).activated.connect(self.onDelete)
-        reciter_laybol = qt.QLabel("تحديد القارئ للقرآن المكتوب")
-        reciter_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout1.addWidget(reciter_laybol)
-        delete_laybol = qt.QLabel("لحذف القارئ المحدد قم بالضغط على زر الحذف أو زر التطبيقات")
-        delete_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout1.addWidget(delete_laybol)        
-        layout1.addWidget(self.search_bar)
-        layout1.addWidget(self.reciter)
+        reciter_section_layout.addWidget(self.reciter)        
+        main_layout.addStretch(1) # This stretch pushes the checkboxes upwards slightly if needed
+        main_layout.addLayout(reciter_section_layout)
+        main_layout.addStretch(1) # This stretch will absorb extra space below the reciter section
     def add_to_startup(self):
         try:
             shell = win32com.client.Dispatch("WScript.Shell")

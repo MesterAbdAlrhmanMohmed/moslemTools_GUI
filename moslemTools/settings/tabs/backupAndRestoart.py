@@ -1,4 +1,4 @@
-import guiTools, gui, zipfile
+import guiTools, gui, zipfile,subprocess
 import sys
 import os, shutil
 from settings import settings_handler, app
@@ -28,8 +28,9 @@ class GUIForThread(qt.QDialog):
                 guiTools.qMessageBox.MessageBox.view(self, "تم", "تم نسخ الإعدادات بنجاح")
             else:
                 mb = guiTools.QQuestionMessageBox.view(self,"تم تحديث الإعدادات","يجب عليك إعادة تشغيل البرنامج لتطبيق التغييرات. هل تريد إعادة التشغيل الآن؟","إعادة التشغيل الآن","إعادة التشغيل لاحقا")
-                if mb==0:
-                    os.execl(sys.executable, sys.executable, *sys.argv)
+                if mb==0:                    
+                    subprocess.Popen([sys.executable] + sys.argv)
+                    sys.exit()
         self.close()
 class Thread(qt2.QRunnable):
     def __init__(self, path, choice):

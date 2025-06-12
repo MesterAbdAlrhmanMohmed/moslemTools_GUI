@@ -7,7 +7,7 @@ from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
-from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
+from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 from appTabs import *
 try:
     updatePath = os.path.join(os.getenv('appdata'), settings_handler.appName, "update")
@@ -32,8 +32,8 @@ class main(qt.QMainWindow):
         self.timer = qt2.QTimer(self)
         self.timer.timeout.connect(self.random_audio_theker)
         layout = qt.QVBoxLayout()
-        self.info = qt.QLineEdit()
-        self.info.setReadOnly(True)
+        self.info = qt.QLabel()
+        self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout1=qt.QHBoxLayout()
         layout1.addWidget(self.info)
@@ -117,7 +117,10 @@ class main(qt.QMainWindow):
         donateAction=qt1.QAction("تبرع",self)
         moreOptionsMenu.addAction(donateAction)
         donateAction.triggered.connect(self.OnDonation)
-        donateAction.setShortcut("ctrl+shift+d")
+        donateAction.setShortcut("ctrl+shift+d")        
+        action_delete_program_data = qt1.QAction("حذف بيانات البرنامج لإلغاء تثبيته", self)
+        action_delete_program_data.triggered.connect(self.delete_program_data_with_confirmation)
+        moreOptionsMenu.addAction(action_delete_program_data)                
         moreOptionsMenu.setFont(font)
         w = qt.QWidget()
         w.setLayout(layout)
@@ -235,7 +238,7 @@ class main(qt.QMainWindow):
     def onViewLastMessageButtonClicked(self):
         with open(os.path.join(os.getenv('appdata'), settings_handler.appName, "message.json"), "r", encoding="utf-8") as file:
             data = json.load(file)
-        guiTools.TextViewer(self, "آخر رسالة من المطورين", data["message"]).exec()
+        guiTools.TextViewer(self, "آخر رسالة من المطور", data["message"]).exec()
     def whats_new_funktion(self):
         try:
             r = requests.get(f"https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/{settings_handler.appName}/main/{app.appdirname}/update/app.json")
@@ -248,7 +251,7 @@ class main(qt.QMainWindow):
         self.quranPlayer.mp.stop()
         self.storiesPlayer.mp.stop()
     def OnDonation(self):
-        guiTools.MessageBox.view(self,"تنبيه","في حالة التبرع الرجاء إرسال صورة للتحويل على حسابات ال Telegram الخاصة بنا، حتى لا تختلط التحويلات الخاطئة بالتحويلات المقصودة")
+        guiTools.MessageBox.view(self,"تنبيه","في حالة التبرع الرجاء إرسال صورة للتحويل على حساب Telegram الخاص بي، حتى لا تختلط التحويلات الخاطئة بالتحويلات المقصودة")
         menu=qt.QMenu("اختر طريقة",self)
         font=qt1.QFont()
         font.setBold(True)
@@ -261,7 +264,51 @@ class main(qt.QMainWindow):
         menu.exec(qt1.QCursor.pos())
     def instaPay(self):
         pyperclip.copy("https://ipn.eg/S/av369852/instapay/23Mu5Z")
-        winsound.Beep(1000, 100)
+        winsound.Beep(1000, 100)    
+    def delete_program_data_with_confirmation(self):    
+        confirm = guiTools.QQuestionMessageBox.view(
+            self,
+            "تأكيد الحذف النهائي لبيانات البرنامج",
+            "تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟",
+            "نعم، احذف البرنامج",
+            "لا، إلغاء"
+        )
+        if confirm == 0:
+            try:
+                roaming_path = os.path.join(os.getenv('appdata'))
+                target_folder_path = os.path.join(roaming_path, 'moslemTools_GUI')
+                if os.path.exists(target_folder_path) and os.path.isdir(target_folder_path):
+                    shutil.rmtree(target_folder_path)
+                    guiTools.MessageBox.view(
+                        self,
+                        "تم الحذف بنجاح",
+                        "تم حذف مجلد moslemTools_GUI وجميع بيانات البرنامج بنجاح\nالآن يمكنك إلغاء تثبيت البرنامج"
+                    )
+                    qt.QApplication.quit()
+                else:
+                    guiTools.MessageBox.view(
+                        self,
+                        "المجلد غير موجود",
+                        f"المجلد '{target_folder_path}' غير موجود أو ليس مجلدًا. لا توجد بيانات لحذفها."
+                    )
+            except OSError as e:
+                guiTools.MessageBox.error(
+                    self,
+                    "خطأ في الحذف",
+                    f"حدث خطأ أثناء محاولة حذف المجلد: {e}\n\nيرجى التأكد من أن البرنامج ليس قيد التشغيل في الخلفية أو أن لديك الأذونات اللازمة."
+                )
+            except Exception as e:
+                guiTools.MessageBox.error(
+                    self,
+                    "خطأ غير متوقع",
+                    f"حدث خطأ غير متوقع: {e}"
+                )
+        else:
+            guiTools.MessageBox.view(
+                self,
+                "تم الإلغاء",
+                "تم إلغاء عملية حذف بيانات البرنامج."
+            )
 App = qt.QApplication([])
 default_font = qt1.QFont()
 default_font.setBold(True)

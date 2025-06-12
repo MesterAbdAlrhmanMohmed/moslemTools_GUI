@@ -16,6 +16,8 @@ class book_marcks(qt.QDialog):
         self.results=guiTools.QListWidget()
         self.results.clicked.connect(self.onItemClicked)
         self.dl=qt.QPushButton("حذف العلامة المرجعية")        
+        self.dl.setShortcut("delete")
+        self.dl.setAccessibleDescription("delete")
         self.dl.setStyleSheet("""
     QPushButton {
         background-color: #8B0000;
@@ -40,8 +42,7 @@ class book_marcks(qt.QDialog):
         layout.addWidget(self.search_bar)
         layout.addWidget(self.results)
         layout.addWidget(self.dl)
-        self.onCategoryChanged()
-        qt1.QShortcut("delete",self).activated.connect(self.onRemove)
+        self.onCategoryChanged()        
     def onItemClicked(self):
         data=functions.bookMarksManager.GetAudioBookByName(self.tabName,self.results.currentItem().text())
         if self.tabName=="quran":
