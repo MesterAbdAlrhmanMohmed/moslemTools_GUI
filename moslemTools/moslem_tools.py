@@ -221,13 +221,13 @@ class main(qt.QMainWindow):
             if current_gregorian_weekday == 4:
                 self.info.setText("جمعة مباركة")
             elif current_gregorian_weekday == 0:
-                self.info.setText("صيام يوم الإثنين سنة\nعن النبي صل الله عليه وسلم")
+                self.info.setText("صيام يوم الإثنين، سنة، عن النبي صل الله عليه وسلم")
             elif current_gregorian_weekday == 3:
-                self.info.setText("صيام يوم الخميس سنة\nعن النبي صل الله عليه وسلم")                        
+                self.info.setText("صيام يوم الخميس، سنة عن النبي صل الله عليه وسلم")                        
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 1:
                 self.info.setText("كل عام وأنتم بخير بمناسبة رأس السنة الهجرية الجديدة")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 10:
-                self.info.setText("صيام عاشوراء مستحب عن النبي صل الله عليه وسلم")        
+                self.info.setText("صيام عاشوراء، مستحب عن النبي صل الله عليه وسلم")        
             elif hijri_date_obj.month == 7 and hijri_date_obj.day == 27:
                 self.info.setText("ذكرى الإسراء والمعراج")        
             elif hijri_date_obj.month == 8 and hijri_date_obj.day == 15:
@@ -249,9 +249,9 @@ class main(qt.QMainWindow):
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
                 self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [1, 2, 3, 4, 5, 6, 7, 8]:
-                self.info.setText("صيام العشر الأوائل من ذي الحجة سنة عن النبي صل الله عليه وسلم")        
+                self.info.setText("صيام العشر الأوائل من ذي الحج،ة سنة عن النبي صل الله عليه وسلم")        
             elif hijri_date_obj.day in [13, 14, 15]:
-                self.info.setText("صيام الأيام القمرية سنة عن النبي صل الله عليه وسلم")        
+                self.info.setText("صيام الأيام القمرية، سنة عن النبي صل الله عليه وسلم")        
             else:
                 self.info.setText("لا تَنْسى ذِكْر الله")
         except Exception as e:
