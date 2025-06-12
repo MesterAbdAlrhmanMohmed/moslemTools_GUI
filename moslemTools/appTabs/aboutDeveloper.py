@@ -16,7 +16,7 @@ class AboutDeveloper(qt.QDialog):
         self.info.addItem("قناة عبد الرحمن على YouTube")
         self.info.addItem("حساب عبد الرحمن على telegram")
         self.info.addItem("حساب عبد الرحمن على GitHub")
-        self.info_text = qt.QLineEdit()
+        self.info_text = qt.QLabel()
         self.info_text.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info_text.setText("اللهم اجعل عملي هذا في ميزان حسناتي وصدقة جارية لي")
         self.info_text.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)

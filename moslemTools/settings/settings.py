@@ -15,6 +15,7 @@ class settings(qt.QDialog):
         self.p = p         
         layout = qt.QVBoxLayout()        
         self.sectian = guiTools.ComboBook()
+        self.sectian.setFocus()        
         font = qt1.QFont()
         font.setBold(True)        
         self.sectian.setStyleSheet("color: #e0e0e0;")

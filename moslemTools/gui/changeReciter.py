@@ -7,6 +7,7 @@ class ChangeReciter(qt.QDialog):
         super().__init__(p)
         self.reciters=reciters
         self.resize(600,400)
+        self.setWindowTitle("اختيار قارئ")
         layout=qt.QVBoxLayout(self)
         serch=qt.QLabel("بحث")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)

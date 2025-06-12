@@ -114,6 +114,10 @@ class main(qt.QMainWindow):
         action_release_date.setShortcut("ctrl+d")
         action_release_date.triggered.connect(lambda: guiTools.MessageBox.view(self, "تاريخ نشر البرنامج", "غير معروف حتى الآن"))
         moreOptionsMenu.addAction(action_release_date)
+        GitHub_action=qt1.QAction("رابط مستودع البرنامج على GitHub", self)
+        GitHub_action.setShortcut("ctrl+shift+q")
+        GitHub_action.triggered.connect(lambda: webbrowser.open("https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI"))
+        moreOptionsMenu.addAction(GitHub_action)
         donateAction=qt1.QAction("تبرع",self)
         moreOptionsMenu.addAction(donateAction)
         donateAction.triggered.connect(self.OnDonation)
@@ -213,27 +217,45 @@ class main(qt.QMainWindow):
     def viewInfoTextEdit(self):
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
-            if hijri_date_obj.month == 9:
-                self.info.setText("رمضان كريم")
-            elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1 or hijri_date_obj.month == 12 and hijri_date_obj.day == 10:
-                self.info.setText("عيد مبارك")
-            elif hijri_date_obj.month == 10:
-                self.info.setText("صيام الست أيام البيض في هذا الشهر وهي سنة عن النبي صل الله عليه وسلم")
-            elif hijri_date_obj.month == 8:
-                self.info.setText("يستحب الصيام في هذا الشهر")
-            elif hijri_date_obj.day in [13, 14, 15]:
-                self.info.setText("صيام الأيام القمرية سنة عن النبي صل الله عليه وسلم")
+            current_gregorian_weekday = datetime.datetime.now().weekday()
+            if current_gregorian_weekday == 4:
+                self.info.setText("جمعة مباركة")
+            elif current_gregorian_weekday == 0:
+                self.info.setText("صيام يوم الإثنين سنة\nعن النبي صل الله عليه وسلم")
+            elif current_gregorian_weekday == 3:
+                self.info.setText("صيام يوم الخميس سنة\nعن النبي صل الله عليه وسلم")                        
+            elif hijri_date_obj.month == 1 and hijri_date_obj.day == 1:
+                self.info.setText("كل عام وأنتم بخير بمناسبة رأس السنة الهجرية الجديدة")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 10:
-                self.info.setText("صيام عاشوراء مستحب عن النبي صل الله عليه وسلم")
-            elif hijri_date_obj.month == 12 and hijri_date_obj.day in [1, 2, 3, 4, 5, 6, 7, 8]:
-                self.info.setText("صيام العشر الأوائل من ذي الحجة سنة عن النبي صل الله عليه وسلم")
+                self.info.setText("صيام عاشوراء مستحب عن النبي صل الله عليه وسلم")        
+            elif hijri_date_obj.month == 7 and hijri_date_obj.day == 27:
+                self.info.setText("ذكرى الإسراء والمعراج")        
+            elif hijri_date_obj.month == 8 and hijri_date_obj.day == 15:
+                self.info.setText("ليلة النصف من شعبان، يستحب فيها الدعاء")
+            elif hijri_date_obj.month == 8:
+                self.info.setText("يستحب الصيام في شهر شعبان")
+            elif hijri_date_obj.month == 9 and hijri_date_obj.day >= 21 and hijri_date_obj.day <= 29:
+                self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر")
+            elif hijri_date_obj.month == 9:
+                self.info.setText("رمضان كريم")        
+            elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1:
+                self.info.setText("عيد فطر مبارك")
+            elif hijri_date_obj.month == 10:
+                self.info.setText("صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صل الله عليه وسلم")        
             elif hijri_date_obj.month == 12 and hijri_date_obj.day == 9:
-                self.info.setText("صيام وقفة عرفات")
-            elif datetime.datetime.now().weekday() in [0, 3]:
-                self.info.setText("صيام اليوم سنة عن النبي صل الله عليه وسلم")
+                self.info.setText("صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
+            elif hijri_date_obj.month == 12 and hijri_date_obj.day == 10:
+                self.info.setText("عيد أضحى مبارك")
+            elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
+                self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
+            elif hijri_date_obj.month == 12 and hijri_date_obj.day in [1, 2, 3, 4, 5, 6, 7, 8]:
+                self.info.setText("صيام العشر الأوائل من ذي الحجة سنة عن النبي صل الله عليه وسلم")        
+            elif hijri_date_obj.day in [13, 14, 15]:
+                self.info.setText("صيام الأيام القمرية سنة عن النبي صل الله عليه وسلم")        
             else:
                 self.info.setText("لا تَنْسى ذِكْر الله")
-        except:
+        except Exception as e:
+            print(f"حدث خطأ: {e}")
             self.info.setText("لا تَنْسى ذِكْر الله")
     def onViewLastMessageButtonClicked(self):
         with open(os.path.join(os.getenv('appdata'), settings_handler.appName, "message.json"), "r", encoding="utf-8") as file:
