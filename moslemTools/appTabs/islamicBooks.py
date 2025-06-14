@@ -31,7 +31,7 @@ class IslamicBooks(qt.QWidget):
         self.info1=qt.QLabel()
         self.info1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info1.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info1.setText("تنبيه هام , مطوري البرنامج غير مسؤولين عن محتوى هذه الكتب")
+        self.info1.setText("تنبيه هام , مطور البرنامج غير مسؤول عن محتوى هذه الكتب")
         layout.addWidget(self.info1)
         self.info2=qt.QLabel()
         self.info2.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
