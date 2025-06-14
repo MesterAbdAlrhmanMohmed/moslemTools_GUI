@@ -112,7 +112,7 @@ class main(qt.QMainWindow):
         moreOptionsMenu.addAction(action_about_devs)
         action_release_date = qt1.QAction("تاريخ نشر البرنامج", self)
         action_release_date.setShortcut("ctrl+d")
-        action_release_date.triggered.connect(lambda: guiTools.MessageBox.view(self, "تاريخ نشر البرنامج", "غير معروف حتى الآن"))
+        action_release_date.triggered.connect(lambda: guiTools.MessageBox.view(self, "تاريخ نشر البرنامج", "السبت 14 يُونْيُو 2025، 18 ذُو ٱلْحِجَّة 1446"))
         moreOptionsMenu.addAction(action_release_date)
         GitHub_action=qt1.QAction("رابط مستودع البرنامج على GitHub", self)
         GitHub_action.setShortcut("ctrl+shift+g")
