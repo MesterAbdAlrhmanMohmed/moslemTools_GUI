@@ -9,7 +9,8 @@ class QQuestionMessageBox(qt.QDialog):
         super().__init__(parent)
         self.result = 1
         self.resize(700, 150)
-        self.setWindowTitle(title)
+        self.setWindowTitle(title)                
+        self.setWindowIcon(self.style().standardIcon(qt.QStyle.StandardPixmap.SP_MessageBoxQuestion))
         main_layout = qt.QVBoxLayout(self)
         self.label = QReadOnlyTextEdit()
         self.label.setText(label)
@@ -17,7 +18,7 @@ class QQuestionMessageBox(qt.QDialog):
         buttons_widget = qt.QWidget()
         buttons_layout = qt.QHBoxLayout(buttons_widget)
         buttons_layout.setContentsMargins(0, 0, 0, 0)
-        buttons_layout.setSpacing(0)
+        buttons_layout.setSpacing(10)
         self.OKBTN = qt.QPushButton(yesLabel)
         self.OKBTN.setDefault(True)
         self.OKBTN.clicked.connect(self.onOk)
@@ -26,10 +27,11 @@ class QQuestionMessageBox(qt.QDialog):
                 background-color: #0000AA;
                 color: #e0e0e0;
                 border-radius: 4px;
-                padding: 4px 6px;
+                padding: 8px 12px; /* Increased padding for bigger buttons */
+                font-size: 14px; /* Optional: Make font a bit larger */
             }
-        """)
-        self.OKBTN.setSizePolicy(qt.QSizePolicy.Policy.Minimum, qt.QSizePolicy.Policy.Fixed)
+        """)        
+        self.OKBTN.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed) 
         buttons_layout.addWidget(self.OKBTN)
         self.noBTN = qt.QPushButton(noLabel)
         self.noBTN.clicked.connect(self.reject)
@@ -38,10 +40,11 @@ class QQuestionMessageBox(qt.QDialog):
                 background-color: #0000AA;
                 color: #e0e0e0;
                 border-radius: 4px;
-                padding: 4px 6px;
+                padding: 8px 12px; /* Increased padding for bigger buttons */
+                font-size: 14px; /* Optional: Make font a bit larger */
             }
-        """)
-        self.noBTN.setSizePolicy(qt.QSizePolicy.Policy.Minimum, qt.QSizePolicy.Policy.Fixed)
+        """)        
+        self.noBTN.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
         buttons_layout.addWidget(self.noBTN)
         main_layout.addWidget(buttons_widget, alignment=Qt.AlignmentFlag.AlignLeft)
         qt1.QShortcut("Escape", self).activated.connect(self.reject)

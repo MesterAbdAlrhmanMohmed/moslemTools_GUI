@@ -26,7 +26,7 @@ class book_marcks(qt.QDialog):
         self.Category.setFont(font)
         self.results = qt.QListWidget()
         self.results.itemActivated.connect(self.onItemClicked)        
-        self.dl = qt.QPushButton("حذف العلامة المرجعية")
+        self.dl = qt.QPushButton("حذف العلامة المرجعية المحددة")
         self.dl.setStyleSheet("""
             QPushButton {
                 background-color: #8B0000;

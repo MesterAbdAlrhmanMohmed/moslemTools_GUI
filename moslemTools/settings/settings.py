@@ -14,6 +14,8 @@ class settings(qt.QDialog):
         self.setWindowTitle("الإعدادات")
         self.p = p         
         layout = qt.QVBoxLayout()        
+        self.sectian_l=qt.QLabel("اختر قسم")
+        layout.addWidget(self.sectian_l,alignment=Qt.AlignmentFlag.AlignCenter)
         self.sectian = guiTools.ComboBook()
         self.sectian.setFocus()        
         font = qt1.QFont()
