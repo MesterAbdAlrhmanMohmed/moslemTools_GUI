@@ -195,6 +195,9 @@ class QuranPlayer(qt.QWidget):
             "ctrl+c: إلغاء التنزيل\n"
             "ctrl+f1: دليل الاختصارات"
         ).exec())
+        self.info_menu = qt.QLabel("لخيارات السورة، نستخدم مفتاح التطبيقات أو click الأيمن")
+        self.info_menu.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
+        self.info_menu.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         recitersLayout = qt.QVBoxLayout()
         recitersLayout.addWidget(self.recitersLabel)
         recitersLayout.addWidget(self.reciterSearchLabel)
@@ -205,6 +208,7 @@ class QuranPlayer(qt.QWidget):
         surahsLayout.addWidget(self.surahSearchLabel)
         surahsLayout.addWidget(self.surahSearchEdit)
         surahsLayout.addWidget(self.surahListWidget)
+        surahsLayout.addWidget(self.info_menu)
         topLayout = qt.QHBoxLayout()
         topLayout.addLayout(recitersLayout)
         topLayout.addLayout(surahsLayout)

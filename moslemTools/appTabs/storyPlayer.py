@@ -183,6 +183,9 @@ class StoryPlayer(qt.QWidget):
             "ctrl+c: إلغاء التنزيل\n"
             "ctrl+f1: دليل الاختصارات"
         ).exec())
+        self.info_menu = qt.QLabel("لخيارات القصة، نستخدم مفتاح التطبيقات أو click الأيمن")
+        self.info_menu.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
+        self.info_menu.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         categoriesLayout = qt.QVBoxLayout()
         categoriesLayout.addWidget(self.categoriesLabel)
         categoriesLayout.addWidget(self.categorySearchLabel)
@@ -193,6 +196,7 @@ class StoryPlayer(qt.QWidget):
         storiesLayout.addWidget(self.storySearchLabel)
         storiesLayout.addWidget(self.storySearchEdit)
         storiesLayout.addWidget(self.storyListWidget)
+        storiesLayout.addWidget(self.info_menu)
         topLayout = qt.QHBoxLayout()
         topLayout.addLayout(categoriesLayout)
         topLayout.addLayout(storiesLayout)
