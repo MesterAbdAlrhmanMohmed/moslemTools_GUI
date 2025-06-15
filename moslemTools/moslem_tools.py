@@ -273,7 +273,7 @@ class main(qt.QMainWindow):
         try:
             r = requests.get(f"https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/{settings_handler.appName}/main/{app.appdirname}/update/app.json")
             info = r.json()
-            guiTools.TextViewer(self, "ما الجديد", info["what is new"]).exec()
+            guiTools.TextViewer(self, "ما الجديد في هذا الإصدار", info["what is new"]).exec()
         except Exception as e:
             print(e)
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشلت عملية جلب المعلومات, الرجاء الإتصال بالإنترنت")
