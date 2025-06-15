@@ -2,6 +2,7 @@ import settings,guiTools
 from .updater import DownloadUpdateGUI
 import requests
 import PyQt6.QtWidgets as qt
+import PyQt6.QtGui as qt1
 from settings.app import appdirname
 def check(p,message=True):
     try:
@@ -20,6 +21,7 @@ class download(qt.QDialog):
     def __init__(self,p,version,URL,whatsNew):
         super().__init__(p)
         self.resize(700,500)
+        self.center()
         layout=qt.QVBoxLayout(self)
         layout1=qt.QHBoxLayout()
         self.setWindowTitle("جديد {} إصدار {}".format(settings.app.name,str(version)))
@@ -40,6 +42,11 @@ class download(qt.QDialog):
         layout1.addWidget(self.download)
         layout1.addWidget(self.Close)
         layout.addLayout(layout1)
+    def center(self):        
+        frame_geometry = self.frameGeometry()        
+        screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
+        frame_geometry.moveCenter(screen_center)        
+        self.move(frame_geometry.topLeft())
     def onUpdate(self):
         self.close()
         settings.app.exit=False
