@@ -31,7 +31,7 @@ class AthkerDialog (qt.QDialog):
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font=qt.QLabel()
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_font.setAccessibleName("حجم النص")        
+        self.show_font.setAccessibleDescription("حجم النص")        
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.setText(str(self.font_size))
         self.N_theker=qt.QPushButton("الذكر التالي")
