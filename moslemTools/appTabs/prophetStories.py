@@ -15,8 +15,8 @@ class ProphetStories(qt.QWidget):
         self.selectCategory.setAccessibleName("اختر قسم")
         self.selectCategory.addItems(["قصص الأنبياء", "قصص القرآن الكريم"])
         self.selectCategory.setStyleSheet("font-size: 14px; font-weight: bold;")
-        category_layout.addWidget(selectCategoryLabel, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         category_layout.addWidget(self.selectCategory, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        category_layout.addWidget(selectCategoryLabel, alignment=qt2.Qt.AlignmentFlag.AlignCenter)        
         category_layout.addStretch(1)
         self.stories = {}
         self.list_of_aProphetStories = guiTools.QListWidget()
