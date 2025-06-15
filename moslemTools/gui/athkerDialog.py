@@ -29,7 +29,7 @@ class AthkerDialog (qt.QDialog):
         self.athkerViewer.setFont(font)
         self.font_laybol=qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font=qt.QLabelself.show_font=qt.QLineEdit()
+        self.show_font=qt.QLabel()
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAccessibleName("حجم النص")        
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
