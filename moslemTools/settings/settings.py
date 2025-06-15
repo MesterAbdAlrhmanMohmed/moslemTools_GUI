@@ -40,7 +40,7 @@ class settings(qt.QDialog):
         self.layout1 = tabs.Genral(self)
         self.sectian.add("عام", self.layout1)
         self.tafaseerSettings = tabs.TafaseerSettings()
-        self.sectian.add("إعدادات التفسير والترجمة", self.tafaseerSettings)
+        self.sectian.add("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings)
         self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
         self.sectian.add("إعدادات الأذان", self.prayerTimesSettings)
         self.locationSettings=tabs.LocationSettings(self)
