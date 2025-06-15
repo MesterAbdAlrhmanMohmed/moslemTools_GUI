@@ -145,7 +145,7 @@ class brotcasts_of_suplications(qt.QWidget):
         self.list_of_adhkar.setStyleSheet(style_sheet)
         self.list_of_adhkar.itemActivated.connect(self.play)
         self.list_of_adhkar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.list_of_adhkar.addItem("اذكار الصباح")
+        self.list_of_adhkar.addItem("أذكار الصباح")
         self.list_of_adhkar.addItem("أذكار المساء")
         self.list_of_adhkar.addItem("أدعية وأذكار يومية")
         layout = qt.QVBoxLayout(self)
