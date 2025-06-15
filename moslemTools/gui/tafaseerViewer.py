@@ -32,7 +32,7 @@ class TafaseerViewer(qt.QDialog):
         self.changeTafaseer = qt.QPushButton("تغيير التفسير")
         self.changeTafaseer.setStyleSheet("background-color: #0000AA; color: white;")
         self.changeTafaseer.clicked.connect(self.on_change_tafaseer)
-        self.changeTafaseer.setFixedSize(150,40)                
+        self.changeTafaseer.setFixedSize(150,40)
         bottomLayout.addWidget(self.changeTafaseer)        
         fontLayout = qt.QVBoxLayout()
         self.font_laybol = qt.QLabel("حجم الخط")

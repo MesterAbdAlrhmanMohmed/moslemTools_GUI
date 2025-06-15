@@ -1,7 +1,7 @@
 {
 "name": "moslem tools",
-"version": 1.1,
-"what is new": "تغيير في دليل المستخدم ليصبح أكثر وضوحا\nتصحيح أسماء بعض قراآت القرآن الكريم\nتغيير في تخطيط البرنامج ليصبح أكثر توافقية مع اللغة العربية\nتغيير أسماء بعض التبويبات في الإعدادات لتصبح أكثر وضوحا\nاستبدال قائمة المزيد من الخيارات العلوية بزرا في الأعلى\nوإصلاحات في بعض الأخطاء",
-"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_1.1/moslem_tools_version_1.1.exe",
+"version": 1.0,
+"what is new": "هذا هو الإصدار الأول للبرنامج",
+"download": "",
 "is_beta": false
 }
