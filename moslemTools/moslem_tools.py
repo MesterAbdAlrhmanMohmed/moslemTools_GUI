@@ -294,7 +294,7 @@ class main(qt.QMainWindow):
         winsound.Beep(1000, 100)    
     def VFC(self):
         pyperclip.copy("+201022701463")
-        guiTools.MessageBox.view(self,"تنبيه","تم نسخ رقم vodafone cash لكن هذا الرقم للتحويلات فقط، يمنع الإتصال بهذا الرقم أو مراسلته بأي شكل")
+        guiTools.MessageBox.view(self,"تنبيه","تم نسخ رقم vodafone cash لكن هذا الرقم للتبرع فقط، يمنع الإتصال بهذا الرقم أو مراسلته بأي شكل")
     def delete_program_data_with_confirmation(self):    
         confirm = guiTools.QQuestionMessageBox.view(
             self,
