@@ -144,8 +144,8 @@ class DateConverter(qt.QWidget):
         self.month_combo.addItems(months)
     def convert_date(self):
         days_of_week = [
-            "الاثنين",
-            "الثلاثاء",
+            "الإثنين",
+            "الثلثاء",
             "الأربعاء",
             "الخميس",
             "الجمعة",
