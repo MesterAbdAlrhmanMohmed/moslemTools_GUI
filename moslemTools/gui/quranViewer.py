@@ -95,11 +95,11 @@ class QuranViewer(qt.QDialog):
         self.changeCurrentReciterButton.clicked.connect(self.onChangeRecitersContextMenuRequested)
         self.changeCurrentReciterButton.setShortcut("ctrl+shift+r")
         self.changeCurrentReciterButton.setAccessibleDescription("control plus shift plus r")
-        self.changeCurrentReciterButton.setStyleSheet("background-color: #0000AA; color: white;")
+        self.changeCurrentReciterButton.setStyleSheet("background-color: #0000AA; color: white;")        
         buttonsLayout.addWidget(self.changeCurrentReciterButton)
         buttonsLayout.addWidget(self.previous)
         buttonsLayout.addWidget(self.changeCategory)
-        buttonsLayout.addWidget(self.next)         
+        buttonsLayout.addWidget(self.next)                 
         layout.addLayout(buttonsLayout)
         if not index==0:
             cerser=self.text.textCursor()

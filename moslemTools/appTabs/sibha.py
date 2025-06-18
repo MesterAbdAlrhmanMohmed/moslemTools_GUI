@@ -52,6 +52,12 @@ class sibha(qt.QWidget):
         self.add.setDefault(True)
         self.add.clicked.connect(self.increment_count)
         self.add.setObjectName("addButton")
+        self.minus = qt.QPushButton("إنقاص")
+        self.minus.setAccessibleDescription("control plus minus")
+        self.minus.setShortcut("ctrl+-")
+        self.minus.setDefault(True)
+        self.minus.clicked.connect(self.decrement_count)
+        self.minus.setObjectName("minusButton")
         self.add_thecr = qt.QPushButton("إضافة ذكر")
         self.add_thecr.setDefault(True)
         self.add_thecr.setAccessibleDescription("control plus a")
@@ -94,6 +100,7 @@ class sibha(qt.QWidget):
         btn_layout.setSpacing(20)
         btn_layout.addWidget(self.reset)
         btn_layout.addWidget(self.add)
+        btn_layout.addWidget(self.minus)
         main_layout.addLayout(layout0)
         main_layout.addLayout(layout1)
         main_layout.addLayout(layout2)
@@ -109,6 +116,12 @@ class sibha(qt.QWidget):
             }
             QPushButton#addButton {
                 background-color: green;
+                color: white;
+                min-height: 40px;
+                font-size: 16px;
+            }
+            QPushButton#minusButton {
+                background-color: #0000AA;
                 color: white;
                 min-height: 40px;
                 font-size: 16px;
@@ -135,6 +148,14 @@ class sibha(qt.QWidget):
         current_count += 1
         self.numbers.setText(str(current_count))
         guiTools.speak(str(current_count))
+    def decrement_count(self):
+        current_count = int(self.numbers.text())
+        if current_count > 0:
+            current_count -= 1
+            self.numbers.setText(str(current_count))
+            guiTools.speak(str(current_count))
+        else:
+            guiTools.speak("لا يمكن الإنقاص أكثر من صفر")
     def speak_number(self):
         guiTools.speak(self.numbers.text())
     def speak_current_thecre(self):
