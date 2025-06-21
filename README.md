@@ -1,3 +1,10 @@
+> ⚠️ This project is a fork and continuation of the original "Moslem Tools" software created by **MesterAnas** and **MesterAbdAlrhmanMohmed** as a joint effort.  
+> The current repository is maintained by **MesterAbdAlrhmanMohmed**, who contributed significantly to the database and backend system.  
+> All usage complies with the terms of the [GNU GPLv3 License](./LICENSE).
+
+
+
+
 برنامج Moslem Tools هو برنامج إسلامي متكامل يضم العديد من الأدوات الإسلامية المفيدة.
 
 
