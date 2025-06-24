@@ -1,6 +1,39 @@
-> ⚠️ This project is a fork and continuation of the original "Moslem Tools" software created by **MesterAnas** and **MesterAbdAlrhmanMohmed** as a joint effort.  
-> The current repository is maintained by **MesterAbdAlrhmanMohmed**, who contributed significantly to the database and backend system.  
-> All usage complies with the terms of the [GNU GPLv3 License](./LICENSE).
+# Moslem Tools - Islamic Utility Software 🕌📚
+
+⚠️ This project is a fork and continuation of the original "Moslem Tools" project that was developed as a joint collaboration between [MesterAnas](https://github.com/mesteranas) and [MesterAbdAlrhmanMohmed](https://github.com/MesterAbdAlrhmanMohmed).
+
+This repository is currently maintained by **MesterAbdAlrhmanMohmed**, who has contributed significantly to:
+- Developing and managing the full database system (including over 11,000 Islamic resources and JSON files).
+- Creating and maintaining most of the backend and application logic.
+- Handling the integration of audio Quran, Hadith, Date Converter, Islamic Radio, and more.
+
+All contributions from **MesterAnas** are fully acknowledged, including the early interface setup and part of the initial idea.
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3.0 (GPLv3)**.  
+Please read the full license in the [LICENSE](./LICENSE) file.
+
+As per the license terms:
+- All original authors are properly credited.
+- The project is distributed as **open source** and can be modified and redistributed under the same license.
+- This repository includes both attribution and a clear statement of derivation.
+
+---
+
+## 🔗 Original Project Repository
+
+You can view the original project on GitHub here:  
+👉 [https://github.com/mesteranas/moslemTools_GUI](https://github.com/mesteranas/moslemTools_GUI)
+
+---
+
+## 🙏 Final Note
+
+May Allah accept this work as a form of sadaqah jariyah (ongoing charity).  
+We encourage all developers and users to contribute to this project with sincerity and integrity.
 
 
 
