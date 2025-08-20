@@ -7,13 +7,13 @@ import PyQt6.QtCore as qt2
 class SelectReciter(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
-        self.resize(700,500)
+        self.resize(900,500)
         layout=qt.QVBoxLayout(self)
-        serch=qt.QLabel("بحث")
+        serch=qt.QLabel("البحث عن قارئ")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(serch)
         self.search_bar=qt.QLineEdit()        
-        self.search_bar.setPlaceholderText("بحث ...")
+        self.search_bar.setPlaceholderText("البحث عن قارئ")
         self.search_bar.textChanged.connect(self.onsearch)        
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)

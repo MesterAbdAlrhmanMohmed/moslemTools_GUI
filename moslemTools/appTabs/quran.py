@@ -39,23 +39,27 @@ class Quran(qt.QWidget):
                 background-color: blue;
                 color: white;
             }
+            /* General QPushButton style - now applies the darker blue to all buttons by default */
             QPushButton {
-                background-color: #0078d7;
+                background-color: #0056b3; /* Darker blue for all general buttons */
                 color: white;
-                border: none;
+                border: none; /* Removed border to be consistent with previous general style */
                 border-radius: 5px;
                 padding: 5px;
             }
             QPushButton:hover {
-                background-color: #005fa1;
+                background-color: #003d80; /* Even darker blue on hover for all general buttons */
             }
+            
+            /* Specific style for customButton (green) - overrides the general QPushButton style */
             QPushButton#customButton {
-                background-color: #008000;
+                background-color: #008000; /* Green color for custom button */
                 color: white;
+                border: none; /* Ensure no border is applied from general style */
             }
             QPushButton#customButton:hover {
                 background-color: #006600;
-            }
+            }                        
             QListWidget {
                 background-color: #000000;
                 border: 1px solid #5a5a5a;
@@ -116,62 +120,42 @@ class Quran(qt.QWidget):
         self.info.customContextMenuRequested.connect(self.onContextMenu)
         self.info.itemActivated.connect(self.onItemTriggered)
         layout.addWidget(self.info)
-        guide_layout = qt.QHBoxLayout()
-        self.user_guide = qt.QPushButton("دليل الاختصارات")
-        self.user_guide.setDefault(True)
-        self.user_guide.setShortcut("ctrl+f1")
-        self.user_guide.setAccessibleDescription("control plus f1")
-        self.user_guide.setFixedSize(150, 40)                
-        self.user_guide.clicked.connect(lambda: guiTools.TextViewer(
-            self,
-            "دليل الاختصارات",
-            (
-                "اختصارات الآية الحالية\n"
-                "space: تشغيل الآية\n"
-                "ctrl+t: تفسير الآية الحالية\n"
-                "ctrl+i: إعراب الآية الحالية\n"
-                "ctrl+r: أسباب نزول الآية الحالية\n"
-                "ctrl+l: ترجمة الآية الحالية\n"
-                "ctrl+f: معلومات الآية الحالية\n"
-                "ctrl+b: إضافة علامة مرجعية\n"
-                "\n"
-                "اختصارات الفئة\n"
-                "ctrl+a: نسخ الفئة\n"
-                "ctrl+s: حفظ الفئة كملف نصي\n"
-                "ctrl+p: طباعة الفئة\n"
-                "ctrl+shift+t: تفسير الفئة\n"
-                "ctrl+shift+i: إعراب الفئة\n"
-                "ctrl+shift+f: معلومات السورة\n"
-                "ctrl+shift+l: ترجمة الفئة\n"
-                "ctrl+shift+p: التشغيل إلى نهاية الفئة\n"
-                "ctrl+alt+t: التفسير من آية إلى آية\n"
-                "ctrl+alt+l: الترجمة من آية إلى آية\n"
-                "ctrl+alt+i: الإعراب من آية إلى آية\n"
-                "ctrl+alt+p: التشغيل من آية إلى آية\n"
-                "\n"
-                "اختصارات حجم الخط\n"
-                "ctrl+=: تكبير الخط\n"
-                "ctrl+-: تصغير الخط\n"
-                "\n"
-                "اختصارات التنقل\n"
-                "alt + السهم الأيسر: الفئة السابقة\n"
-                "alt + السهم الأيمن: الفئة التالية\n"
-                "ctrl+shift+g: الذهاب إلى محتوى فئة\n"
-                "ctrl+alt+g: تغيير الفئة\n"
-                "ctrl+shift+r: تغيير القارئ\n"
-                "ctrl+f1: دليل الاختصارات"
-            )
-        ).exec())
-        guide_layout.addWidget(self.user_guide)
+        guide_layout = qt.QHBoxLayout()        
+        self.info_of_quran= guiTools.QPushButton("معلومات عن المصحف")                
+        self.info_of_quran.setShortcut("ctrl+shift+q")
+        self.info_of_quran.setAccessibleDescription("control plus shift plus Q")
+        self.info_of_quran.setFixedSize(150, 40)                
+        self.info_of_quran.clicked.connect(lambda: guiTools.TextViewer(
+    self,
+    "معلومات عن المصحف",
+    (
+        "معلومات عامة عن مصحف المدينة برواية حفص عن عاصم:\n"
+        "عدد السور: 114 سورة (86 مكية + 28 مدنية).\n"
+        "عدد الآيات: 6236 آية (بحسب رواية حفص، دون احتساب البسملة في السور ما عدا سورة الفاتحة).\n"
+        "عدد الأجزاء: 30 جزءًا.\n"
+        "عدد الأحزاب: 60 حزبًا.\n"
+        "عدد الأرباع: 240 ربعًا (4 أرباع في الحزب، 8 أرباع في الجزء).\n"
+        "عدد السجدات التلاوية: 15 سجدة.\n"
+        "عدد الصفحات (في مصحف المدينة العادي): حوالي 604 صفحة.\n"
+        "\n"
+        "ملاحظات:\n"
+        "عدد الكلمات تقريبي، حوالي 77430 كلمة حسب طرق العد الطباعية.\n"
+        "عدد الحروف تقريبي، يتراوح بين 320000 و324000 حرف حسب احتساب النقاط والحركات.\n"
+        "عدد الركوعات تقريبي (558 ركوعاً)، وهو رقم متداول حسب تقسيم السور في الطبعات.\n"
+        "\n"
+        "كل الأرقام المدونة تمثل الطبعة الرسمية لمصحف المدينة برواية حفص عن عاصم، الصادرة عن مجمع الملك فهد لطباعة المصحف الشريف."        
+    )
+).exec())        
         self.info1 = qt.QLabel()
         self.info1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info1.setText("لخيارات عنصر الفئة, نستخدم مفتاح التطبيقات أو click الأيمن")
         self.info1.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         guide_layout.addWidget(self.info1)
+        guide_layout.addWidget(self.info_of_quran)
         layout.addLayout(guide_layout)
         self.onTypeChanged(0)
     def search(self, pattern, text_list):
-        tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+        tashkeel_pattern = re.compile(r'[^\u0621-\u063A\u0641-\u064A\s]+')
         normalized_pattern = tashkeel_pattern.sub('', pattern)
         matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text)]
         return matches
@@ -255,7 +239,7 @@ class Quran(qt.QWidget):
             return
         result = self.getResult()
         gui.QuranPlayer(self, result, 0, self.type.currentIndex(),
-                            self.info.currentItem().text(), enableBookMarks=True).exec()
+                            self.info.currentItem().text()).exec()
     def onTafseerActionTriggered(self):
         if not self.info.currentItem():
             return

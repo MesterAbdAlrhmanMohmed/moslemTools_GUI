@@ -17,7 +17,7 @@ class Download(qt.QDialog):
         self.types = guiTools.QListWidget()
         font = qt1.QFont()
         font.setBold(True)        
-        self.types.addItems(["كتاب تفسير", "ترجمة قرآن", "كتاب حديث", "قارئ للقرآن لتبويبة القرآن الكريم مكتوب", "أذكار وأدعية", "الكتب الإسلامية"])
+        self.types.addItems(["كتاب تفسير لتبويبة القرآن الكريم مكتوب", "ترجمة للقرآن الكريم لتبويبة القرآن الكريم مكتوب", "كتاب حديث", "قارئ للقرآن لتبويبة القرآن الكريم مكتوب", "أذكار وأدعية صوتية لتبويبة الأذكار", "الكتب الإسلامية"])
         self.types.setFont(font)
         self.types.clicked.connect(self.onItemClicked)
         self.adminstration = qt.QLabel()

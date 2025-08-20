@@ -6,7 +6,7 @@ import PyQt6.QtCore as qt2
 class SelectItem(qt.QDialog):
     def __init__(self,p,fileName:str,dirName):
         super().__init__(p)
-        self.resize(700,500)
+        self.resize(900,500)
         self.data={}
         self.dirName=dirName
         layout=qt.QVBoxLayout(self)

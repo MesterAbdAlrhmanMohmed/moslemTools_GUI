@@ -73,6 +73,7 @@ class QuranPlayer(qt.QWidget):
         self.reciterSearchLabel = qt.QLabel("ابحث عن قارئ")
         self.reciterSearchLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.reciterSearchEdit = qt.QLineEdit()
+        self.reciterSearchEdit.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.reciterSearchEdit.setAccessibleName("ابحث عن قارئ")
         self.reciterSearchEdit.setObjectName("reciterSearch")
         self.recitersListWidget = guiTools.QListWidget()
@@ -82,6 +83,7 @@ class QuranPlayer(qt.QWidget):
         self.surahSearchLabel = qt.QLabel("ابحث عن سورة")
         self.surahSearchLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.surahSearchEdit = qt.QLineEdit()
+        self.surahSearchEdit .setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.surahSearchEdit.setAccessibleName("ابحث عن سورة")
         self.surahSearchEdit.setObjectName("surahSearch")
         self.surahListWidget = guiTools.QListWidget()
@@ -95,9 +97,9 @@ class QuranPlayer(qt.QWidget):
         self.progressBar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.progressBar.setVisible(False)        
         self.cancel_download_button = qt.QPushButton("إلغاء التنزيل")
-        self.cancel_download_button.setShortcut("ctrl+c")
-        self.cancel_download_button.setAccessibleDescription("control plus c")
         self.cancel_download_button.setDefault(True)
+        self.cancel_download_button.setShortcut("ctrl+c")
+        self.cancel_download_button.setAccessibleDescription("control plus c")        
         self.cancel_download_button.setVisible(False)
         self.cancel_download_button.clicked.connect(self.cancel_current_download)        
         self.cancel_download_button.setStyleSheet("""
@@ -115,86 +117,57 @@ class QuranPlayer(qt.QWidget):
         self.mp = QMediaPlayer()
         self.au = QAudioOutput()
         self.mp.setAudioOutput(self.au)
-        self.openBookmarks = qt.QPushButton("العلامات المرجعية")
+        self.openBookmarks = qt.QPushButton("العلامات المرجعية")        
         self.openBookmarks.setDefault(True)
         self.openBookmarks.clicked.connect(self.onBookmarkOpened)
         self.openBookmarks.setShortcut("ctrl+shift+b")
         self.openBookmarks.setAccessibleDescription("control plus shift plus b")
         self.openBookmarks.setFixedSize(150, 40)
-        self.play_all_to_end = qt.QPushButton("تشغيل كل السور من بداية السورة المركز عليها الى النهاية")
-        self.play_all_to_end.setAccessibleDescription("control plus A")
-        self.play_all_to_end.setCheckable(True)
+        self.play_all_to_end = qt.QPushButton("تشغيل كل السور من السورة المحددة الى النهاية")
         self.play_all_to_end.setDefault(True)
+        self.play_all_to_end.setAccessibleDescription("control plus A")
+        self.play_all_to_end.setCheckable(True)        
         self.play_all_to_end.setShortcut("ctrl+a")
         self.play_all_to_end.toggled.connect(lambda checked: self.update_button_style(self.play_all_to_end, checked))
         self.play_all_to_end.toggled.connect(self.handle_play_all_toggled)
-        self.play_all_to_start = qt.QPushButton("تشغيل كل السور من بداية السورة المركز عليها الى البداية")
+        self.play_all_to_start = qt.QPushButton("تشغيل كل السور من السورة المحددة الى البداية")
+        self.play_all_to_start.setDefault(True)
         self.play_all_to_start.setAccessibleDescription("control plus shift plus A")
         self.play_all_to_start.setCheckable(True)
-        self.play_all_to_start.setDefault(True)
         self.play_all_to_start.setShortcut("ctrl+shift+a")
         self.play_all_to_start.toggled.connect(lambda checked: self.update_button_style(self.play_all_to_start, checked))
         self.play_all_to_start.toggled.connect(self.handle_play_all_start_toggled)
         self.repeat_surah_button = qt.QPushButton("تكرار تشغيل السورة المحددة")
-        self.repeat_surah_button.setAccessibleDescription("control plus R")
-        self.repeat_surah_button.setCheckable(True)
         self.repeat_surah_button.setDefault(True)
+        self.repeat_surah_button.setAccessibleDescription("control plus R")
+        self.repeat_surah_button.setCheckable(True)        
         self.repeat_surah_button.setShortcut("ctrl+r")
         self.repeat_surah_button.toggled.connect(lambda checked: self.update_button_style(self.repeat_surah_button, checked))
         self.repeat_surah_button.toggled.connect(self.handle_repeat_toggled)
         self.Slider = qt.QSlider(qt2.Qt.Orientation.Horizontal)
         self.Slider.setRange(0, 100)
-        self.Slider.setAccessibleName("الوقت المنقدي")
+        self.Slider.setAccessibleName("الوقت المنقضي")
         self.Slider.setTracking(True)
         self.Slider.valueChanged.connect(self.set_position_from_slider)
         self.Slider.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.Slider.customContextMenuRequested.connect(self.onAddNewBookmark)
         self.mp.durationChanged.connect(self.update_slider)
-        self.mp.positionChanged.connect(self.update_slider)
+        self.mp.positionChanged.connect(self.update_slider)                
         self.duration = qt.QLabel()
         self.duration.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
         self.duration.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.mp.mediaStatusChanged.connect(self.handle_media_status_changed)
-        self.dl_all_app = qt.QPushButton("تحميل جميع السور المتاحة لهذا القارئ في التطبيق")
+        self.dl_all_app = qt.QPushButton("تحميل جميع السور المتاحة لهذا القارئ في التطبيق")        
         self.dl_all_app.setDefault(True)
         self.dl_all_app.clicked.connect(self.download_all_audios_to_app)
-        self.dl_all = qt.QPushButton("تحميل جميع السور المتاحة لهذا القارئ في الجهاز")
+        self.dl_all = qt.QPushButton("تحميل جميع السور المتاحة لهذا القارئ في الجهاز")        
         self.dl_all.setDefault(True)
         self.dl_all.clicked.connect(self.download_all_soar)
         self.delete = qt.QPushButton("حذف كل السور للقارئ الحالي من التطبيق")
-        self.delete.setStyleSheet("background-color: #8B0000; color: white;")
         self.delete.setDefault(True)
+        self.delete.setStyleSheet("background-color: #8B0000; color: white;")        
         self.delete.setVisible(False)
-        self.delete.clicked.connect(lambda: self.delete_surah())
-        self.user_guide = qt.QPushButton("دليل الاختصارات")
-        self.user_guide.setDefault(True)
-        self.user_guide.setShortcut("ctrl+f1")
-        self.user_guide.setAccessibleDescription("control plus f1")
-        self.user_guide.setFixedSize(150, 40)
-        self.user_guide.clicked.connect(lambda: guiTools.TextViewer(
-            self,
-            "دليل الاختصارات",
-            "ctrl+s: إيقاف\n"
-            "space: التشغيل والإيقاف المؤقت\n"
-            "alt زائد السهم الأيمن: التقديم السريع لمدة 5 ثواني\n"
-            "alt زائد السهم الأيسر: الترجيع السريع لمدة 5 ثواني\n"
-            "alt زائد السهم الأعلى: التقديم السريع لمدة 10 ثواني\n"
-            "alt زائد السهم الأسفل: الترجيع السريع لمدة 10 ثواني\n"
-            "ctrl زائد السهم الأيمن: التقديم السريع لمدة 30 ثانية\n"
-            "ctrl زائد السهم الأيسر: الترجيع السريع لمدة 30 ثانية\n"
-            "ctrl زائد السهم الأعلى: التقديم السريع لمدة دقيقة\n"
-            "ctrl زائد السهم الأسفل: الترجيع  السريع لمدة دقيقة\n"
-            "ctrl زائد رقم: الانتقال الى موضع محدد من المقطع, مثلا ctrl+10 الانتقال الى 10% من المقطع\n"
-            "shift زائد السهم الأعلى: رفع الصوت\n"
-            "shift زائد السهم الأسفل: خفض الصوت\n"
-            "[: تحديد موضع البدء\n"
-            "]: تحديد موضع الانتهاء\n"
-            "backspace: حذف الموضع المحدد وإيقاف التكرار\n"
-            "الضغط على زر التطبيقات على شريط مدة المقطع يسمح بإضافة علامة مرجعية للموضع الحالي\n"
-            "ctrl+shift+b: فتح نافذة العلامات المرجعية\n"
-            "ctrl+c: إلغاء التنزيل\n"
-            "ctrl+f1: دليل الاختصارات"
-        ).exec())
+        self.delete.clicked.connect(lambda: self.delete_surah())        
         self.info_menu = qt.QLabel("لخيارات السورة، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.info_menu.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
         self.info_menu.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -211,22 +184,25 @@ class QuranPlayer(qt.QWidget):
         surahsLayout.addWidget(self.info_menu)
         topLayout = qt.QHBoxLayout()
         topLayout.addLayout(recitersLayout)
-        topLayout.addLayout(surahsLayout)
+        topLayout.addLayout(surahsLayout)        
+        download_buttons_layout = qt.QHBoxLayout()
+        download_buttons_layout.addWidget(self.dl_all_app)
+        download_buttons_layout.addWidget(self.delete)
+        download_buttons_layout.addWidget(self.dl_all)
         layout = qt.QVBoxLayout()
         layout.addLayout(topLayout)
-        layout.addWidget(self.dl_all_app)
-        layout.addWidget(self.delete)
-        layout.addWidget(self.dl_all)
+        layout.addLayout(download_buttons_layout)
         layout.addWidget(self.Slider)
-        layout.addWidget(self.play_all_to_end)
-        layout.addWidget(self.play_all_to_start)
-        layout.addWidget(self.repeat_surah_button)        
         progress_cancel_layout = qt.QHBoxLayout()        
         progress_cancel_layout.addWidget(self.cancel_download_button)
         progress_cancel_layout.addWidget(self.progressBar)
-        layout.addLayout(progress_cancel_layout)
-        layout1 = qt.QHBoxLayout()
-        layout1.addWidget(self.user_guide)
+        layout.addLayout(progress_cancel_layout)        
+        playback_buttons_layout = qt.QHBoxLayout()
+        playback_buttons_layout.addWidget(self.play_all_to_end)
+        playback_buttons_layout.addWidget(self.play_all_to_start)
+        layout.addLayout(playback_buttons_layout)
+        layout.addWidget(self.repeat_surah_button)
+        layout1 = qt.QHBoxLayout()        
         layout1.addWidget(self.duration)
         layout1.addWidget(self.openBookmarks)
         layout.addLayout(layout1)
@@ -379,8 +355,8 @@ class QuranPlayer(qt.QWidget):
         if os.path.exists(surah_path):
             action = qt.QWidgetAction(self)
             btn = qt.QPushButton("حذف السورة المحددة من التطبيق")
-            btn.setStyleSheet("background-color: #8B0000; color: white;")
             btn.setDefault(True)
+            btn.setStyleSheet("background-color: #8B0000; color: white;")            
             btn.clicked.connect(lambda: self.delete_surah(surah_name))
             action.setDefaultWidget(btn)
             return action
@@ -781,7 +757,7 @@ class QuranPlayer(qt.QWidget):
     def onChangeEndingPosition(self):
         if self.startingPosition is not None:
             if self.startingPosition == self.mp.position():
-                guiTools.qMessageBox.MessageBox.view(self, "خطأ", "لا يمكن أن يكون موضع البداية هو نفس موضع النهاية")
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يمكن أن يكون موضع البداية هو نفس موضع النهاية")
             elif self.startingPosition > self.mp.position():
                 guiTools.qMessageBox.MessageBox.view(self, "خطأ", "لا يمكن أن يكون موضع البداية أكبر من موضع النهاية")
             else:

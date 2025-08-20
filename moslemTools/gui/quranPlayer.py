@@ -11,11 +11,10 @@ import guiTools,settings,functions
 with open("data/json/files/all_reciters.json","r",encoding="utf-8-sig") as file:
     reciters=json.load(file)
 class QuranPlayer(qt.QDialog):
-    def __init__(self,p,text,index:int,type,category,enableBookMarks=True):
+    def __init__(self,p,text,index:int,type,category):
         super().__init__(p)                                
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
-        self.currentReciter=int(settings.settings_handler.get("g","reciter"))
-        self.enableBookmarks=enableBookMarks
+        self.currentReciter=int(settings.settings_handler.get("g","reciter"))        
         self.resize(1200,600)
         font = qt1.QFont()
         font.setBold(True)
@@ -34,7 +33,13 @@ class QuranPlayer(qt.QDialog):
         self.media.mediaStatusChanged.connect(self.on_state)
         self.index=index-1        
         self.quranText=text.split("\n")
-        self.text=guiTools.QReadOnlyTextEdit()
+        self.text=guiTools.QReadOnlyTextEdit()        
+        self.text.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
+        self.text.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)                
+        option = self.text.document().defaultTextOption()
+        option.setAlignment(qt2.Qt.AlignmentFlag.AlignRight)
+        option.setTextDirection(qt2.Qt.LayoutDirection.RightToLeft)
+        self.text.document().setDefaultTextOption(option)        
         self.text.setText(text[index-1])
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
@@ -48,36 +53,45 @@ class QuranPlayer(qt.QDialog):
         self.media_progress.valueChanged.connect(self.set_position_from_slider)
         self.media.durationChanged.connect(self.update_slider)
         self.media.positionChanged.connect(self.update_slider)
-        self.media_progress.setAccessibleName("التحكم في تقدم الآية")
+        self.media_progress.setAccessibleName("التحكم في تقدم الآية")                
+        self.time_label = qt.QLabel()        
+        self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        progress_time_layout = qt.QHBoxLayout()
+        progress_time_layout.addWidget(self.media_progress, 3)
+        progress_time_layout.addWidget(self.time_label, 2)
         self.font_laybol=qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font=qt.QLabel()
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_font.setAccessibleName("حجم النص")        
+        self.show_font.setAccessibleDescription("حجم النص")        
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.setText(str(self.font_size))        
-        self.N_aya=qt.QPushButton("الآيا التالية")
+        self.N_aya=guiTools.QPushButton("الآيا التالية")
+        self.N_aya.setAutoDefault(False)
         self.N_aya.setStyleSheet("background-color: #0000AA; color: white;")
         self.N_aya.clicked.connect(self.onNextAyah)
         self.N_aya.setStyleSheet("background-color: #0000AA; color: white;")
         self.N_aya.setAccessibleDescription("alt زائد السهم الأيمن")
-        self.PPS=qt.QPushButton("تشغيل")
+        self.PPS=guiTools.QPushButton("تشغيل")
+        self.PPS.setAutoDefault(False)
         self.PPS.setAccessibleDescription("space")
         self.PPS.clicked.connect(self.on_play)
         self.PPS.setStyleSheet("background-color: #0000AA; color: white;")
-        self.P_aya=qt.QPushButton("الآيا السابقة")
+        self.P_aya=guiTools.QPushButton("الآيا السابقة")
+        self.P_aya.setAutoDefault(False)
         self.P_aya.setStyleSheet("background-color: #0000AA; color: white;")
         self.P_aya.setStyleSheet("background-color: #0000AA; color: white;")
         self.P_aya.clicked.connect(self.onPreviousAyah)
         self.P_aya.setAccessibleDescription("alt زائد السهم الأيسر")
-        self.changeCurrentReciterButton=qt.QPushButton("تغيير القارئ")
+        self.changeCurrentReciterButton=guiTools.QPushButton("تغيير القارئ")
+        self.changeCurrentReciterButton.setAutoDefault(False)
         self.changeCurrentReciterButton.clicked.connect(self.onChangeRecitersContextMenuRequested)
         self.changeCurrentReciterButton.setStyleSheet("background-color: #0000AA; color: white;")
         self.changeCurrentReciterButton.setShortcut("ctrl+shift+r")
         self.changeCurrentReciterButton.setAccessibleDescription("control plus shift plus R")
         layout=qt.QVBoxLayout(self)
         layout.addWidget(self.text)
-        layout.addWidget(self.media_progress)
+        layout.addLayout(progress_time_layout)
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
         layout1=qt.QHBoxLayout()
@@ -85,18 +99,16 @@ class QuranPlayer(qt.QDialog):
         layout1.addWidget(self.P_aya)
         layout1.addWidget(self.PPS)        
         layout1.addWidget(self.N_aya)                
-
         layout.addLayout(layout1)
         qt1.QShortcut("space",self).activated.connect(self.on_play)
         qt1.QShortcut("ctrl+g",self).activated.connect(self.gotoayah)
         qt1.QShortcut("alt+right",self).activated.connect(self.onNextAyah)
         qt1.QShortcut("alt+left",self).activated.connect(self.onPreviousAyah)
-        qt1.QShortcut("escape",self).activated.connect(self.close)
+        qt1.QShortcut("escape",self).activated.connect(self.safeClose)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("shift+up",self).activated.connect(self.volume_up)
-        qt1.QShortcut("shift+down",self).activated.connect(self.volume_down)
-        qt1.QShortcut("ctrl+b",self).activated.connect(self.onAddOrRemoveBookmark)
+        qt1.QShortcut("shift+down",self).activated.connect(self.volume_down)        
         qt1.QShortcut("ctrl+r", self).activated.connect(self.getCurrentAyahTanzel)
         qt1.QShortcut("ctrl+i", self).activated.connect(self.getCurentAyahIArab)        
         qt1.QShortcut("ctrl+t", self).activated.connect(self.getCurentAyahTafseer)
@@ -105,8 +117,10 @@ class QuranPlayer(qt.QDialog):
         self.on_play()
     def OnContextMenu(self):
         if self.media.isPlaying():
-            self.media.pause()
+            self.media.pause()        
             self.PPS.setText("تشغيل")
+        else:
+            pass
         menu=qt.QMenu("الخيارات",self)
         menu.setAccessibleName("الخيارات")
         aya=qt.QMenu("خيارات الآية",self)
@@ -134,19 +148,7 @@ class QuranPlayer(qt.QDialog):
         aya_tanzeel=qt1.QAction("أسباب نزول الآيا الحالية",self)
         aya_tanzeel.setShortcut("ctrl+r")
         aya.addAction(aya_tanzeel)
-        aya_tanzeel.triggered.connect(self.getCurrentAyahTanzel)        
-        state,self.nameOfBookmark=functions.bookMarksManager.getQuranBookmarkName(self.type,self.category,self.index,isPlayer=True)
-        if state:
-            removeBookmarkAction=qt1.QAction("حذف العلامة المرجعية",self)
-            removeBookmarkAction.setShortcut("ctrl+b")
-            aya.addAction(removeBookmarkAction)
-            removeBookmarkAction.triggered.connect(self.onRemoveBookmark)
-        else:
-            addNewBookMark=qt1.QAction("إضافة علامة مرجعية",self)
-            addNewBookMark.setShortcut("ctrl+b")
-            aya.addAction(addNewBookMark)
-            addNewBookMark.triggered.connect(self.onAddBookMark)
-            addNewBookMark.setEnabled(self.enableBookmarks)
+        aya_tanzeel.triggered.connect(self.getCurrentAyahTanzel)                            
         Previous_aya=qt1.QAction("الآيا السابقة",self)
         Previous_aya.setShortcut("alt+left")
         aya.addAction(Previous_aya)
@@ -217,7 +219,8 @@ class QuranPlayer(qt.QDialog):
             self.media.pause()
             self.PPS.setText("تشغيل")
     def gotoayah(self):
-        self.media.stop()
+        if self.media.isPlaying():
+            self.media.stop()
         number,ok=guiTools.QInputDialog.getInt(self,"الذهاب إلى آية","أكتب رقم الآية",self.index+1,1,len(self.quranText))
         if ok:
             self.currentTime=1
@@ -267,16 +270,32 @@ class QuranPlayer(qt.QDialog):
         name=list(reciters.keys())[index]
         return name
     def getCurentAyahTafseer(self):
+        if self.media.isPlaying():
+            self.media.stop()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
-        TafaseerViewer(self,AyahNumber,AyahNumber).exec()
-    def closeEvent(self,event):
-        self.media.stop()
-        self.close()
+        TafaseerViewer(self,AyahNumber,AyahNumber).exec()            
+    def safeClose(self):        
+        if self.media.isPlaying():
+            self.media.stop()            
+            qt2.QTimer.singleShot(100, self.close)
+        else:
+            self.close()    
+    def closeEvent(self, event):        
+        if self.media.isPlaying():
+            self.media.stop()
+            event.ignore()
+            qt2.QTimer.singleShot(100, self.close)
+        else:
+            event.accept()
     def getCurentAyahIArab(self):
+        if self.media.isPlaying():
+            self.media.stop()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
         result=functions.iarab.getIarab(AyahNumber,AyahNumber)
         guiTools.TextViewer(self,"إعراب",result).exec()
     def getCurrentAyahTanzel(self):
+        if self.media.isPlaying():
+            self.media.stop()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
         result=functions.tanzil.gettanzil(AyahNumber)
         if result:
@@ -284,50 +303,51 @@ class QuranPlayer(qt.QDialog):
         else:
             guiTools.qMessageBox.MessageBox.view(self,"تنبيه","لا توجد أسباب نزول متاحة لهذه الآية")
     def getAyahInfo(self):
+        if self.media.isPlaying():
+            self.media.stop()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
         sajda=""
         if juz[3]:
             sajda="الآية تحتوي على سجدة"
-        guiTools.qMessageBox.MessageBox.view(self,"معلومة","رقم الآية {} رقم السورة {} {} رقم الآية في المصحف {} الجزء {} الربع {} الصفحة {} {}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
+        guiTools.qMessageBox.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nالجزء {} \nالربع {} \nالصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))    
     def getCurentAyahTranslation(self):
+        if self.media.isPlaying():
+            self.media.stop()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
-        translationViewer(self,AyahNumber,AyahNumber).exec()    
-    def onAddBookMark(self):
-        if self.enableBookmarks==False:
-            guiTools.qMessageBox.MessageBox.view(self,"تنبيه","لا يمكن وضع علامة مرجعية عند تصفح القرآن بشكلا مخصص")
-            return
-        name,OK=guiTools.QInputDialog.getText(self,"إضافة علامة مرجعية","أكتب أسم للعلامة المرجعية")
-        if OK:
-            functions.bookMarksManager.addNewQuranBookMark(self.type,self.category,self.index,True,name)
+        translationViewer(self,AyahNumber,AyahNumber).exec()        
     def volume_up(self):
         self.audioOutput.setVolume(self.audioOutput.volume()+0.10)
     def volume_down(self):
-        self.audioOutput.setVolume(self.audioOutput.volume()-0.10)
-    def onRemoveBookmark(self):
-        try:
-            functions.bookMarksManager.removeQuranBookMark(self.nameOfBookmark)
-            winsound.Beep(1000,100)
-        except:
-            guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر حذف العلامة المرجعية")
-    def onAddOrRemoveBookmark(self):
-        state,self.nameOfBookmark=functions.bookMarksManager.getQuranBookmarkName(self.type,self.category,self.index,isPlayer=True)
-        if state:
-            self.onRemoveBookmark()
-        else:
-            self.onAddBookMark()
+        self.audioOutput.setVolume(self.audioOutput.volume()-0.10)    
     def set_position_from_slider(self, value):
         duration = self.media.duration()
         new_position = int((value / 100) * duration)
         self.media.setPosition(new_position)
+    
     def update_slider(self):
         try:
             self.media_progress.blockSignals(True)
-            self.media_progress.setValue(int((self.media.position() / self.media.duration()) * 100))
+            position = self.media.position()
+            duration = self.media.duration()
+            
+            if duration > 0:                
+                progress_value = int((position / duration) * 100)
+                self.media_progress.setValue(progress_value)                                
+                self.update_time_label(position, duration)            
             self.media_progress.blockSignals(False)
         except:
-            pass
+            pass    
+    def update_time_label(self, position, duration):        
+        position_sec = position // 1000
+        duration_sec = duration // 1000                
+        remaining_sec = duration_sec - position_sec                
+        position_str = f"{position_sec // 60}:{position_sec % 60:02d}"
+        duration_str = f"{duration_sec // 60}:{duration_sec % 60:02d}"
+        remaining_str = f"{remaining_sec // 60}:{remaining_sec % 60:02d}"                
+        self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")   
     def onChangeRecitersContextMenuRequested(self):
-        self.media.stop()
+        if self.media.isPlaying():
+            self.media.stop()
         RL=list(reciters.keys())
         dlg=ChangeReciter(self,RL,self.currentReciter)
         code=dlg.exec()

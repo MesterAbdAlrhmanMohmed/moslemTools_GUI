@@ -4,34 +4,42 @@ from settings import app
 bookMarksPath=os.path.join(os.getenv('appdata'),app.appName,"bookMarks.json")
 if not os.path.exists(bookMarksPath):
     with open(bookMarksPath,"w",encoding="utf-8") as file:
-        json.dump({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[]},file,ensure_ascii=False,indent=4) # تم إضافة "stories" هنا
+        json.dump({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[]},file,ensure_ascii=False,indent=4)
+
 def openBookMarksFile():
     try:
         with open(bookMarksPath,"r",encoding="utf-8") as file:
             return json.load(file)
     except:        
         return {"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[]}
+
 def saveBookMarks(bookMarksList:dict):
     with open(bookMarksPath,"w",encoding="utf-8") as file:
         json.dump(bookMarksList,file,ensure_ascii=False,indent=4)
+
 def removeAllQuranBookMarks():
     bookMarksList = openBookMarksFile()
     bookMarksList["quran"] = []
     saveBookMarks(bookMarksList)
+
 def removeAllAhadeethBookMarks():
     bookMarksList = openBookMarksFile()
     bookMarksList["ahadeeth"] = []
     saveBookMarks(bookMarksList)
+
 def removeAllIslamicBookBookMarks():
     bookMarksList = openBookMarksFile()
     bookMarksList["islamicBooks"] = []
     saveBookMarks(bookMarksList)
+
 def removeAllStoriesBookMarks():
     bookMarksList = openBookMarksFile()
     bookMarksList["stories"] = []
     saveBookMarks(bookMarksList)
+
 def removeAllBookMarks():
     saveBookMarks({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[]})
+
 def addNewHadeethBookMark(bookName:str,hadeethNumber:int,bookMarkName:str):
     bookMarksList=openBookMarksFile()
     ahadeethBookMarksList=bookMarksList["ahadeeth"]
@@ -43,6 +51,7 @@ def addNewHadeethBookMark(bookName:str,hadeethNumber:int,bookMarkName:str):
     ahadeethBookMarksList.append(newBookMarkData)
     bookMarksList["ahadeeth"]=ahadeethBookMarksList
     saveBookMarks(bookMarksList)
+
 def removeAhadeethBookMark(bookMarkName:str):
     bookMarksList=openBookMarksFile()
     ahadeethBookMarksList=bookMarksList["ahadeeth"]
@@ -52,11 +61,14 @@ def removeAhadeethBookMark(bookMarkName:str):
             break
     bookMarksList["ahadeeth"]=ahadeethBookMarksList
     saveBookMarks(bookMarksList)
+
 def GetHadeethBookByName(name:str):
     ahadeethBookMarks=openBookMarksFile()
     for hadeethData in ahadeethBookMarks["ahadeeth"]:
         if hadeethData["name"]==name:
             return hadeethData["bookName"],hadeethData["number"]
+    return None, None
+
 def addNewQuranBookMark(typeIndex:int,categoryIndex,ayahIndex:int,isPlayer:bool,bookMarkName:str):
     bookMarksList=openBookMarksFile()
     quranBookMarksList=bookMarksList["quran"]
@@ -70,24 +82,33 @@ def addNewQuranBookMark(typeIndex:int,categoryIndex,ayahIndex:int,isPlayer:bool,
     quranBookMarksList.append(newQuranBookMarkData)
     bookMarksList["quran"]=quranBookMarksList
     saveBookMarks(bookMarksList)
+
 def removeQuranBookMark(bookMarkName:str):
     bookMarksList=openBookMarksFile()
-    quranBookMarksList=bookMarksList["quran"] # تم تغيير ahadeethBookMarksList إلى quranBookMarksList هنا
-    for quranBookMarkData in quranBookMarksList: # تم تغيير hadeethBookMarkData إلى quranBookMarkData هنا
-        if quranBookMarkData["name"]==bookMarkName: # تم تغيير hadeethBookMarkData إلى quranBookMarkData هنا
-            quranBookMarksList.remove(quranBookMarkData) # تم تغيير hadeethBookMarkData إلى quranBookMarkData هنا
+    quranBookMarksList=bookMarksList["quran"]
+    for quranBookMarkData in quranBookMarksList:
+        if quranBookMarkData["name"]==bookMarkName:
+            quranBookMarksList.remove(quranBookMarkData)
             break
     bookMarksList["quran"]=quranBookMarksList
     saveBookMarks(bookMarksList)
+
 def openQuranByBookMarkName(p,bookMarkName:str):
     quranBookMarksList=openBookMarksFile()["quran"]
-    data = None # تعريف data بقيمة افتراضية
+    data = None
     for bookMark in quranBookMarksList:
         if bookMark["name"]==bookMarkName:
             data=bookMark
             break
-    if data is None: # إضافة تحقق إذا لم يتم العثور على العلامة المرجعية
+    if data is None:
+        print("error")
         return
+    
+    # التحقق من وجود البيانات الضرورية
+    if not all(key in data for key in ["type", "category", "ayah", "isPlayer"]):
+        print("error")
+        return
+    
     result=""
     if data["type"]==0:
         result=quranJsonControl.getSurahs()
@@ -99,10 +120,18 @@ def openQuranByBookMarkName(p,bookMarkName:str):
         result=quranJsonControl.getHezb()
     elif data["type"]==4:
         result=quranJsonControl.getHizb()
+    
+    # التحقق من وجود الفئة في النتائج
+    if data["category"] not in result:
+        print("error")
+        return
+    
+    # استخدام رقم الآية مباشرة دون إضافة 1
     if data["isPlayer"]:
         gui.QuranPlayer(p,result[data["category"]][1],data["ayah"],data["type"],data["category"]).exec()
     else:
-        gui.QuranViewer(p,result[data["category"]][1],data["type"],data["category"],index=data["ayah"]+1).exec()
+        gui.QuranViewer(p,result[data["category"]][1],data["type"],data["category"],index=data["ayah"]).exec()
+
 def addNewislamicBookBookMark(bookName:str,partName:str,pageNumber:int,bookMarkName:str):
     bookMarksList=openBookMarksFile()
     try:
@@ -118,6 +147,7 @@ def addNewislamicBookBookMark(bookName:str,partName:str,pageNumber:int,bookMarkN
     islamicBookBookMarksList.append(newBookMarkData)
     bookMarksList["islamicBooks"]=islamicBookBookMarksList
     saveBookMarks(bookMarksList)
+
 def removeislamicBookBookMark(bookMarkName:str):
     bookMarksList=openBookMarksFile()
     islamicBookBookMarksList=bookMarksList["islamicBooks"]
@@ -127,35 +157,40 @@ def removeislamicBookBookMark(bookMarkName:str):
             break
     bookMarksList["islamicBooks"]=islamicBookBookMarksList
     saveBookMarks(bookMarksList)
+
 def GetislamicBookBookByName(name:str):
     islamicBookBookMarks=openBookMarksFile()
     for islamicBookData in islamicBookBookMarks["islamicBooks"]:
         if islamicBookData["name"]==name:
             return islamicBookData["bookName"],islamicBookData["number"],islamicBookData["part"]
+    return None, None, None
+
 def addNewStoriesBookMark(typeIndex:int,categoryIndex,lineIndex:int,bookMarkName:str):
     bookMarksList=openBookMarksFile()
     try:
-        storiesBookMarksList=bookMarksList["stories"] # تم تغيير quranBookMarksList إلى storiesBookMarksList هنا
+        storiesBookMarksList=bookMarksList["stories"]
     except:
-        storiesBookMarksList=bookMarksList["stories"]=[] # تم تغيير quranBookMarksList إلى storiesBookMarksList هنا
-    newStoriesBookMarkData={ # تم تغيير newQuranBookMarkData إلى newStoriesBookMarkData هنا
+        storiesBookMarksList=bookMarksList["stories"]=[]
+    newStoriesBookMarkData={
         "type":typeIndex,
         "category":categoryIndex,
         "line":lineIndex,
         "name":bookMarkName
     }
-    storiesBookMarksList.append(newStoriesBookMarkData) # تم تغيير quranBookMarksList إلى storiesBookMarksList و newQuranBookMarkData إلى newStoriesBookMarkData
-    bookMarksList["stories"]=storiesBookMarksList # تم تغيير quranBookMarksList إلى storiesBookMarksList هنا
+    storiesBookMarksList.append(newStoriesBookMarkData)
+    bookMarksList["stories"]=storiesBookMarksList
     saveBookMarks(bookMarksList)
+
 def removeStoriesBookMark(bookMarkName:str):
     bookMarksList=openBookMarksFile()
-    storiesBookMarksList=bookMarksList["stories"] # تم تغيير ahadeethBookMarksList إلى storiesBookMarksList هنا
-    for storiesBookMarkData in storiesBookMarksList: # تم تغيير hadeethBookMarkData إلى storiesBookMarkData هنا
-        if storiesBookMarkData["name"]==bookMarkName: # تم تغيير hadeethBookMarkData إلى storiesBookMarkData هنا
-            storiesBookMarksList.remove(storiesBookMarkData) # تم تغيير hadeethBookMarkData إلى storiesBookMarkData هنا
+    storiesBookMarksList=bookMarksList["stories"]
+    for storiesBookMarkData in storiesBookMarksList:
+        if storiesBookMarkData["name"]==bookMarkName:
+            storiesBookMarksList.remove(storiesBookMarkData)
             break
-    bookMarksList["stories"]=storiesBookMarksList # تم تغيير ahadeethBookMarksList إلى storiesBookMarksList هنا
+    bookMarksList["stories"]=storiesBookMarksList
     saveBookMarks(bookMarksList)
+
 def getStoryBookmark(p,name):
     bookMarksList=openBookMarksFile()
     storiesBookMarksList=bookMarksList["stories"]
@@ -164,11 +199,14 @@ def getStoryBookmark(p,name):
     line=None
     for bkName in storiesBookMarksList:
         if bkName["name"]==name:
-            type=bkName["type"]
-            category=bkName["category"]
-            line=bkName["line"]
-            break # إضافة break للخروج بعد العثور على العلامة المرجعية
-    if type is None: # إضافة تحقق إذا لم يتم العثور على العلامة المرجعية
+            # التحقق من وجود البيانات الضرورية
+            if "type" in bkName and "category" in bkName and "line" in bkName:
+                type=bkName["type"]
+                category=bkName["category"]
+                line=bkName["line"]
+            break
+    if type is None:
+        print("error")
         return
     if type==0:
         with open("data/json/prophetStories.json","r",encoding="utf-8-sig") as file:
@@ -176,50 +214,59 @@ def getStoryBookmark(p,name):
     elif type==1:
         with open("data/json/quranStories.json","r",encoding="utf-8-sig") as file:
             stories=json.load(file)
-    story=stories[category]
-    gui.StoryViewer(p,story,type,category,stories,index=line).exec()
+    if category in stories:
+        story=stories[category]
+        gui.StoryViewer(p,story,type,category,stories,index=line).exec()
+    else:
+        print("error")
+
 def addNewaudioBookMark(tabName,typeIndex:int,categoryIndex:int,position:int,bookMarkName:str):
     bookMarksList=openBookMarksFile()
     try:
-        audioBookMarksList=bookMarksList["audio " + tabName] # تم تغيير quranBookMarksList إلى audioBookMarksList
+        audioBookMarksList=bookMarksList["audio " + tabName]
     except:
-        audioBookMarksList=bookMarksList["audio " + tabName]=[] # تم تغيير quranBookMarksList إلى audioBookMarksList
-    newAudioBookMarkData={ # تم تغيير newQuranBookMarkData إلى newAudioBookMarkData
+        audioBookMarksList=bookMarksList["audio " + tabName]=[]
+    newAudioBookMarkData={
         "type":typeIndex,
         "category":categoryIndex,
         "position":position,
         "name":bookMarkName
     }
-    audioBookMarksList.append(newAudioBookMarkData) # تم تغيير quranBookMarksList إلى audioBookMarksList و newQuranBookMarkData إلى newAudioBookMarkData
-    bookMarksList["audio " + tabName]=audioBookMarksList # تم تغيير quranBookMarksList إلى audioBookMarksList
+    audioBookMarksList.append(newAudioBookMarkData)
+    bookMarksList["audio " + tabName]=audioBookMarksList
     saveBookMarks(bookMarksList)
+
 def removeaudioBookMark(tabName,bookMarkName:str):
     bookMarksList=openBookMarksFile()
-    audioBookMarksList=bookMarksList["audio " + tabName] # تم تغيير ahadeethBookMarksList إلى audioBookMarksList
-    for audioBookMarkData in audioBookMarksList: # تم تغيير hadeethBookMarkData إلى audioBookMarkData
-        if audioBookMarkData["name"]==bookMarkName: # تم تغيير hadeethBookMarkData إلى audioBookMarkData
-            audioBookMarksList.remove(audioBookMarkData) # تم تغيير hadeethBookMarkData إلى audioBookMarkData
+    audioBookMarksList=bookMarksList["audio " + tabName]
+    for audioBookMarkData in audioBookMarksList:
+        if audioBookMarkData["name"]==bookMarkName:
+            audioBookMarksList.remove(audioBookMarkData)
             break
-    bookMarksList["audio " + tabName]=audioBookMarksList # تم تغيير ahadeethBookMarksList إلى audioBookMarksList
+    bookMarksList["audio " + tabName]=audioBookMarksList
     saveBookMarks(bookMarksList)
+
 def GetAudioBookByName(tabName,name:str):
-    audioBookMarks=openBookMarksFile() # تم تغيير ahadeethBookMarks إلى audioBookMarks
-    for audioData in audioBookMarks["audio " + tabName]: # تم تغيير hadeethData إلى audioData
+    audioBookMarks=openBookMarksFile()
+    for audioData in audioBookMarks["audio " + tabName]:
         if audioData["name"]==name:
             return audioData
+    return None
+
 def getQuranBookmarkName(type:int,category:str,ayah:str,isPlayer=True):
     name=""
     state=False
     bookMarksList=openBookMarksFile()
     try:
-        quranBookMarksList=bookMarksList["quran"] # تم تغيير ahadeethBookMarksList إلى quranBookMarksList
+        quranBookMarksList=bookMarksList["quran"]
     except:
         return False,""
-    for quranBookMarkData in quranBookMarksList: # تم تغيير hadeethBookMarkData إلى quranBookMarkData
+    for quranBookMarkData in quranBookMarksList:
         if quranBookMarkData["type"]==type and quranBookMarkData["category"]==category and quranBookMarkData["ayah"]==ayah and quranBookMarkData["isPlayer"]==isPlayer:
             state=True
             name=quranBookMarkData["name"]
     return state,name
+
 def getAhdeethBookmarkName(bookName:str,hadeethNumber:int):
     name=""
     state=False
@@ -234,41 +281,44 @@ def getAhdeethBookmarkName(bookName:str,hadeethNumber:int):
             state=True
             name=hadeethBookMarkData["name"]
     return state,name
+
 def getIslamicBookBookmarkName(bookName:str,hadeethNumber:int):
     name=""
     state=False
     bookMarksList=openBookMarksFile()
     try:
-        islamicBookBookMarksList=bookMarksList["islamicBooks"] # تم تغيير ahadeethBookMarksList إلى islamicBookBookMarksList
+        islamicBookBookMarksList=bookMarksList["islamicBooks"]
     except:
         return False,""
-    for islamicBookBookMarkData in islamicBookBookMarksList: # تم تغيير hadeethBookMarkData إلى islamicBookBookMarkData
+    for islamicBookBookMarkData in islamicBookBookMarksList:
         if islamicBookBookMarkData["bookName"]==bookName and islamicBookBookMarkData["number"]==hadeethNumber:
             state=True
             name=islamicBookBookMarkData["name"]
     return state,name
+
 def getStoriesBookmarkName(bookName:str,hadeethNumber:int):
     name=""
     state=False
     bookMarksList=openBookMarksFile()
     try:
-        storiesBookMarksList=bookMarksList["stories"] # تم تغيير ahadeethBookMarksList إلى storiesBookMarksList
+        storiesBookMarksList=bookMarksList["stories"]
     except:
         return False,""
-    for storiesBookMarkData in storiesBookMarksList: # تم تغيير hadeethBookMarkData إلى storiesBookMarkData
+    for storiesBookMarkData in storiesBookMarksList:
         if storiesBookMarkData["category"]==bookName and storiesBookMarkData["line"]==hadeethNumber:
             state=True
             name=storiesBookMarkData["name"]
     return state,name
+
 def getAudioBookmarkName(typeF:str,type:str,category:str,position:int):
     name=""
     state=False
     bookMarksList=openBookMarksFile()
     try:
-        audioBookMarksList=bookMarksList["audio " + typeF] # تم تغيير ahadeethBookMarksList إلى audioBookMarksList
+        audioBookMarksList=bookMarksList["audio " + typeF]
     except:
         return False,""
-    for audioBookMarkData in audioBookMarksList: # تم تغيير hadeethBookMarkData إلى audioBookMarkData
+    for audioBookMarkData in audioBookMarksList:
         if audioBookMarkData["type"]==type and audioBookMarkData["category"]==category and audioBookMarkData["position"]==position:
             state=True
             name=audioBookMarkData["name"]

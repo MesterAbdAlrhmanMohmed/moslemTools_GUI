@@ -10,7 +10,7 @@ class NamesOfAllah(qt.QWidget):
         font = qt1.QFont()
         font.setBold(True)
         self.setFont(font)        
-        with open("data/json/namesOfAllah.json","r",encoding="utf-8") as file:
+        with open("data/json/namesOfAllah.json", "r", encoding="utf-8") as file:
             all_data = json.load(file)                
         self.data = all_data.get("ar", []) 
         layout = qt.QVBoxLayout(self)
@@ -22,8 +22,7 @@ class NamesOfAllah(qt.QWidget):
         for item in self.data:
             name = item.get("name", "اسم غير موجود")
             meaning = item.get("meaning", "معنى غير موجود")
-            formatted_text += f"{name}\n"
-            formatted_text += f"{meaning}\n"
+            formatted_text += f"{name}\n{meaning}\n"
         self.information.setText(formatted_text.strip())        
         self.information.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.information.customContextMenuRequested.connect(self.OnContextMenu)
@@ -49,13 +48,17 @@ class NamesOfAllah(qt.QWidget):
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)        
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
+        bold_font = qt1.QFont()
+        bold_font.setBold(True)
+        menu.setFont(bold_font)
         menu.setAccessibleName("الخيارات")
         menu.setFocus()
         text_options = qt.QMenu("خيارات النص", self)
+        text_options.setFont(bold_font)
         save = text_options.addAction("حفظ كملف نصي")
         save.setShortcut("ctrl+s")
         save.triggered.connect(self.save_text_as_txt)        
-        print_action = text_options.addAction("طباعة") # Renamed print to print_action to avoid keyword conflict
+        print_action = text_options.addAction("طباعة")
         print_action.setShortcut("ctrl+p")
         print_action.triggered.connect(self.print_text)
         copy_all = text_options.addAction("نسخ النص كاملا")        
@@ -65,12 +68,13 @@ class NamesOfAllah(qt.QWidget):
         copy_selected_text.setShortcut("ctrl+c")
         copy_selected_text.triggered.connect(self.copy_line)
         fontMenu = qt.QMenu("حجم الخط", self)
-        increase_font_action = qt1.QAction("تكبير الخط", self) # Renamed to avoid conflict
+        fontMenu.setFont(bold_font)
+        increase_font_action = qt1.QAction("تكبير الخط", self)
         increase_font_action.setShortcut("ctrl+=")
         fontMenu.addAction(increase_font_action)
         fontMenu.setDefaultAction(increase_font_action)
         increase_font_action.triggered.connect(self.increase_font_size)
-        decrease_font_size_action = qt1.QAction("تصغير الخط", self) # Renamed to avoid conflict
+        decrease_font_size_action = qt1.QAction("تصغير الخط", self)
         decrease_font_size_action.setShortcut("ctrl+-")
         fontMenu.addAction(decrease_font_size_action)
         decrease_font_size_action.triggered.connect(self.decrease_font_size)

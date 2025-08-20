@@ -1,52 +1,68 @@
-import pyperclip, winsound
+import pyperclip, winsound,guiTools
 from settings import *
-from hijri_converter import Gregorian, Hijri
+from hijridate import Gregorian, Hijri
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 class DateConverter(qt.QWidget):
     def __init__(self):
-        super().__init__()                                
+        super().__init__()
         self.setStyleSheet("""
-            QWidget {                
-                font-size: 14px;
+            QWidget {
+                font-size: 12px;
             }
             QLabel {
                 font-weight: bold;
             }
-            QLineEdit, QComboBox {                
+            QLineEdit, QComboBox {
                 border: 1px solid #5c5c5c;
                 border-radius: 4px;
                 padding: 6px;
                 font-weight: bold;
                 min-height: 40px;
             }
+            /* General QPushButton style - Kept as original (gray) */
             QPushButton {
                 background-color: #3e3e42;
                 border: 1px solid #5c5c5c;
                 border-radius: 4px;
-                padding: 8px;
-                min-height: 40px;
+                padding: 10px 15px; /* Increased padding for larger buttons */
+                min-height: 38px; /* Reduced min-height for less vertical length */
             }
             QPushButton:hover {
                 background-color: #505055;
             }
             QPushButton:pressed {
                 background-color: #505055;
-            }
+            }            
+            /* Specific style for copyButton - Still using darker blue */
             QPushButton#copyButton {
-                background-color: #007bff;
+                background-color: #0056b3; /* Darker blue */
                 color: white;
             }
+            QPushButton#copyButton:hover {
+                background-color: #003d80; /* Even darker blue on hover */
+            }
+            QPushButton#copyButton:pressed {
+                background-color: #003d80; /* Consistent pressed state with hover */
+            }
+
+            /* Specific style for convertButton - Now back to green like the search button */
             QPushButton#convertButton {
-                background-color: #28a745;
+                background-color: #008000; /* Green color changed to match quran.py custom button */
                 color: white;
             }
-        """)
-        main_layout = qt.QVBoxLayout()
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(12)
-        main_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignTop)        
+            QPushButton#convertButton:hover {
+                background-color: #006600; /* Darker green on hover */
+            }
+            QPushButton#convertButton:pressed {
+                background-color: #006600; /* Consistent pressed state with hover */
+            }
+        """)        
+        content_layout = qt.QVBoxLayout()
+        content_layout.setContentsMargins(20, 20, 20, 20)
+        content_layout.setSpacing(12)
+        content_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignTop)        
         conv_layout = qt.QHBoxLayout()
         conv_layout.setSpacing(10)
         conv_layout.addStretch(1)
@@ -57,11 +73,11 @@ class DateConverter(qt.QWidget):
         self.Converter_combo.addItem("التحويل من هجري الى ميلادي")
         self.Converter_combo.addItem("التحويل من ميلادي الى هجري")
         self.Converter_combo.currentIndexChanged.connect(self.update_month_combo)
-        self.Converter_combo.currentIndexChanged.connect(self.update_button_text)        
-        conv_layout.addWidget(self.Converter_combo, 0)
-        conv_layout.addWidget(self.l_Converter, 0)
+        self.Converter_combo.currentIndexChanged.connect(self.update_button_text)
+        conv_layout.addWidget(self.Converter_combo)
+        conv_layout.addWidget(self.l_Converter)
         conv_layout.addStretch(1)
-        main_layout.addLayout(conv_layout)
+        content_layout.addLayout(conv_layout)        
         year_layout = qt.QHBoxLayout()
         year_layout.setSpacing(10)
         self.l_year = qt.QLabel("العام")
@@ -69,19 +85,19 @@ class DateConverter(qt.QWidget):
         self.year = qt.QLineEdit()
         self.year.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.year.setAccessibleName("العام")
-        self.year.setInputMask("9999")        
+        self.year.setInputMask("9999")
         year_layout.addWidget(self.year, 2)
         year_layout.addWidget(self.l_year, 1)
-        main_layout.addLayout(year_layout)
+        content_layout.addLayout(year_layout)
         month_layout = qt.QHBoxLayout()
         month_layout.setSpacing(10)
         self.l_month = qt.QLabel("الشهر")
         self.l_month.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.month_combo = qt.QComboBox()
-        self.month_combo.setAccessibleName("الشهر")        
+        self.month_combo.setAccessibleName("الشهر")
         month_layout.addWidget(self.month_combo, 2)
         month_layout.addWidget(self.l_month, 1)
-        main_layout.addLayout(month_layout)
+        content_layout.addLayout(month_layout)
         day_layout = qt.QHBoxLayout()
         day_layout.setSpacing(10)
         self.l_day = qt.QLabel("اليوم")
@@ -89,31 +105,38 @@ class DateConverter(qt.QWidget):
         self.day = qt.QLineEdit()
         self.day.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.day.setAccessibleName("اليوم")
-        self.day.textChanged.connect(self.max_number)        
+        self.day.textChanged.connect(self.max_number)
         day_layout.addWidget(self.day, 2)
         day_layout.addWidget(self.l_day, 1)
-        main_layout.addLayout(day_layout)
-        self.Convert = qt.QPushButton("التحويل الى ميلادي")
-        self.Convert.setObjectName("convertButton")
-        self.Convert.setDefault(True)
+        content_layout.addLayout(day_layout)
+        result_controls_layout = qt.QHBoxLayout()
+        result_controls_layout.setSpacing(10)
+        self.Convert = guiTools.QPushButton("التحويل الى ميلادي")
+        self.Convert.setObjectName("convertButton")        
         self.Convert.clicked.connect(self.convert_date)
-        main_layout.addWidget(self.Convert)
-        result_layout = qt.QHBoxLayout()
-        result_layout.setSpacing(10)
-        self.l_result = qt.QLabel("النتيجة")
-        self.l_result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.result = qt.QLabel()
         self.result.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
-        result_layout.addWidget(self.result, 3)
-        result_layout.addWidget(self.l_result, 1)
-        main_layout.addLayout(result_layout)
-        self.copy_result = qt.QPushButton("نسخ النتيجة")
-        self.copy_result.setObjectName("copyButton")
-        self.copy_result.setDefault(True)
+        self.result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        spacer = qt.QSpacerItem(10, 0, qt.QSizePolicy.Policy.Fixed, qt.QSizePolicy.Policy.Minimum)
+        self.l_result = qt.QLabel("النتيجة")
+        self.l_result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.copy_result = guiTools.QPushButton("نسخ النتيجة")
+        self.copy_result.setObjectName("copyButton")    
         self.copy_result.clicked.connect(self.copy)
-        main_layout.addWidget(self.copy_result)
-        self.setLayout(main_layout)
+        result_controls_layout.addWidget(self.Convert)
+        result_controls_layout.addWidget(self.result)
+        result_controls_layout.addSpacing(10)
+        result_controls_layout.addWidget(self.l_result)
+        result_controls_layout.addWidget(self.copy_result)
+        content_layout.addLayout(result_controls_layout)        
+        container = qt.QWidget()
+        container.setLayout(content_layout)
+        container.setMaximumWidth(600)
+        right_layout = qt.QHBoxLayout()
+        right_layout.addStretch()
+        right_layout.addWidget(container)
+        right_layout.addStretch()
+        self.setLayout(right_layout)
         self.update_month_combo()
     def max_number(self):
         if self.day.text() > "31":
@@ -144,13 +167,7 @@ class DateConverter(qt.QWidget):
         self.month_combo.addItems(months)
     def convert_date(self):
         days_of_week = [
-            "الإثنين",
-            "الثلثاء",
-            "الأربعاء",
-            "الخميس",
-            "الجمعة",
-            "السبت",
-            "الأحد"
+            "الإثنين", "الثلثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"
         ]
         year_text = self.year.text()
         day_text = self.day.text()

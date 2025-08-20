@@ -14,3 +14,4 @@ from .islamicBooks import IslamicBooks
 from .quranRecitations import QuranRecitations
 from .prophetStories import ProphetStories
 from. storyPlayer import StoryPlayer
+from. notes import NotesDialog

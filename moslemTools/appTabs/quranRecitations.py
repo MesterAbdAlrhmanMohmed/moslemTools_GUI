@@ -46,7 +46,7 @@ class QuranRecitations(qt.QWidget):
         surahVerses = self.data[surahText]
         gui.QuranRecitationViewer(self, "\n".join(surahVerses)).exec()
     def search(self, pattern, text_list):
-        tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+        tashkeel_pattern = re.compile(r'[^\u0621-\u063A\u0641-\u064A\s]+')
         normalized_pattern = tashkeel_pattern.sub('', pattern)
         matches = [
             text for text in text_list

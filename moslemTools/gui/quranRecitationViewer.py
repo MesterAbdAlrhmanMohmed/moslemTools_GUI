@@ -123,6 +123,7 @@ class QuranRecitationViewer(qt.QDialog):
                 selected_text=cursor.selectedText()
                 pyperclip.copy(selected_text)                
                 winsound.Beep(1000,100)
+                guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
@@ -130,6 +131,7 @@ class QuranRecitationViewer(qt.QDialog):
             text=self.text.toPlainText()
             pyperclip.copy(text)            
             winsound.Beep(1000,100)
+            guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def goToAyah(self):

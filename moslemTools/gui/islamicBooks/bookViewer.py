@@ -1,167 +1,257 @@
-import guiTools,pyperclip,winsound,gettext,json,functions,settings,os
+from guiTools import note_dialog
+import functions.notesManager as notesManager
+import guiTools, pyperclip, winsound, gettext, json, functions, settings, os
 import PyQt6.QtWidgets as qt
-from PyQt6.QtPrintSupport import QPrinter,QPrintDialog
+from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
+from PyQt6.QtCore import QTimer
 class book_viewer(qt.QDialog):
-    def __init__(self,p,book_name,partName:str,content:list,index:int=0):
+    def __init__(self, p, book_name, partName: str, content: list, index: int = 0):
         super().__init__(p)
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
-        self.data=content
-        self.index=index
-        self.bookName=book_name
-        self.part=partName
+        self.data = content
+        self.index = index
+        self.bookName = book_name
+        self.part = partName        
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_line)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
-        qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)                        
-        qt1.QShortcut("alt+right",self).activated.connect(self.next_book)
-        qt1.QShortcut("alt+left",self).activated.connect(self.previous_book)
-        qt1.QShortcut("ctrl+g",self).activated.connect(self.go_to_book)
-        qt1.QShortcut("ctrl+b",self).activated.connect(self.onAddOrRemoveBookmark)
-        self.resize(1200,600)
-        self.text=guiTools.QReadOnlyTextEdit()        
+        qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
+        qt1.QShortcut("alt+right", self).activated.connect(self.next_book)
+        qt1.QShortcut("alt+left", self).activated.connect(self.previous_book)
+        qt1.QShortcut("ctrl+g", self).activated.connect(self.go_to_book)
+        qt1.QShortcut("ctrl+b", self).activated.connect(self.onAddOrRemoveBookmark)
+        qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
+        qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
+        qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
+        self.resize(1200, 600)
+        self.text = guiTools.QReadOnlyTextEdit()
         self.text.setText(self.data[self.index])
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
-        self.font_size=12
-        font=self.font()
+        self.font_size = 12
+        font = self.font()
         font.setPointSize(self.font_size)
         self.text.setFont(font)
-        self.font_laybol=qt.QLabel("حجم الخط")
+        self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font=qt.QLabel()
+        self.show_font = qt.QLabel()
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_font.setAccessibleDescription("حجم النص")        
+        self.show_font.setAccessibleDescription("حجم النص")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.setText(str(self.font_size))
-        self.N_book=qt.QPushButton("الصفحة التالية")
+        self.N_book = guiTools.QPushButton("الصفحة التالية")
         self.N_book.setAccessibleDescription("alt زائد السهم الأيمن")
-        self.N_book.clicked.connect(self.next_book)        
-        self.P_book=qt.QPushButton("الصفحة السابقة")
+        self.N_book.clicked.connect(self.next_book)
+        self.N_book.setStyleSheet("background-color: #0000AA; color: white;")
+        self.N_book.setAutoDefault(False)  # إضافة setAutoDefault(False)
+        self.P_book = guiTools.QPushButton("الصفحة السابقة")
         self.P_book.setAccessibleDescription("alt زائد السهم الأيسر")
         self.P_book.clicked.connect(self.previous_book)
         self.P_book.setStyleSheet("background-color: #0000AA; color: white;")
-        self.N_book.setStyleSheet("background-color: #0000AA; color: white;")
-        self.book_number_laybol=qt.QLabel("رقم الصفحة")
+        self.P_book.setAutoDefault(False)  # إضافة setAutoDefault(False)
+        self.book_number_laybol = qt.QLabel("رقم الصفحة")
         self.book_number_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_book_number=qt.QLabel()
+        self.show_book_number = qt.QLabel()
         self.show_book_number.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_book_number.setAccessibleDescription("رقم الصفحة")
         self.show_book_number.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_book_number.setText(str(self.index+1))
-        layout=qt.QVBoxLayout(self)
-        layout.addWidget(self.text)        
+        self.show_book_number.setText(str(self.index + 1))
+        layout = qt.QVBoxLayout(self)
+        layout.addWidget(self.text)
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
         layout.addWidget(self.book_number_laybol)
         layout.addWidget(self.show_book_number)
-        layout1=qt.QHBoxLayout()
+        layout1 = qt.QHBoxLayout()
         layout1.addWidget(self.P_book)
-        layout1.addWidget(self.N_book)
-        layout.addLayout(layout1)
-    def next_book(self):
-        if self.index == len(self.data)-1:
-            self.index=0
-        else:
-            self.index+=1
-        self.text.setText(self.data[self.index])
-        guiTools.speak(str(self.index+1))
-        self.show_book_number.setText(str(self.index+1))
-        winsound.PlaySound("data/sounds/next_page.wav",1)
-    def previous_book(self):
-        if self.index == 0:
-            self.index=len(self.data)-1
-        else:
-            self.index-=1
-        self.text.setText(self.data[self.index])
-        guiTools.speak(str(self.index+1))
-        self.show_book_number.setText(str(self.index+1))
-        winsound.PlaySound("data/sounds/previous_page.wav",1)
-    def go_to_book(self):        
-        book,OK=guiTools.QInputDialog.getInt(self,"الذهاب إلى صفحة","أكتب رقم الصفحة",self.index+1,1,len(self.data))
-        if OK:                                
-            self.index=book-1
-            self.text.setText(self.data[self.index])
-            self.show_book_number.setText(str(self.index+1))
+        layout1.addWidget(self.N_book)        
+        layout.addLayout(layout1)        
     def OnContextMenu(self):
-        menu=qt.QMenu("الخيارات", self)
-        boldFont=menu.font()
+        menu = qt.QMenu("الخيارات", self)
+        boldFont = menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
-        menu.setAccessibleName("الخيارات")
-        menu.setFocus()
-        book_menu=qt.QMenu("خيارات الصفحة", self)
-        next_action=book_menu.addAction("الصفحة التالية")
+        menu.setAccessibleName("الخيارات")        
+        book_menu = qt.QMenu("خيارات الصفحة", self)
+        book_menu.setFont(boldFont)
+        next_action = book_menu.addAction("الصفحة التالية")
         next_action.setShortcut("alt+right")
-        next_action.triggered.connect(self.next_book)
-        previous_action=book_menu.addAction("الصفحة السابقة")
+        next_action.triggered.connect(self.next_book)    
+        previous_action = book_menu.addAction("الصفحة السابقة")
         previous_action.setShortcut("alt+left")
-        previous_action.triggered.connect(self.previous_book)
-        go_action=book_menu.addAction("الذهاب إلى صفحة")
+        previous_action.triggered.connect(self.previous_book)    
+        go_action = book_menu.addAction("الذهاب إلى صفحة")
         go_action.setShortcut("ctrl+g")
-        go_action.triggered.connect(self.go_to_book)
-        state,self.nameOfBookmark=functions.bookMarksManager.getIslamicBookBookmarkName(self.bookName,self.index)
-        if state:
-            removeBookmarkAction=qt1.QAction("حذف العلامة المرجعية",self)
-            removeBookmarkAction.setShortcut("ctrl+b")
-            book_menu.addAction(removeBookmarkAction)
-            removeBookmarkAction.triggered.connect(self.onRemoveBookmark)
-        else:
-            addBookMarkAction=qt1.QAction("إضافة علامة مرجعية",self)
-            addBookMarkAction.setShortcut("ctrl+b")
-            book_menu.addAction(addBookMarkAction)
-            addBookMarkAction.triggered.connect(self.onAddBookMark)
-        menu.addMenu(book_menu)
-        text_options_menu=qt.QMenu("خيارات النص", self)
-        save_action=text_options_menu.addAction("حفظ كملف نصي")
+        go_action.triggered.connect(self.go_to_book)    
+        menu.addMenu(book_menu)        
+        text_options_menu = qt.QMenu("خيارات النص", self)
+        text_options_menu.setFont(boldFont)
+        save_action = text_options_menu.addAction("حفظ كملف نصي")
         save_action.setShortcut("ctrl+s")
-        save_action.triggered.connect(self.save_text_as_txt)
-        text_options_menu.setDefaultAction(save_action)
-        print_action=text_options_menu.addAction("طباعة")
+        save_action.triggered.connect(self.save_text_as_txt)    
+        print_action = text_options_menu.addAction("طباعة")
         print_action.setShortcut("ctrl+p")
-        print_action.triggered.connect(self.print_text)
-        copy_all_action=text_options_menu.addAction("نسخ النص كاملاً")
+        print_action.triggered.connect(self.print_text)    
+        copy_all_action = text_options_menu.addAction("نسخ النص كاملاً")
         copy_all_action.setShortcut("ctrl+a")
-        copy_all_action.triggered.connect(self.copy_text)
-        copy_selected_action=text_options_menu.addAction("نسخ النص المحدد")
+        copy_all_action.triggered.connect(self.copy_text)    
+        copy_selected_action = text_options_menu.addAction("نسخ النص المحدد")
         copy_selected_action.setShortcut("ctrl+c")
         copy_selected_action.triggered.connect(self.copy_line)    
-        font_menu=qt.QMenu("حجم الخط", self)
-        increase_font_action=qt1.QAction("تكبير الخط", self)
-        increase_font_action.setShortcut("ctrl+=")
-        font_menu.addAction(increase_font_action)
-        increase_font_action.triggered.connect(self.increase_font_size)
-        decrease_font_action=qt1.QAction("تصغير الخط", self)
-        decrease_font_action.setShortcut("ctrl+-")
-        font_menu.addAction(decrease_font_action)
-        decrease_font_action.triggered.connect(self.decrease_font_size)            
-        menu.addMenu(text_options_menu)
-        menu.addMenu(font_menu)
-        text_options_menu.setFont(boldFont)
+        menu.addMenu(text_options_menu)        
+        font_menu = qt.QMenu("حجم الخط", self)
         font_menu.setFont(boldFont)
+        increase_font_action = qt1.QAction("تكبير الخط", self)
+        increase_font_action.setShortcut("ctrl+=")
+        increase_font_action.triggered.connect(self.increase_font_size)
+        font_menu.addAction(increase_font_action)    
+        decrease_font_action = qt1.QAction("تصغير الخط", self)
+        decrease_font_action.setShortcut("ctrl+-")
+        decrease_font_action.triggered.connect(self.decrease_font_size)
+        font_menu.addAction(decrease_font_action)
+        menu.addMenu(font_menu)        
+        book_position = {
+            "bookName": self.bookName,
+            "partName": self.part,
+            "pageNumber": self.index
+        }    
+        note_exists = notesManager.getNotesForPosition("islamicBooks", book_position)    
+        if note_exists:
+            note_action = qt1.QAction("عرض ملاحظة الصفحة الحالية", self)
+            note_action.setShortcut("ctrl+o")
+            note_action.triggered.connect(lambda: self.onNoteAction(book_position))
+            book_menu.addAction(note_action)            
+            delete_note_action = qt.QWidgetAction(self)
+            delete_button = qt.QPushButton("حذف ملاحظة الصفحة الحالية:  ctrl+shift+n")
+            delete_button.setDefault(True)
+            delete_button.setShortcut("ctrl+shift+n")
+            delete_button.setStyleSheet("background-color: #8B0000; color: white;")            
+            delete_button.clicked.connect(lambda: self.onDeleteNote(book_position))
+            delete_note_action.setDefaultWidget(delete_button)
+            book_menu.addAction(delete_note_action)
+        else:
+            note_action = qt1.QAction("إضافة ملاحظة للصفحة الحالية", self)
+            note_action.setShortcut("ctrl+n")
+            note_action.triggered.connect(lambda: self.onAddNote(book_position))    
+            book_menu.addAction(note_action)                
+        state, self.nameOfBookmark = functions.bookMarksManager.getIslamicBookBookmarkName(self.bookName, self.index)
+        if state:
+            delete_bookmark_action = qt.QWidgetAction(self)
+            delete_bookmark_button = qt.QPushButton("حذف العلامة المرجعية للصفحة الحالية: ctrl+b")
+            delete_bookmark_button.setDefault(True)
+            delete_bookmark_button.setShortcut("ctrl+b")
+            delete_bookmark_button.setStyleSheet("background-color: #8B0000; color: white;")
+            delete_bookmark_button.clicked.connect(self.onRemoveBookmark)
+            delete_bookmark_action.setDefaultWidget(delete_bookmark_button)
+            book_menu.addAction(delete_bookmark_action)
+        else:
+            add_bookmark_action = qt1.QAction("إضافة علامة مرجعية للصفحة الحالية", self)
+            add_bookmark_action.setShortcut("ctrl+b")
+            add_bookmark_action.triggered.connect(self.onAddBookMark)
+            book_menu.addAction(add_bookmark_action)        
         menu.exec(self.mapToGlobal(self.cursor().pos()))
+    def onAddNote(self, position_data):
+        dialog = note_dialog.NoteDialog(self, mode="add")
+        dialog.saved.connect(lambda old, new, content: self.saveNote(position_data, new, content))
+        dialog.exec()    
+    def onEditNote(self, position_data, note_name):
+        note = notesManager.getNoteByName("islamicBooks", note_name)
+        if note:
+            dialog = note_dialog.NoteDialog(
+                self,
+                title=note["name"],
+                content=note["content"],
+                mode="edit",
+                old_name=note["name"]
+            )
+            dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
+            dialog.exec()    
+    def saveNote(self, position_data, name, content):
+        notesManager.addNewNote("islamicBooks", {
+            "name": name,
+            "content": content,
+            "position_data": position_data
+        })    
+        guiTools.speak("تمت إضافة الملاحظة")    
+    def updateNote(self, position_data, old_name, new_name, new_content):
+        update_data = {
+            "name": new_name,
+            "content": new_content,
+            "position_data": position_data
+        }
+        success = notesManager.updateNote("islamicBooks", old_name, update_data)
+        if success:
+            guiTools.speak("تم تحديث الملاحظة بنجاح")
+        else:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")    
+    def onNoteAction(self, position_data):
+        note = notesManager.getNotesForPosition("islamicBooks", position_data)
+        if note:
+            dialog = note_dialog.NoteDialog(
+                self,
+                title=note["name"],
+                content=note["content"],
+                mode="view",
+                old_name=note["name"]
+            )
+            dialog.edit_requested.connect(lambda note_name: self.onEditNote(position_data, note_name))
+            dialog.exec()    
+    def onDeleteNote(self, position_data):
+        note = notesManager.getNotesForPosition("islamicBooks", position_data)
+        if note:
+            confirm = guiTools.QQuestionMessageBox.view(
+                self, "تأكيد الحذف", 
+                f"هل أنت متأكد أنك تريد حذف الملاحظة '{note['name']}'؟", 
+                "نعم", "لا"
+            )
+            if confirm == 0:
+                notesManager.removeNote("islamicBooks", note["name"])
+                guiTools.speak("تم حذف الملاحظة")    
+    def onAddOrRemoveNote(self):
+        position_data = {
+            "bookName": self.bookName,
+            "partName": self.part,
+            "pageNumber": self.index
+        }
+        note_exists = notesManager.getNotesForPosition("islamicBooks", position_data)
+        if note_exists:
+            self.onEditNote(position_data, note_exists["name"])
+        else:
+            self.onAddNote(position_data)    
+    def onViewNote(self):
+        position_data = {
+            "bookName": self.bookName,
+            "partName": self.part,
+            "pageNumber": self.index
+        }
+        note_exists = notesManager.getNotesForPosition("islamicBooks", position_data)
+        if note_exists:
+            self.onNoteAction(position_data)
+        else:
+            guiTools.speak("لا توجد ملاحظة لهذه الصفحة")
     def print_text(self):
         try:
-            printer=QPrinter()
-            dialog=QPrintDialog(printer, self)
+            printer = QPrinter()
+            dialog = QPrintDialog(printer, self)
             if dialog.exec() == QPrintDialog.DialogCode.Accepted:
                 self.text.print(printer)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def save_text_as_txt(self):
         try:
-            file_dialog=qt.QFileDialog()
+            file_dialog = qt.QFileDialog()
             file_dialog.setAcceptMode(qt.QFileDialog.AcceptMode.AcceptSave)
             file_dialog.setNameFilter("Text Files (*.txt);;All Files (*)")
             file_dialog.setDefaultSuffix("txt")
             if file_dialog.exec() == qt.QFileDialog.DialogCode.Accepted:
-                file_name=file_dialog.selectedFiles()[0]
+                file_name = file_dialog.selectedFiles()[0]
                 with open(file_name, 'w', encoding='utf-8') as file:
                     text = self.text.toPlainText()
-                    file.write(text)                
+                    file.write(text)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def increase_font_size(self):
@@ -177,41 +267,79 @@ class book_viewer(qt.QDialog):
             self.show_font.setText(str(self.font_size))
             self.update_font_size()
     def update_font_size(self):
-        cursor=self.text.textCursor()
+        cursor = self.text.textCursor()
         self.text.selectAll()
-        font=self.text.font()
+        font = self.text.font()
         font.setPointSize(self.font_size)
-        self.text.setCurrentFont(font)        
+        self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
     def copy_line(self):
         try:
-            cursor=self.text.textCursor()
+            cursor = self.text.textCursor()
             if cursor.hasSelection():
-                selected_text=cursor.selectedText()
-                pyperclip.copy(selected_text)                
-                winsound.Beep(1000,100)
+                selected_text = cursor.selectedText()
+                pyperclip.copy(selected_text)
+                winsound.Beep(1000, 100)
+                guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
         try:
-            text=self.text.toPlainText()
-            pyperclip.copy(text)            
-            winsound.Beep(1000,100)
+            text = self.text.toPlainText()
+            pyperclip.copy(text)
+            winsound.Beep(1000, 100)
+            guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def onAddBookMark(self):
-        name,OK=guiTools.QInputDialog.getText(self,"إضافة علامة مرجعية","أكتب أسم للعلامة المرجعية")
+        name, OK = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب أسم للعلامة المرجعية")
         if OK:
-            functions.bookMarksManager.addNewislamicBookBookMark(self.bookName,self.part,self.index,name)
+            functions.bookMarksManager.addNewislamicBookBookMark(self.bookName, self.part, self.index, name)
+            guiTools.speak("تمت إضافة العلامة المرجعية")
     def onRemoveBookmark(self):
         try:
-            functions.bookMarksManager.removeislamicBookBookMark(self.nameOfBookmark)
-            winsound.Beep(1000,100)
+            confirm = guiTools.QQuestionMessageBox.view(
+                self, "تأكيد الحذف", 
+                f"هل أنت متأكد أنك تريد حذف العلامة المرجعية '{self.nameOfBookmark}'؟", 
+                "نعم", "لا"
+            )
+            if confirm == 0:
+                functions.bookMarksManager.removeislamicBookBookMark(self.nameOfBookmark)                
+                guiTools.speak("تم حذف العلامة المرجعية")
         except:
-            guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر حذف العلامة المرجعية")
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "تعذر حذف العلامة المرجعية")    
     def onAddOrRemoveBookmark(self):
-        state,self.nameOfBookmark=functions.bookMarksManager.getIslamicBookBookmarkName(self.bookName,self.index)
+        state, self.nameOfBookmark = functions.bookMarksManager.getIslamicBookBookmarkName(self.bookName, self.index)
         if state:
             self.onRemoveBookmark()
         else:
             self.onAddBookMark()
+    def next_book(self):
+        self.index = 0 if self.index == len(self.data) - 1 else self.index + 1
+        self.text.setText(self.data[self.index])
+        guiTools.speak(str(self.index + 1))
+        self.show_book_number.setText(str(self.index + 1))
+        winsound.PlaySound("data/sounds/next_page.wav", 1)
+    def previous_book(self):
+        self.index = len(self.data) - 1 if self.index == 0 else self.index - 1
+        self.text.setText(self.data[self.index])
+        guiTools.speak(str(self.index + 1))
+        self.show_book_number.setText(str(self.index + 1))
+        winsound.PlaySound("data/sounds/previous_page.wav", 1)
+    def go_to_book(self):
+        book, OK = guiTools.QInputDialog.getInt(self, "الذهاب إلى صفحة", "أكتب رقم الصفحة", self.index + 1, 1, len(self.data))
+        if OK:
+            self.index = book - 1
+            self.text.setText(self.data[self.index])
+            self.show_book_number.setText(str(self.index + 1))
+    def onDeleteNoteShortcut(self):
+        position_data = {
+            "bookName": self.bookName,
+            "partName": self.part,
+            "pageNumber": self.index
+        }
+        note_exists = notesManager.getNotesForPosition("islamicBooks", position_data)
+        if note_exists:
+            self.onDeleteNote(position_data)
+        else:
+            guiTools.speak("لا توجد ملاحظة لحذفها")

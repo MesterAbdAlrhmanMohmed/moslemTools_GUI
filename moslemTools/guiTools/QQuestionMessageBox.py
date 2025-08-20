@@ -1,3 +1,4 @@
+from guiTools import QPushButton
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -10,6 +11,7 @@ class QQuestionMessageBox(qt.QDialog):
         self.result = 1
         self.resize(700, 150)
         self.setWindowTitle(title)                
+        self.center()
         self.setWindowIcon(self.style().standardIcon(qt.QStyle.StandardPixmap.SP_MessageBoxQuestion))
         main_layout = qt.QVBoxLayout(self)
         self.label = QReadOnlyTextEdit()
@@ -19,8 +21,7 @@ class QQuestionMessageBox(qt.QDialog):
         buttons_layout = qt.QHBoxLayout(buttons_widget)
         buttons_layout.setContentsMargins(0, 0, 0, 0)
         buttons_layout.setSpacing(10)
-        self.OKBTN = qt.QPushButton(yesLabel)
-        self.OKBTN.setDefault(True)
+        self.OKBTN = QPushButton(yesLabel)
         self.OKBTN.clicked.connect(self.onOk)
         self.OKBTN.setStyleSheet("""
             QPushButton {
@@ -33,7 +34,7 @@ class QQuestionMessageBox(qt.QDialog):
         """)        
         self.OKBTN.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed) 
         buttons_layout.addWidget(self.OKBTN)
-        self.noBTN = qt.QPushButton(noLabel)
+        self.noBTN = QPushButton(noLabel)
         self.noBTN.clicked.connect(self.reject)
         self.noBTN.setStyleSheet("""
             QPushButton {
@@ -48,6 +49,11 @@ class QQuestionMessageBox(qt.QDialog):
         buttons_layout.addWidget(self.noBTN)
         main_layout.addWidget(buttons_widget, alignment=Qt.AlignmentFlag.AlignLeft)
         qt1.QShortcut("Escape", self).activated.connect(self.reject)
+    def center(self):        
+        frame_geometry = self.frameGeometry()        
+        screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
+        frame_geometry.moveCenter(screen_center)        
+        self.move(frame_geometry.topLeft())
     def onOk(self):
         self.result = 0
         self.accept()

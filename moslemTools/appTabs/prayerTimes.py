@@ -1,10 +1,12 @@
 import pyperclip, requests, geocoder, winsound, gui
+from guiTools import speak
 from settings import settings_handler
-from hijri_converter import Gregorian
+from hijridate import Gregorian, Hijri
 from datetime import datetime,timedelta
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+import os
 class prayer_times(qt.QWidget):
     def __init__(self,p):
         super().__init__()
@@ -36,63 +38,88 @@ class prayer_times(qt.QWidget):
         self.reminded=False
         self.information.setFont(font)
         self.worning.setFont(font)
+        self.worning0 = qt.QLabel()
+        self.worning0.setText("قال رسولُ اللهِ صلَّى الله عليه وسلَّم:\n«إنَّ العهدَ الذي بيننا وبينهم الصلاةُ، فمَن تركها فقد كفر».\nفلا تتركوا أيَّ صلاةٍ مفروضةٍ لأيِّ سبب.")
+        self.worning0.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.worning0.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.worning3 = qt.QLabel()
+        self.worning3.setText("معلومة هامة: لا يمكن تحتيد مواقيت الصلاة باستخدام بيانات الهاتف المحمول")
+        self.worning3.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.worning3.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
         layout = qt.QVBoxLayout()
         layout.addWidget(self.information)
+        layout.addWidget(self.worning0)        
+        layout.addItem(qt.QSpacerItem(0, 15, qt.QSizePolicy.Policy.Minimum, qt.QSizePolicy.Policy.Fixed))
+        layout.addWidget(self.worning3)
         layout.addWidget(self.worning1)
         layout.addWidget(self.worning2)
         layout.addWidget(self.worning)
         self.setLayout(layout)
-        self.display_prayer_times()
+        self.display_prayer_times()    
     def onTimer(self):
         currentTimeOBJ = datetime.now()
         currentTime=currentTimeOBJ.strftime("%I:%M %p")
         beforeOptions=settings_handler.get("prayerTimes","remindBeforeAdaan")        
-        beforeChoises={"0":15,"1":30,"2":60} 
+        beforeChoises={"0":15,"1":30,"2":60}         
         if self.day==4:
             ZoharDay="gomaasoon.mp3"
         else:
-            ZoharDay="zohrsoon.mp3"
+            ZoharDay="zohrsoon.mp3"        
         for time_str in self.times:
-            if self.times.index(time_str) == 1: 
-                continue            
+            index = self.times.index(time_str)
+            prayer_name = self.prayers[index]            
             if currentTime == time_str:
                 self.reminded=False
-                if settings_handler.get("prayerTimes", "adaanReminder") == "True":
-                    print("addaan")
-                    gui.AdaanDialog(self, self.times.index(time_str), self.prayers[self.times.index(time_str)]).exec()                    
-                    self.timer.stop()
-                    self.timer.singleShot(60000, qt2.Qt.TimerType.PreciseTimer, lambda: self.timer.start(10000))
-                    return
+                if settings_handler.get("prayerTimes", "adaanReminder") == "True":                    
+                    prayer_key = self.get_prayer_key(prayer_name)                    
+                    if prayer_key:                        
+                        sound_file = settings_handler.get("adhanSounds", prayer_key)
+                        sound_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", sound_file)                                                
+                        gui.AdaanDialog(self, index, prayer_name, sound_path).exec()                    
+                        self.timer.stop()
+                        self.timer.singleShot(60000, qt2.Qt.TimerType.PreciseTimer, lambda: self.timer.start(10000))
+                        return                        
             if beforeOptions != "3":                
-                if beforeOptions in beforeChoises:
+                if beforeOptions in beforeChoises:                    
                     minutes_to_subtract = beforeChoises[beforeOptions]                                        
                     prayer_time_obj = datetime.strptime(time_str, "%I:%M %p")
                     beforeTimeOBJ = prayer_time_obj - timedelta(minutes=minutes_to_subtract)
-                    beforeTime = beforeTimeOBJ.strftime("%I:%M %p")
+                    beforeTime = beforeTimeOBJ.strftime("%I:%M %p")                    
                     if self.reminded:
-                        continue                                        
-                    medias={0:"fagrsoon.mp3",2:ZoharDay,3:"asrsoon.mp3",4:"maghribsoon.mp3",5:"eshaasoon.mp3"}
+                        continue                                                            
+                    medias={0:"fagrsoon.mp3",2:ZoharDay,3:"asrsoon.mp3",4:"maghribsoon.mp3",5:"eshaasoon.mp3"}                    
                     if beforeTime==currentTime:
                         self.reminded=True
                         if self.p.media_player.isPlaying():
-                            self.p.media_player.stop()                        
-                        if self.times.index(time_str) in medias:
-                            self.p.media_player.setSource(qt2.QUrl.fromLocalFile("data\\sounds\\before_azan\\" + medias[self.times.index(time_str)]))
+                            self.p.media_player.stop()                                                
+                        if index in medias:
+                            self.p.media_player.setSource(qt2.QUrl.fromLocalFile("data\\sounds\\before_azan\\" + medias[index]))
                             self.p.media_player.play()
-                            print(f"Playing pre-Adhan reminder for {self.prayers[self.times.index(time_str)]}")
+                            print(f"Playing pre-Adhan reminder for {prayer_name}")
                         else:
-                            print(f"No specific pre-Adhan sound for prayer index {self.times.index(time_str)}")
+                            print(f"No specific pre-Adhan sound for prayer {prayer_name}")
                 else:
-                    print(f"Warning: 'remindBeforeAdaan' value '{beforeOptions}' not found in beforeChoises. No before-Adhan reminder will be set.")
+                    print(f"Warning: 'remindBeforeAdaan' value '{beforeOptions}' not found in beforeChoises. No before-Adhan reminder will be set.")    
+    def get_prayer_key(self, prayer_name_ar):        
+        prayer_map = {
+            "الفجر": "fajr",
+            "الظهر": "dhuhr",
+            "العصر": "asr",
+            "المغرب": "maghrib",
+            "العشاء": "isha"
+        }
+        return prayer_map.get(prayer_name_ar, None)    
     def copy_all_items(self):
         all_text = "\n".join([self.information.item(i).text() for i in range(self.information.count())])
         pyperclip.copy(all_text)
-        winsound.Beep(1000, 100)
+        speak("تم نسخ كل المحتوى بنجاح")        
+        winsound.Beep(1000, 100)    
     def copy_selected_item(self):
         selected_item = self.information.currentItem()
         if selected_item:
             pyperclip.copy(selected_item.text())
-            winsound.Beep(1000, 100)
+            winsound.Beep(1000, 100)    
+            speak("تم نسخ المحتوى المحدد بنجاح")
     def display_prayer_times(self):
         self.information.clear()
         gregorian_months = [
@@ -142,7 +169,7 @@ class prayer_times(qt.QWidget):
             else:
                 self.information.addItem("حدث خطأ في جلب مواقيت الصلاة.")
         else:
-            self.information.addItem("لم يتم تحديد الموقع الجغرافي. تأكد من اتصال الإنترنت.")        
+            self.information.addItem("لم يتم تحديد الموقع الجغرافي. تأكد من اتصال الإنترنت، ولن تعمل خدمة مواقيت الصلاة مع استخدام بيانات الهاتف المحمول")
         now = datetime.now()
         day_name = days_of_week[now.weekday()]
         self.day=now.weekday()
@@ -150,4 +177,27 @@ class prayer_times(qt.QWidget):
         hijri_date_obj = Gregorian.today().to_hijri()
         hijri_date = f"{hijri_date_obj.day} {hijri_months[hijri_date_obj.month - 1]} {hijri_date_obj.year}"
         self.information.addItem("التاريخ الميلادي: " + gregorian_date)
-        self.information.addItem("التاريخ الهجري: " + hijri_date)
+        self.information.addItem("التاريخ الهجري: " + hijri_date)        
+        today_greg = datetime.now().date()
+        today_hijri = Gregorian.today().to_hijri()
+        ramadan_year = today_hijri.year        
+        if today_hijri.month >= 9:
+            ramadan_year += 1        
+        ramadan_start_hijri = Hijri(ramadan_year, 9, 1)
+        ramadan_start_greg = ramadan_start_hijri.to_gregorian()        
+        time_left = ramadan_start_greg - today_greg
+        total_days_left = time_left.days
+        ramadan_countdown_message = ""
+        if total_days_left == 0:
+            ramadan_countdown_message = "اليوم هو أول أيام شهر رمضان!"
+        elif total_days_left > 0:            
+            months = total_days_left // 30
+            days = total_days_left % 30            
+            if months > 0 and days > 0:
+                ramadan_countdown_message = f"باقي على شهر رمضان حوالي: {months} شهر و {days} يوم"
+            elif months > 0 and days == 0:
+                ramadan_countdown_message = f"باقي على شهر رمضان: {months} شهر بالضبط"
+            elif months == 0 and days > 0:
+                ramadan_countdown_message = f"باقي على شهر رمضان: {days} يوم"                
+        if ramadan_countdown_message:
+            self.information.addItem(ramadan_countdown_message)

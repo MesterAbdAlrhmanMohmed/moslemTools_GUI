@@ -12,9 +12,12 @@ if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"islamicBooks"))
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"islamicBooks"))
     shutil.copy("data/json/islamicBooks/elShabahLibe.json",os.path.join(os.getenv('appdata'),appName,"islamicBooks","elShabahLibe.json"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"addan")):
-    os.mkdir(os.path.join(os.getenv('appdata'),appName,"addan"))
+    os.mkdir(os.path.join(os.getenv('appdata'),appName,"addan"))    
     shutil.copy("data/sounds/adaan/fajr.mp3",os.path.join(os.getenv('appdata'),appName,"addan","fajr.mp3"))
-    shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","genral.mp3"))
+    shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","dhuhr.mp3"))
+    shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","asr.mp3"))
+    shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","maghrib.mp3"))
+    shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","isha.mp3"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"quran surah reciters")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"quran surah reciters"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"athkar")):
@@ -67,6 +70,13 @@ settingsConfig={
         "times":"1",
         "duration":"0",
         "replay":"True"
+    },
+    "adhanSounds": {
+        "fajr": "fajr.mp3",
+        "dhuhr": "dhuhr.mp3",
+        "asr": "asr.mp3",
+        "maghrib": "maghrib.mp3",
+        "isha": "isha.mp3"
     }
 }
 if not os.path.exists(cpath):

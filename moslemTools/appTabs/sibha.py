@@ -40,42 +40,36 @@ class sibha(qt.QWidget):
         self.numbers.setAccessibleDescription("عدد التسبيحات")
         self.numbers.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.numbers.setStyleSheet("font-size:300px;")
-        self.reset = qt.QPushButton("إعادة تعين")
-        self.reset.setAccessibleDescription("control plus R")
-        self.reset.setDefault(True)
+        self.reset = guiTools.QPushButton("إعادة تعين")
+        self.reset.setAccessibleDescription("control plus R")        
         self.reset.setShortcut("ctrl+r")
         self.reset.clicked.connect(self.reset_count)
         self.reset.setObjectName("resetButton")
-        self.add = qt.QPushButton("التسبيح")
+        self.add = guiTools.QPushButton("التسبيح")
         self.add.setAccessibleDescription("control plus equals")
-        self.add.setShortcut("ctrl+=")
-        self.add.setDefault(True)
+        self.add.setShortcut("ctrl+=")        
         self.add.clicked.connect(self.increment_count)
         self.add.setObjectName("addButton")
-        self.minus = qt.QPushButton("إنقاص")
+        self.minus = guiTools.QPushButton("إنقاص")
         self.minus.setAccessibleDescription("control plus minus")
-        self.minus.setShortcut("ctrl+-")
-        self.minus.setDefault(True)
+        self.minus.setShortcut("ctrl+-")        
         self.minus.clicked.connect(self.decrement_count)
         self.minus.setObjectName("minusButton")
-        self.add_thecr = qt.QPushButton("إضافة ذكر")
-        self.add_thecr.setDefault(True)
+        self.add_thecr = guiTools.QPushButton("إضافة ذكر")        
         self.add_thecr.setAccessibleDescription("control plus a")
         self.add_thecr.setShortcut("ctrl+a")
         self.add_thecr.setMaximumHeight(30)
         self.add_thecr.setMaximumWidth(160)
         self.add_thecr.clicked.connect(self.onAddThakar)
-        self.add_thecr.setStyleSheet("background-color: green; color: white;")
+        self.add_thecr.setStyleSheet("background-color: #008000; color: white;") # Changed to #008000
         self.line_of_thecr = qt.QLineEdit()
         self.line_of_thecr.textChanged.connect(self.onLineTextChanged)
         self.line_of_thecr.setPlaceholderText("أكتب الذكر")
         self.line_of_thecr.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.done_thecr = qt.QPushButton("إضافة الذكر")
-        self.done_thecr.setDefault(True)
+        self.done_thecr = guiTools.QPushButton("إضافة الذكر")        
         self.done_thecr.clicked.connect(self.onAddThkarCompeleted)
-        self.done_thecr.setStyleSheet("background-color: green; color: white;")
-        self.cancel_add = qt.QPushButton("إلغاء")
-        self.cancel_add.setDefault(True)
+        self.done_thecr.setStyleSheet("background-color: #008000; color: white;") # Changed to #008000
+        self.cancel_add = guiTools.QPushButton("إلغاء")        
         self.cancel_add.setShortcut("shift+c")
         self.cancel_add.setAccessibleDescription("shift plus c")
         self.cancel_add.clicked.connect(self.cansel_add_thecr)
@@ -115,7 +109,7 @@ class sibha(qt.QWidget):
                 font-size: 16px;
             }
             QPushButton#addButton {
-                background-color: green;
+                background-color: #008000; /* Changed to #008000 */
                 color: white;
                 min-height: 40px;
                 font-size: 16px;

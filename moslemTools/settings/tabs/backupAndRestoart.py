@@ -72,10 +72,10 @@ class Restoar(qt.QWidget):
             }
         """)
         layout = qt.QVBoxLayout(self)
-        self.createCopy = qt.QPushButton("النسخ الاحتياطي")
+        self.createCopy = qt.QPushButton("نسخ الإعدادات والملفات احتياطيا")
         layout.addWidget(self.createCopy)
         self.createCopy.clicked.connect(self.onbackup)
-        self.restoar = qt.QPushButton("استعادة")
+        self.restoar = qt.QPushButton("استعادة الإعدادات والملفات")
         layout.addWidget(self.restoar)
         self.restoar.clicked.connect(self.onrestoar)
         self.p = p
