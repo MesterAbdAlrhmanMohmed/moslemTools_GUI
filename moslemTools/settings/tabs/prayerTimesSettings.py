@@ -83,7 +83,7 @@ class PrayerTimesSettings(qt.QWidget):
         row3_layout.addWidget(self.Sound_level, 2)
         row3_layout.addWidget(self.soundLevelLabel)
         group_layout.addLayout(row3_layout)                
-        self.changeAdhanSound = qt.QPushButton("تغيير أصوات الأذان")
+        self.changeAdhanSound = guiTools.QPushButton("تغيير أصوات الأذان")
         self.changeAdhanSound.setVisible(p.cbts(settings_handler.get("prayerTimes", "adaanReminder")))
         self.changeAdhanSound.clicked.connect(self.onChangeAdhanButtonClicked)
         group_layout.addWidget(self.changeAdhanSound, 0, qt2.Qt.AlignmentFlag.AlignRight)        

@@ -1,4 +1,4 @@
-import update
+import update,guiTools
 from settings import settings_handler
 import PyQt6.QtWidgets as qt
 class Update(qt.QWidget):
@@ -34,7 +34,7 @@ class Update(qt.QWidget):
         button_container = qt.QWidget()
         button_layout = qt.QHBoxLayout(button_container)
         button_layout.setContentsMargins(0, 0, 0, 0)        
-        self.update_check = qt.QPushButton("التحقق من وجود تحديثات")
+        self.update_check = guiTools.QPushButton("التحقق من وجود تحديثات")
         self.update_check.clicked.connect(lambda: update.check(self))
         button_layout.addStretch()
         button_layout.addWidget(self.update_check)                

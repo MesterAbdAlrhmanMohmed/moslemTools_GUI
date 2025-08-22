@@ -106,7 +106,7 @@ class DownloadReciter(qt.QDialog):
         self.downloaded.setAccessibleName("عدد الأذكار التي تم تحميلها")
         self.downloaded.setRange(0,7000)
         self.downloaded.setReadOnly(True)
-        self.pause=qt.QPushButton("إيقاف مؤقت")
+        self.pause=guiTools.QPushButton("إيقاف مؤقت")
         self.pause.setStyleSheet("background-color: #0000AA; color: white;")
         layout=qt.QVBoxLayout(self)
         layout.addWidget(self.progress)

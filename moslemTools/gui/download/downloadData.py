@@ -104,7 +104,7 @@ class StartDownloading(qt.QDialog):
         self.progressBar=qt.QProgressBar()        
         self.progressBar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         layout.addWidget(self.progressBar)
-        self.cancel=qt.QPushButton("إلغاء")
+        self.cancel=guiTools.QPushButton("إلغاء")
         self.cancel.setStyleSheet("background-color: #0000AA; color: #e0e0e0;")
         self.cancel.clicked.connect(self.close)
         layout.addWidget(self.cancel)

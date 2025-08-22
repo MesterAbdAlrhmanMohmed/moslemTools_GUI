@@ -48,7 +48,7 @@ class AthkerDialog (qt.QDialog):
         self.time_label.setVisible(False)
         progress_time_layout = qt.QHBoxLayout()
         progress_time_layout.addWidget(self.media_progress, 3)
-        progress_time_layout.addWidget(self.time_label, 2)
+        progress_time_layout.addWidget(self.time_label)
         
         self.font_laybol=qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)

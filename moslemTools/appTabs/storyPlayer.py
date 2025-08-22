@@ -122,13 +122,6 @@ class StoryPlayer(qt.QWidget):
         self.play_all_to_end.setShortcut("ctrl+a")
         self.play_all_to_end.toggled.connect(lambda checked: self.update_button_style(self.play_all_to_end, checked))
         self.play_all_to_end.toggled.connect(self.handle_play_all_toggled)
-        self.play_all_to_start = qt.QPushButton("تشغيل كل القصص من بداية القصة المركزة عليها الى البداية")
-        self.play_all_to_start.setDefault(True)
-        self.play_all_to_start.setAccessibleDescription("control plus shift plus A")
-        self.play_all_to_start.setCheckable(True)        
-        self.play_all_to_start.setShortcut("ctrl+shift+a")
-        self.play_all_to_start.toggled.connect(lambda checked: self.update_button_style(self.play_all_to_start, checked))
-        self.play_all_to_start.toggled.connect(self.handle_play_all_start_toggled)
         self.repeat_story_button = qt.QPushButton("تكرار تشغيل القصة المحددة")
         self.repeat_story_button.setDefault(True)
         self.repeat_story_button.setAccessibleDescription("control plus R")
@@ -191,9 +184,8 @@ class StoryPlayer(qt.QWidget):
         layout.addLayout(progress_cancel_layout)        
         playback_buttons_layout = qt.QHBoxLayout()
         playback_buttons_layout.addWidget(self.play_all_to_end)
-        playback_buttons_layout.addWidget(self.play_all_to_start)
+        playback_buttons_layout.addWidget(self.repeat_story_button)
         layout.addLayout(playback_buttons_layout)
-        layout.addWidget(self.repeat_story_button)
         layout1 = qt.QHBoxLayout()        
         layout1.addWidget(self.duration)
         layout1.addWidget(self.openBookmarks)
@@ -225,33 +217,18 @@ class StoryPlayer(qt.QWidget):
     def handle_play_all_toggled(self, checked):
         self.mp.stop()
         if checked:
-            self.play_all_to_start.setEnabled(False)
             self.repeat_story_button.setEnabled(False)
             if self.storyListWidget.currentRow() == -1 and self.storyListWidget.count() > 0:
                 self.storyListWidget.setCurrentRow(0)
             self.play_selected_audio()
         else:
-            self.play_all_to_start.setEnabled(True)
-            self.repeat_story_button.setEnabled(True)
-    def handle_play_all_start_toggled(self, checked):
-        self.mp.stop()
-        if checked:
-            self.play_all_to_end.setEnabled(False)
-            self.repeat_story_button.setEnabled(False)
-            if self.storyListWidget.currentRow() == -1 and self.storyListWidget.count() > 0:
-                self.storyListWidget.setCurrentRow(self.storyListWidget.count() - 1)
-            self.play_selected_audio()
-        else:
-            self.play_all_to_end.setEnabled(True)
             self.repeat_story_button.setEnabled(True)
     def handle_repeat_toggled(self, checked):
         self.mp.stop()
         if checked:
             self.play_all_to_end.setEnabled(False)
-            self.play_all_to_start.setEnabled(False)
         else:
             self.play_all_to_end.setEnabled(True)
-            self.play_all_to_start.setEnabled(True)
     def handle_media_status_changed(self, status):
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
             if self.repeat_story_button.isChecked():
@@ -259,8 +236,6 @@ class StoryPlayer(qt.QWidget):
                 self.play_selected_audio()
             elif self.play_all_to_end.isChecked():
                 self.play_next_in_list()
-            elif self.play_all_to_start.isChecked():
-                self.play_previous_in_list()
     def play_next_in_list(self):
         current_row = self.storyListWidget.currentRow()
         if current_row < self.storyListWidget.count() - 1:
@@ -268,13 +243,6 @@ class StoryPlayer(qt.QWidget):
             self.play_selected_audio()
         else:
             self.play_all_to_end.setChecked(False)
-    def play_previous_in_list(self):
-        current_row = self.storyListWidget.currentRow()
-        if current_row > 0:
-            self.storyListWidget.setCurrentRow(current_row - 1)
-            self.play_selected_audio()
-        else:
-            self.play_all_to_start.setChecked(False)
     def delete_story(self, story_name=None):
         selected_category_item = self.categoriesListWidget.currentItem()
         if not selected_category_item:

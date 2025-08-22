@@ -62,22 +62,29 @@ class Restoar(qt.QWidget):
                 font-family: Arial;
             }
             QPushButton {
-                background-color: #0000AA; /* استخدام اللون الأزرق كما في شاشة الموت */
+                background-color: #0000AA;
                 color: #e0e0e0;
-                padding: 6px;
                 border: 1px solid #555;
+                padding: 8px 20px;
+                border-radius: 4px;
+                font-size: 14px;
             }
             QPushButton:hover {
                 background-color: #0000CC;
             }
         """)
         layout = qt.QVBoxLayout(self)
-        self.createCopy = qt.QPushButton("نسخ الإعدادات والملفات احتياطيا")
-        layout.addWidget(self.createCopy)
-        self.createCopy.clicked.connect(self.onbackup)
-        self.restoar = qt.QPushButton("استعادة الإعدادات والملفات")
-        layout.addWidget(self.restoar)
-        self.restoar.clicked.connect(self.onrestoar)
+        layout.addStretch()        
+        self.createCopy = guiTools.QPushButton("نسخ الإعدادات والملفات احتياطيا")
+        self.createCopy.setFixedWidth(250)
+        layout.addWidget(self.createCopy, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addSpacing(10)
+        self.createCopy.clicked.connect(self.onbackup)        
+        self.restoar = guiTools.QPushButton("استعادة الإعدادات والملفات")
+        self.restoar.setFixedWidth(250)
+        layout.addWidget(self.restoar, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        self.restoar.clicked.connect(self.onrestoar)        
+        layout.addStretch()
         self.p = p
     def onbackup(self):
         fileDialog = qt.QFileDialog(self.p)
