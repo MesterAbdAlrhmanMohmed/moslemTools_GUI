@@ -19,7 +19,10 @@ class ProphetStories(qt.QWidget):
         category_layout.addWidget(selectCategoryLabel, alignment=qt2.Qt.AlignmentFlag.AlignCenter)        
         category_layout.addStretch(1)
         self.stories = {}
+        font=qt1.QFont()
+        font.setBold(True)        
         self.list_of_aProphetStories = guiTools.QListWidget()
+        self.list_of_aProphetStories.setFont(font)
         self.list_of_aProphetStories.itemClicked.connect(self.open)        
         layout = qt.QVBoxLayout(self)
         layout.addLayout(category_layout)        
