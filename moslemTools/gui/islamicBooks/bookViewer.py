@@ -27,6 +27,7 @@ class book_viewer(qt.QDialog):
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         self.resize(1200, 600)
         self.text = guiTools.QReadOnlyTextEdit()
         self.text.setText(self.data[self.index])
@@ -59,7 +60,7 @@ class book_viewer(qt.QDialog):
         self.show_book_number.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_book_number.setAccessibleDescription("رقم الصفحة")
         self.show_book_number.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_book_number.setText(str(self.index + 1))
+        self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.text)
         layout.addWidget(self.font_laybol)
@@ -112,6 +113,10 @@ class book_viewer(qt.QDialog):
         decrease_font_action = qt1.QAction("تصغير الخط", self)
         decrease_font_action.setShortcut("ctrl+-")
         decrease_font_action.triggered.connect(self.decrease_font_size)
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(self.set_font_size_dialog)
+        font_menu.addAction(set_font_size)
         font_menu.addAction(decrease_font_action)
         menu.addMenu(font_menu)        
         book_position = {
@@ -318,20 +323,20 @@ class book_viewer(qt.QDialog):
         self.index = 0 if self.index == len(self.data) - 1 else self.index + 1
         self.text.setText(self.data[self.index])
         guiTools.speak(str(self.index + 1))
-        self.show_book_number.setText(str(self.index + 1))
+        self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         winsound.PlaySound("data/sounds/next_page.wav", 1)
     def previous_book(self):
         self.index = len(self.data) - 1 if self.index == 0 else self.index - 1
         self.text.setText(self.data[self.index])
         guiTools.speak(str(self.index + 1))
-        self.show_book_number.setText(str(self.index + 1))
+        self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         winsound.PlaySound("data/sounds/previous_page.wav", 1)
     def go_to_book(self):
         book, OK = guiTools.QInputDialog.getInt(self, "الذهاب إلى صفحة", "أكتب رقم الصفحة", self.index + 1, 1, len(self.data))
         if OK:
             self.index = book - 1
             self.text.setText(self.data[self.index])
-            self.show_book_number.setText(str(self.index + 1))
+            self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
     def onDeleteNoteShortcut(self):
         position_data = {
             "bookName": self.bookName,
@@ -343,3 +348,20 @@ class book_viewer(qt.QDialog):
             self.onDeleteNote(position_data)
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

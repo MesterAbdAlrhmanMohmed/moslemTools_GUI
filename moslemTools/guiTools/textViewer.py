@@ -7,13 +7,14 @@ from PyQt6.QtCore import QTimer
 class TextViewer(qt.QDialog):
     def __init__(self, p, title, text):
         super().__init__(p)
-        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
-        qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_line)
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)        
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
+        qt1.QShortcut("ctrl+1", self).activated.connect(self.set_font_size_dialog)
+        qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
         self.context_menu_active = False
         self.saved_text = ""
         self.saved_cursor_position = None
@@ -21,15 +22,15 @@ class TextViewer(qt.QDialog):
         self.saved_selection_end = -1
         self.setWindowTitle(title)
         self.resize(1200, 600)
-        self.text = guiTools.QReadOnlyTextEdit()        
+        self.text = guiTools.QReadOnlyTextEdit()
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
         self.font_size = 12
         font = qt1.QFont()
         font.setPointSize(self.font_size)
         font.setBold(True)
-        self.text.setFont(font)                
-        self._set_text_with_delay(text)        
+        self.text.setFont(font)
+        self._set_text_with_delay(text)
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font = qt.QLabel()
@@ -40,8 +41,8 @@ class TextViewer(qt.QDialog):
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.text)
         layout.addWidget(self.font_laybol)
-        layout.addWidget(self.show_font)        
-    def _set_full_text_and_update_font(self, full_text):        
+        layout.addWidget(self.show_font)
+    def _set_full_text_and_update_font(self, full_text):
         self.text.setText(full_text)
         self.update_font_size()
     def OnContextMenu(self):
@@ -52,8 +53,8 @@ class TextViewer(qt.QDialog):
         self.saved_text = self.text.toPlainText()
         self.text.setUpdatesEnabled(False)
         self.text.clear()
-        self.context_menu_active = True    
-        font=qt1.QFont()
+        self.context_menu_active = True
+        font = qt1.QFont()
         font.setBold(True)
         menu = qt.QMenu("الخيارات", self)
         menu.setFont(font)
@@ -84,11 +85,15 @@ class TextViewer(qt.QDialog):
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
         decreaseFontSizeAction.triggered.connect(lambda: QTimer.singleShot(250, self.decrease_font_size))
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(lambda: QTimer.singleShot(250, self.set_font_size_dialog))
+        fontMenu.addAction(set_font_size)
         menu.addMenu(text_options)
         menu.addMenu(fontMenu)
         menu.aboutToHide.connect(self.restore_after_menu)
-        menu.exec(self.mapToGlobal(self.cursor().pos()))    
-    def restore_after_menu(self):    
+        menu.exec(self.mapToGlobal(self.cursor().pos()))
+    def restore_after_menu(self):
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
         self.text.setText('\n'.join(lines[:7]))
@@ -99,7 +104,6 @@ class TextViewer(qt.QDialog):
             self.text.setTextCursor(cursor)
         if len(lines) > 7:
             QTimer.singleShot(200, self.restore_full_content)
-    
     def restore_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
@@ -107,7 +111,6 @@ class TextViewer(qt.QDialog):
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
                 self.text.setTextCursor(cursor)
-    
     def print_text(self):
         try:
             printer = QPrinter()
@@ -142,13 +145,14 @@ class TextViewer(qt.QDialog):
             self.show_font.setText(str(self.font_size))
             self.update_font_size()
     def update_font_size(self):
-        cursor = self.text.textCursor()    
+        cursor = self.text.textCursor()
         selected_text_start = cursor.selectionStart()
-        selected_text_end = cursor.selectionEnd()
-        self.text.selectAll()
-        font = self.text.font()
-        font.setPointSize(self.font_size)
-        self.text.setCurrentFont(font)            
+        selected_text_end = cursor.selectionEnd()    
+        fmt = qt1.QTextCharFormat()
+        fmt.setFontPointSize(self.font_size)
+        fmt.setFontWeight(qt1.QFont.Weight.Bold)    
+        cursor.select(qt1.QTextCursor.SelectionType.Document)
+        cursor.mergeCharFormat(fmt)    
         cursor.setPosition(selected_text_start)
         if selected_text_start != selected_text_end:
             cursor.setPosition(selected_text_end, qt1.QTextCursor.MoveMode.KeepAnchor)
@@ -171,15 +175,42 @@ class TextViewer(qt.QDialog):
             guiTools.qMessageBox.MessageBox.view(self, "تنبيه حدث خطأ", str(error))
     def _set_text_with_delay(self, full_text):
         self.saved_text = full_text
-        lines = full_text.split('\n')        
+        lines = full_text.split('\n')
         self.text.setText('\n'.join(lines[:7]))
-        self.update_font_size()        
-        if len(lines) > 7:            
+        self.update_font_size()
+        if len(lines) > 7:
             QTimer.singleShot(200, self._display_full_content)
-    def _display_full_content(self):        
+    def _display_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
             if self.saved_cursor_position is not None:
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
                 self.text.setTextCursor(cursor)
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))
+    def copy_current_selection(self):
+        try:
+            cursor = self.text.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
+                pyperclip.copy(selected_text)
+                winsound.Beep(1000, 100)
+                guiTools.speak("تم نسخ النص المحدد بنجاح")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))

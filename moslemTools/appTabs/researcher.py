@@ -164,6 +164,7 @@ class Albaheth(qt.QWidget):
         qt1.QShortcut("Ctrl+Shift+R", self).activated.connect(self.on_change_reciter_requested)        
         qt1.QShortcut("Ctrl+C", self).activated.connect(self.copy_line)
         qt1.QShortcut("Ctrl+A", self).activated.connect(self.copy_text)    
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
     def on_shortcut_activated(self, action_func):        
         self.pause_for_action()        
         cursor = self.results.textCursor()
@@ -513,6 +514,10 @@ class Albaheth(qt.QWidget):
         dec_font = qt1.QAction("تصغير الخط", self)
         dec_font.setShortcut("Ctrl+-")
         dec_font.triggered.connect(self.decrease_font_size)
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(self.set_font_size_dialog)
+        font_menu.addAction(set_font_size)
         font_menu.addAction(dec_font)        
         menu.addMenu(font_menu)        
         menu.exec(qt1.QCursor.pos())
@@ -656,10 +661,26 @@ class Albaheth(qt.QWidget):
     def on_change_reciter_requested(self):        
         self.pause_for_action()        
         with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
-            reciters = json.load(file)
-        
+            reciters = json.load(file)        
         reciter_list = list(reciters.keys())
         dlg = ChangeReciter(self, reciter_list, self.currentReciter)
         if dlg.exec() == qt.QDialog.DialogCode.Accepted:
             self.currentReciter = dlg.recitersListWidget.currentRow()                
         self.resume_after_action()
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

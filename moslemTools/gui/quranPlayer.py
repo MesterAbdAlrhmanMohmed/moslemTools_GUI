@@ -114,6 +114,7 @@ class QuranPlayer(qt.QDialog):
         qt1.QShortcut("ctrl+t", self).activated.connect(self.getCurentAyahTafseer)
         qt1.QShortcut("ctrl+l", self).activated.connect(self.getCurentAyahTranslation)
         qt1.QShortcut("ctrl+f", self).activated.connect(self.getAyahInfo)
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         self.on_play()
     def OnContextMenu(self):
         if self.media.isPlaying():
@@ -168,6 +169,10 @@ class QuranPlayer(qt.QDialog):
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(self.set_font_size_dialog)
+        fontMenu.addAction(set_font_size)
         menu.addMenu(aya)
         menu.addMenu(fontMenu)        
         menu.exec(self.mapToGlobal(self.cursor().pos()))
@@ -354,3 +359,20 @@ class QuranPlayer(qt.QDialog):
         if code==dlg.DialogCode.Accepted:
             self.currentReciter=list(reciters.keys()).index(dlg.recitersListWidget.currentItem().text())
         self.on_play()
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

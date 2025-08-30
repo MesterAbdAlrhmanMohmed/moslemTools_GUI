@@ -20,13 +20,7 @@ class AthkerDialog (qt.QDialog):
         self.media.stop()
         self.athkerList=athkerList
         self.inex=0
-        self.athkerViewer=guiTools.QReadOnlyTextEdit()                
-        self.athkerViewer.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
-        self.athkerViewer.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)                
-        option = self.athkerViewer.document().defaultTextOption()
-        option.setAlignment(qt2.Qt.AlignmentFlag.AlignRight)
-        option.setTextDirection(qt2.Qt.LayoutDirection.RightToLeft)
-        self.athkerViewer.document().setDefaultTextOption(option)        
+        self.athkerViewer=guiTools.QReadOnlyTextEdit()                                        
         self.athkerViewer.setText(self.athkerList[self.inex]["text"])
         self.athkerViewer.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.athkerViewer.customContextMenuRequested.connect(self.OnContextMenu)
@@ -93,6 +87,7 @@ class AthkerDialog (qt.QDialog):
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)                
         qt1.QShortcut("shift+up",self).activated.connect(self.volume_up)
         qt1.QShortcut("shift+down",self).activated.connect(self.volume_down)            
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
     def set_position_from_slider(self, value):
         duration = self.media.duration()
         new_position = int((value / 100) * duration)
@@ -215,6 +210,10 @@ class AthkerDialog (qt.QDialog):
         decrease_action.setShortcut("ctrl+-")
         decrease_action.triggered.connect(self.decrease_font_size)
         font_menu.addAction(decrease_action)                
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(self.set_font_size_dialog)
+        font_menu.addAction(set_font_size)
         menu.addMenu(text_menu)
         menu.addMenu(font_menu)        
         menu.exec(qt1.QCursor.pos())
@@ -280,3 +279,20 @@ class AthkerDialog (qt.QDialog):
         self.audioOutput.setVolume(self.audioOutput.volume()+0.10)        
     def volume_down(self):
         self.audioOutput.setVolume(self.audioOutput.volume()-0.10)
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

@@ -1,4 +1,4 @@
-import pyperclip, requests, geocoder, winsound, gui
+import pyperclip, requests, geocoder, winsound, gui, os
 from guiTools import speak
 from settings import settings_handler
 from hijridate import Gregorian, Hijri
@@ -6,7 +6,94 @@ from datetime import datetime,timedelta
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
-import os
+class PrayerTimesWorker(qt2.QObject):
+    finished = qt2.pyqtSignal(object, object, object, object, object, object, object, object)
+    error = qt2.pyqtSignal(str)
+    def get_dates_info(self):        
+        gregorian_months = [
+            "يَنَايِر", "فِبْرَايِر", "مَارِس", "أَبْرِيل", "مَايُو", "يُونْيُو",
+            "يُولْيُو", "أَغُسْطُس", "سِبْتَمْبَر", "أُكْتُوبَر", "نُوفَمْبَر", "دِيسَمْبَر",
+        ]
+        hijri_months = [
+            "مُحَرَّم", "صَفَر", "رَبِيع ٱلْأَوَّل", "رَبِيع ٱلثَّانِي", "جُمَادَىٰ ٱلْأُولَىٰ",
+            "جُمَادَىٰ ٱلثَّانِيَة", "رَجَب", "شَعْبَان", "رَمَضَان", "شَوَّال",
+            "ذُو ٱلْقَعْدَة", "ذُو ٱلْحِجَّة",
+        ]
+        days_of_week = [
+            "الإثنين", "الثلثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"
+        ]        
+        now = datetime.now()
+        day_name = days_of_week[now.weekday()]
+        day = now.weekday()
+        gregorian_date = f"{day_name} - {now.day} {gregorian_months[now.month - 1]} {now.year}"
+        hijri_date_obj = Gregorian.today().to_hijri()
+        hijri_date = f"{hijri_date_obj.day} {hijri_months[hijri_date_obj.month - 1]} {hijri_date_obj.year}"                
+        today_greg = datetime.now().date()
+        today_hijri = Gregorian.today().to_hijri()
+        ramadan_year = today_hijri.year
+        if today_hijri.month >= 9:
+            ramadan_year += 1
+        ramadan_start_hijri = Hijri(ramadan_year, 9, 1)
+        ramadan_start_greg = ramadan_start_hijri.to_gregorian()
+        time_left = ramadan_start_greg - today_greg
+        total_days_left = time_left.days
+        ramadan_countdown_message = ""        
+        if total_days_left == 0:
+            ramadan_countdown_message = "اليوم هو أول أيام شهر رمضان!"
+        elif total_days_left > 0:
+            months = total_days_left // 30
+            days = total_days_left % 30
+            if months > 0 and days > 0:
+                ramadan_countdown_message = f"باقي على شهر رمضان حوالي: {months} شهر و {days} يوم"
+            elif months > 0 and days == 0:
+                ramadan_countdown_message = f"باقي على شهر رمضان: {months} شهر بالضبط"
+            elif months == 0 and days > 0:
+                ramadan_countdown_message = f"باقي على شهر رمضان: {days} يوم"        
+        return gregorian_date, hijri_date, ramadan_countdown_message, day
+    def run(self):
+        try:            
+            gregorian_date, hijri_date, ramadan_countdown_message, day = self.get_dates_info()            
+            g = geocoder.ip('me')
+            if g.ok:
+                if settings_handler.get("location","autoDetect")=="True":
+                    latitude = g.latlng[0]
+                    longitude = g.latlng[1]
+                else:
+                    latitude=float(settings_handler.get("location","LT2"))
+                    longitude=float(settings_handler.get("location","LT1"))                
+                method = 5
+                response = requests.get('http://api.aladhan.com/v1/timings', params={
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'method': method
+                })                
+                if response.status_code == 200:
+                    data = response.json()['data']['timings']
+                    prayers_ar = {
+                        'Fajr': 'الفجر',
+                        'Sunrise': 'الشروق',
+                        'Dhuhr': 'الظهر',
+                        'Asr': 'العصر',
+                        'Maghrib': 'المغرب',
+                        'Isha': 'العشاء'
+                    }                    
+                    prayers = list(prayers_ar.values())
+                    times = []
+                    for prayer_en, prayer_ar in prayers_ar.items():
+                        time_24h = data[prayer_en]
+                        time_12h = datetime.strptime(time_24h, "%H:%M").strftime("%I:%M %p")
+                        times.append(time_12h)                    
+                    self.finished.emit(prayers, times, gregorian_date, hijri_date, ramadan_countdown_message, day, None, None)
+                else:
+                    self.finished.emit([], [], gregorian_date, hijri_date, ramadan_countdown_message, day, "حدث خطأ في جلب مواقيت الصلاة.", None)
+            else:
+                self.finished.emit([], [], gregorian_date, hijri_date, ramadan_countdown_message, day, "لم يتم تحديد الموقع الجغرافي. تأكد من اتصال الإنترنت، ولن تعمل خدمة مواقيت الصلاة مع استخدام بيانات الهاتف المحمول", None)
+        except Exception as e:            
+            try:
+                gregorian_date, hijri_date, ramadan_countdown_message, day = self.get_dates_info()
+                self.finished.emit([], [], gregorian_date, hijri_date, ramadan_countdown_message, day, f"حدث خطأ غير متوقع: {str(e)}", None)
+            except:
+                self.error.emit(f"حدث خطأ غير متوقع: {str(e)}")
 class prayer_times(qt.QWidget):
     def __init__(self,p):
         super().__init__()
@@ -43,7 +130,7 @@ class prayer_times(qt.QWidget):
         self.worning0.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.worning0.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.worning3 = qt.QLabel()
-        self.worning3.setText("معلومة هامة: لا يمكن تحتيد مواقيت الصلاة باستخدام بيانات الهاتف المحمول")
+        self.worning3.setText("معلومة هامة: لا يمكن تحديد مواقيت الصلاة باستخدام بيانات الهاتف المحمول")
         self.worning3.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.worning3.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
         layout = qt.QVBoxLayout()
@@ -55,7 +142,7 @@ class prayer_times(qt.QWidget):
         layout.addWidget(self.worning2)
         layout.addWidget(self.worning)
         self.setLayout(layout)
-        self.display_prayer_times()    
+        self.display_prayer_times()        
     def onTimer(self):
         currentTimeOBJ = datetime.now()
         currentTime=currentTimeOBJ.strftime("%I:%M %p")
@@ -99,7 +186,7 @@ class prayer_times(qt.QWidget):
                         else:
                             print(f"No specific pre-Adhan sound for prayer {prayer_name}")
                 else:
-                    print(f"Warning: 'remindBeforeAdaan' value '{beforeOptions}' not found in beforeChoises. No before-Adhan reminder will be set.")    
+                    print(f"Warning: 'remindBeforeAdaan' value '{beforeOptions}' not found in beforeChoises. No before-Adhan reminder will be set.")        
     def get_prayer_key(self, prayer_name_ar):        
         prayer_map = {
             "الفجر": "fajr",
@@ -108,96 +195,70 @@ class prayer_times(qt.QWidget):
             "المغرب": "maghrib",
             "العشاء": "isha"
         }
-        return prayer_map.get(prayer_name_ar, None)    
+        return prayer_map.get(prayer_name_ar, None)        
     def copy_all_items(self):
         all_text = "\n".join([self.information.item(i).text() for i in range(self.information.count())])
         pyperclip.copy(all_text)
         speak("تم نسخ كل المحتوى بنجاح")        
-        winsound.Beep(1000, 100)    
+        winsound.Beep(1000, 100)        
     def copy_selected_item(self):
         selected_item = self.information.currentItem()
         if selected_item:
             pyperclip.copy(selected_item.text())
             winsound.Beep(1000, 100)    
-            speak("تم نسخ المحتوى المحدد بنجاح")
+            speak("تم نسخ المحتوى المحدد بنجاح")    
     def display_prayer_times(self):
         self.information.clear()
-        gregorian_months = [
-            "يَنَايِر", "فِبْرَايِر", "مَارِس", "أَبْرِيل", "مَايُو", "يُونْيُو",
-            "يُولْيُو", "أَغُسْطُس", "سِبْتَمْبَر", "أُكْتُوبَر", "نُوفَمْبَر", "دِيسَمْبَر",
-        ]
-        hijri_months = [
-            "مُحَرَّم", "صَفَر", "رَبِيع ٱلْأَوَّل", "رَبِيع ٱلثَّانِي", "جُمَادَىٰ ٱلْأُولَىٰ",
-            "جُمَادَىٰ ٱلثَّانِيَة", "رَجَب", "شَعْبَان", "رَمَضَان", "شَوَّال",
-            "ذُو ٱلْقَعْدَة", "ذُو ٱلْحِجَّة",
-        ]
-        days_of_week = [
-            "الإثنين", "الثلثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"
-        ]
-        g = geocoder.ip('me')
-        if g.ok:
-            if settings_handler.get("location","autoDetect")=="True":
-                latitude = g.latlng[0]
-                longitude = g.latlng[1]
-            else:
-                latitude=float(settings_handler.get("location","LT2"))
-                longitude=float(settings_handler.get("location","LT1"))
-            method = 5
-            response = requests.get('http://api.aladhan.com/v1/timings', params={
-                'latitude': latitude,
-                'longitude': longitude,
-                'method': method
-            })
-            if response.status_code == 200:
-                data = response.json()['data']['timings']
-                prayers_ar = {
-                    'Fajr': 'الفجر',
-                    'Sunrise': 'الشروق',
-                    'Dhuhr': 'الظهر',
-                    'Asr': 'العصر',
-                    'Maghrib': 'المغرب',
-                    'Isha': 'العشاء'
-                }
-                self.prayers = list(prayers_ar.values())
-                self.times = []
-                self.timer.start(10000)
-                for prayer_en, prayer_ar in prayers_ar.items():
-                    time_24h = data[prayer_en]
-                    time_12h = datetime.strptime(time_24h, "%H:%M").strftime("%I:%M %p")
-                    self.times.append(time_12h)
-                    self.information.addItem(f"{prayer_ar}: {time_12h}")
-            else:
-                self.information.addItem("حدث خطأ في جلب مواقيت الصلاة.")
-        else:
-            self.information.addItem("لم يتم تحديد الموقع الجغرافي. تأكد من اتصال الإنترنت، ولن تعمل خدمة مواقيت الصلاة مع استخدام بيانات الهاتف المحمول")
-        now = datetime.now()
-        day_name = days_of_week[now.weekday()]
-        self.day=now.weekday()
-        gregorian_date = f"{day_name} - {now.day} {gregorian_months[now.month - 1]} {now.year}"
-        hijri_date_obj = Gregorian.today().to_hijri()
-        hijri_date = f"{hijri_date_obj.day} {hijri_months[hijri_date_obj.month - 1]} {hijri_date_obj.year}"
+        self.information.addItem("جاري تحميل مواقيت الصلاة...")                
+        self.worker = PrayerTimesWorker()
+        self.thread = qt2.QThread()
+        self.worker.moveToThread(self.thread)                
+        self.worker.finished.connect(self.on_prayer_times_ready)
+        self.worker.error.connect(self.on_prayer_times_error)                
+        self.thread.started.connect(self.worker.run)
+        self.thread.start()    
+    def on_prayer_times_ready(self, prayers, times, gregorian_date, hijri_date, ramadan_countdown_message, day, error_message, _):        
+        self.thread.quit()
+        self.thread.wait()                
+        self.information.clear()
+        self.prayers = prayers
+        self.times = times
+        self.day = day                
+        if prayers and times:
+            for i in range(len(prayers)):
+                self.information.addItem(f"{prayers[i]}: {times[i]}")                
         self.information.addItem("التاريخ الميلادي: " + gregorian_date)
-        self.information.addItem("التاريخ الهجري: " + hijri_date)        
-        today_greg = datetime.now().date()
-        today_hijri = Gregorian.today().to_hijri()
-        ramadan_year = today_hijri.year        
-        if today_hijri.month >= 9:
-            ramadan_year += 1        
-        ramadan_start_hijri = Hijri(ramadan_year, 9, 1)
-        ramadan_start_greg = ramadan_start_hijri.to_gregorian()        
-        time_left = ramadan_start_greg - today_greg
-        total_days_left = time_left.days
-        ramadan_countdown_message = ""
-        if total_days_left == 0:
-            ramadan_countdown_message = "اليوم هو أول أيام شهر رمضان!"
-        elif total_days_left > 0:            
-            months = total_days_left // 30
-            days = total_days_left % 30            
-            if months > 0 and days > 0:
-                ramadan_countdown_message = f"باقي على شهر رمضان حوالي: {months} شهر و {days} يوم"
-            elif months > 0 and days == 0:
-                ramadan_countdown_message = f"باقي على شهر رمضان: {months} شهر بالضبط"
-            elif months == 0 and days > 0:
-                ramadan_countdown_message = f"باقي على شهر رمضان: {days} يوم"                
+        self.information.addItem("التاريخ الهجري: " + hijri_date)                
         if ramadan_countdown_message:
-            self.information.addItem(ramadan_countdown_message)
+            self.information.addItem(ramadan_countdown_message)                
+        if error_message:
+            self.information.addItem(error_message)                
+        if not self.timer.isActive() and prayers and times:
+            self.timer.start(10000)    
+    def on_prayer_times_error(self, error_message):        
+        self.thread.quit()
+        self.thread.wait()                
+        self.information.clear()
+        self.information.addItem(error_message)                
+        try:
+            gregorian_months = [
+                "يَنَايِر", "فِبْرَايِر", "مَارِس", "أَبْرِيل", "مَايُو", "يُونْيُو",
+                "يُولْيُو", "أَغُسْطُس", "سِبْتَمْبَر", "أُكْتُوبَر", "نُوفَمْبَر", "دِيسَمْبَر",
+            ]
+            hijri_months = [
+                "مُحَرَّم", "صَفَر", "رَبِيع ٱلْأَوَّل", "رَبِيع ٱلثَّانِي", "جُمَادَىٰ ٱلْأُولَىٰ",
+                "جُمَادَىٰ ٱلثَّانِيَة", "رَجَب", "شَعْبَان", "رَمَضَان", "شَوَّال",
+                "ذُو ٱلْقَعْدَة", "ذُو ٱلْحِجَّة",
+            ]
+            days_of_week = [
+                "الإثنين", "الثلثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"
+            ]            
+            now = datetime.now()
+            day_name = days_of_week[now.weekday()]
+            gregorian_date = f"{day_name} - {now.day} {gregorian_months[now.month - 1]} {now.year}"
+            hijri_date_obj = Gregorian.today().to_hijri()
+            hijri_date = f"{hijri_date_obj.day} {hijri_months[hijri_date_obj.month - 1]} {hijri_date_obj.year}"            
+            self.information.addItem("التاريخ الميلادي: " + gregorian_date)
+            self.information.addItem("التاريخ الهجري: " + hijri_date)
+        except:
+            pass

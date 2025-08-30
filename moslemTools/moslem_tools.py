@@ -9,7 +9,8 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 from appTabs import *
-guiTools.speak("مرحبا بك في moslem tools, جاري تشغيل البرنامج, الرجاء الانتظار.")
+username = os.getlogin()
+guiTools.speak(f"مرحبا يا {username} في moslem tools، جاري تشغيل البرنامج، الرجاء الانتظار.")
 try:
     updatePath = os.path.join(os.getenv('appdata'), settings_handler.appName, "update")
     if os.path.exists(updatePath):

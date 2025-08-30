@@ -46,6 +46,7 @@ class NamesOfAllah(qt.QWidget):
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)        
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
         bold_font = qt1.QFont()
@@ -78,6 +79,10 @@ class NamesOfAllah(qt.QWidget):
         decrease_font_size_action.setShortcut("ctrl+-")
         fontMenu.addAction(decrease_font_size_action)
         decrease_font_size_action.triggered.connect(self.decrease_font_size)
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(self.set_font_size_dialog)
+        fontMenu.addAction(set_font_size)
         menu.addMenu(text_options)
         menu.addMenu(fontMenu)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
@@ -137,3 +142,20 @@ class NamesOfAllah(qt.QWidget):
             winsound.Beep(1000, 100)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

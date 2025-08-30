@@ -10,7 +10,7 @@ class StoryViewer(qt.QDialog):
         super().__init__(p)
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
-        qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_line)
+        qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
@@ -19,6 +19,7 @@ class StoryViewer(qt.QDialog):
         qt1.QShortcut("ctrl+b", self).activated.connect(self.onAddOrRemoveBookmark)
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)        
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         self.type = type
         self.stories = stories
         self.category = category
@@ -155,6 +156,10 @@ class StoryViewer(qt.QDialog):
         fontMenu.setFont(boldFont)
         fontMenu.addAction("تكبير الخط", self.increase_font_size).setShortcut("ctrl+=")
         fontMenu.addAction("تصغير الخط", self.decrease_font_size).setShortcut("ctrl+-")
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(self.set_font_size_dialog)
+        fontMenu.addAction(set_font_size)
         menu.addMenu(fontMenu)        
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(self.mapToGlobal(self.cursor().pos()))    
@@ -350,3 +355,30 @@ class StoryViewer(qt.QDialog):
             self.onDeleteNote(position_data)
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
+    def copy_current_selection(self):
+        try:
+            cursor = self.text.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
+                pyperclip.copy(selected_text)
+                winsound.Beep(1000, 100)
+                guiTools.speak("تم نسخ النص المحدد بنجاح")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

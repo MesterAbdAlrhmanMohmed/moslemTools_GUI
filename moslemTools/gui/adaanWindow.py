@@ -3,7 +3,7 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from .after_azaan import AfterAdaan
-import os, settings
+import settings
 class AdaanDialog(qt.QDialog):
     def __init__(self, p, index: int, title: str, sound_path: str):  # أضفنا sound_path كمعلمة
         super().__init__(p)

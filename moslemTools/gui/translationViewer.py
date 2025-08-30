@@ -7,13 +7,14 @@ from PyQt6.QtCore import QTimer
 class translationViewer(qt.QDialog):
     def __init__(self, p, From, to):
         super().__init__(p)
-        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
-        qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_line)
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)        
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_astxt)
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
+        qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         self.index = settings.settings_handler.get("translation", "translation")
         self.context_menu_active = False
         self.saved_text = ""
@@ -67,27 +68,31 @@ class translationViewer(qt.QDialog):
         menu.setFocus()
         save = menu.addAction("حفظ كملف نصي")
         save.setShortcut("ctrl+s")
-        save.triggered.connect(lambda: QTimer.singleShot(250, self.save_text_as_txt))
+        save.triggered.connect(lambda: QTimer.singleShot(501, self.save_text_as_txt))
         menu.setDefaultAction(save)
         printerAction = menu.addAction("طباعة")
         printerAction.setShortcut("ctrl+p")
-        printerAction.triggered.connect(lambda: QTimer.singleShot(250, self.print_text))
+        printerAction.triggered.connect(lambda: QTimer.singleShot(501, self.print_text))
         copy_all = menu.addAction("نسخ النص كاملا")
         copy_all.setShortcut("ctrl+a")
-        copy_all.triggered.connect(lambda: QTimer.singleShot(250, self.copy_text))
+        copy_all.triggered.connect(lambda: QTimer.singleShot(501, self.copy_text))
         copy_selected_text = menu.addAction("نسخ النص المحدد")
         copy_selected_text .setShortcut("ctrl+c")
-        copy_selected_text.triggered.connect(lambda: QTimer.singleShot(250, self.copy_line))
+        copy_selected_text.triggered.connect(lambda: QTimer.singleShot(501, self.copy_line))
         fontMenu = qt.QMenu("حجم الخط", self)
         incressFontAction = qt1.QAction("تكبير الخط", self)
         incressFontAction.setShortcut("ctrl+=")
         fontMenu.addAction(incressFontAction)
         fontMenu.setDefaultAction(incressFontAction)
-        incressFontAction.triggered.connect(lambda: QTimer.singleShot(250, self.increase_font_size))
+        incressFontAction.triggered.connect(lambda: QTimer.singleShot(501, self.increase_font_size))
         decreaseFontSizeAction = qt1.QAction("تصغير الخط", self)
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
-        decreaseFontSizeAction.triggered.connect(lambda: QTimer.singleShot(250, self.decrease_font_size))
+        decreaseFontSizeAction.triggered.connect(lambda: QTimer.singleShot(501, self.decrease_font_size))
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(lambda: QTimer.singleShot(501, self.set_font_size_dialog))
+        fontMenu.addAction(set_font_size)
         menu.addMenu(fontMenu)
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(qt1.QCursor.pos())    
@@ -101,7 +106,7 @@ class translationViewer(qt.QDialog):
             cursor.setPosition(self.saved_cursor_position)
             self.text.setTextCursor(cursor)
         if len(lines) > 7:
-            QTimer.singleShot(200, self.restore_full_content)    
+            QTimer.singleShot(500, self.restore_full_content)    
     def restore_full_content(self):    
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
@@ -190,6 +195,16 @@ class translationViewer(qt.QDialog):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+    def copy_current_selection(self):
+        try:
+            cursor = self.text.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
+                pyperclip.copy(selected_text)
+                winsound.Beep(1000, 100)
+                guiTools.speak("تم نسخ النص المحدد بنجاح")        
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def getResult(self):
         self.full_content = functions.translater.gettranslation(
             functions.translater.gettranslationByIndex(self.index),
@@ -199,7 +214,7 @@ class translationViewer(qt.QDialog):
         lines = self.full_content.split('\n')
         self.text.setText('\n'.join(lines[:7]))
         if len(lines) > 7:
-            QTimer.singleShot(200, self.display_full_content)
+            QTimer.singleShot(500, self.display_full_content)
     def display_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.full_content)
@@ -207,3 +222,20 @@ class translationViewer(qt.QDialog):
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
                 self.text.setTextCursor(cursor)
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

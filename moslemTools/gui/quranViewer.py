@@ -124,12 +124,12 @@ class QuranViewer(qt.QDialog):
         buttonsLayout.addWidget(self.next)
         layout.addLayout(buttonsLayout)
         if not self.initial_ayah_index == 0:
-            QTimer.singleShot(201, self._set_initial_ayah_position)
+            QTimer.singleShot(501, self._set_initial_ayah_position)
         if enableNextPreviouseButtons:
             qt1.QShortcut("ctrl+shift+g",self).activated.connect(self.goToCategory)
         qt1.QShortcut("space",self).activated.connect(self.on_play)
         qt1.QShortcut("ctrl+g",self).activated.connect(self.goToAyah)
-        qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_line)
+        qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
@@ -154,6 +154,7 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)            
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)    
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
     def pause_for_action(self):        
         if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.was_playing_before_action = True
@@ -169,7 +170,7 @@ class QuranViewer(qt.QDialog):
         initial_text_chunk = '\n'.join(lines[:7])
         self.text.setText(initial_text_chunk)        
         if len(lines) > 7:
-            qt2.QTimer.singleShot(200, self._display_full_content)
+            qt2.QTimer.singleShot(500, self._display_full_content)
     def _display_full_content(self):                
         if not hasattr(self, 'context_menu_active') or not self.context_menu_active:
             self.text.setText(self.saved_text)                        
@@ -179,7 +180,7 @@ class QuranViewer(qt.QDialog):
         self.text.setText('\n'.join(lines[:7]))
         self.text.setUpdatesEnabled(True)    
         if len(lines) > 7:
-            QTimer.singleShot(200, self.restore_full_content)        
+            QTimer.singleShot(500, self.restore_full_content)        
         if self.saved_cursor_position is not None:
             cursor = self.text.textCursor()
             cursor.setPosition(self.saved_cursor_position)
@@ -355,7 +356,11 @@ class QuranViewer(qt.QDialog):
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
-        menu.addMenu(fontMenu)        
+        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
+        set_font_size.setShortcut("ctrl+1")
+        set_font_size.triggered.connect(self.set_font_size_dialog)
+        fontMenu.addAction(set_font_size)
+        menu.addMenu(fontMenu)                
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(self.mapToGlobal(self.cursor().pos()))                        
     def onAddNote(self, position_data):
@@ -555,17 +560,7 @@ class QuranViewer(qt.QDialog):
         font=self.text.font()
         font.setPointSize(self.font_size)
         self.text.setCurrentFont(font)
-        self.text.setTextCursor(cursor)        
-    def copy_line(self):
-        try:
-            cursor=self.text.textCursor()
-            if cursor.hasSelection():
-                selected_text=cursor.selectedText()
-                pyperclip.copy(selected_text)
-                winsound.Beep(1000,100)
-                guiTools.speak("تم نسخ النص المحدد بنجاح")
-        except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))        
+        self.text.setTextCursor(cursor)            
     def copy_text(self):
         try:
             text=self.text.toPlainText()
@@ -901,3 +896,30 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
         self.resume_after_action()
+    def set_font_size_dialog(self):
+        try:
+            size, ok = guiTools.QInputDialog.getInt(
+                self,
+                "تغيير حجم الخط",
+                "أدخل حجم الخط (من 1 الى 50):",
+                value=self.font_size,
+                min=1,
+                max=50
+            )
+            if ok:
+                self.font_size = size
+                self.show_font.setText(str(self.font_size))
+                self.update_font_size()
+                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))
+    def copy_current_selection(self):            
+        try:
+            cursor = self.text.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
+                pyperclip.copy(selected_text)
+                winsound.Beep(1000, 100)
+                guiTools.speak("تم نسخ النص المحدد بنجاح")
+        except Exception as error:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))

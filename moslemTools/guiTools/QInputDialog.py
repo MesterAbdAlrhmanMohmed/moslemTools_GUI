@@ -2,6 +2,7 @@ from guiTools import QPushButton
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from PyQt6.QtCore import Qt
+
 class QInputDialog(qt.QDialog):
     def __init__(self, parent, title: str, label: str, widget):
         super().__init__(parent)
@@ -13,7 +14,13 @@ class QInputDialog(qt.QDialog):
         layout.addWidget(self.label)
         self.text = widget
         self.text.setAccessibleName(label)
-        self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        # محاذاة النص حسب نوع الودجة
+        if isinstance(widget, qt.QLineEdit):
+            self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        elif isinstance(widget, qt.QSpinBox):
+            self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            
         self.text.textChanged.connect(self.onTextChanged)
         layout.addWidget(self.text)        
         self.OKBTN = QPushButton("موافق")
@@ -47,9 +54,11 @@ class QInputDialog(qt.QDialog):
         wrapper.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addLayout(wrapper)
         qt1.QShortcut("Escape", self).activated.connect(self.reject)
+    
     def closeEvent(self, event):
         self.reject()
         event.accept()
+    
     def onTextChanged(self, text):
         if text.strip():
             self.OKBTN.setDisabled(False)
@@ -73,6 +82,7 @@ class QInputDialog(qt.QDialog):
                     font-size: 14px;
                 }
             """)
+    
     @staticmethod
     def getText(parent, title: str, label: str, text: str = ""):
         dlg = QInputDialog(parent, title, label, qt.QLineEdit())
@@ -83,10 +93,20 @@ class QInputDialog(qt.QDialog):
             return dlg.text.text(), True
         else:
             return "", False
+    
     @staticmethod
     def getInt(parent, title: str, label: str, value: int, min: int, max: int):
         dlg = QInputDialog(parent, title, label, qt.QSpinBox())
         dlg.text.setRange(min, max)
+        dlg.text.setValue(value)
+        result = dlg.exec()
+        if result == qt.QDialog.DialogCode.Accepted:
+            return dlg.text.value(), True
+        else:
+            return 0, False    
+    @staticmethod
+    def getSingleInt(parent, title: str, label: str, value: int):
+        dlg = QInputDialog(parent, title, label, qt.QSpinBox())
         dlg.text.setValue(value)
         result = dlg.exec()
         if result == qt.QDialog.DialogCode.Accepted:

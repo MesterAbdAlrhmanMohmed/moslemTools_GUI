@@ -3,44 +3,73 @@ from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+import threading
+class Worker(qt2.QObject):
+    finished = qt2.pyqtSignal()
+    data_ready = qt2.pyqtSignal(list)
+    def __init__(self):
+        super().__init__()
+    def refresh_books(self):
+        try:
+            functions.islamicBooks.setbook()
+            book_list = list(functions.islamicBooks.books.keys())
+            self.data_ready.emit(book_list)
+        except Exception as e:
+            print(f"Error in refresh thread: {e}")
+        finally:
+            self.finished.emit()
 class IslamicBooks(qt.QWidget):
     def __init__(self):
         super().__init__()                
         font = qt1.QFont()
         font.setBold(True)
         self.setFont(font)
-        layout=qt.QVBoxLayout(self)
-        qt1.QShortcut("f5",self).activated.connect(self.refresh)
+        layout=qt.QVBoxLayout(self)                
+        self.worker = None        
+        qt1.QShortcut("f5",self).activated.connect(self.start_threaded_refresh)        
         serch=qt.QLabel("البحث عن كتاب")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(serch)
+        layout.addWidget(serch)        
         self.search_bar=qt.QLineEdit()        
         self.search_bar.setPlaceholderText("البحث عن كتاب")
         self.search_bar.textChanged.connect(self.onsearch)        
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.search_bar)
+        layout.addWidget(self.search_bar)        
         self.list_of_abook=guiTools.QListWidget()
         self.list_of_abook.addItems(functions.islamicBooks.books.keys())
         self.list_of_abook.itemClicked.connect(self.open)
-        layout.addWidget(self.list_of_abook)
+        layout.addWidget(self.list_of_abook)        
         self.info=qt.QLabel()
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setText("في حالة تحميل كتاب جديد, يرجى إعادة تحميل قائمة الكتب بالضغت على زر F5")
-        layout.addWidget(self.info)
+        layout.addWidget(self.info)        
         self.info1=qt.QLabel()
         self.info1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info1.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info1.setText("تنبيه هام , مطور البرنامج غير مسؤول عن محتوى هذه الكتب")        
+        self.info1.setText("تنبيه هام , مطور البرنامج غير مسؤول عن محتوى هذه الكتب")                
         self.info2=qt.QLabel()
         self.info2.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info2.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info2.setText("لحذف أي كتاب تم تحميله, نستخدم زر الحذف أو زر التطبيقات")
         layout.addWidget(self.info2)
-        layout.addWidget(self.info1)
+        layout.addWidget(self.info1)        
         self.list_of_abook.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.list_of_abook.customContextMenuRequested.connect(self.onDelete)
-        qt1.QShortcut("delete",self).activated.connect(self.onDelete)
+        qt1.QShortcut("delete",self).activated.connect(self.onDelete)    
+    def start_threaded_refresh(self):
+        if self.worker is None:
+            self.worker = Worker()
+            self.worker.data_ready.connect(self.handle_data_ready)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.worker.finished.connect(lambda: setattr(self, 'worker', None))            
+            thread = threading.Thread(target=self.worker.refresh_books)
+            thread.daemon = True
+            thread.start()    
+    def handle_data_ready(self, book_list):
+        self.list_of_abook.clear()
+        self.list_of_abook.addItems(book_list)
+        self.list_of_abook.setFocus()    
     def onDelete(self):
         selectedItem=self.list_of_abook.currentItem()
         if selectedItem:
@@ -55,7 +84,7 @@ class IslamicBooks(qt.QWidget):
                     functions.islamicBooks.setbook()
                     self.list_of_abook.clear()
                     self.list_of_abook.addItems(functions.islamicBooks.books.keys())
-                    guiTools.speak("تم الحذف")
+                    guiTools.speak("تم الحذف")    
     def open(self):
         try:
             with open(os.path.join(os.getenv('appdata'),app.appName,"islamicBooks",functions.islamicBooks.books[self.list_of_abook.currentItem().text()]),"r",encoding="utf-8") as f:
@@ -68,11 +97,9 @@ class IslamicBooks(qt.QWidget):
                     gui.islamicBooks.PartSelection(self,bookName,data).exec()
         except Exception as error:
             print(error)
-            guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر فتح الملف ")
+            guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر فتح الملف ")    
     def refresh(self):
-        functions.islamicBooks.setbook()
-        self.list_of_abook.clear()
-        self.list_of_abook.addItems(functions.islamicBooks.books.keys())
+        self.start_threaded_refresh()    
     def search(self,pattern,text_list):    
         tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')        
         normalized_pattern=tashkeel_pattern.sub('', pattern)        
@@ -80,7 +107,7 @@ class IslamicBooks(qt.QWidget):
             text for text in text_list
             if normalized_pattern in tashkeel_pattern.sub('', text)
         ]        
-        return matches        
+        return matches            
     def onsearch(self):
         search_text=self.search_bar.text().lower()
         self.list_of_abook.clear()
