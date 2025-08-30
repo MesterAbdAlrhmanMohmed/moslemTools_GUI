@@ -1,7 +1,7 @@
 {
 "name": "moslem tools",
-"version": 1.4,
-"what is new": "تم إضافة زر إنقاس في السبحة الإكترونية\nتم عمل تعديلات بسيطة في تخطيطات بعض النوافذ\nتم إصلاح بعض الأخطاء\nتنبيه هام، يجب تحديث هذا الإصدار لأن الإصلاحات هذه مهمة جدا",
-"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_1.4/moslem_tools_version_1.4.exe",
-"is_beta": false
+"version": 2.2,
+"what is new": "الإصدار التجريبي الثاني",
+"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_alcoder_version_2.0.1_beta/moslem_tools_alcoder_version_2.0.1_beta.exe",
+"is_beta": true
 }
