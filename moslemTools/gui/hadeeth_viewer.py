@@ -1,10 +1,11 @@
 from guiTools import note_dialog
 import functions.notesManager as notesManager
-import guiTools, pyperclip, winsound, gettext, json, functions, settings, os
+import guiTools, pyperclip, winsound, json, functions, settings, os
 import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
+from docx import Document
 class hadeeth_viewer(qt.QDialog):
     def __init__(self, p, book_name, index: int = 0):
         super().__init__(p)
@@ -34,6 +35,9 @@ class hadeeth_viewer(qt.QDialog):
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
+        qt1.QShortcut("ctrl+alt+c", self).activated.connect(self.copy_page_range)
+        qt1.QShortcut("ctrl+alt+s", self).activated.connect(self.save_page_range_as_txt)
+        qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.save_page_range_as_docx)
         self.resize(1200, 600)
         self.text = guiTools.QReadOnlyTextEdit()
         self.text.setText(self.data[self.index])
@@ -94,6 +98,18 @@ class hadeeth_viewer(qt.QDialog):
         go_action.setShortcut("ctrl+g")
         go_action.triggered.connect(self.go_to_hadeeth)    
         menu.addMenu(hadeeth_menu)        
+        book_options_menu = qt.QMenu("خيارات الكتاب", self)
+        book_options_menu.setFont(boldFont)        
+        copy_range_action = book_options_menu.addAction("نسخ الأحاديث")
+        copy_range_action.setShortcut("ctrl+alt+c")
+        copy_range_action.triggered.connect(self.copy_page_range)        
+        save_txt_range_action = book_options_menu.addAction("حفظ الأحاديث كملف نصي")
+        save_txt_range_action.setShortcut("ctrl+alt+s")
+        save_txt_range_action.triggered.connect(self.save_page_range_as_txt)        
+        save_docx_range_action = book_options_menu.addAction("حفظ الأحاديث كملف Word")
+        save_docx_range_action.setShortcut("ctrl+alt+d")
+        save_docx_range_action.triggered.connect(self.save_page_range_as_docx)        
+        menu.addMenu(book_options_menu)        
         text_options_menu = qt.QMenu("خيارات النص", self)
         text_options_menu.setFont(boldFont)
         save_action = text_options_menu.addAction("حفظ كملف نصي")
@@ -118,7 +134,6 @@ class hadeeth_viewer(qt.QDialog):
         decrease_font_action = qt1.QAction("تصغير الخط", self)
         decrease_font_action.setShortcut("ctrl+-")
         decrease_font_action.triggered.connect(self.decrease_font_size)
-        font_menu.addAction(decrease_font_action)
         set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
         set_font_size.setShortcut("ctrl+1")
         set_font_size.triggered.connect(self.set_font_size_dialog)
@@ -161,9 +176,78 @@ class hadeeth_viewer(qt.QDialog):
             add_bookmark_action = qt1.QAction("إضافة علامة مرجعية للحديث الحالي", self)
             add_bookmark_action.setShortcut("ctrl+b")
             add_bookmark_action.triggered.connect(self.onAddBookMark)
-            hadeeth_menu.addAction(add_bookmark_action)
-        
+            hadeeth_menu.addAction(add_bookmark_action)        
         menu.exec(self.mapToGlobal(self.cursor().pos()))    
+    def get_page_range(self):        
+        start_page, ok1 = guiTools.QInputDialog.getInt(
+            self, "بداية النطاق", "أدخل رقم حديث البداية:", 
+            value=self.index + 1, min=1, max=len(self.data)
+        )
+        if not ok1:
+            return None, None            
+        end_page, ok2 = guiTools.QInputDialog.getInt(
+            self, "نهاية النطاق", f"أدخل رقم حديث النهاية (1-{len(self.data)}):", 
+            value=len(self.data), 
+            min=1, max=len(self.data)
+        )
+        if not ok2:
+            return None, None        
+        if start_page > end_page:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حديث البداية لا يمكن أن يكون أكبر من حديث النهاية")
+            return None, None
+            
+        return start_page, end_page
+    def copy_page_range(self):        
+        start, end = self.get_page_range()
+        if start is None or end is None:
+            return            
+        content = ""
+        for i in range(start-1, end):
+            content += self.data[i] + "\n\n"            
+        try:
+            pyperclip.copy(content)
+            winsound.Beep(1000, 100)            
+            guiTools.qMessageBox.MessageBox.view(self, "تم النسخ", f"تم نسخ المحتوى من الحديث {start} إلى الحديث {end}")
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ في النسخ", str(e))
+    def save_page_range_as_txt(self):        
+        start, end = self.get_page_range()
+        if start is None or end is None:
+            return            
+        try:
+            file_dialog = qt.QFileDialog()
+            file_dialog.setAcceptMode(qt.QFileDialog.AcceptMode.AcceptSave)
+            file_dialog.setNameFilter("Text Files (*.txt);;All Files (*)")
+            file_dialog.setDefaultSuffix("txt")
+            if file_dialog.exec() == qt.QFileDialog.DialogCode.Accepted:
+                file_name = file_dialog.selectedFiles()[0]
+                with open(file_name, 'w', encoding='utf-8') as file:
+                    for i in range(start-1, end):
+                        file.write(self.data[i] + "\n\n")
+                guiTools.speak(f"تم حفظ المحتوى من الحديث {start} إلى الحديث {end} في ملف نصي")
+                guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", f"تم حفظ المحتوى من الحديث {start} إلى الحديث {end} في ملف نصي")
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ في الحفظ", str(e))
+    def save_page_range_as_docx(self):        
+        start, end = self.get_page_range()
+        if start is None or end is None:
+            return            
+        try:
+            file_dialog = qt.QFileDialog()
+            file_dialog.setAcceptMode(qt.QFileDialog.AcceptMode.AcceptSave)
+            file_dialog.setNameFilter("Word Documents (*.docx);;All Files (*)")
+            file_dialog.setDefaultSuffix("docx")
+            if file_dialog.exec() == qt.QFileDialog.DialogCode.Accepted:
+                file_name = file_dialog.selectedFiles()[0]                
+                doc = Document()
+                for i in range(start-1, end):
+                    p = doc.add_paragraph(self.data[i])
+                    if i < end-1:
+                        doc.add_page_break()                
+                doc.save(file_name)                
+                guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", f"تم حفظ المحتوى من الحديث {start} إلى الحديث {end} في ملف Word")
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ في الحفظ", str(e))
     def onAddNote(self, position_data):
         dialog = note_dialog.NoteDialog(self, mode="add")
         dialog.saved.connect(lambda old, new, content: self.saveNote(position_data, new, content))

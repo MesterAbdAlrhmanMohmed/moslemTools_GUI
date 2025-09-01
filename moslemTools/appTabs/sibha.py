@@ -15,8 +15,7 @@ class sibha(qt.QWidget):
     def __init__(self):
         super().__init__()
         qt1.QShortcut("ctrl+s", self).activated.connect(self.speak_number)
-        qt1.QShortcut("ctrl+c", self).activated.connect(self.speak_current_thecre)
-        
+        qt1.QShortcut("ctrl+c", self).activated.connect(self.speak_current_thecre)        
         with open(path, "r", encoding="utf-8") as file:
             self.externalAthkar = json.load(file)                
         with open(limits_path, "r", encoding="utf-8") as file:
@@ -178,13 +177,21 @@ class sibha(qt.QWidget):
     def on_limit_selected(self, name):        
         menu = qt.QMenu(self)                
         font=qt1.QFont()
-        font.setBold(True)
-        set_action = menu.addAction("تعيين")
-        set_action.triggered.connect(lambda: self.set_active_limit(name))                
+        font.setBold(True)                
+        if self.limits_data["active"] == name:
+            deactivate_action = menu.addAction("إلغاء التعيين")
+            deactivate_action.triggered.connect(lambda: self.deactivate_limit(name))
+        else:
+            set_action = menu.addAction("تعيين")
+            set_action.triggered.connect(lambda: self.set_active_limit(name))                        
         delete_action = menu.addAction("حذف")
         delete_action.triggered.connect(lambda: self.delete_limit(name))        
         menu.setFont(font)
         menu.exec(qt1.QCursor.pos())    
+    def deactivate_limit(self, name):        
+        self.limits_data["active"] = None
+        self.save_limits()
+        guiTools.speak(f"تم إلغاء تعيين الحد الأقصى {name}")    
     def set_active_limit(self, name):        
         self.limits_data["active"] = name
         self.save_limits()
