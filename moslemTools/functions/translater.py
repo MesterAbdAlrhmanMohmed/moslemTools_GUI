@@ -20,7 +20,7 @@ def gettranslation(translationName:str,From:int,to:int):
                 result.append(ayah)
         return "\n".join(result)
     except:
-        return _("لم يتم العثور على ترجمات متاحة ,يرجا تحميل ترجمة واحدة على الأقل")
+        return ("لم يتم العثور على ترجمات متاحة ,يرجا تحميل ترجمة واحدة على الأقل")
 def settranslation():
     global translations
     with open("data/json/files/all_translater.json","r",encoding="utf-8") as file:

@@ -1,4 +1,3 @@
-import os
 import json
 def gettanzil(From:int):
     try:
@@ -12,4 +11,4 @@ def gettanzil(From:int):
                 break
         return result
     except:
-        return _("لم يتم العثور على أسباب نزول متاحة , الرجاء إعادة تثبيت البرنامج")
+        return ("لم يتم العثور على أسباب نزول متاحة , الرجاء إعادة تثبيت البرنامج")

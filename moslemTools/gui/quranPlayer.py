@@ -116,12 +116,11 @@ class QuranPlayer(qt.QDialog):
         qt1.QShortcut("ctrl+f", self).activated.connect(self.getAyahInfo)
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         self.on_play()
-    def OnContextMenu(self):
-        if self.media.isPlaying():
+    def OnContextMenu(self):        
+        self.was_playing = self.media.isPlaying()                
+        if self.was_playing:
             self.media.pause()        
             self.PPS.setText("تشغيل")
-        else:
-            pass
         menu=qt.QMenu("الخيارات",self)
         menu.setAccessibleName("الخيارات")
         aya=qt.QMenu("خيارات الآية",self)
@@ -174,8 +173,13 @@ class QuranPlayer(qt.QDialog):
         set_font_size.triggered.connect(self.set_font_size_dialog)
         fontMenu.addAction(set_font_size)
         menu.addMenu(aya)
-        menu.addMenu(fontMenu)        
-        menu.exec(self.mapToGlobal(self.cursor().pos()))
+        menu.addMenu(fontMenu)                
+        menu.aboutToHide.connect(self.resume_playback)        
+        menu.exec(self.mapToGlobal(self.cursor().pos()))    
+    def resume_playback(self):
+        if hasattr(self, 'was_playing') and self.was_playing and not self.media.isPlaying():
+            self.media.play()
+            self.PPS.setText("إيقاف مؤقت")
     def increase_font_size(self):
         if self.font_size < 50:
             self.font_size += 1

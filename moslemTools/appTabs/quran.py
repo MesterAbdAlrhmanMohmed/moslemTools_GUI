@@ -88,7 +88,7 @@ class Quran(qt.QWidget):
         self.type.setAccessibleName("التصفح ب")
         self.type.addItems(["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"])
         self.type.currentIndexChanged.connect(self.onTypeChanged)
-        layout1.addWidget(self.type)
+        layout1.addWidget(self.type)        
         self.custom_laybol=qt.QLabel("CTRL+C")
         self.custom_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.custom = guiTools.QPushButton("التصفح المخصص")
@@ -98,7 +98,7 @@ class Quran(qt.QWidget):
         self.custom.clicked.connect(self.onCostumBTNClicked)                
         self.custom.setMaximumWidth(150)
         self.custom.setMaximumHeight(150)
-        layout2=qt.QVBoxLayout()
+        layout2=qt.QVBoxLayout()        
         layout2.addWidget(self.custom_laybol)
         layout2.addWidget(self.custom)        
         browse_layout.addLayout(layout1)        
@@ -244,22 +244,28 @@ class Quran(qt.QWidget):
         if not self.info.currentItem():
             return
         ayahList = self.getResult().split("\n")
-        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0])
-        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1])
+        category = self.info.currentItem().text()
+        type = self.type.currentIndex()
+        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0], category, type)
+        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], category, type)
         gui.TafaseerViewer(self, AyahNumber1, AyahNumber2).exec()
     def onTranslationActionTriggered(self):
         if not self.info.currentItem():
             return
         ayahList = self.getResult().split("\n")
-        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0])
-        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1])
+        category = self.info.currentItem().text()
+        type = self.type.currentIndex()
+        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0], category, type)
+        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], category, type)
         gui.translationViewer(self, AyahNumber1, AyahNumber2).exec()
     def onIarabActionTriggered(self):
         if not self.info.currentItem():
             return
         ayahList = self.getResult().split("\n")
-        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0])
-        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1])
+        category = self.info.currentItem().text()
+        type = self.type.currentIndex()
+        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0], category, type)
+        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], category, type)
         result = functions.iarab.getIarab(AyahNumber1, AyahNumber2)
         guiTools.TextViewer(self, "إعراب", result).exec()
     def onCostumBTNClicked(self):

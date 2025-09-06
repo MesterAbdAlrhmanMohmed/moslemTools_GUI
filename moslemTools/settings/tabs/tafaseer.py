@@ -4,6 +4,7 @@ import os, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+
 class TafaseerSettings(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -67,40 +68,48 @@ class TafaseerSettings(qt.QWidget):
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setStyleSheet("font-weight: bold;")
-        main_layout.addWidget(self.info)                
-        self.selectTafaseer.currentTextChanged.connect(
-            lambda text: settings_handler.set("tafaseer", "tafaseer", str(list(tafseer.tafaseers.keys()).index(text)))
-        )
-        self.selecttranslation.currentTextChanged.connect(
-            lambda text: settings_handler.set("translation", "translation", str(list(translater.translations.keys()).index(text)))
-        )    
+        main_layout.addWidget(self.info)                        
+        self.selectTafaseer.currentTextChanged.connect(self.onTafaseerChanged)
+        self.selecttranslation.currentTextChanged.connect(self.onTranslationChanged)    
+    def onTafaseerChanged(self, text):
+        if text and text in tafseer.tafaseers:
+            index = list(tafseer.tafaseers.keys()).index(text)
+            settings_handler.set("tafaseer", "tafaseer", str(index))    
+    def onTranslationChanged(self, text):
+        if text and text in translater.translations:
+            index = list(translater.translations.keys()).index(text)
+            settings_handler.set("translation", "translation", str(index))    
     def onDelete1(self):
         selectedItem = self.selecttranslation.currentText()
         if selectedItem:
             itemText = selectedItem
             if itemText == "English by Talal Itani":
-                guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا يمكنك حذف هذا الكتاب ")
+                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكنك حذف هذا الكتاب ")
             else:
                 question = guiTools.QQuestionMessageBox.view(self, "تنبيه", "هل تريد حذف هذا الكتاب","نعم","لا")
                 if question == 0:
                     name = translater.translations[itemText]
                     os.remove(os.path.join(os.getenv('appdata'), app.appName, "Quran Translations", name))
-                    translater.settranslation()
+                    translater.settranslation()                                        
+                    self.selecttranslation.blockSignals(True)
                     self.selecttranslation.clear()
                     self.selecttranslation.addItems(translater.translations.keys())
-                    guiTools.speak("تم الحذف")    
+                    self.selecttranslation.blockSignals(False)                    
+                    guiTools.speak("تم الحذف")        
     def onDelete(self):
         selectedItem = self.selectTafaseer.currentText()
         if selectedItem:
             itemText = selectedItem
             if itemText == "الميصر":
-                guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا يمكنك حذف هذا الكتاب ")
+                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكنك حذف هذا الكتاب ")
             else:
                 question = guiTools.QQuestionMessageBox.view(self, "تنبيه", "هل تريد حذف هذا الكتاب","نعم","لا")
                 if question == 0:
                     name = tafseer.tafaseers[itemText]
                     os.remove(os.path.join(os.getenv('appdata'), app.appName, "tafaseer", name))
-                    tafseer.setTafaseer()
+                    tafseer.setTafaseer()                                        
+                    self.selectTafaseer.blockSignals(True)
                     self.selectTafaseer.clear()
                     self.selectTafaseer.addItems(tafseer.tafaseers.keys())
+                    self.selectTafaseer.blockSignals(False)                    
                     guiTools.speak("تم الحذف")

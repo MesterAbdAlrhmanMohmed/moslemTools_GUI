@@ -20,12 +20,11 @@ def getTafaseer(tafaseerName:str,From:int,to:int):
                 result.append(ayah)
         return "\n".join(result)
     except:
-        return _("لم يتم العثور على تفاسير متاحة , الرجاء تحميل تفسير واحد على الأقل")
+        return ("لم يتم العثور على تفاسير متاحة , الرجاء تحميل تفسير واحد على الأقل")
 def setTafaseer():
     global tafaseers
     with open("data/json/files/all_tafaseers.json","r",encoding="utf-8") as file:
         tafaseers=json.load(file)
-
     values=tafaseers.copy().values()
     for value in values:
         if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"tafaseer",value)):

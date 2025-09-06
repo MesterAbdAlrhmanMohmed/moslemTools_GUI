@@ -164,9 +164,11 @@ class AthkerDialog (qt.QDialog):
             self.inex-=1
         self.athkerViewer.setText(self.athkerList[self.inex]["text"])
         winsound.PlaySound("data/sounds/previous_page.wav",1)                
-    def OnContextMenu(self):                
-        if self.media.isPlaying():
+    def OnContextMenu(self):                        
+        self.was_playing = self.media.isPlaying()                
+        if self.was_playing:
             self.media.pause()
+            self.PPS.setText("تشغيل")            
         menu = qt.QMenu(self)
         boldFont = qt1.QFont()
         boldFont.setBold(True)
@@ -215,8 +217,13 @@ class AthkerDialog (qt.QDialog):
         set_font_size.triggered.connect(self.set_font_size_dialog)
         font_menu.addAction(set_font_size)
         menu.addMenu(text_menu)
-        menu.addMenu(font_menu)        
-        menu.exec(qt1.QCursor.pos())
+        menu.addMenu(font_menu)                
+        menu.aboutToHide.connect(self.resume_playback)        
+        menu.exec(qt1.QCursor.pos())    
+    def resume_playback(self):
+        if hasattr(self, 'was_playing') and self.was_playing and not self.media.isPlaying():
+            self.media.play()
+            self.PPS.setText("إيقاف مؤقت")            
     def print_text(self):
         try:
             printer=QPrinter()

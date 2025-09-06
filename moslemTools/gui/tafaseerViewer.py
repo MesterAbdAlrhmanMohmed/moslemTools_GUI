@@ -100,23 +100,21 @@ class TafaseerViewer(qt.QDialog):
     def restore_after_menu(self):
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
-        self.text.setText('\n'.join(lines[:7]))
+        self.text.setText('\n'.join(lines[:40]))
         self.text.setUpdatesEnabled(True)
         if self.saved_cursor_position is not None:
             cursor = self.text.textCursor()
             cursor.setPosition(self.saved_cursor_position)
             self.text.setTextCursor(cursor)
-        if len(lines) > 7:
-            QTimer.singleShot(500, self.restore_full_content)
-    
+        if len(lines) > 40:
+            QTimer.singleShot(500, self.restore_full_content)    
     def restore_full_content(self):    
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
             if self.saved_cursor_position is not None:
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
-                self.text.setTextCursor(cursor)
-    
+                self.text.setTextCursor(cursor)    
     def on_change_tafaseer(self):
         self.saved_cursor_position = self.text.textCursor().position()
         self.saved_text = self.text.toPlainText()
@@ -142,7 +140,12 @@ class TafaseerViewer(qt.QDialog):
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(qt1.QCursor.pos())
     def onTafaseerChanged(self, name: str):
-        self.index = functions.tafseer.tafaseers[self.sender().text()]
+        self.index = functions.tafseer.tafaseers[self.sender().text()]        
+        self.saved_text = ""
+        self.saved_cursor_position = None
+        self.saved_selection_start = -1
+        self.saved_selection_end = -1
+        self.context_menu_active = False
         self.getResult()
     def print_text(self):
         try:
@@ -190,12 +193,14 @@ class TafaseerViewer(qt.QDialog):
                 selected_text = self.saved_text[self.saved_selection_start:self.saved_selection_end]
                 pyperclip.copy(selected_text)
                 winsound.Beep(1000, 100)
+                guiTools.speak("تم نسخ النص المحدد بنجاح")        
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
         try:
-            pyperclip.copy(self.saved_text)
+            pyperclip.copy(self.text.toPlainText())
             winsound.Beep(1000, 100)
+            guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_current_selection(self):
@@ -204,7 +209,7 @@ class TafaseerViewer(qt.QDialog):
             if cursor.hasSelection():
                 selected_text = cursor.selectedText()
                 pyperclip.copy(selected_text)
-                winsound.Beep(1000, 100)
+                winsound.Beep(1000, 100)                
                 guiTools.speak("تم نسخ النص المحدد بنجاح")        
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
@@ -214,8 +219,8 @@ class TafaseerViewer(qt.QDialog):
             self.From, self.to
         )
         lines = self.full_content.split('\n')
-        self.text.setText('\n'.join(lines[:7]))
-        if len(lines) > 7:
+        self.text.setText('\n'.join(lines[:40   ]))
+        if len(lines) > 40:
             QTimer.singleShot(500, self.display_full_content)
     def display_full_content(self):
         if not self.context_menu_active:

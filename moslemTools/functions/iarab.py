@@ -1,4 +1,3 @@
-import os
 import json
 def getIarab(From:int,to:int):
     try:
@@ -11,4 +10,4 @@ def getIarab(From:int,to:int):
                 result.append(ayah)
         return "\n".join(result)
     except:
-        return _("لم يتم العثور على ملفات الإعراب, الرجاء إعادة تثبيت البرنامج مرة أخرى")
+        return ("لم يتم العثور على ملفات الإعراب, الرجاء إعادة تثبيت البرنامج مرة أخرى")

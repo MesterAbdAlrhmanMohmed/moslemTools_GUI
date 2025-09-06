@@ -96,13 +96,13 @@ class TextViewer(qt.QDialog):
     def restore_after_menu(self):
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
-        self.text.setText('\n'.join(lines[:7]))
+        self.text.setText('\n'.join(lines[:40]))
         self.text.setUpdatesEnabled(True)
         if self.saved_cursor_position is not None:
             cursor = self.text.textCursor()
             cursor.setPosition(self.saved_cursor_position)
             self.text.setTextCursor(cursor)
-        if len(lines) > 7:
+        if len(lines) > 40:
             QTimer.singleShot(200, self.restore_full_content)
     def restore_full_content(self):
         if not self.context_menu_active:
@@ -176,9 +176,9 @@ class TextViewer(qt.QDialog):
     def _set_text_with_delay(self, full_text):
         self.saved_text = full_text
         lines = full_text.split('\n')
-        self.text.setText('\n'.join(lines[:7]))
+        self.text.setText('\n'.join(lines[:40]))
         self.update_font_size()
-        if len(lines) > 7:
+        if len(lines) > 40:
             QTimer.singleShot(200, self._display_full_content)
     def _display_full_content(self):
         if not self.context_menu_active:

@@ -67,9 +67,7 @@ def getHizb():
                 Q+=1
             if times==5:
                 times=1
-                juzNumber+=1
-
-    
+                juzNumber+=1    
             if str(juzNumber) in juz:
                 List=juz[str(juzNumber)]
                 List.append("{} ({})".format(ayah["text"],str(ayah["numberInSurah"])))
@@ -80,13 +78,21 @@ def getHizb():
         content=juz[j]
         juz[j]=[j,"\n".join(content)]
     return juz
-def getAyah(text):
-    for key,value in data.items():
+def getAyah(text, category=None, type=None):
+    if type == 0 and category and category.startswith("3"):
+        surah_key = "3"
+        if surah_key in data:
+            for ayah in data[surah_key]["ayahs"]:
+                t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))
+                if t == text:
+                    return ayah["numberInSurah"], surah_key, [ayah["juz"], data[surah_key]["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]
+
+    for key, value in data.items():
         for ayah in value["ayahs"]:
-            t="{} ({})".format(ayah["text"],str(ayah["numberInSurah"]))
-            if t==text:
-                return ayah["numberInSurah"],key,[ayah["juz"],value["name"],ayah["hizbQuarter"],ayah["sajda"]],ayah["page"],ayah["number"]
-    return 1,"1",["1","","",False],"1",1
+            t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))
+            if t == text:
+                return ayah["numberInSurah"], key, [ayah["juz"], value["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]
+    return 1, "1", ["1", "", "", False], "1", 1
 def getQuran():
     result=[]
     for Surah,value in data.items():
@@ -97,8 +103,7 @@ def getFromToSurahs(from_surah, from_ayah, to_surah, to_ayah):
     result=[]
     for surah_key in sorted(data.keys(), key=lambda x: int(x)):
         surah_num=int(surah_key)
-        ayahs=data[surah_key]["ayahs"]
-        
+        ayahs=data[surah_key]["ayahs"]        
         if from_surah < surah_num < to_surah:
             for ayah in ayahs:
                 result.append(f"{ayah['text']} ({ayah['numberInSurah']})")
@@ -110,8 +115,7 @@ def getFromToSurahs(from_surah, from_ayah, to_surah, to_ayah):
                         result.append(f"{ayah['text']} ({ayah['numberInSurah']})")
                 else:
                     if ayah_num >= from_ayah:
-                        result.append(f"{ayah['text']} ({ayah['numberInSurah']})")
-                        
+                        result.append(f"{ayah['text']} ({ayah['numberInSurah']})")                        
         elif surah_num == to_surah:
             for ayah in ayahs:
                 ayah_num=int(ayah["numberInSurah"])
@@ -123,30 +127,21 @@ def getFromToTypes(result, from_type, from_vers, to_type, to_vers):
     to_type = int(to_type)
     from_vers = int(from_vers)
     to_vers = int(to_vers)
-
     ayah_list = []
-    collecting = False
-
-    # Ensure correct order of types
+    collecting = False    
     sorted_keys = sorted(result.keys(), key=lambda x: int(x))
     for key in sorted_keys:
         key_int = int(key)
         ayahs = result[key][1].split("\n")
-
         for ayah in ayahs:
-            i=ayahs.index(ayah)+1
-            # Start collecting at the exact from_type/from_vers
+            i=ayahs.index(ayah)+1            
             if key_int == from_type and i == from_vers:
                 collecting = True
             if collecting:
-                ayah_list.append(ayah)
-
-            # Stop collecting after reaching to_type/to_vers
+                ayah_list.append(ayah)            
             if key_int == to_type and i == to_vers:
                 return ayah_list
-
-    return ayah_list  # fallback
-
+    return ayah_list
 def getFromTo(from_surah, from_ayah, to_surah, to_ayah,index):
     if index==0:
         return getFromToSurahs(from_surah,from_ayah,to_surah,to_ayah)

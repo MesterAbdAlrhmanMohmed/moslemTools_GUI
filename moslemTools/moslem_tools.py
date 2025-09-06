@@ -257,7 +257,7 @@ class main(qt.QMainWindow):
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
             if current_gregorian_weekday == 4:
-                self.info.setText("جمعة مباركة، لا تنسوا تشغيل سورة الكهف")
+                self.info.setText("جمعة مباركة، لا تنسوا تشغيل أو قراءة سورة الكهف")
             elif current_gregorian_weekday == 0:
                 self.info.setText("صيام يوم الإثنين، سنة، عن النبي صل الله عليه وسلم")
             elif current_gregorian_weekday == 3:

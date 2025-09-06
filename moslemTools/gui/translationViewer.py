@@ -68,7 +68,7 @@ class translationViewer(qt.QDialog):
         menu.setFocus()
         save = menu.addAction("حفظ كملف نصي")
         save.setShortcut("ctrl+s")
-        save.triggered.connect(lambda: QTimer.singleShot(501, self.save_text_as_txt))
+        save.triggered.connect(lambda: QTimer.singleShot(501, self.save_text_astxt))
         menu.setDefaultAction(save)
         printerAction = menu.addAction("طباعة")
         printerAction.setShortcut("ctrl+p")
@@ -99,13 +99,13 @@ class translationViewer(qt.QDialog):
     def restore_after_menu(self):
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
-        self.text.setText('\n'.join(lines[:7]))
+        self.text.setText('\n'.join(lines[:40]))
         self.text.setUpdatesEnabled(True)
         if self.saved_cursor_position is not None:
             cursor = self.text.textCursor()
             cursor.setPosition(self.saved_cursor_position)
             self.text.setTextCursor(cursor)
-        if len(lines) > 7:
+        if len(lines) > 40:
             QTimer.singleShot(500, self.restore_full_content)    
     def restore_full_content(self):    
         if not self.context_menu_active:
@@ -138,7 +138,12 @@ class translationViewer(qt.QDialog):
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(qt1.QCursor.pos())
     def on_translation_changed(self, name: str):
-        self.index = functions.translater.translations[name]
+        self.index = functions.translater.translations[name]        
+        self.saved_text = ""
+        self.saved_cursor_position = None
+        self.saved_selection_start = -1
+        self.saved_selection_end = -1
+        self.context_menu_active = False
         self.getResult()
     def print_text(self):
         try:
@@ -189,8 +194,8 @@ class translationViewer(qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
-        try:
-            pyperclip.copy(self.saved_text)
+        try:            
+            pyperclip.copy(self.text.toPlainText())
             winsound.Beep(1000, 100)
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
@@ -210,10 +215,9 @@ class translationViewer(qt.QDialog):
             functions.translater.gettranslationByIndex(self.index),
             self.From, self.to
         )
-        self.saved_text = self.full_content
         lines = self.full_content.split('\n')
-        self.text.setText('\n'.join(lines[:7]))
-        if len(lines) > 7:
+        self.text.setText('\n'.join(lines[:40]))
+        if len(lines) > 40:
             QTimer.singleShot(500, self.display_full_content)
     def display_full_content(self):
         if not self.context_menu_active:

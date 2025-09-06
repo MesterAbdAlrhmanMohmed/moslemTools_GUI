@@ -33,8 +33,7 @@ def updateNote(category_type, old_name, new_note_data):
     category_notes = notesList.get(category_type, [])
     found = False
     for i, note in enumerate(category_notes):
-        if note["name"] == old_name:
-            # الحفاظ على بيانات الموضع إذا لم يتم توفيرها في التحديث
+        if note["name"] == old_name:            
             if "position_data" not in new_note_data and "position_data" in note:
                 new_note_data["position_data"] = note["position_data"]
             category_notes[i] = new_note_data
