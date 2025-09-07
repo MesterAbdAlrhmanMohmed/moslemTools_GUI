@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "moslem tools, alcoder"
-#define MyAppVersion "2.0 beta"
+#define MyAppVersion "2.0"
 #define MyAppPublisher "abd alrhman mohamed alcoder"
 #define MyAppURL "https://github.com/MesterAbdAlrhmanMohmed"
 #define MyAppExeName "moslem_tools.exe"
@@ -11,7 +11,7 @@
 #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
 
 [Setup]
-AppId={{826D8631-B76A-42C3-A71B-6EDB8A1D9399}
+AppId={{E41F7AC1-AF39-4E08-B56B-967313455FAC}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
@@ -33,24 +33,37 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
+; نسخ exe الرئيسي
 Source: "D:\alcoder\moslem tools\moslemTools\dist\moslem_tools\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+; نسخ باقي الملفات (مكتبات، إلخ)
 Source: "D:\alcoder\moslem tools\moslemTools\dist\moslem_tools\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; نسخ مجلد data إلى C:\Users\<User>\data
+Source: "D:\alcoder\moslem tools\moslemTools\dist\moslem_tools\data\*"; DestDir: "{code:GetUserProfileDataDir}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Registry]
-; ربط الامتداد مع البرنامج
+; ربط الامتداد
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocExt}\OpenWithProgids"; ValueType: string; ValueName: "{#MyAppAssocKey}"; ValueData: ""; Flags: uninsdeletevalue
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppAssocName}"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".myp"; ValueData: ""
 
-; تشغيل البرنامج من Run (Win+R) بكتابة mt
+; تشغيل من Run (Win+R) بكتابة mt
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\mt.exe"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\mt.exe"; ValueType: string; ValueName: "Path"; ValueData: "{app}"
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; HotKey: "CTRL+ALT+M"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+function GetUserProfileDataDir(Param: String): String;
+var
+  UserProfile: String;
+begin
+  UserProfile := GetEnv('USERPROFILE');
+  Result := UserProfile + '\data';
+end;
