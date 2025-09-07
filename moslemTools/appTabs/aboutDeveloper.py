@@ -25,7 +25,7 @@ class AboutDeveloper(qt.QDialog):
         self.info_text = qt.QLabel()
         self.info_text.setFont(font1)
         self.info_text.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.info_text.setText("اللهم اجعل عملي هذا في ميزان حسناتي وصدقة جارية لي")
+        self.info_text.setText("اللهم اجعل عملنا هذا في ميزان حسناتنا وصدقة جارية لنا")
         self.info_text.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info_text.setFont(font)
         layout = qt.QVBoxLayout()

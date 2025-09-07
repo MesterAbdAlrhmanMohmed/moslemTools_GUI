@@ -89,7 +89,7 @@ class main(qt.QMainWindow):
         content_layout.addWidget(self.list_widget)
         content_layout.addWidget(self.list_widget.w, 1)
         layout.addLayout(content_layout)        
-        self.more_options_button = guiTools.QPushButton("المزيد من الخيارات")
+        self.more_options_button = qt.QPushButton("المزيد من الخيارات")
         self.more_options_button.setDefault(True)
         self.more_options_button.setStyleSheet("background-color: black; color: white;")        
         self.more_options_button.setFixedSize(150,40)                        
