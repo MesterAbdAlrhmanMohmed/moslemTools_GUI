@@ -10,7 +10,7 @@ class book_marcks(qt.QDialog):
         font.setBold(True)
         self.setFont(font)        
         self.setWindowTitle("العلامات المرجعية")
-        self.setMinimumWidth(800)                
+        self.resize(800,450)
         self.tabWidget = qt.QTabWidget()
         self.tabWidget.setStyleSheet("""
             QTabWidget::pane {
@@ -45,10 +45,10 @@ class book_marcks(qt.QDialog):
         for i, category in enumerate(categories):
             tab = qt.QWidget()
             tab_layout = qt.QVBoxLayout(tab)            
-            search_label = qt.QLabel("بحث")
+            search_label = qt.QLabel("البحث عن علامة مرجعية")
             search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-            search_bar = qt.QLineEdit()
-            search_bar.setPlaceholderText("بحث ...")
+            search_bar = qt.QLineEdit()            
+            search_bar .setAccessibleName("البحث عن علامة مرجعية")
             search_bar.textChanged.connect(lambda text, idx=i: self.onsearch_tab(text, idx))
             search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)            
             results = qt.QListWidget()            

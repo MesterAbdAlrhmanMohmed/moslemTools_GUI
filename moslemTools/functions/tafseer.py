@@ -1,5 +1,4 @@
-import os,settings
-import json
+import os,settings,json
 tafaseers={}
 def getTafaseerByIndex(index:str):
     try:

@@ -1,10 +1,6 @@
-import guiTools, gui, zipfile,subprocess
-import sys
-import os, shutil
-from settings import settings_handler, app
-import win32com.client
+import guiTools,zipfile,subprocess,sys,os, shutil
+from settings import settings_handler
 import PyQt6.QtWidgets as qt
-import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 class GUIForThread(qt.QDialog):
     def __init__(self, p, path, choice):

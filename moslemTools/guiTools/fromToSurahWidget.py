@@ -1,7 +1,6 @@
 import functions, gui, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
-import PyQt6.QtCore as qt2
 class FromToSurahWidget(qt.QDialog):
     def __init__(self, p, index:int):
         super().__init__()

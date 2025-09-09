@@ -1,5 +1,4 @@
 from configparser import ConfigParser
-import locale
 import os,shutil
 from . import app
 appName=app.appName

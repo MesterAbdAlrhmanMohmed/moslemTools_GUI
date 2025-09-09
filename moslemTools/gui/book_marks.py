@@ -1,4 +1,4 @@
-import gui,guiTools,functions,json,os,re,time
+import guiTools,functions,re,time
 from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1

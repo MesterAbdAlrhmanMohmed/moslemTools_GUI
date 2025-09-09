@@ -1,6 +1,5 @@
-from functions import quranJsonControl
-import json,os,requests,gettext,re
-import guiTools,gui,settings,settings,functions
+import json,os,requests,re
+import guiTools,settings,settings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2

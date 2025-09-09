@@ -1,4 +1,4 @@
-import time,winsound,pyperclip,os,settings,shutil
+import time,winsound,pyperclip,os,settings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2

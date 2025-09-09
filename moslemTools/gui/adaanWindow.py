@@ -5,7 +5,7 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from .after_azaan import AfterAdaan
 import settings
 class AdaanDialog(qt.QDialog):
-    def __init__(self, p, index: int, title: str, sound_path: str):  # أضفنا sound_path كمعلمة
+    def __init__(self, p, index: int, title: str, sound_path: str):
         super().__init__(p)
         self.resize(500, 600)
         self.setWindowTitle(title)

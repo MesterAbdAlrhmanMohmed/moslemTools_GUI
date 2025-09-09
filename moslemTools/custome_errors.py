@@ -1,7 +1,4 @@
-import traceback
-import os
-import ctypes
-import sys
+import traceback, os, ctypes
 def my_excepthook(exctype, value, tb):
     tb_list = traceback.extract_tb(tb)
     error_message = ""

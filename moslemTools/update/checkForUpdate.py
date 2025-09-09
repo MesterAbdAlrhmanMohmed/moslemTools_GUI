@@ -1,6 +1,5 @@
-import settings,guiTools
+import settings,guiTools,requests
 from .updater import DownloadUpdateGUI
-import requests
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from settings.app import appdirname

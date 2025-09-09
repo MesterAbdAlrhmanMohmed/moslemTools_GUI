@@ -1,4 +1,4 @@
-import json
+import json,re
 with open("data/json/quran.json","r",encoding="utf-8-sig") as file:
     data=json.load(file)
 def getSurahs():
@@ -79,14 +79,17 @@ def getHizb():
         juz[j]=[j,"\n".join(content)]
     return juz
 def getAyah(text, category=None, type=None):
-    if type == 0 and category and category.startswith("3"):
-        surah_key = "3"
-        if surah_key in data:
-            for ayah in data[surah_key]["ayahs"]:
-                t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))
-                if t == text:
-                    return ayah["numberInSurah"], surah_key, [ayah["juz"], data[surah_key]["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]
-
+    if type == 0 and category:
+        match = re.match(r"(\d+)", category)
+        if match:
+            surah_key = match.group(1)                        
+            special_surahs = ["3", "28", "29", "30", "31", "32", "41", "43", "44", "45", "46"]
+            if surah_key in special_surahs:
+                if surah_key in data:
+                    for ayah in data[surah_key]["ayahs"]:
+                        t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))
+                        if t == text:
+                            return ayah["numberInSurah"], surah_key, [ayah["juz"], data[surah_key]["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]    
     for key, value in data.items():
         for ayah in value["ayahs"]:
             t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))

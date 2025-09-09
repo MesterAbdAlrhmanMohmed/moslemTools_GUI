@@ -1,7 +1,6 @@
 from guiTools import QPushButton
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
-import PyQt6.QtCore as qt2
 from PyQt6.QtCore import Qt
 from .QReadOnlyTextEdit import QReadOnlyTextEdit
 import winsound

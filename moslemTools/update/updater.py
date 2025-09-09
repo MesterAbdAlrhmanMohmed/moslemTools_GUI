@@ -1,8 +1,4 @@
-import guiTools
-import settings
-import requests
-import subprocess
-import os,shutil
+import os,shutil,subprocess,requests,settings,guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 class DownloadUpdateObjects(qt2.QObject):

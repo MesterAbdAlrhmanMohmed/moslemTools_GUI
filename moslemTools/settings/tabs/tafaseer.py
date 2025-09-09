@@ -4,7 +4,6 @@ import os, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
-
 class TafaseerSettings(qt.QWidget):
     def __init__(self):
         super().__init__()

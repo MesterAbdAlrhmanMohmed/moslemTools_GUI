@@ -1,9 +1,6 @@
-import guiTools, update, functions,gui,subprocess
-import sys
-import os, shutil
+import guiTools,functions,gui,subprocess,os,sys
 from . import settings_handler, app, tabs
 import PyQt6.QtWidgets as qt
-import sys
 import PyQt6.QtGui as qt1
 from PyQt6.QtCore import Qt
 class settings(qt.QDialog):

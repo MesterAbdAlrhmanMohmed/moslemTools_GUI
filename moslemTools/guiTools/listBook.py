@@ -1,6 +1,5 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
-from PyQt6.QtCore import Qt
 from settings import *
 class listBook(qt.QListWidget):
     def __init__(self):

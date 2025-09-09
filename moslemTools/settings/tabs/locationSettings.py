@@ -1,8 +1,7 @@
 from settings import settings_handler
 import PyQt6.QtWidgets as qt
-import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
-import os, shutil,guiTools,webbrowser
+import webbrowser
 class LocationSettings(qt.QWidget):
     def __init__(self, p):
         super().__init__()

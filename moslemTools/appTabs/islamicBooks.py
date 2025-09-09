@@ -51,7 +51,7 @@ class IslamicBooks(qt.QWidget):
         self.info2=qt.QLabel()
         self.info2.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info2.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info2.setText("لحذف أي كتاب تم تحميله, نستخدم زر الحذف أو زر التطبيقات")
+        self.info2.setText("لحذف أي كتاب تم تحميله, نستخدم زر الحذف أو زر التطبيقات أو click الأيمن")
         layout.addWidget(self.info2)
         layout.addWidget(self.info1)        
         self.list_of_abook.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)

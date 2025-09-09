@@ -2,7 +2,6 @@ import pyperclip, winsound,guiTools
 from settings import *
 from hijridate import Gregorian, Hijri
 import PyQt6.QtWidgets as qt
-import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 class DateConverter(qt.QWidget):
     def __init__(self):

@@ -1,4 +1,4 @@
-import update,guiTools
+import update
 from settings import settings_handler
 import PyQt6.QtWidgets as qt
 class Update(qt.QWidget):

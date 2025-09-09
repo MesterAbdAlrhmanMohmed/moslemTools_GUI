@@ -1,4 +1,4 @@
-import guiTools, gui, gettext
+import guiTools, gui
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2

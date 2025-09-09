@@ -1,4 +1,4 @@
-import guiTools,pyperclip,winsound,gettext
+import guiTools,pyperclip,winsound
 import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter,QPrintDialog
 from PyQt6 import QtGui as qt1

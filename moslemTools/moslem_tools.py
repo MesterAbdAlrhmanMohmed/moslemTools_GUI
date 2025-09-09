@@ -100,7 +100,7 @@ class main(qt.QMainWindow):
         self.moreOptionsMenu.setFont(font)
         self.moreOptionsMenu.setAccessibleName("المزيد من الخيارات")
         action_settings = qt1.QAction("الإعدادات", self)
-        action_settings.setShortcut("f3")
+        action_settings.setShortcut("f1")
         action_settings.triggered.connect(lambda: settings(self).exec())
         self.moreOptionsMenu.addAction(action_settings)        
         action_bookMark = qt1.QAction("العلامات المرجعية", self)
@@ -189,8 +189,8 @@ class main(qt.QMainWindow):
         SC_MAXIMIZE = 0xF030
         SC_RESTORE = 0xF120
         GWL_STYLE = -16
-        WS_CAPTION = 0x00C00000      # شريط العنوان
-        WS_SYSMENU = 0x00080000      # زر الإغلاق فقط
+        WS_CAPTION = 0x00C00000
+        WS_SYSMENU = 0x00080000
         user32 = ctypes.windll.user32
         GetWindowLong = user32.GetWindowLongW
         SetWindowLong = user32.SetWindowLongW
@@ -201,7 +201,7 @@ class main(qt.QMainWindow):
                 user32.RemoveMenu(hMenu, cmd, MF_BYCOMMAND)
             user32.DrawMenuBar(hwnd)    
         style = GetWindowLong(hwnd, GWL_STYLE)
-        new_style = WS_CAPTION | WS_SYSMENU   # بس عنوان + زر إغلاق
+        new_style = WS_CAPTION | WS_SYSMENU
         SetWindowLong(hwnd, GWL_STYLE, new_style)    
         user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0,
                             0x0002 | 0x0001 | 0x0020)

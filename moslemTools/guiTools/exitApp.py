@@ -1,9 +1,6 @@
 import sys,subprocess
-from . import QPushButton
-import os
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
-from PyQt6.QtCore import Qt
 from settings import *
 class ExitApp(qt.QDialog):
     def __init__(self, p):

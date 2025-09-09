@@ -1,6 +1,5 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
-import PyQt6.QtGui as qt1
 class QReadOnlyTextEdit(qt.QTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)        

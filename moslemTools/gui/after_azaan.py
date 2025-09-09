@@ -2,7 +2,6 @@ import PyQt6.QtGui as qt1
 from PyQt6 import QtWidgets as qt
 from PyQt6 import QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
-from PyQt6.QtCore import QTimer
 import guiTools, pyperclip, winsound
 class AfterAdaan(qt.QDialog):
     def __init__(self,p):

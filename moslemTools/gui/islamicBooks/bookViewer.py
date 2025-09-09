@@ -5,7 +5,6 @@ import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
-from PyQt6.QtCore import QTimer
 from docx import Document
 class book_viewer(qt.QDialog):
     def __init__(self, p, book_name, partName: str, content: list, index: int = 0):

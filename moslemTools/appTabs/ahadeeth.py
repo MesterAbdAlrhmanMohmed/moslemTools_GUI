@@ -32,7 +32,7 @@ class hadeeth(qt.QWidget):
         self.info1=qt.QLabel()
         self.info1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info1.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info1.setText("لحذف أي كتاب تم تحميله, نستخدم زر الحذف أو زر التطبيقات")
+        self.info1.setText("لحذف أي كتاب تم تحميله, نستخدم زر الحذف أو زر التطبيقات أو click الأيمن")
         layout.addWidget(self.info1)
         self.list_of_ahadeeth.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.list_of_ahadeeth.customContextMenuRequested.connect(self.onDelete)

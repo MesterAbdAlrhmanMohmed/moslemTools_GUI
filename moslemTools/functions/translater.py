@@ -1,5 +1,4 @@
-import os,settings
-import json
+import os,settings,json
 translations={}
 def gettranslationByIndex(index:str):
     try:
