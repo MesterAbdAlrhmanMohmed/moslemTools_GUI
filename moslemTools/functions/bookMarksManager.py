@@ -287,3 +287,15 @@ def getAudioBookmarkName(typeF:str,type:str,category:str,position:int):
             state=True
             name=audioBookMarkData["name"]
     return state,name
+def getQuranBookmarks():
+    bookMarksList = openBookMarksFile()
+    return bookMarksList["quran"]
+def getAhadeethBookmarks():
+    bookMarksList = openBookMarksFile()
+    return bookMarksList["ahadeeth"]
+def getIslamicBookBookmarks():
+    bookMarksList = openBookMarksFile()
+    return bookMarksList["islamicBooks"]
+def getStoriesBookmarks():
+    bookMarksList = openBookMarksFile()
+    return bookMarksList["stories"]

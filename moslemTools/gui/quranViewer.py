@@ -397,13 +397,22 @@ class QuranViewer(qt.QDialog):
             dialog.exec()
         self.resume_after_action()    
     def saveNote(self, position_data, name, content):
+        existing_note = notesManager.getNoteByName("quran", name)
+        if existing_note is not None:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
+            return        
         notesManager.addNewNote("quran", {
             "name": name,
             "content": content,
             "position_data": position_data
         })
-        guiTools.speak("تمت إضافة الملاحظة")        
-    def updateNote(self, position_data, old_name, new_name, new_content):
+        guiTools.speak("تمت إضافة الملاحظة")
+    def updateNote(self, position_data, old_name, new_name, new_content):    
+        if old_name != new_name:
+            existing_note = notesManager.getNoteByName("quran", new_name)
+            if existing_note is not None:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
+                return
         update_data = {
             "name": new_name,
             "content": new_content,
@@ -413,7 +422,7 @@ class QuranViewer(qt.QDialog):
         if success:
             guiTools.speak("تم تحديث الملاحظة بنجاح")
         else:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")        
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")
     def onAddOrRemoveNote(self):
         self.pause_for_action()
         if not self.enableBookmarks:
@@ -682,14 +691,19 @@ class QuranViewer(qt.QDialog):
     def onAddBookMark(self):
         self.pause_for_action()
         if self.enableBookmarks==False:
-            guiTools.qMessageBox.MessageBox.view(self,"تنبيه","لا يمكن وضع علامة مرجعية عند تصفح القرآن بشكلا مخصص")
+            guiTools.qMessageBox.MessageBox.error(self,"تنبيه","لا يمكن وضع علامة مرجعية عند تصفح القرآن بشكلا مخصص")
             self.resume_after_action()
             return
         name,OK=guiTools.QInputDialog.getText(self,"إضافة علامة مرجعية","أكتب أسم للعلامة المرجعية")
         if OK:
+            bookmarks = functions.bookMarksManager.getQuranBookmarks()
+            if any(bookmark['name'] == name for bookmark in bookmarks):
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم العلامة المرجعية موجود بالفعل، الرجاء اختيار اسم آخر.")
+                self.resume_after_action()
+                return            
             current_ayah = self.getCurrentAyah()
-            functions.bookMarksManager.addNewQuranBookMark(self.type,self.category,current_ayah,False,name)
-        self.resume_after_action()    
+            functions.bookMarksManager.addNewQuranBookMark(self.type, self.category, current_ayah, False, name)
+        self.resume_after_action()
     def playFromVersToVers(self):
         self.pause_for_action()
         FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.quranText.split("\n")))
@@ -839,7 +853,7 @@ class QuranViewer(qt.QDialog):
                 "نعم", "لا"
             )
             if confirm == 0:
-                functions.bookMarksManager.removeQuranBookMark(self.nameOfBookmark)                
+                functions.bookMarksManager.removeQuranBookMark(self.nameOfBookmark)
                 guiTools.speak("تم حذف العلامة المرجعية")
         except:
             guiTools.speak("تم حذف العلامة المرجعية")
@@ -847,7 +861,7 @@ class QuranViewer(qt.QDialog):
     def onAddOrRemoveBookmark(self):
         self.pause_for_action()
         current_ayah = self.getCurrentAyah()
-        state,self.nameOfBookmark=functions.bookMarksManager.getQuranBookmarkName(self.type,self.category,current_ayah,isPlayer=False)
+        state, self.nameOfBookmark = functions.bookMarksManager.getQuranBookmarkName(self.type, self.category, current_ayah, isPlayer=False)
         if state:
             self.onRemoveBookmark()
         else:

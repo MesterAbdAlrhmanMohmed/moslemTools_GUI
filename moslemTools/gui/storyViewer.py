@@ -188,13 +188,22 @@ class StoryViewer(qt.QDialog):
             dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
             dialog.exec()    
     def saveNote(self, position_data, name, content):
+        existing_note = notesManager.getNoteByName("stories", name)
+        if existing_note is not None:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
+            return        
         notesManager.addNewNote("stories", {
             "name": name,
             "content": content,
             "position_data": position_data
         })
-        guiTools.speak("تمت إضافة الملاحظة")    
-    def updateNote(self, position_data, old_name, new_name, new_content):
+        guiTools.speak("تمت إضافة الملاحظة")
+    def updateNote(self, position_data, old_name, new_name, new_content):    
+        if old_name != new_name:
+            existing_note = notesManager.getNoteByName("stories", new_name)
+            if existing_note is not None:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
+                return
         update_data = {
             "name": new_name,
             "content": new_content,
@@ -204,7 +213,7 @@ class StoryViewer(qt.QDialog):
         if success:
             guiTools.speak("تم تحديث الملاحظة بنجاح")
         else:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")    
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")
     def onAddOrRemoveNote(self):
         position_data = {
             "type": self.type,
@@ -310,8 +319,12 @@ class StoryViewer(qt.QDialog):
     def onAddBookMark(self):
         name, OK = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب أسم للعلامة المرجعية")
         if OK:
+            bookmarks = functions.bookMarksManager.getStoriesBookmarks()
+            if any(bookmark['name'] == name for bookmark in bookmarks):
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم العلامة المرجعية موجود بالفعل، الرجاء اختيار اسم آخر.")
+                return            
             functions.bookMarksManager.addNewStoriesBookMark(self.type, self.category, self.getCurrentLine(), name)
-            guiTools.speak("تمت إضافة العلامة المرجعية")    
+            guiTools.speak("تمت إضافة العلامة المرجعية")
     def onAddOrRemoveBookmark(self):
         state, bookmark_name = functions.bookMarksManager.getStoriesBookmarkName(self.category, self.getCurrentLine())
         if state:

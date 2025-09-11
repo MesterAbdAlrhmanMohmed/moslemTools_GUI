@@ -132,6 +132,7 @@ class StoryPlayer(qt.QWidget):
         self.repeat_story_button.toggled.connect(lambda checked: self.update_button_style(self.repeat_story_button, checked))
         self.repeat_story_button.toggled.connect(self.handle_repeat_toggled)
         self.Slider = qt.QSlider(qt2.Qt.Orientation.Horizontal)
+        self.Slider.setAccessibleName("التحكم في تقدم القصة")
         self.Slider.setRange(0, 100)        
         self.Slider.setTracking(True)
         self.Slider.valueChanged.connect(self.set_position_from_slider)

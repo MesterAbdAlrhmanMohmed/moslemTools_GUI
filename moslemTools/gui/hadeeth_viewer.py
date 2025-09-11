@@ -264,14 +264,23 @@ class hadeeth_viewer(qt.QDialog):
             )
             dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
             dialog.exec()    
-    def saveNote(self, position_data, name, content):
+    def saveNote(self, position_data, name, content):    
+        existing_note = notesManager.getNoteByName("ahadeeth", name)
+        if existing_note is not None:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
+            return        
         notesManager.addNewNote("ahadeeth", {
             "name": name,
             "content": content,
             "position_data": position_data
-        })    
-        guiTools.speak("تمت إضافة الملاحظة")    
-    def updateNote(self, position_data, old_name, new_name, new_content):
+        })
+        guiTools.speak("تمت إضافة الملاحظة")
+    def updateNote(self, position_data, old_name, new_name, new_content):    
+        if old_name != new_name:
+            existing_note = notesManager.getNoteByName("ahadeeth", new_name)
+            if existing_note is not None:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
+                return
         update_data = {
             "name": new_name,
             "content": new_content,
@@ -281,7 +290,7 @@ class hadeeth_viewer(qt.QDialog):
         if success:
             guiTools.speak("تم تحديث الملاحظة بنجاح")
         else:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")    
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")
     def onAddOrRemoveNote(self):
         position_data = {
             "bookName": self.bookName,
@@ -407,8 +416,12 @@ class hadeeth_viewer(qt.QDialog):
     def onAddBookMark(self):
         name, OK = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب أسم للعلامة المرجعية")
         if OK:
+            bookmarks = functions.bookMarksManager.getAhadeethBookmarks()
+            if any(bookmark['name'] == name for bookmark in bookmarks):
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم العلامة المرجعية موجود بالفعل، الرجاء اختيار اسم آخر.")
+                return            
             functions.bookMarksManager.addNewHadeethBookMark(self.bookName, self.index, name)
-            guiTools.speak("تمت إضافة العلامة المرجعية")    
+            guiTools.speak("تمت إضافة العلامة المرجعية")
     def onRemoveBookmark(self):
         try:
             confirm = guiTools.QQuestionMessageBox.view(
@@ -417,7 +430,7 @@ class hadeeth_viewer(qt.QDialog):
                 "نعم", "لا"
             )
             if confirm == 0:
-                functions.bookMarksManager.removeAhadeethBookMark(self.nameOfBookmark)                
+                functions.bookMarksManager.removeAhadeethBookMark(self.nameOfBookmark)
                 guiTools.speak("تم حذف العلامة المرجعية")
         except:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "تعذر حذف العلامة المرجعية")    
