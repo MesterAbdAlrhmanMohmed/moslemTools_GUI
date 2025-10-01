@@ -1,6 +1,5 @@
 from .listBook import listBook
 from .exitApp import ExitApp
-from .speak import speak
 from .textViewer import TextViewer
 from .send_notification import SendNotification
 from .QPushButton import QPushButton
@@ -13,3 +12,4 @@ from .QInputDialog import QInputDialog
 from .qMessageBox import MessageBox
 from .QQuestionMessageBox import QQuestionMessageBox
 from .note_dialog import NoteDialog
+from .speak import speak

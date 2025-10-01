@@ -11,6 +11,7 @@ class other_brotcasts(qt.QWidget):
         self.audio_output = audio_output_instance
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_other = qt.QListWidget()
+        self.list_of_other.setSpacing(1)
         self.list_of_other.setStyleSheet(style_sheet)
         self.list_of_other.itemActivated.connect(self.play)        
         self.list_of_other.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
@@ -142,6 +143,7 @@ class brotcasts_of_suplications(qt.QWidget):
         self.audio_output = audio_output_instance
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_adhkar = qt.QListWidget()
+        self.list_of_adhkar.setSpacing(1)
         self.list_of_adhkar.setStyleSheet(style_sheet)
         self.list_of_adhkar.itemActivated.connect(self.play)
         self.list_of_adhkar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -192,6 +194,7 @@ class brotcasts_of_tafseer(qt.QWidget):
         self.audio_output = audio_output_instance
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_tafseer = qt.QListWidget()
+        self.list_of_tafseer.setSpacing(1)
         self.list_of_tafseer.setStyleSheet(style_sheet)
         self.list_of_tafseer.itemActivated.connect(self.play)
         self.list_of_tafseer.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -248,6 +251,7 @@ class brotcasts_of_reciters(qt.QWidget):
         self.audio_output = audio_output_instance
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_reciters = qt.QListWidget()
+        self.list_of_reciters.setSpacing(1)
         self.list_of_reciters.setStyleSheet(style_sheet)
         self.list_of_reciters.itemActivated.connect(self.play)
         self.list_of_reciters.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
@@ -382,6 +386,7 @@ class quran_brotcast(qt.QWidget):
         self.audio_output = audio_output_instance
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_quran_brotcasts = qt.QListWidget()
+        self.list_of_quran_brotcasts.setSpacing(1)
         self.list_of_quran_brotcasts.setStyleSheet(style_sheet)
         self.list_of_quran_brotcasts.itemActivated.connect(self.play)
         self.list_of_quran_brotcasts.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)

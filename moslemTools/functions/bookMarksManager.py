@@ -1,16 +1,20 @@
 from . import quranJsonControl
-import json ,os,gui
+import json, os, gui
 from settings import app
 bookMarksPath=os.path.join(os.getenv('appdata'),app.appName,"bookMarks.json")
 if not os.path.exists(bookMarksPath):
     with open(bookMarksPath,"w",encoding="utf-8") as file:
-        json.dump({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[]},file,ensure_ascii=False,indent=4)
+        json.dump({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[], "islamicTopics":[]},file,ensure_ascii=False,indent=4)
 def openBookMarksFile():
     try:
         with open(bookMarksPath,"r",encoding="utf-8") as file:
-            return json.load(file)
+            data = json.load(file)            
+            for key in ["quran", "ahadeeth", "islamicBooks", "stories", "islamicTopics"]:
+                if key not in data:
+                    data[key] = []
+            return data
     except:        
-        return {"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[]}
+        return {"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[], "islamicTopics":[]}
 def saveBookMarks(bookMarksList:dict):
     with open(bookMarksPath,"w",encoding="utf-8") as file:
         json.dump(bookMarksList,file,ensure_ascii=False,indent=4)
@@ -30,8 +34,12 @@ def removeAllStoriesBookMarks():
     bookMarksList = openBookMarksFile()
     bookMarksList["stories"] = []
     saveBookMarks(bookMarksList)
+def removeAllIslamicTopicsBookMarks():
+    bookMarksList = openBookMarksFile()
+    bookMarksList["islamicTopics"] = []
+    saveBookMarks(bookMarksList)
 def removeAllBookMarks():
-    saveBookMarks({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[]})
+    saveBookMarks({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[], "islamicTopics":[]})
 def addNewHadeethBookMark(bookName:str,hadeethNumber:int,bookMarkName:str):
     bookMarksList=openBookMarksFile()
     ahadeethBookMarksList=bookMarksList["ahadeeth"]
@@ -192,6 +200,65 @@ def getStoryBookmark(p,name):
         gui.StoryViewer(p,story,type,category,stories,index=line).exec()
     else:
         print("error")
+def addNewIslamicTopicBookMark(file_path: str, title: str, line: int, bookmark_name: str):
+    bookmarks_list = openBookMarksFile()
+    new_bookmark = {
+        "file": file_path,
+        "title": title,
+        "line": line,
+        "name": bookmark_name
+    }
+    bookmarks_list["islamicTopics"].append(new_bookmark)
+    saveBookMarks(bookmarks_list)
+def removeIslamicTopicBookMark(bookmark_name: str):
+    bookmarks_list = openBookMarksFile()
+    bookmarks_list["islamicTopics"] = [bm for bm in bookmarks_list["islamicTopics"] if bm["name"] != bookmark_name]
+    saveBookMarks(bookmarks_list)
+def openIslamicTopicByBookmarkName(p, name: str):
+    bookmarks_list = openBookMarksFile()
+    bookmark_data = next((bm for bm in bookmarks_list.get("islamicTopics", []) if bm["name"] == name), None)
+    if not bookmark_data:
+        print("Error: Islamic Topic bookmark not found.")
+        return
+    file_path = bookmark_data.get("file")
+    title = bookmark_data.get("title")
+    line = bookmark_data.get("line", 0)
+    if not file_path or not title:
+        print("Error: Invalid Islamic Topic bookmark data.")
+        return
+    full_path = os.path.join("data", "json", "IslamicTopics", file_path)
+    if not os.path.exists(full_path):        
+        base_search_path = os.path.join("data", "json", "IslamicTopics")
+        found = False
+        for root, _, files in os.walk(base_search_path):
+            if os.path.basename(file_path) in files:
+                full_path = os.path.join(root, os.path.basename(file_path))
+                found = True
+                break
+        if not found:
+            print(f"Error: Could not find file {file_path}")
+            return
+    try:
+        with open(full_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)        
+        all_topics = {item.get("number", str(i)): item.get("label", "") for i, item in enumerate(data)}
+        content = all_topics.get(title)        
+        if content:
+            from gui.islamicTopicViewer import IslamicTopicViewer            
+            IslamicTopicViewer(p, file_path, title, content, all_topics, index=line).exec()
+        else:
+            print(f"Error: Topic '{title}' not found in file '{file_path}'.")
+    except Exception as e:
+        print(f"Error opening Islamic Topic bookmark: {e}")
+def getIslamicTopicBookmarkName(file_path: str, title: str, line: int):
+    bookmarks_list = openBookMarksFile()
+    for bm in bookmarks_list.get("islamicTopics", []):
+        if bm.get("file") == file_path and bm.get("title") == title and bm.get("line") == line:
+            return True, bm["name"]
+    return False, ""
+def getIslamicTopicsBookmarks():
+    bookmarks_list = openBookMarksFile()
+    return bookmarks_list.get("islamicTopics", [])
 def addNewaudioBookMark(tabName,typeIndex:int,categoryIndex:int,position:int,bookMarkName:str):
     bookMarksList=openBookMarksFile()
     try:

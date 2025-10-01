@@ -51,25 +51,26 @@ class main(qt.QMainWindow):
         content_layout = qt.QHBoxLayout()
         self.list_widget = guiTools.listBook()
         self.list_widget.currentItemChanged.connect(self.onToolChanged)
+        self.list_widget.setSpacing(1)
         self.quranPlayer = QuranPlayer()
         self.storiesPlayer = StoryPlayer()
         self.researcher = Albaheth()
-        tabs = [
+        tabs = [    
             (prayer_times(self), "مواقيت الصلاة والتاريخ"),
             (Quran(), "القرآن الكريم مكتوب"),
             (self.quranPlayer, "القرآن الكريم صوتي"),
             (QuranRecitations(), "قراءات القرآن الكريم"),
-            (hadeeth(), "الأحاديث النبوية والقدسية"),
-            (IslamicBooks(), "الكتب الإسلامية"),
-            (ProphetStories(), "القصص الإسلامية المكتوبة"),            
-            (self.storiesPlayer, "القصص الإسلامية الصوتية للأطفال"),
-            (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),
-            (self.researcher, "الباحث في القرآن والأحاديث"),
-            (protcasts(), "الإذاعات الإسلامية"),            
             (Athker(), "الأذكار والأدعية"),
-            (sibha(), "سبحة إلكترونية"),
+            (sibha(), "سبحة إلكترونية"),    
+            (hadeeth(), "الأحاديث النبوية والقدسية"),
             (NamesOfAllah(), "أسماء الله الحُسْنى"),
-            (DateConverter(), "محول التاريخ")
+            (IslamicBooks(), "الكتب الإسلامية"),
+            (ProphetStories(), "القصص الإسلامية المكتوبة"),
+            (self.storiesPlayer, "القصص الإسلامية الصوتية للأطفال"),
+            (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),    
+            (self.researcher, "الباحث في القرآن والأحاديث"),
+            (protcasts(), "إذاعات الراديو الإسلامية"),
+            (DateConverter(), "محول التاريخ"),
         ]
         for widget_class, label in tabs:
             self.list_widget.add(label, widget_class)
@@ -91,6 +92,8 @@ class main(qt.QMainWindow):
         content_layout.addWidget(self.list_widget.w, 1)
         layout.addLayout(content_layout)        
         self.more_options_button = qt.QPushButton("المزيد من الخيارات")
+        self.more_options_button.setShortcut("ctrl+o")
+        self.more_options_button.setAccessibleDescription("control plus o")
         self.more_options_button.setDefault(True)
         self.more_options_button.setStyleSheet("background-color: black; color: white;")        
         self.more_options_button.setFixedSize(150,40)                        
@@ -254,48 +257,49 @@ class main(qt.QMainWindow):
         self.developers_window = AboutDeveloper()
         self.developers_window.show()
     def viewInfoTextEdit(self):
+        username1 = os.getlogin()
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
             if current_gregorian_weekday == 4:
-                self.info.setText("جمعة مباركة، لا تنسوا تشغيل أو قراءة سورة الكهف")
+                self.info.setText(f"جمعة مباركة يا {username1}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صل الله عليه وسلم")
             elif current_gregorian_weekday == 0:
-                self.info.setText("صيام يوم الإثنين، سنة، عن النبي صل الله عليه وسلم")
+                self.info.setText(f"يا {username1} صيام يوم الإثنين، سنة عن النبي صل الله عليه وسلم")
             elif current_gregorian_weekday == 3:
-                self.info.setText("صيام يوم الخميس، سنة عن النبي صل الله عليه وسلم")                        
+                self.info.setText(f"يا {username1} صيام يوم الخميس، سنة عن النبي صل الله عليه وسلم")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 1:
                 self.info.setText("كل عام وأنتم بخير بمناسبة رأس السنة الهجرية الجديدة")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 10:
-                self.info.setText("صيام عاشوراء، مستحب عن النبي صل الله عليه وسلم")        
+                self.info.setText(f"يا {username1} صيام عاشوراء، مستحب عن النبي صل الله عليه وسلم")
             elif hijri_date_obj.month == 7 and hijri_date_obj.day == 27:
-                self.info.setText("ذكرى الإسراء والمعراج")        
+                self.info.setText("ذكرى الإسراء والمعراج")
             elif hijri_date_obj.month == 8 and hijri_date_obj.day == 15:
-                self.info.setText("ليلة النصف من شعبان، يستحب فيها الدعاء")
+                self.info.setText(f"يا {username1} ليلة النصف من شعبان، يستحب فيها الدعاء")
             elif hijri_date_obj.month == 8:
-                self.info.setText("يستحب الصيام في شهر شعبان")
-            elif hijri_date_obj.month == 9 and hijri_date_obj.day >= 21 and hijri_date_obj.day <= 29:
+                self.info.setText(f"يا {username1} يستحب الصيام في شهر شعبان")
+            elif hijri_date_obj.month == 9 and 21 <= hijri_date_obj.day <= 29:
                 self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر")
             elif hijri_date_obj.month == 9:
-                self.info.setText("رمضان كريم")        
+                self.info.setText(f"رمضان كريم يا {username1}")
             elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1:
-                self.info.setText("عيد فطر مبارك")
+                self.info.setText(f"عيد فطر مبارك يا {username1}")
             elif hijri_date_obj.month == 10:
-                self.info.setText("صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صل الله عليه وسلم")        
+                self.info.setText(f"يا {username1} صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صل الله عليه وسلم")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day == 9:
-                self.info.setText("صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
+                self.info.setText(f"يا {username1} صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day == 10:
-                self.info.setText("عيد أضحى مبارك")
+                self.info.setText(f"عيد أضحى مبارك يا {username1}")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
                 self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [1, 2, 3, 4, 5, 6, 7, 8]:
-                self.info.setText("صيام العشر الأوائل من ذي الحج،ة سنة عن النبي صل الله عليه وسلم")        
+                self.info.setText(f"يا {username1} صيام العشر الأوائل من ذي الحجة سنة عن النبي صل الله عليه وسلم")
             elif hijri_date_obj.day in [13, 14, 15]:
-                self.info.setText("صيام الأيام القمرية، سنة عن النبي صل الله عليه وسلم")        
+                self.info.setText(f"يا {username1} صيام الأيام القمرية، سنة عن النبي صل الله عليه وسلم")
             else:
-                self.info.setText("لا تَنْسى ذِكْر الله")
+                self.info.setText("لا تَنْسوا ذِكْر الله")
         except Exception as e:
             print(f"حدث خطأ: {e}")
-            self.info.setText("لا تَنْسى ذِكْر الله")
+            self.info.setText("لا تَنْسوا ذِكْر الله")
     def onViewLastMessageButtonClicked(self):
         with open(os.path.join(os.getenv('appdata'), settings_handler.appName, "message.json"), "r", encoding="utf-8") as file:
             data = json.load(file)
@@ -308,10 +312,10 @@ class main(qt.QMainWindow):
         except Exception as e:
             print(e)
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشلت عملية جلب المعلومات, الرجاء الإتصال بالإنترنت")
-    def onToolChanged(self,index):
+    def onToolChanged(self, current, previous):
         self.quranPlayer.mp.pause()
         self.storiesPlayer.mp.pause()
-        self.researcher.media_player.pause()
+        self.researcher.media_player.pause()                
     def OnDonation(self):
         guiTools.MessageBox.view(self,"تنبيه","في حالة التبرع الرجاء إرسال صورة للتحويل على حساب Telegram الخاص بي، حتى لا تختلط التحويلات الخاطئة بالتحويلات المقصودة")
         menu=qt.QMenu("اختر طريقة",self)

@@ -2,7 +2,7 @@ import PyQt6.QtGui as qt1
 from PyQt6 import QtWidgets as qt
 from PyQt6 import QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
-import guiTools, pyperclip, winsound
+import guiTools, pyperclip, winsound, settings
 class AfterAdaan(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
@@ -19,13 +19,17 @@ class AfterAdaan(qt.QDialog):
         self.suplication = guiTools.QReadOnlyTextEdit()
         self.suplication.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.suplication.customContextMenuRequested.connect(self.onContextMenu)
-        self.font_size = 12
+        
+        # --- Load default font settings ---
+        self.font_size = int(settings.settings_handler.get("font", "size"))
+        is_bold = settings.settings_handler.get("font", "bold") == "True"
+        
         font = qt1.QFont()
         font.setPointSize(self.font_size)
-        font.setBold(True)
+        font.setBold(is_bold)
         self.suplication.setFont(font)
-        self.suplication.setAccessibleName("دعاء بعد الأذان")
-        self.suplication.setText("اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ\nيُستحب إضافة: إِنَّكَ لَا تُخْلِفُ المِيعَادَ.\n\nثواب الدعاء بعد الأذان\nقال رسول الله صل الله عليه وسلم: مَنْ قَالَ حِينَ يَسْمَعُ النِّدَاءَ: اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ؛ حَلَّتْ لَهُ شَفَاعَتِي يَوْمَ القِيَامَةِ\nرواه البخاري في صحيحه.")                
+        
+        self.suplication.setText("اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ\nيُستحب إضافة: إِنَّكَ لَا تُخْلِفُ المِيعَادَ.\n\nثواب الدعاء بعد الأذان\nقال رسول الله صل الله عليه وسلم: مَنْ قَالَ حِينَ يَسْمَعُ النِّدَاءَ: اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ؛ حَلَّتْ لَهُ شَفَاعَتِي يَوْمُ القِيَامَةِ\nرواه البخاري في صحيحه.")                
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font = qt.QLabel(str(self.font_size))
@@ -42,6 +46,7 @@ class AfterAdaan(qt.QDialog):
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
+
     def onContextMenu(self, pos):
         menu = qt.QMenu("الخيارات", self)
         font=qt1.QFont()
@@ -55,10 +60,10 @@ class AfterAdaan(qt.QDialog):
         copy_selected_text.triggered.connect(self.copy_line)
         fontMenu = qt.QMenu("حجم الخط", self)
         fontMenu.setFont(font)        
-        incressFontAction = qt1.QAction("تكبير الخط (Ctrl+=", self)
+        incressFontAction = qt1.QAction("تكبير الخط (Ctrl+=)", self)
         fontMenu.addAction(incressFontAction)
         incressFontAction.triggered.connect(self.increase_font_size)        
-        decreaseFontSizeAction = qt1.QAction("تصغير الخط (Ctrl+-", self)
+        decreaseFontSizeAction = qt1.QAction("تصغير الخط (Ctrl+-)", self)
         fontMenu.addAction(decreaseFontSizeAction)
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)        
         set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
@@ -68,22 +73,29 @@ class AfterAdaan(qt.QDialog):
         menu.addMenu(text_options)
         menu.addMenu(fontMenu)
         menu.exec(self.suplication.mapToGlobal(pos))
+
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
             self.update_font_size()
+
     def decrease_font_size(self):
         if self.font_size > 1:
             self.font_size -= 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
             self.update_font_size()
+
     def update_font_size(self):
+        cursor = self.suplication.textCursor()
+        self.suplication.selectAll()
         font = self.suplication.font()
         font.setPointSize(self.font_size)
-        self.suplication.setFont(font)
+        self.suplication.setCurrentFont(font)
+        self.suplication.setTextCursor(cursor)
+
     def copy_line(self):
         try:
             cursor = self.suplication.textCursor()
@@ -93,6 +105,7 @@ class AfterAdaan(qt.QDialog):
                 guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", str(e))
+
     def copy_text(self):
         try:
             pyperclip.copy(self.suplication.toPlainText())
@@ -100,18 +113,20 @@ class AfterAdaan(qt.QDialog):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", str(e))
+
     def closewindow(self):
         self.media_player.stop()
         self.accept()
+
     def set_font_size_dialog(self):
         try:
             size, ok = guiTools.QInputDialog.getInt(
                 self,
                 "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 50):",
+                "أدخل حجم الخط (من 1 الى 100):",
                 value=self.font_size,
                 min=1,
-                max=50
+                max=100
             )
             if ok:
                 self.font_size = size

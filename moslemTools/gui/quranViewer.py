@@ -4,7 +4,7 @@ from .changeReciter import ChangeReciter
 from .translationViewer import translationViewer
 from .tafaseerViewer import TafaseerViewer
 from .quranPlayer import QuranPlayer
-import time, winsound, pyperclip, os, json
+import time, winsound, pyperclip, os, json, re, requests, subprocess, shutil
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -12,8 +12,145 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6.QtCore import QTimer
 import guiTools, settings, functions
-with open("data/json/files/all_reciters.json","r",encoding="utf-8-sig") as file:
-    reciters=json.load(file)
+
+with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
+    reciters = json.load(file)
+
+class DownloadThread(qt2.QThread):
+    progress = qt2.pyqtSignal(int)
+    finished = qt2.pyqtSignal()
+    cancelled = qt2.pyqtSignal()
+    def __init__(self, url, filepath):
+        super().__init__()
+        self.url = url
+        self.filepath = filepath
+        self.is_cancelled = False
+    def run(self):
+        try:
+            response = requests.get(self.url, stream=True)
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded_size = 0
+            with open(self.filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if self.is_cancelled:
+                        self.cancelled.emit()
+                        return
+                    if chunk:
+                        f.write(chunk)
+                        downloaded_size += len(chunk)
+                        if total_size > 0:
+                            progress_percent = int((downloaded_size / total_size) * 100)
+                            self.progress.emit(progress_percent)
+            self.finished.emit()
+        except Exception as e:
+            print(f"Error during download or file writing: {e}")
+            self.cancelled.emit()
+    def cancel(self):
+        self.is_cancelled = True
+class MergeThread(qt2.QThread):
+    finished = qt2.pyqtSignal(bool, str)
+    def __init__(self, ffmpeg_path, input_files, output_file):
+        super().__init__()
+        self.ffmpeg_path = ffmpeg_path
+        self.input_files = input_files
+        self.output_file = output_file
+        self.process = None
+    def run(self):
+        list_filepath = os.path.join(os.path.dirname(self.output_file), "mergelist.txt")
+        try:
+            with open(list_filepath, 'w', encoding='utf-8') as f:
+                for file_path in self.input_files:
+                    safe_path = file_path.replace("\\", "/")
+                    f.write(f"file '{safe_path}'\n")
+            command = [
+                self.ffmpeg_path,
+                "-y",
+                "-f", "concat",
+                "-safe", "0",
+                "-i", list_filepath,
+                "-ar", "44100",
+                "-ac", "2",
+                "-b:a", "192k",
+                self.output_file
+            ]
+            startupinfo = None
+            if os.name == 'nt':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            self.process = subprocess.Popen(command, startupinfo=startupinfo, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
+            stdout, stderr = self.process.communicate()
+            if self.process.returncode == 0:
+                self.finished.emit(True, "Success")
+            else:
+                self.finished.emit(False, f"فشل الدمج أو تم إلغاؤه.\n{stderr}")
+        except Exception as e:
+            self.finished.emit(False, f"حدث خطأ غير متوقع: {str(e)}")
+        finally:
+            if os.path.exists(list_filepath):
+                os.remove(list_filepath)
+    def stop(self):
+        if self.process and self.process.poll() is None:
+            self.process.terminate()
+class SearchModeDialog(qt.QDialog):
+    def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
+        super().__init__(parent)
+        self.setWindowTitle("إعدادات نمط البحث")
+        self.setFixedSize(350, 200)
+        self.initial_ignore_tashkeel = ignore_tashkeel
+        self.initial_ignore_hamza = ignore_hamza
+        self.initial_ignore_symbols = ignore_symbols
+        self.ignore_tashkeel = ignore_tashkeel
+        self.ignore_hamza = ignore_hamza
+        self.ignore_symbols = ignore_symbols
+        self.init_ui()
+    def init_ui(self):
+        layout = qt.QVBoxLayout(self)
+        layout.setSpacing(10)
+        layout.setContentsMargins(20, 20, 20, 20)        
+        bold_font = qt1.QFont()
+        bold_font.setBold(True)        
+        self.tashkeel_checkbox = qt.QCheckBox("تجاهل التشكيل")
+        self.tashkeel_checkbox.setChecked(self.initial_ignore_tashkeel)
+        self.tashkeel_checkbox.setFont(bold_font)
+        self.tashkeel_checkbox.stateChanged.connect(self._set_ignore_tashkeel)
+        layout.addWidget(self.tashkeel_checkbox)        
+        self.hamza_checkbox = qt.QCheckBox("تجاهل الهمزات")
+        self.hamza_checkbox.setChecked(self.initial_ignore_hamza)
+        self.hamza_checkbox.setFont(bold_font)
+        self.hamza_checkbox.stateChanged.connect(self._set_ignore_hamza)
+        layout.addWidget(self.hamza_checkbox)        
+        self.symbols_checkbox = qt.QCheckBox("تجاهل الرموز والعلامات")
+        self.symbols_checkbox.setChecked(self.initial_ignore_symbols)
+        self.symbols_checkbox.setFont(bold_font)
+        self.symbols_checkbox.stateChanged.connect(self._set_ignore_symbols)
+        layout.addWidget(self.symbols_checkbox)        
+        layout.addStretch(1)        
+        buttons_layout = qt.QHBoxLayout()
+        self.apply_button = guiTools.QPushButton("تطبيق التغييرات")
+        self.apply_button.setObjectName("applySearchModeChangesButton")
+        self.apply_button.clicked.connect(self.accept)        
+        self.apply_button.setAutoDefault(False)
+        self.cancel_button = guiTools.QPushButton("إلغاء")
+        self.cancel_button.setAutoDefault(False)
+        self.cancel_button.setObjectName("cancelButton")
+        self.cancel_button.clicked.connect(self.reject)        
+        buttons_layout.addStretch(1)
+        buttons_layout.addWidget(self.apply_button)
+        buttons_layout.addWidget(self.cancel_button)
+        buttons_layout.addStretch(1)        
+        layout.addLayout(buttons_layout)
+    def _set_ignore_tashkeel(self, state):
+        self.ignore_tashkeel = bool(state)
+    def _set_ignore_hamza(self, state):
+        self.ignore_hamza = bool(state)
+    def _set_ignore_symbols(self, state):
+        self.ignore_symbols = bool(state)
+    def get_settings(self):
+        return {
+            "ignore_tashkeel": self.ignore_tashkeel,
+            "ignore_hamza": self.ignore_hamza,
+            "ignore_symbols": self.ignore_symbols
+        }
 class QuranViewer(qt.QDialog):
     def __init__(self,p,text:str,type:int,category,index=0,enableNextPreviouseButtons=False,typeResult=[],CurrentIndex=0,enableBookmarks=True):
         super().__init__(p)
@@ -30,10 +167,26 @@ class QuranViewer(qt.QDialog):
         self.saved_text = ""
         self.saved_cursor_position = None
         self.saved_ayah_index = None
-        self.was_playing_before_action = False
+        self.was_playing_before_action = False                
+        self.original_quran_text = text
+        self.is_search_view = False
+        self.initial_enableBookmarks = enableBookmarks
+        self.ignore_tashkeel = True
+        self.ignore_hamza = True
+        self.ignore_symbols = True        
         self.resize(1200,600)
         self.type=type
         self.category=category
+        self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
+        if not os.path.exists(self.ffmpeg_path):
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ فادح", "لم يتم العثور على أداة الدمج FFmpeg. خاصية دمج الآيات لن تعمل.")
+        self.merge_list = []
+        self.files_to_delete_after_merge = []
+        self.is_merging = False
+        self.merge_phase = 'idle'
+        self.cancellation_requested = False
+        self.completed_merge_downloads = set()
+        self.current_download_url = None
         self.media=QMediaPlayer(self)
         self.audioOutput=QAudioOutput(self)
         self.media.setAudioOutput(self.audioOutput)
@@ -42,7 +195,26 @@ class QuranViewer(qt.QDialog):
         time.sleep(0.5)
         self.media.stop()
         self.media.mediaStatusChanged.connect(self.on_state)
-        self.quranText=text
+        self.quranText=text        
+        self.setStyleSheet("""
+            QPushButton#startButton, QPushButton#applySearchModeChangesButton {
+                background-color: #28a745; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-weight: bold;
+            }
+            QPushButton#startButton:hover, QPushButton#applySearchModeChangesButton:hover { background-color: #218838; }
+            QPushButton#startButton:pressed, QPushButton#applySearchModeChangesButton:pressed { background-color: #218838; }
+
+            QPushButton#searchModeButton {
+                background-color: #0056b3; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-weight: bold;
+            }
+            QPushButton#searchModeButton:hover { background-color: #003d80; }
+            QPushButton#searchModeButton:pressed { background-color: #003d80; }
+
+            QPushButton#clearResultsButton, QPushButton#cancelButton {
+                background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-weight: bold;
+            }
+            QPushButton#clearResultsButton:hover, QPushButton#cancelButton:hover { background-color: #c82333; }
+            QPushButton#clearResultsButton:pressed, QPushButton#cancelButton:pressed { background-color: #bd2130; }
+        """)
         self.text=guiTools.QReadOnlyTextEdit()
         self.font_size = 12
         font = qt1.QFont()
@@ -84,10 +256,54 @@ class QuranViewer(qt.QDialog):
                 formatted_name = self.format_category_name(self.type, list(self.typeResult.keys())[self.CurrentIndex])
                 self.info.setText(formatted_name)
             else:
-                self.info.setText("")
-        layout=qt.QVBoxLayout(self)
+                self.info.setText("")        
+        layout=qt.QVBoxLayout(self)        
+        self.search_widget = qt.QWidget()
+        search_layout = qt.QHBoxLayout(self.search_widget)
+        search_layout.setContentsMargins(0, 5, 0, 5)
+        self.search_input = qt.QLineEdit()
+        self.search_input.setPlaceholderText("أكتب محتوى البحث هنا...")
+        self.search_input.returnPressed.connect(self.perform_search)
+        self.search_button = guiTools.QPushButton("البحث")
+        self.search_button.setObjectName("startButton")
+        self.search_button.setAutoDefault(False)
+        self.search_button.clicked.connect(self.perform_search)
+        self.search_mode_button = guiTools.QPushButton("نمط البحث")
+        self.search_mode_button.setObjectName("searchModeButton")
+        self.search_mode_button.setShortcut("ctrl+q")
+        self.search_mode_button.setAutoDefault(False)
+        self.search_mode_button.clicked.connect(self.show_search_mode_dialog)
+        self.search_mode_button.setAccessibleDescription("control plus q")        
+        self.clear_results_button = guiTools.QPushButton("حذف المحتوى والعودة الى العرض الأصلي")
+        self.clear_results_button.setObjectName("clearResultsButton")
+        self.clear_results_button.setShortcut("ctrl+delete")
+        self.clear_results_button.setAutoDefault(False)
+        self.clear_results_button.clicked.connect(self.clear_search_results)
+        self.clear_results_button.setAccessibleDescription("control plus delete")        
+        search_layout.addWidget(self.clear_results_button)
+        search_layout.addWidget(self.search_input)
+        search_layout.addWidget(self.search_button)
+        search_layout.addWidget(self.search_mode_button)        
+        layout.addWidget(self.search_widget)
+        self.search_widget.hide()
+        self.clear_results_button.hide()        
         layout.addWidget(self.text)
         layout.addLayout(progress_time_layout)
+        self.merge_feedback_label = qt.QLabel()
+        self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.merge_progress_bar = qt.QProgressBar()
+        self.merge_action_button = guiTools.QPushButton("إلغاء الدمج")
+        self.merge_action_button.setAutoDefault(False)
+        self.merge_action_button.clicked.connect(self.handle_merge_action)
+        merge_layout = qt.QHBoxLayout()
+        merge_layout.addWidget(self.merge_feedback_label)
+        merge_layout.addWidget(self.merge_progress_bar)
+        merge_layout.addWidget(self.merge_action_button)
+        self.merge_widget = qt.QWidget()
+        self.merge_widget.setLayout(merge_layout)
+        self.merge_widget.setVisible(False)
+        layout.addWidget(self.merge_widget)
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
         layout.addWidget(self.info)
@@ -98,7 +314,7 @@ class QuranViewer(qt.QDialog):
         self.next.setVisible(enableNextPreviouseButtons)
         self.next.setShortcut("alt+right")
         self.next.setAccessibleDescription("alt زائد السهم الأيمن")
-        self.next.setStyleSheet("background-color: #0000AA; color: white;")
+        self.next.setStyleSheet("background-color: #0000AA; color: white;")        
         self.changeCategory=guiTools.QPushButton("تغيير الفئة")
         self.changeCategory.setAutoDefault(False)
         self.changeCategory.setStyleSheet("background-color: #0000AA; color: white;")
@@ -118,16 +334,23 @@ class QuranViewer(qt.QDialog):
         self.changeCurrentReciterButton.clicked.connect(self.onChangeRecitersContextMenuRequested)
         self.changeCurrentReciterButton.setShortcut("ctrl+shift+r")
         self.changeCurrentReciterButton.setAccessibleDescription("control plus shift plus r")
-        self.changeCurrentReciterButton.setStyleSheet("background-color: #0000AA; color: white;")
+        self.changeCurrentReciterButton.setStyleSheet("background-color: #0000AA; color: white;")        
+        self.toggle_search_button = guiTools.QPushButton("البحث في المحتوى المعروض")
+        self.toggle_search_button.setAutoDefault(False)
+        self.toggle_search_button.setStyleSheet("background-color: #0000AA; color: white;")
+        self.toggle_search_button.clicked.connect(self.toggle_search_bar)
+        self.toggle_search_button.setAccessibleDescription("control plus shift plus q")        
         buttonsLayout.addWidget(self.changeCurrentReciterButton)
         buttonsLayout.addWidget(self.previous)
         buttonsLayout.addWidget(self.changeCategory)
         buttonsLayout.addWidget(self.next)
-        layout.addLayout(buttonsLayout)
+        buttonsLayout.addWidget(self.toggle_search_button)
+        layout.addLayout(buttonsLayout)        
         if not self.initial_ayah_index == 0:
-            QTimer.singleShot(501, self._set_initial_ayah_position)
+            QTimer.singleShot(501, self._set_initial_ayah_position)            
         if enableNextPreviouseButtons:
-            qt1.QShortcut("ctrl+shift+g",self).activated.connect(self.goToCategory)
+            qt1.QShortcut("ctrl+shift+g",self).activated.connect(self.goToCategory)                    
+        qt1.QShortcut("ctrl+shift+q", self).activated.connect(self.toggle_search_bar)
         qt1.QShortcut("space",self).activated.connect(self.on_play)
         qt1.QShortcut("ctrl+g",self).activated.connect(self.goToAyah)
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
@@ -151,11 +374,257 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+alt+l", self).activated.connect(self.translateFromVersToVers)
         qt1.QShortcut("ctrl+alt+i", self).activated.connect(self.IArabFromVersToVers)
         qt1.QShortcut("ctrl+alt+p", self).activated.connect(self.playFromVersToVers)
+        qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.mergeAyahs)
         qt1.QShortcut("ctrl+shift+p", self).activated.connect(lambda: QuranPlayer(self, self.quranText, self.getCurrentAyah(), self.type, self.category).exec())
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)            
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)    
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)    
+    def handle_merge_action(self):
+        if self.is_merging and self.merge_phase == 'merging':
+            self.confirm_and_cancel_merge()
+    def confirm_and_cancel_merge(self):
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", 
+            "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
+        if reply == 0:
+            self.cancellation_requested = True
+            if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
+                self.merge_thread.stop()
+    def mergeAyahs(self):
+        self.pause_for_action()
+        if self.is_search_view:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يمكن دمج الآيات في وضع البحث.")
+            self.resume_after_action()
+            return
+        if not os.path.exists(self.ffmpeg_path):
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
+            self.resume_after_action()
+            return
+        total_ayahs = len(self.quranText.split("\n"))
+        start_ayah, ok1 = guiTools.QInputDialog.getInt(self, "تحديد بداية الدمج", "من الآية رقم:", self.getCurrentAyah() + 1, 1, total_ayahs)
+        if not ok1:
+            self.resume_after_action()
+            return
+        end_ayah, ok2 = guiTools.QInputDialog.getInt(self, "تحديد نهاية الدمج", "إلى الآية رقم:", total_ayahs, start_ayah, total_ayahs)
+        if not ok2:
+            self.resume_after_action()
+            return
+        self.merge_list.clear()
+        reciter_url_base = reciters[self.getCurrentReciter()]
+        reciter_folder_name = reciter_url_base.split("/")[-3]
+        reciter_local_path_base = os.path.join(os.getenv('appdata'), settings.app.appName, "reciters", reciter_folder_name)
+        ayahs_to_download = []
+        for i in range(start_ayah - 1, end_ayah):
+            ayah_filename = self.on_set(i)
+            if not ayah_filename: continue        
+            local_path = os.path.join(reciter_local_path_base, ayah_filename)
+            ayah_info = {
+                "index": i, "filename": ayah_filename,
+                "url": reciter_url_base + ayah_filename,
+                "local_path": local_path
+            }
+            self.merge_list.append(ayah_info)
+            if not os.path.exists(local_path):
+                ayahs_to_download.append(ayah_info)        
+        num_files_to_download = len(ayahs_to_download)
+        if num_files_to_download > 0:
+            confirm_message = (
+                f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\n"
+                "سيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\n"
+                "بعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\n"
+                "هل أنت متأكد أنك تريد المتابعة؟"
+            )
+        else:
+            confirm_message = (
+                "جميع الآيات المحددة جاهزة للدمج.\n"
+                "ستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق البرنامج حتى انتهاء العملية.\n\n"
+                "هل تريد المتابعة؟"
+            )
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
+        if reply != 0:
+            self.resume_after_action()
+            return
+        output_filename, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف المدموج", "", "Audio Files (*.mp3)")
+        if not output_filename:
+            self.resume_after_action()
+            return
+        self.set_ui_for_merge(True)
+        self.current_merge_output_path = output_filename
+        self.files_to_delete_after_merge.clear()
+        self.completed_merge_downloads.clear()
+        self.cancellation_requested = False
+        self.process_next_in_merge_queue()
+    def process_next_in_merge_queue(self):
+        if self.cancellation_requested:
+            self.on_merge_finished(False, "تم إلغاء العملية من قبل المستخدم.")
+            return
+        output_dir = os.path.dirname(self.current_merge_output_path)
+        next_item_to_download = None
+        for item in self.merge_list:
+            if not os.path.exists(item["local_path"]) and item["url"] not in self.completed_merge_downloads:
+                next_item_to_download = item
+                break    
+        if next_item_to_download:
+            self.merge_phase = 'downloading'
+            self.merge_action_button.hide()
+            self.merge_feedback_label.setText("جاري تحميل الآيات المطلوبة...")
+            self.merge_progress_bar.show()
+            url = next_item_to_download['url']
+            safe_filename = "".join(c for c in next_item_to_download['filename'] if c.isalnum() or c in ('.', '_')).rstrip()
+            download_path = os.path.join(output_dir, f"temp_{safe_filename}")            
+            self.current_download_url = url
+            self.download_thread = DownloadThread(url, download_path)
+            self.download_thread.progress.connect(self.merge_progress_bar.setValue)
+            self.download_thread.finished.connect(self.on_single_merge_download_finished)
+            self.download_thread.cancelled.connect(lambda: self.on_merge_finished(False, "حدث خطأ أثناء التحميل."))
+            self.download_thread.start()
+        else:
+            self.merge_progress_bar.hide()
+            self.finalize_and_execute_merge()
+    def on_single_merge_download_finished(self):
+        if self.current_download_url:
+            self.completed_merge_downloads.add(self.current_download_url)
+            self.current_download_url = None
+        self.process_next_in_merge_queue()
+    def finalize_and_execute_merge(self):
+        if self.cancellation_requested:
+            self.on_merge_finished(False, "تم إلغاء العملية قبل بدء الدمج.")
+            return            
+        self.merge_action_button.show()
+        files_for_ffmpeg = []
+        self.files_to_delete_after_merge.clear()
+        output_dir = os.path.dirname(self.current_merge_output_path)
+        for item in self.merge_list:
+            if os.path.exists(item["local_path"]):
+                files_for_ffmpeg.append(item["local_path"])
+            else:
+                safe_filename = "".join(c for c in item['filename'] if c.isalnum() or c in ('.', '_')).rstrip()
+                temp_path = os.path.join(output_dir, f"temp_{safe_filename}")
+                if os.path.exists(temp_path):
+                    files_for_ffmpeg.append(temp_path)
+                    if temp_path not in self.files_to_delete_after_merge:
+                        self.files_to_delete_after_merge.append(temp_path)
+                else:
+                    self.on_merge_finished(False, f"خطأ: الملف المؤقت للآية لم يتم العثور عليه: {item['filename']}")
+                    return
+        if len(files_for_ffmpeg) != len(self.merge_list):
+            self.on_merge_finished(False, "لم يتم العثور على جميع الملفات المطلوبة للدمج.")
+            return
+        self.execute_merge(files_for_ffmpeg, self.current_merge_output_path)
+    def execute_merge(self, input_files, output_file):
+        self.is_merging = True
+        self.merge_phase = 'merging'
+        self.merge_feedback_label.setText(f"جاري دمج {len(self.merge_list)} آيات...")
+        self.merge_action_button.setText("إلغاء الدمج")
+        self.merge_thread = MergeThread(self.ffmpeg_path, input_files, output_file)
+        self.merge_thread.finished.connect(self.on_merge_finished)
+        self.merge_thread.start()
+    def on_merge_finished(self, success, message):
+        self.is_merging = False
+        self.merge_phase = 'idle'
+        if self.cancellation_requested:
+            guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الدمج.")
+            if hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
+                try: os.remove(self.current_merge_output_path)
+                except: pass
+        elif success:
+            guiTools.qMessageBox.MessageBox.view(self, "نجاح", "تم دمج الآيات بنجاح.")
+        else:
+            guiTools.qMessageBox.MessageBox.error(self, "فشل", message)
+        if self.files_to_delete_after_merge:
+            reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", 
+                "هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
+            if reply == 0:
+                for f_path in self.files_to_delete_after_merge:
+                    if os.path.exists(f_path):
+                        try: os.remove(f_path)
+                        except: pass        
+        self.set_ui_for_merge(False)
+        self.cancellation_requested = False
+        self.merge_list.clear()
+        self.files_to_delete_after_merge.clear()
+        self.completed_merge_downloads.clear()
+        self.resume_after_action()
+    def set_ui_for_merge(self, is_active):
+        self.is_merging = is_active
+        widgets_to_disable = [
+            self.text, self.search_widget, self.next, self.previous,
+            self.changeCategory, self.changeCurrentReciterButton, self.toggle_search_button
+        ]
+        for widget in widgets_to_disable:
+            widget.setEnabled(not is_active)        
+        self.merge_widget.setVisible(is_active)
+        if is_active:
+            self.merge_feedback_label.setText("جاري التحضير لعملية الدمج...")
+            self.merge_action_button.setText("إلغاء العملية")
+            self.merge_action_button.setStyleSheet("background-color: #8B0000; color: white;")
+            self.merge_progress_bar.hide()
+            self.merge_progress_bar.setValue(0)
+        else:
+            self.merge_action_button.setStyleSheet("")
+    def toggle_search_bar(self):
+        if self.search_widget.isVisible():
+            self.search_widget.hide()
+            self.toggle_search_button.setText("البحث في المحتوى المعروض")
+            guiTools.speak("تم إخفاء شريط البحث")
+        else:
+            self.search_widget.show()
+            self.toggle_search_button.setText("إخفاء شريط البحث")
+            self.search_input.setFocus()
+    def show_search_mode_dialog(self):        
+        self.pause_for_action()        
+        dialog = SearchModeDialog(self, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
+        if dialog.exec() == qt.QDialog.DialogCode.Accepted:
+            settings_values = dialog.get_settings()
+            self.ignore_tashkeel = settings_values["ignore_tashkeel"]
+            self.ignore_hamza = settings_values["ignore_hamza"]
+            self.ignore_symbols = settings_values["ignore_symbols"]
+            guiTools.speak("تم تطبيق إعدادات البحث بنجاح")
+        else:
+            guiTools.speak("تم إلغاء التغييرات")                
+        self.resume_after_action()
+    def search(self, pattern, text_list):
+        def remove_tashkeel(text):
+            return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)        
+        def normalize_hamza(text):
+            return re.sub(r'[أإآ]', 'ا', text)        
+        def normalize(text):
+            normalized_text = text
+            if self.ignore_tashkeel:
+                normalized_text = remove_tashkeel(normalized_text)
+            if self.ignore_hamza:
+                normalized_text = normalize_hamza(normalized_text)
+            return normalized_text        
+        normalized_pattern = normalize(pattern)
+        return [text for text in text_list if normalized_pattern in normalize(text)]
+    def perform_search(self):
+        search_term = self.search_input.text()
+        if not search_term:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "يرجى كتابة محتوى للبحث")
+            return        
+        source_text_list = self.original_quran_text.split('\n')
+        results = self.search(search_term, source_text_list)
+        if results:
+            self.is_search_view = True
+            self.enableBookmarks = False
+            header = f"عدد نتائج البحث: {len(results)}"
+            guiTools.speak(header)
+            display_text = [header, ""] + results
+            self.quranText = "\n".join(results)
+            self.text.setText("\n".join(display_text))
+            self.clear_results_button.show()
+            if self.media.isPlaying():
+                self.media.stop()
+        else:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على نتائج")            
+    def clear_search_results(self):
+        self.is_search_view = False
+        self.enableBookmarks = self.initial_enableBookmarks
+        self.quranText = self.original_quran_text
+        self.text.setText(self.original_quran_text)
+        self.clear_results_button.hide()
+        self.search_input.clear()
+        guiTools.speak("تمت العودة إلى العرض الأصلي")
     def format_category_name(self, category_type, category_value):
         if category_type == 0:
             return category_value
@@ -349,6 +818,10 @@ class QuranViewer(qt.QDialog):
         playFromVersToVersAction.setShortcut("ctrl+alt+p")
         surahOption.addAction(playFromVersToVersAction)
         playFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.playFromVersToVers))    
+        mergeAyahsAction = qt1.QAction("دمج الآيات", self)
+        mergeAyahsAction.setShortcut("ctrl+alt+d")
+        surahOption.addAction(mergeAyahsAction)
+        mergeAyahsAction.triggered.connect(lambda: QTimer.singleShot(501, self.mergeAyahs))
         playSurahToEnd = qt1.QAction("التشغيل إلى نهاية الفئة", self)
         playSurahToEnd.setShortcut("ctrl+shift+p")
         surahOption.addAction(playSurahToEnd)
@@ -499,13 +972,20 @@ class QuranViewer(qt.QDialog):
                 cerser.movePosition(cerser.MoveOperation.Down)
             self.text.setTextCursor(cerser)
         self.resume_after_action()    
-    def getCurrentAyah(self):        
-        cerser=self.text.textCursor()
-        return cerser.blockNumber()    
+    def getCurrentAyah(self):
+        if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):
+            return self.text.textCursor().blockNumber() - 2
+        return self.text.textCursor().blockNumber()
     def on_set(self, ayah_index=None):
         if ayah_index is None:
             ayah_index = self.getCurrentAyah()
-        current_line = self.quranText.split("\n")[ayah_index]
+        
+        if self.is_search_view:
+            if ayah_index < 0: return None
+            current_line = self.quranText.split("\n")[ayah_index]
+        else:
+            current_line = self.original_quran_text.split("\n")[ayah_index]
+
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         if int(surah)<10:
             surah="00" + surah
@@ -524,8 +1004,12 @@ class QuranViewer(qt.QDialog):
         self.media_progress.setVisible(True)
         self.time_label.setVisible(True)        
         if not self.media.isPlaying():
-            current_ayah = self.getCurrentAyah()
-            file_name = self.on_set(current_ayah)
+            current_ayah_index = self.getCurrentAyah()
+            if current_ayah_index < 0: return
+            
+            file_name = self.on_set(current_ayah_index)
+            if not file_name: return
+
             if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],file_name)):
                 path=qt2.QUrl.fromLocalFile(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],file_name))
             else:
@@ -541,8 +1025,11 @@ class QuranViewer(qt.QDialog):
         name=list(reciters.keys())[index]
         return name    
     def getcurrentAyahText(self):
-        line=self.getCurrentAyah()
-        return self.quranText.split("\n")[line]        
+        line = self.getCurrentAyah()
+        if line < 0: return ""
+        if self.is_search_view:
+            return self.quranText.split("\n")[line]
+        return self.original_quran_text.split("\n")[line]        
     def print_text(self):
         try:
             printer=QPrinter()
@@ -594,6 +1081,9 @@ class QuranViewer(qt.QDialog):
     def getCurentAyahTafseer(self):
         self.pause_for_action()
         current_ayah = self.getCurrentAyah()
+        if current_ayah < 0: 
+            self.resume_after_action()
+            return
         current_line = self.quranText.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         self.text.setUpdatesEnabled(False)
@@ -612,6 +1102,9 @@ class QuranViewer(qt.QDialog):
     def onSurahInfo(self):
         self.pause_for_action()
         current_ayah = self.getCurrentAyah()
+        if current_ayah < 0: 
+            self.resume_after_action()
+            return
         current_line = self.quranText.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         with open("data/json/files/all_surahs.json","r",encoding="utf-8") as file:
@@ -624,12 +1117,31 @@ class QuranViewer(qt.QDialog):
             type="مدنية"
         guiTools.qMessageBox.MessageBox.view(self,"معلومات {}".format(juz[1]),"رقم السورة {} \n عدد آياتها {} \n نوع السورة {}".format(str(surah),str(numberOfAyah),type))
         self.resume_after_action()    
-    def closeEvent(self,event):
-        self.media.stop()
-        self.close()        
+    def closeEvent(self, event):
+        if self.is_merging:
+            if self.merge_phase == 'downloading':
+                guiTools.qMessageBox.MessageBox.error(self, "غير مسموح", "لا يمكن إغلاق البرنامج أثناء مرحلة تحميل الآيات. الرجاء الانتظار.")
+                event.ignore()
+            elif self.merge_phase == 'merging':
+                reply = guiTools.QQuestionMessageBox.view(self, "تأكيد", "عملية الدمج قيد التشغيل. هل تريد إلغاءها والخروج؟", "نعم", "لا")
+                if reply == 0:
+                    self.cancellation_requested = True
+                    if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
+                        self.merge_thread.stop()
+                    event.accept()
+                else:
+                    event.ignore()
+            else:
+                event.ignore()
+        else:
+            self.media.stop()
+            super().closeEvent(event)
     def getCurentAyahIArab(self):
         self.pause_for_action()
         current_ayah = self.getCurrentAyah()
+        if current_ayah < 0: 
+            self.resume_after_action()
+            return
         current_line = self.quranText.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         result=functions.iarab.getIarab(AyahNumber,AyahNumber)
@@ -650,6 +1162,9 @@ class QuranViewer(qt.QDialog):
     def getCurrentAyahTanzel(self):
         self.pause_for_action()
         current_ayah = self.getCurrentAyah()
+        if current_ayah < 0: 
+            self.resume_after_action()
+            return
         current_line = self.quranText.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         result=functions.tanzil.gettanzil(AyahNumber)
@@ -663,6 +1178,9 @@ class QuranViewer(qt.QDialog):
     def getAyahInfo(self):
         self.pause_for_action()
         current_ayah = self.getCurrentAyah()
+        if current_ayah < 0:
+            self.resume_after_action()
+            return
         current_line = self.quranText.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         sajda=""
@@ -673,6 +1191,9 @@ class QuranViewer(qt.QDialog):
     def getCurentAyahTranslation(self):
         self.pause_for_action()
         current_ayah = self.getCurrentAyah()
+        if current_ayah < 0: 
+            self.resume_after_action()
+            return
         current_line = self.quranText.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         self.text.setUpdatesEnabled(False)
@@ -770,6 +1291,7 @@ class QuranViewer(qt.QDialog):
         formatted_name = self.format_category_name(self.type, indexs)
         self.category = indexs 
         self.quranText=self.typeResult[indexs][1]
+        self.original_quran_text = self.quranText
         self._set_text_with_delay(self.quranText)
         winsound.PlaySound("data/sounds/next_page.wav",1)
         guiTools.speak(str(formatted_name))
@@ -785,6 +1307,7 @@ class QuranViewer(qt.QDialog):
         formatted_name = self.format_category_name(self.type, indexs)
         self.category = indexs 
         self.quranText=self.typeResult[indexs][1]
+        self.original_quran_text = self.quranText
         self._set_text_with_delay(self.quranText)
         winsound.PlaySound("data/sounds/previous_page.wav",1)
         guiTools.speak(str(formatted_name))
@@ -792,7 +1315,7 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()        
     def goToCategory(self):
         self.pause_for_action()
-        category,OK=qt.QInputDialog.getItem(self,"الذهاب إلى محتوى فئة","اختر عنصر",self.typeResult,self.CurrentIndex,True)
+        category,OK=qt.QInputDialog.getItem(self,"الذهاب إلى محتوى فئة","اختر عنصر",list(self.typeResult.keys()),self.CurrentIndex,False)
         if OK:
             self.CurrentIndex=list(self.typeResult.keys()).index(category)
             indexs=list(self.typeResult.keys())[self.CurrentIndex]
@@ -800,6 +1323,7 @@ class QuranViewer(qt.QDialog):
             self.category = indexs
             self.info.setText(formatted_name)
             self.quranText=self.typeResult[indexs][1]
+            self.original_quran_text = self.quranText
             self._set_text_with_delay(self.quranText)
         self.resume_after_action()        
     def onChangeCategory(self):
@@ -842,6 +1366,7 @@ class QuranViewer(qt.QDialog):
         formatted_name = self.format_category_name(self.type, indexs)
         self.info.setText(formatted_name)
         self.quranText=self.typeResult[indexs][1]
+        self.original_quran_text = self.quranText
         self._set_text_with_delay(self.quranText)
         self.resume_after_action()        
     def onRemoveBookmark(self):
@@ -860,6 +1385,10 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()
     def onAddOrRemoveBookmark(self):
         self.pause_for_action()
+        if not self.enableBookmarks:
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا يمكن إدارة العلامات المرجعية في هذا العرض")
+            self.resume_after_action()
+            return
         current_ayah = self.getCurrentAyah()
         state, self.nameOfBookmark = functions.bookMarksManager.getQuranBookmarkName(self.type, self.category, current_ayah, isPlayer=False)
         if state:

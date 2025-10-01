@@ -35,6 +35,7 @@ class hadeeth(qt.QWidget):
         self.info1.setText("لحذف أي كتاب تم تحميله, نستخدم زر الحذف أو زر التطبيقات أو click الأيمن")
         layout.addWidget(self.info1)
         self.list_of_ahadeeth.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.list_of_ahadeeth.setSpacing(1)
         self.list_of_ahadeeth.customContextMenuRequested.connect(self.onDelete)
         qt1.QShortcut("delete",self).activated.connect(self.onDelete)
     def onDelete(self):

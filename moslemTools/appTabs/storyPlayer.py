@@ -1,4 +1,4 @@
-import guiTools, requests, json, os,gui,functions
+import guiTools, requests, json, os,gui,functions, subprocess, shutil, winsound
 from guiTools import TextViewer
 from settings import *
 import PyQt6.QtWidgets as qt
@@ -36,9 +36,56 @@ class DownloadThread(qt2.QThread):
             self.cancelled.emit()
     def cancel(self):
         self.is_cancelled = True
+class MergeThread(qt2.QThread):
+    finished = qt2.pyqtSignal(bool, str)
+    def __init__(self, ffmpeg_path, input_files, output_file):
+        super().__init__()
+        self.ffmpeg_path = ffmpeg_path
+        self.input_files = input_files
+        self.output_file = output_file
+        self.process = None
+    def run(self):
+        list_filepath = os.path.join(os.path.dirname(self.output_file), "mergelist.txt")
+        try:
+            with open(list_filepath, 'w', encoding='utf-8') as f:
+                for file_path in self.input_files:
+                    safe_path = file_path.replace("\\", "/")
+                    f.write(f"file '{safe_path}'\n")
+            command = [
+                self.ffmpeg_path,
+                "-y",
+                "-f", "concat",
+                "-safe", "0",
+                "-i", list_filepath,
+                "-ar", "44100",
+                "-ac", "2",
+                "-b:a", "192k",
+                self.output_file
+            ]            
+            startupinfo = None
+            if os.name == 'nt':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            self.process = subprocess.Popen(command, startupinfo=startupinfo, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
+            stdout, stderr = self.process.communicate()
+            if self.process.returncode == 0:
+                self.finished.emit(True, "Success")
+            else:
+                self.finished.emit(False, f"فشل الدمج أو تم إلغاؤه.\n{stderr}")
+        except Exception as e:
+            self.finished.emit(False, f"حدث خطأ غير متوقع: {str(e)}")
+        finally:
+            if os.path.exists(list_filepath):
+                os.remove(list_filepath)
+    def stop(self):
+        if self.process and self.process.poll() is None:
+            self.process.terminate()
 class StoryPlayer(qt.QWidget):
     def __init__(self):
         super().__init__()        
+        self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
+        if not os.path.exists(self.ffmpeg_path):
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ فادح", "لم يتم العثور على أداة الدمج FFmpeg. خاصية دمج القصص لن تعمل.")
         qt1.QShortcut("ctrl+s", self).activated.connect(lambda: self.mp.stop())
         qt1.QShortcut("space", self).activated.connect(self.play)
         qt1.QShortcut("alt+right", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 5000))
@@ -59,17 +106,26 @@ class StoryPlayer(qt.QWidget):
         qt1.QShortcut("ctrl+8", self).activated.connect(self.t80)
         qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("shift+up", self).activated.connect(self.increase_volume)
-        qt1.QShortcut("shift+down", self).activated.connect(self.decrease_volume)
+        qt1.QShortcut("shift+down", self).activated.connect(self.decrease_volume)        
+        self.merge_list = []
+        self.files_to_delete_after_merge = []
+        self.is_merging = False
+        self.cancellation_requested = False
+        self.completed_merge_downloads = set()
+        self.current_download_url = None        
         self.categories_data = self.load_categories()
         self.categoriesLabel = qt.QLabel("إختيار فئة")
-        self.categoriesLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.categoriesLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         self.categorySearchLabel = qt.QLabel("ابحث عن فئة")
         self.categorySearchLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.categorySearchLabel.setVisible(False)
         self.categorySearchEdit = qt.QLineEdit()
         self.categorySearchEdit.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.categorySearchEdit.setAccessibleName("ابحث عن فئة")        
         self.categorySearchEdit.setObjectName("categorySearch")
+        self.categorySearchEdit.setVisible(False)        
         self.categoriesListWidget = guiTools.QListWidget()
+        self.categoriesListWidget.setSpacing(1)
         self.categoriesListWidget.itemSelectionChanged.connect(self.on_category_selected)
         self.storiesLabel = qt.QLabel("القصص")
         self.storiesLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -80,8 +136,8 @@ class StoryPlayer(qt.QWidget):
         self.storySearchEdit.setAccessibleName("ابحث عن قصة")
         self.storySearchEdit.setObjectName("storySearch")
         self.storyListWidget = guiTools.QListWidget()
+        self.storyListWidget.setSpacing(1)
         self.storyListWidget.clicked.connect(self.play_selected_audio)
-        self.categorySearchEdit.textChanged.connect(self.category_onsearch)
         self.storySearchEdit.textChanged.connect(self.story_onsearch)
         self.categoriesList = list(self.categories_data.keys())
         self.categoriesList.sort()
@@ -154,49 +210,320 @@ class StoryPlayer(qt.QWidget):
         self.delete.clicked.connect(lambda: self.delete_story())        
         self.info_menu = qt.QLabel("لخيارات القصة، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.info_menu.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
-        self.info_menu.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.info_menu.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
+        self.merge_feedback_label = qt.QLabel()
+        self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.merge_feedback_label.setVisible(False)
+        self.merge_action_button = guiTools.QPushButton("بدء دمج القصص المحددة")
+        self.merge_action_button.clicked.connect(self.handle_merge_action)
+        self.merge_action_button.setVisible(False)
+        self.merge_all_button = guiTools.QPushButton("دمج كل قصص الفئة")
+        self.merge_all_button.clicked.connect(self.prepare_merge_all)
+        self.merge_all_button.setVisible(True)
         categoriesLayout = qt.QVBoxLayout()
         categoriesLayout.addWidget(self.categoriesLabel)
         categoriesLayout.addWidget(self.categorySearchLabel)
         categoriesLayout.addWidget(self.categorySearchEdit)
-        categoriesLayout.addWidget(self.categoriesListWidget)
+        categoriesLayout.addWidget(self.categoriesListWidget)        
         storiesLayout = qt.QVBoxLayout()
         storiesLayout.addWidget(self.storiesLabel)
         storiesLayout.addWidget(self.storySearchLabel)
         storiesLayout.addWidget(self.storySearchEdit)
         storiesLayout.addWidget(self.storyListWidget)
         storiesLayout.addWidget(self.info_menu)
+        storiesLayout.addWidget(self.merge_feedback_label)        
+        merge_buttons_layout = qt.QVBoxLayout()
+        merge_buttons_layout.addWidget(self.merge_action_button)
+        merge_buttons_layout.addWidget(self.merge_all_button)
+        storiesLayout.addLayout(merge_buttons_layout)
         topLayout = qt.QHBoxLayout()
         topLayout.addLayout(categoriesLayout)
-        topLayout.addLayout(storiesLayout)        
+        topLayout.addLayout(storiesLayout)                
         download_buttons_layout = qt.QHBoxLayout()
         download_buttons_layout.addWidget(self.dl_all_app)
         download_buttons_layout.addWidget(self.delete)
-        download_buttons_layout.addWidget(self.dl_all)
+        download_buttons_layout.addWidget(self.dl_all)        
         layout = qt.QVBoxLayout()
         layout.addLayout(topLayout)
         layout.addLayout(download_buttons_layout)
-        layout.addWidget(self.Slider)
+        layout.addWidget(self.Slider)        
         progress_cancel_layout = qt.QHBoxLayout()        
         progress_cancel_layout.addWidget(self.cancel_download_button)
         progress_cancel_layout.addWidget(self.progressBar)
-        layout.addLayout(progress_cancel_layout)        
+        layout.addLayout(progress_cancel_layout)                
         playback_buttons_layout = qt.QHBoxLayout()
         playback_buttons_layout.addWidget(self.play_all_to_end)
         playback_buttons_layout.addWidget(self.repeat_story_button)
-        layout.addLayout(playback_buttons_layout)
+        layout.addLayout(playback_buttons_layout)        
         layout1 = qt.QHBoxLayout()        
         layout1.addWidget(self.User_guide)
         layout1.addWidget(self.duration)
         layout1.addWidget(self.openBookmarks)
-        layout.addLayout(layout1)
-        self.setLayout(layout)
+        layout.addLayout(layout1)        
+        self.setLayout(layout)        
         if self.categoriesListWidget.count() > 0:
             self.categoriesListWidget.setCurrentRow(0)
-            self.on_category_selected()
+            self.on_category_selected()            
         self.storyListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.storyListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
+    def handle_merge_action(self):
+        if self.is_merging:
+            self.confirm_and_cancel_merge()
+        else:
+            self.prepare_merge()
+    def confirm_and_cancel_merge(self):
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", 
+            "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
+        if reply == 0:
+            self.cancellation_requested = True
+            if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
+                self.merge_thread.stop()
+    def add_to_merge_list(self):
+        selected_category_item = self.categoriesListWidget.currentItem()
+        selected_story_item = self.storyListWidget.currentItem()
+        if not selected_category_item or not selected_story_item:
+            return        
+        category = selected_category_item.text()
+        story = selected_story_item.text()        
+        story_info = {
+            "category": category,
+            "story": story,
+            "url": self.categories_data[category][story]
+        }
+        self.merge_list.append(story_info)
+        winsound.Beep(440, 100)
+        self.update_merge_ui()
+    def remove_from_merge_list(self):
+        if not self.merge_list:
+            return        
+        num_items = len(self.merge_list)
+        number, ok = guiTools.QInputDialog.getSingleInt(
+            self, 
+            "إزالة قصة", 
+            f"أدخل رقم القصة لإزالتها (من 1 إلى {num_items})", 
+            1
+        )
+        if ok:
+            if 1 <= number <= num_items:
+                del self.merge_list[number - 1]
+                winsound.Beep(600, 150)
+                self.update_merge_ui()
+            else:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
+    def update_merge_ui(self):
+        count = len(self.merge_list)
+        if count > 0:
+            self.merge_feedback_label.setText(f"تم تحديد {count} قصة للدمج.")
+            self.merge_feedback_label.setVisible(True)
+            self.merge_all_button.setEnabled(False)
+        else:
+            self.merge_feedback_label.setVisible(False)
+            self.merge_all_button.setEnabled(True)
+        self.merge_action_button.setVisible(count >= 2)
+    def cancel_merge(self):
+        self.merge_list.clear()
+        self.merge_feedback_label.setVisible(False)
+        self.merge_action_button.setVisible(False)
+        self.merge_all_button.setEnabled(True)
+    def prepare_merge_all(self):
+        if not self.categoriesListWidget.currentItem():
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء اختيار فئة أولاً.")
+            return
+        self.merge_list.clear()
+        category = self.categoriesListWidget.currentItem().text()
+        story_list = self.categories_data[category].items()
+        for story, url in story_list:
+            self.merge_list.append({"category": category, "story": story, "url": url})        
+        self.prepare_merge(is_all=True)
+    def prepare_merge(self, is_all=False):
+        if len(self.merge_list) < 2 and not is_all:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "يجب تحديد قصتين على الأقل للدمج.")
+            return
+        if not os.path.exists(self.ffmpeg_path):
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
+            return                
+        urls_to_download = []
+        for item in self.merge_list:
+            category = item["category"]
+            story = item["story"]
+            local_path = os.path.join(os.getenv('appdata'), app.appName, "stories", category, f"{story}.mp3")
+            if not os.path.exists(local_path):
+                urls_to_download.append(item["url"])
+        
+        num_files_to_download = len(urls_to_download)
+
+        if num_files_to_download > 0:
+            confirm_message = (
+                f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} قصة غير موجودة.\n\n"
+                "سيتم الآن تحميل ودمج الملفات المحددة على مرحلتين:\n"
+                "مرحلة التحميل: سيتم تحميل الملفات تباعًا. في هذه الأثناء، يمكنك استخدام قائمة القصص للتراجع عن تحديد أي قصة لم يبدأ تحميلها بعد، وبذلك يتم إلغاء تحميلها.\n"
+                "مرحلة الدمج: بعد انتهاء التحميل، لن تتمكن من استخدام الواجهة إلا لإلغاء عملية الدمج بأكملها.\n\n"
+                "هل تريد المتابعة؟"
+            )
+        else:
+            confirm_message = (
+                "جميع القصص المحددة جاهزة للدمج.\n"
+                "ستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة باستثناء زر إلغاء الدمج.\n\n"
+                "هل تريد المتابعة؟"
+            )
+
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
+        if reply != 0:
+            if is_all:
+                self.cancel_merge()
+            return
+        output_filename, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف المدموج", "", "Audio Files (*.mp3)")
+        if not output_filename:
+            if is_all:
+                self.cancel_merge()
+            return        
+        
+        self.set_ui_for_merge_download(False)
+
+        self.current_merge_output_path = output_filename
+        self.files_to_delete_after_merge.clear()
+        self.completed_merge_downloads.clear()        
+        self.process_next_in_merge_queue()
+    def process_next_in_merge_queue(self):
+        output_dir = os.path.dirname(self.current_merge_output_path)
+        next_item_to_download = None
+        for item in self.merge_list:
+            category = item["category"]
+            story = item["story"]
+            url = item["url"]            
+            local_path = os.path.join(os.getenv('appdata'), app.appName, "stories", category, f"{story}.mp3")
+            if os.path.exists(local_path):
+                continue            
+            if url in self.completed_merge_downloads:
+                continue
+            next_item_to_download = item
+            break        
+        if next_item_to_download:
+            self.progressBar.setVisible(True)
+            url = next_item_to_download['url']
+            category = next_item_to_download['category']
+            story = next_item_to_download['story']            
+            safe_story_name = "".join(c for c in story if c.isalnum() or c in (' ', '_')).rstrip()
+            download_path = os.path.join(output_dir, f"{category}_{safe_story_name}.mp3")            
+            self.current_download_url = url
+            self.download_thread = DownloadThread(url, download_path)
+            self.download_thread.progress.connect(self.progressBar.setValue)
+            self.download_thread.finished.connect(self.on_single_merge_download_finished)
+            self.download_thread.start()
+        else:
+            self.progressBar.setVisible(False)
+            self.finalize_and_execute_merge()
+    def on_single_merge_download_finished(self):
+        if self.current_download_url:
+            self.completed_merge_downloads.add(self.current_download_url)
+            self.current_download_url = None        
+        self.process_next_in_merge_queue()
+    def finalize_and_execute_merge(self):
+        self.set_ui_for_merge_download(True)
+
+        files_for_ffmpeg = []
+        self.files_to_delete_after_merge.clear()
+        output_dir = os.path.dirname(self.current_merge_output_path)        
+        for item in self.merge_list:
+            category, story, url = item["category"], item["story"], item["url"]
+            local_path = os.path.join(os.getenv('appdata'), app.appName, "stories", category, f"{story}.mp3")            
+            if os.path.exists(local_path):
+                files_for_ffmpeg.append(local_path)
+            else:
+                safe_story_name = "".join(c for c in story if c.isalnum() or c in (' ', '_')).rstrip()
+                temp_path = os.path.join(output_dir, f"{category}_{safe_story_name}.mp3")
+                files_for_ffmpeg.append(temp_path)                
+                if temp_path not in self.files_to_delete_after_merge:
+                    self.files_to_delete_after_merge.append(temp_path)        
+        if not files_for_ffmpeg:
+             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على أي ملفات للدمج.")
+             self.cancel_merge()
+             return
+        self.execute_merge(files_for_ffmpeg, self.current_merge_output_path)
+    def execute_merge(self, input_files, output_file):
+        self.is_merging = True
+        self.cancellation_requested = False
+        self.set_ui_enabled(False)
+        self.merge_feedback_label.setEnabled(True)
+        count = len(self.merge_list)
+        self.merge_feedback_label.setText(f"جاري دمج {count} قصص...")
+        self.merge_feedback_label.setVisible(True)        
+        self.merge_action_button.setVisible(True)
+        self.merge_action_button.setEnabled(True)
+        self.merge_action_button.setText("إلغاء الدمج")
+        self.merge_action_button.setStyleSheet("background-color: #8B0000; color: white;")
+        self.merge_thread = MergeThread(self.ffmpeg_path, input_files, output_file)
+        self.merge_thread.finished.connect(self.on_merge_finished)
+        self.merge_thread.start()
+    def on_merge_finished(self, success, message):
+        self.is_merging = False
+        self.set_ui_enabled(True)
+        self.merge_feedback_label.setVisible(False)
+        self.merge_action_button.setText("بدء دمج القصص المحددة")
+        self.merge_action_button.setStyleSheet("")
+        self.update_merge_ui()
+        if self.cancellation_requested:
+            guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الدمج.")
+            if hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
+                os.remove(self.current_merge_output_path)            
+            if self.files_to_delete_after_merge:
+                reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", 
+                    "هل تريد حذف القصص الفردية التي تم تحميلها لهذه العملية الملغاة؟", "نعم", "لا")
+                if reply == 0:
+                    for f_path in self.files_to_delete_after_merge:
+                        if os.path.exists(f_path):
+                            try: os.remove(f_path)
+                            except: pass
+        elif success:
+            merged_files_names = [f" {item['story']}" for item in self.merge_list]
+            details = "\n".join(merged_files_names)
+            success_message = f"تم دمج القصص بنجاح:\n{details}"
+            guiTools.qMessageBox.MessageBox.view(self, "نجاح", success_message)
+            if self.files_to_delete_after_merge:
+                reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", 
+                    "هل تريد حذف القصص الفردية التي تم تحميلها للدمج؟", "نعم", "لا")
+                if reply == 0:
+                    for f_path in self.files_to_delete_after_merge:
+                        if os.path.exists(f_path):
+                            try: os.remove(f_path)
+                            except: pass
+        else:
+            guiTools.qMessageBox.MessageBox.error(self, "فشل", message)        
+        self.cancellation_requested = False
+        self.cancel_merge()
+        self.files_to_delete_after_merge.clear()
+        self.completed_merge_downloads.clear()
+    def set_ui_enabled(self, enabled):
+        widgets_to_toggle = [
+            self.categoriesListWidget, self.storyListWidget,
+            self.storySearchEdit, self.storySearchLabel,
+            self.dl_all, self.dl_all_app, self.delete,
+            self.play_all_to_end, self.repeat_story_button,
+            self.Slider, self.openBookmarks, self.User_guide,
+            self.merge_all_button, self.categoriesLabel, self.storiesLabel,
+            self.duration, self.info_menu,
+            self.merge_feedback_label
+        ]
+        for widget in widgets_to_toggle:
+            widget.setEnabled(enabled)        
+        if not enabled:
+            self.merge_action_button.setEnabled(True)
+    def set_ui_for_merge_download(self, enabled):
+        widgets_to_toggle = [
+            self.categoriesListWidget,
+            self.categorySearchEdit, self.storySearchEdit,
+            self.categorySearchLabel, self.storySearchLabel,
+            self.dl_all, self.dl_all_app, self.delete,
+            self.play_all_to_end, self.repeat_story_button,
+            self.Slider, self.openBookmarks, self.User_guide,
+            self.merge_all_button, self.categoriesLabel,
+            self.duration, self.info_menu,
+            self.merge_action_button
+        ]
+        for widget in widgets_to_toggle:
+            widget.setEnabled(enabled)
     def cleanup_pending_deletions(self):
         stories_dir = os.path.join(os.getenv('appdata'), app.appName, "stories")
         if os.path.exists(stories_dir):
@@ -506,19 +833,20 @@ class StoryPlayer(qt.QWidget):
     def on_category_selected(self):
         self.mp.stop()
         self.storyListWidget.clear()
+        self.cancel_merge()
         selected_category_item = self.categoriesListWidget.currentItem()
         if selected_category_item:
+            self.merge_all_button.setEnabled(True)
             category = selected_category_item.text()
             for story, link in self.categories_data[category].items():
                 self.storyListWidget.addItem(story)
             self.check_all_stories_downloaded()
+        else:
+            self.merge_all_button.setEnabled(False)
+
     def search(self, search_text, data):
         return [item for item in data if search_text in item.lower()]
-    def category_onsearch(self):
-        search_text = self.categorySearchEdit.text().lower()
-        self.categoriesListWidget.clear()
-        result = self.search(search_text, self.categoriesList)
-        self.categoriesListWidget.addItems(result)
+
     def story_onsearch(self):
         search_text = self.storySearchEdit.text().lower()
         self.storyListWidget.clear()
@@ -591,6 +919,27 @@ class StoryPlayer(qt.QWidget):
         boldFont=menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
+        
+        merge_menu = menu.addMenu("دمج القصص")
+        if not self.merge_list:
+            start_merge_action = qt1.QAction("بدء الدمج من هذه القصة", self)
+            start_merge_action.triggered.connect(self.add_to_merge_list)
+            merge_menu.addAction(start_merge_action)
+        else:
+            add_next_action = qt1.QAction(f"إضافة القصة رقم {len(self.merge_list) + 1}", self)
+            add_next_action.triggered.connect(self.add_to_merge_list)
+            merge_menu.addAction(add_next_action)
+            
+            undo_action = qt1.QAction("التراجع عن تحديد قصة", self)
+            undo_action.triggered.connect(self.remove_from_merge_list)
+            merge_menu.addAction(undo_action)
+
+            cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
+            cancel_merge_action.triggered.connect(self.cancel_merge)
+            merge_menu.addAction(cancel_merge_action)
+
+        menu.addSeparator()
+
         play_action = qt1.QAction("تشغيل القصة المحددة", self)
         play_action.triggered.connect(self.play_selected_audio)
         menu.addAction(play_action)
@@ -650,24 +999,32 @@ class StoryPlayer(qt.QWidget):
             self.mp.play()
     def increase_volume(self):
         current_volume = self.au.volume()
-        new_volume = current_volume + 0.10
+        new_volume = min(current_volume + 0.10, 1.0)
         self.au.setVolume(new_volume)
     def decrease_volume(self):
         current_volume = self.au.volume()
-        new_volume = current_volume - 0.10
+        new_volume = max(current_volume - 0.10, 0.0)
         self.au.setVolume(new_volume)
     def set_position_from_slider(self, value):
         duration = self.mp.duration()
-        new_position = int((value / 100) * duration)
-        self.mp.setPosition(new_position)
+        if duration > 0:
+            new_position = int((value / 100) * duration)
+            self.mp.setPosition(new_position)
     def update_slider(self):
-        try:
-            self.Slider.blockSignals(True)
-            self.Slider.setValue(int((self.mp.position() / self.mp.duration()) * 100))
-            self.Slider.blockSignals(False)
-            self.time_VA()
-        except:
-            self.duration.setText("خطأ في الحصول على مدة المقطع")
+        if self.mp.duration() > 0:
+            try:
+                self.Slider.blockSignals(True)
+                position_ratio = self.mp.position() / self.mp.duration()
+                self.Slider.setValue(int(position_ratio * 100))
+                self.Slider.blockSignals(False)
+                self.time_VA()
+            except ZeroDivisionError:
+                self.Slider.setValue(0)
+                self.duration.setText("00:00:00")
+        else:
+            self.Slider.setValue(0)
+            self.duration.setText("00:00:00")
+
     def time_VA(self):
         position = self.mp.position()
         duration = self.mp.duration()
@@ -689,7 +1046,7 @@ class StoryPlayer(qt.QWidget):
         gui.book_marcks(self,"stories").exec()
     def onAddNewBookmark(self):
         name, ok = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب اسم العلامة المرجعية")
-        if ok:
+        if ok and name:
             type = self.categoriesListWidget.currentRow()
             story = self.storyListWidget.currentRow()
             position = self.mp.position()

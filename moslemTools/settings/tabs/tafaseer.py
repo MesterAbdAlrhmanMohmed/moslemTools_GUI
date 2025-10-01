@@ -71,13 +71,13 @@ class TafaseerSettings(qt.QWidget):
         self.selectTafaseer.currentTextChanged.connect(self.onTafaseerChanged)
         self.selecttranslation.currentTextChanged.connect(self.onTranslationChanged)    
     def onTafaseerChanged(self, text):
-        if text and text in tafseer.tafaseers:
-            index = list(tafseer.tafaseers.keys()).index(text)
-            settings_handler.set("tafaseer", "tafaseer", str(index))    
+        if text and text in tafseer.tafaseers:            
+            filename = tafseer.tafaseers[text]
+            settings_handler.set("tafaseer", "tafaseer", filename)    
     def onTranslationChanged(self, text):
-        if text and text in translater.translations:
-            index = list(translater.translations.keys()).index(text)
-            settings_handler.set("translation", "translation", str(index))    
+        if text and text in translater.translations:            
+            filename = translater.translations[text]
+            settings_handler.set("translation", "translation", filename)    
     def onDelete1(self):
         selectedItem = self.selecttranslation.currentText()
         if selectedItem:
@@ -93,8 +93,9 @@ class TafaseerSettings(qt.QWidget):
                     self.selecttranslation.blockSignals(True)
                     self.selecttranslation.clear()
                     self.selecttranslation.addItems(translater.translations.keys())
-                    self.selecttranslation.blockSignals(False)                    
-                    guiTools.speak("تم الحذف")        
+                    self.selecttranslation.blockSignals(False)                                        
+                    self.selecttranslation.setCurrentText("English by Talal Itani")                    
+                    guiTools.speak("تم الحذف")            
     def onDelete(self):
         selectedItem = self.selectTafaseer.currentText()
         if selectedItem:
@@ -110,5 +111,6 @@ class TafaseerSettings(qt.QWidget):
                     self.selectTafaseer.blockSignals(True)
                     self.selectTafaseer.clear()
                     self.selectTafaseer.addItems(tafseer.tafaseers.keys())
-                    self.selectTafaseer.blockSignals(False)                    
+                    self.selectTafaseer.blockSignals(False)                                        
+                    self.selectTafaseer.setCurrentText("الميصر")                    
                     guiTools.speak("تم الحذف")

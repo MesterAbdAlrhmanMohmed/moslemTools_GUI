@@ -10,6 +10,7 @@ class AboutDeveloper(qt.QDialog):
         self.center()
         self.setWindowTitle("عن المطور")
         self.info = guiTools.QListWidget()
+        self.info.setSpacing(1)
         font = self.info.font()
         font.setBold(True)
         self.info.setFont(font)

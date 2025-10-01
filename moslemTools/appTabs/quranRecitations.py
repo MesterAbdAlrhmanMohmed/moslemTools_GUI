@@ -30,6 +30,7 @@ class QuranRecitations(qt.QWidget):
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)
         self.surahs = qt.QListWidget()
+        self.surahs.setSpacing(1)
         self.surahs.itemActivated.connect(self.onSurahClicked)
         layout.addWidget(self.surahs)
         self.data = {}

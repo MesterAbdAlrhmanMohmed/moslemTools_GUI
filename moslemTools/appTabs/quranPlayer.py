@@ -1,4 +1,4 @@
-import guiTools, requests, json, os, winsound, gui, functions
+import guiTools, requests, json, os, winsound, gui, functions, subprocess, shutil
 from guiTools import TextViewer
 from settings import *
 import PyQt6.QtWidgets as qt
@@ -36,9 +36,56 @@ class DownloadThread(qt2.QThread):
             self.cancelled.emit()
     def cancel(self):
         self.is_cancelled = True
+class MergeThread(qt2.QThread):
+    finished = qt2.pyqtSignal(bool, str)
+    def __init__(self, ffmpeg_path, input_files, output_file):
+        super().__init__()
+        self.ffmpeg_path = ffmpeg_path
+        self.input_files = input_files
+        self.output_file = output_file
+        self.process = None
+    def run(self):
+        list_filepath = os.path.join(os.path.dirname(self.output_file), "mergelist.txt")
+        try:
+            with open(list_filepath, 'w', encoding='utf-8') as f:
+                for file_path in self.input_files:
+                    safe_path = file_path.replace("\\", "/")
+                    f.write(f"file '{safe_path}'\n")
+            command = [
+                self.ffmpeg_path,
+                "-y",
+                "-f", "concat",
+                "-safe", "0",
+                "-i", list_filepath,
+                "-ar", "44100",
+                "-ac", "2",
+                "-b:a", "192k",
+                self.output_file
+            ]        
+            startupinfo = None
+            if os.name == 'nt':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            self.process = subprocess.Popen(command, startupinfo=startupinfo, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
+            stdout, stderr = self.process.communicate()
+            if self.process.returncode == 0:
+                self.finished.emit(True, "Success")
+            else:
+                self.finished.emit(False, f"فشل الدمج أو تم إلغاؤه.\n{stderr}")
+        except Exception as e:
+            self.finished.emit(False, f"حدث خطأ غير متوقع: {str(e)}")
+        finally:
+            if os.path.exists(list_filepath):
+                os.remove(list_filepath)
+    def stop(self):
+        if self.process and self.process.poll() is None:
+            self.process.terminate()
 class QuranPlayer(qt.QWidget):
     def __init__(self):
         super().__init__()
+        self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
+        if not os.path.exists(self.ffmpeg_path):
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ فادح", "لم يتم العثور على أداة الدمج FFmpeg. خاصية دمج السور لن تعمل.")
         qt1.QShortcut("ctrl+s", self).activated.connect(lambda: self.mp.stop())
         qt1.QShortcut("space", self).activated.connect(self.play)
         qt1.QShortcut("alt+right", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 5000))
@@ -68,6 +115,12 @@ class QuranPlayer(qt.QWidget):
         self.startingPosition = None
         self.endingPosition = None
         self.repeatFromPositionToPosition = False
+        self.merge_list = []
+        self.files_to_delete_after_merge = []
+        self.is_merging = False
+        self.cancellation_requested = False
+        self.completed_merge_downloads = set()
+        self.current_download_url = None
         self.reciters_data = self.load_reciters()
         self.recitersLabel = qt.QLabel("إختيار قارئ")
         self.recitersLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -78,6 +131,7 @@ class QuranPlayer(qt.QWidget):
         self.reciterSearchEdit.setAccessibleName("ابحث عن قارئ")
         self.reciterSearchEdit.setObjectName("reciterSearch")
         self.recitersListWidget = guiTools.QListWidget()
+        self.recitersListWidget.setSpacing(1)
         self.recitersListWidget.itemSelectionChanged.connect(self.on_reciter_selected)
         self.surahsLabel = qt.QLabel("السور")
         self.surahsLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -88,6 +142,7 @@ class QuranPlayer(qt.QWidget):
         self.surahSearchEdit.setAccessibleName("ابحث عن سورة")
         self.surahSearchEdit.setObjectName("surahSearch")
         self.surahListWidget = guiTools.QListWidget()
+        self.surahListWidget.setSpacing(1)
         self.surahListWidget.clicked.connect(self.play_selected_audio)
         self.reciterSearchEdit.textChanged.connect(self.reciter_onsearch)
         self.surahSearchEdit.textChanged.connect(self.surah_onsearch)
@@ -168,29 +223,48 @@ class QuranPlayer(qt.QWidget):
         self.delete.clicked.connect(lambda: self.delete_surah())        
         self.info_menu = qt.QLabel("لخيارات السورة، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.info_menu.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
-        self.info_menu.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.info_menu.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
+        self.merge_feedback_label = qt.QLabel()
+        self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.merge_feedback_label.setVisible(False)    
+        self.merge_action_button = guiTools.QPushButton("بدء دمج السور المحددة")
+        self.merge_action_button.clicked.connect(self.handle_merge_action)
+        self.merge_action_button.setVisible(False)        
+        self.merge_all_from_start_button = guiTools.QPushButton("دمج كل السور من البداية الى النهاية")
+        self.merge_all_from_start_button.clicked.connect(self.prepare_merge_all_from_start)
+        self.merge_all_from_start_button.setVisible(True)        
+        self.merge_all_from_end_button = guiTools.QPushButton("دمج كل السور من النهاية الى البداية")
+        self.merge_all_from_end_button.clicked.connect(self.prepare_merge_all_from_end)
+        self.merge_all_from_end_button.setVisible(True)        
         recitersLayout = qt.QVBoxLayout()
         recitersLayout.addWidget(self.recitersLabel)
         recitersLayout.addWidget(self.reciterSearchLabel)
         recitersLayout.addWidget(self.reciterSearchEdit)
-        recitersLayout.addWidget(self.recitersListWidget)
+        recitersLayout.addWidget(self.recitersListWidget)        
         surahsLayout = qt.QVBoxLayout()
         surahsLayout.addWidget(self.surahsLabel)
         surahsLayout.addWidget(self.surahSearchLabel)
         surahsLayout.addWidget(self.surahSearchEdit)
         surahsLayout.addWidget(self.surahListWidget)
         surahsLayout.addWidget(self.info_menu)
+        surahsLayout.addWidget(self.merge_feedback_label)        
+        merge_buttons_layout = qt.QVBoxLayout()
+        merge_buttons_layout.addWidget(self.merge_action_button)
+        merge_buttons_layout.addWidget(self.merge_all_from_start_button)
+        merge_buttons_layout.addWidget(self.merge_all_from_end_button)
+        surahsLayout.addLayout(merge_buttons_layout)        
         topLayout = qt.QHBoxLayout()
         topLayout.addLayout(recitersLayout)
-        topLayout.addLayout(surahsLayout)        
+        topLayout.addLayout(surahsLayout)                
         download_buttons_layout = qt.QHBoxLayout()
         download_buttons_layout.addWidget(self.dl_all_app)
         download_buttons_layout.addWidget(self.delete)
-        download_buttons_layout.addWidget(self.dl_all)
+        download_buttons_layout.addWidget(self.dl_all)        
         layout = qt.QVBoxLayout()
         layout.addLayout(topLayout)
         layout.addLayout(download_buttons_layout)
-        layout.addWidget(self.Slider)
+        layout.addWidget(self.Slider)        
         progress_cancel_layout = qt.QHBoxLayout()        
         progress_cancel_layout.addWidget(self.cancel_download_button)
         progress_cancel_layout.addWidget(self.progressBar)
@@ -199,19 +273,294 @@ class QuranPlayer(qt.QWidget):
         playback_buttons_layout.addWidget(self.play_all_to_end)
         playback_buttons_layout.addWidget(self.play_all_to_start)
         layout.addLayout(playback_buttons_layout)
-        layout.addWidget(self.repeat_surah_button)
+        layout.addWidget(self.repeat_surah_button)        
         layout1 = qt.QHBoxLayout()        
         layout1.addWidget(self.User_guide)
         layout1.addWidget(self.duration)
         layout1.addWidget(self.openBookmarks)
-        layout.addLayout(layout1)
-        self.setLayout(layout)
+        layout.addLayout(layout1)        
+        self.setLayout(layout)        
         if self.recitersListWidget.count() > 0:
             self.recitersListWidget.setCurrentRow(0)
-            self.on_reciter_selected()
+            self.on_reciter_selected()            
         self.surahListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.surahListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
+    def handle_merge_action(self):
+        if self.is_merging:
+            self.confirm_and_cancel_merge()
+        else:
+            self.prepare_merge()
+    def confirm_and_cancel_merge(self):
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", 
+            "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
+        if reply == 0:
+            self.cancellation_requested = True
+            if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
+                self.merge_thread.stop()
+    def add_to_merge_list(self):
+        selected_reciter_item = self.recitersListWidget.currentItem()
+        selected_surah_item = self.surahListWidget.currentItem()
+        if not selected_reciter_item or not selected_surah_item:
+            return        
+        reciter = selected_reciter_item.text()
+        surah = selected_surah_item.text()        
+        surah_info = {
+            "reciter": reciter,
+            "surah": surah,
+            "url": self.reciters_data[reciter][surah]
+        }
+        self.merge_list.append(surah_info)
+        winsound.Beep(440, 100)
+        self.update_merge_ui()
+    def remove_from_merge_list(self):
+        if not self.merge_list:
+            return        
+        num_items = len(self.merge_list)
+        number, ok = guiTools.QInputDialog.getSingleInt(
+            self, 
+            "إزالة سورة", 
+            f"أدخل رقم السورة لإزالتها (من 1 إلى {num_items})", 
+            1
+        )
+        if ok:
+            if 1 <= number <= num_items:
+                del self.merge_list[number - 1]
+                winsound.Beep(600, 150)
+                self.update_merge_ui()
+            else:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
+    def update_merge_ui(self):
+        count = len(self.merge_list)
+        if count > 0:
+            self.merge_feedback_label.setText(f"تم تحديد {count} سورة للدمج.")
+            self.merge_feedback_label.setVisible(True)
+            self.merge_all_from_start_button.setEnabled(False)
+            self.merge_all_from_end_button.setEnabled(False)
+        else:
+            self.merge_feedback_label.setVisible(False)
+            self.merge_all_from_start_button.setEnabled(True)
+            self.merge_all_from_end_button.setEnabled(True)
+        self.merge_action_button.setVisible(count >= 2)
+    def cancel_merge(self):
+        self.merge_list.clear()
+        self.merge_feedback_label.setVisible(False)
+        self.merge_action_button.setVisible(False)
+        self.merge_all_from_start_button.setEnabled(True)
+        self.merge_all_from_end_button.setEnabled(True)
+    def prepare_merge_all_from_start(self):
+        if not self.recitersListWidget.currentItem():
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء اختيار قارئ أولاً.")
+            return
+        self.merge_list.clear()
+        reciter = self.recitersListWidget.currentItem().text()
+        surah_names = list(self.reciters_data[reciter].keys())
+        for surah in surah_names:
+            url = self.reciters_data[reciter][surah]
+            self.merge_list.append({"reciter": reciter, "surah": surah, "url": url})
+        self.prepare_merge(is_all=True)
+    def prepare_merge_all_from_end(self):
+        if not self.recitersListWidget.currentItem():
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء اختيار قارئ أولاً.")
+            return
+        self.merge_list.clear()
+        reciter = self.recitersListWidget.currentItem().text()
+        surah_names = list(self.reciters_data[reciter].keys())
+        surah_names.reverse()
+        for surah in surah_names:
+            url = self.reciters_data[reciter][surah]
+            self.merge_list.append({"reciter": reciter, "surah": surah, "url": url})
+        self.prepare_merge(is_all=True)
+    def prepare_merge(self, is_all=False):
+        if len(self.merge_list) < 2 and not is_all:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "يجب تحديد سورتين على الأقل للدمج.")
+            return
+        if not os.path.exists(self.ffmpeg_path):
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
+            return                
+        urls_to_download = []
+        for item in self.merge_list:
+            reciter = item["reciter"]
+            surah = item["surah"]
+            local_path = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter, f"{surah}.mp3")
+            if not os.path.exists(local_path):
+                urls_to_download.append(item["url"])
+        
+        num_files_to_download = len(urls_to_download)
+        
+        if num_files_to_download > 0:
+            confirm_message = (
+                f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} سورة غير موجودة.\n"
+                "سيتم الآن تحميل ودمج الملفات المحددة على مرحلتين:\n"
+                "مرحلة التحميل: سيتم تحميل الملفات تباعًا. في هذه الأثناء، يمكنك استخدام قائمة السور للتراجع عن تحديد أي سورة لم يبدأ تحميلها بعد، وبذلك يتم إلغاء تحميلها.\n"
+                "مرحلة الدمج: بعد انتهاء التحميل، لن تتمكن من استخدام الواجهة إلا لإلغاء عملية الدمج بأكملها.\n\n"
+                "هل تريد المتابعة؟"
+            )
+        else:
+            confirm_message = (
+                "جميع السور المحددة جاهزة للدمج.\n"
+                "ستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة باستثناء زر إلغاء الدمج.\n\n"
+                "هل تريد المتابعة؟"
+            )
+
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
+        if reply != 0:
+            if is_all:
+                self.cancel_merge()
+            return
+        output_filename, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف المدموج", "", "Audio Files (*.mp3)")
+        if not output_filename:
+            if is_all:
+                self.cancel_merge()
+            return
+        
+        self.set_ui_for_merge_download(False)
+        
+        self.current_merge_output_path = output_filename
+        self.files_to_delete_after_merge.clear()
+        self.completed_merge_downloads.clear()        
+        self.process_next_in_merge_queue()
+    def process_next_in_merge_queue(self):
+        output_dir = os.path.dirname(self.current_merge_output_path)
+        next_item_to_download = None
+        for item in self.merge_list:
+            reciter = item["reciter"]
+            surah = item["surah"]
+            url = item["url"]            
+            local_path = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter, f"{surah}.mp3")
+            if os.path.exists(local_path):
+                continue            
+            if url in self.completed_merge_downloads:
+                continue
+            next_item_to_download = item
+            break        
+        if next_item_to_download:
+            self.progressBar.setVisible(True)
+            url = next_item_to_download['url']
+            reciter = next_item_to_download['reciter']
+            surah = next_item_to_download['surah']            
+            safe_surah_name = "".join(c for c in surah if c.isalnum() or c in (' ', '_')).rstrip()
+            download_path = os.path.join(output_dir, f"{reciter}_{safe_surah_name}.mp3")            
+            self.current_download_url = url
+            self.download_thread = DownloadThread(url, download_path)
+            self.download_thread.progress.connect(self.progressBar.setValue)
+            self.download_thread.finished.connect(self.on_single_merge_download_finished)
+            self.download_thread.start()
+        else:
+            self.progressBar.setVisible(False)
+            self.finalize_and_execute_merge()
+    def on_single_merge_download_finished(self):
+        if self.current_download_url:
+            self.completed_merge_downloads.add(self.current_download_url)
+            self.current_download_url = None
+        self.process_next_in_merge_queue()
+    def finalize_and_execute_merge(self):
+        self.set_ui_for_merge_download(True)
+        
+        files_for_ffmpeg = []
+        self.files_to_delete_after_merge.clear()
+        output_dir = os.path.dirname(self.current_merge_output_path)
+        for item in self.merge_list:
+            reciter, surah, url = item["reciter"], item["surah"], item["url"]
+            local_path = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter, f"{surah}.mp3")            
+            if os.path.exists(local_path):
+                files_for_ffmpeg.append(local_path)
+            else:
+                safe_surah_name = "".join(c for c in surah if c.isalnum() or c in (' ', '_')).rstrip()
+                temp_path = os.path.join(output_dir, f"{reciter}_{safe_surah_name}.mp3")
+                files_for_ffmpeg.append(temp_path)                
+                if temp_path not in self.files_to_delete_after_merge:
+                    self.files_to_delete_after_merge.append(temp_path)
+        if not files_for_ffmpeg:
+             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على أي ملفات للدمج.")
+             self.cancel_merge()
+             return
+        self.execute_merge(files_for_ffmpeg, self.current_merge_output_path)
+    def execute_merge(self, input_files, output_file):
+        self.is_merging = True
+        self.cancellation_requested = False
+        self.set_ui_enabled(False)
+        self.merge_feedback_label.setEnabled(True)
+        count = len(self.merge_list)
+        self.merge_feedback_label.setText(f"جاري دمج {count} سور...")
+        self.merge_feedback_label.setVisible(True)
+        self.merge_action_button.setVisible(True)
+        self.merge_action_button.setEnabled(True)
+        self.merge_action_button.setText("إلغاء الدمج")
+        self.merge_action_button.setStyleSheet("background-color: #8B0000; color: white;")
+        self.merge_thread = MergeThread(self.ffmpeg_path, input_files, output_file)
+        self.merge_thread.finished.connect(self.on_merge_finished)
+        self.merge_thread.start()        
+    def on_merge_finished(self, success, message):
+        self.is_merging = False
+        self.set_ui_enabled(True)        
+        self.merge_feedback_label.setVisible(False)
+        self.merge_action_button.setText("بدء دمج السور المحددة")
+        self.merge_action_button.setStyleSheet("")
+        self.update_merge_ui()
+        if self.cancellation_requested:
+            guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الدمج.")
+            if hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
+                os.remove(self.current_merge_output_path)            
+            if self.files_to_delete_after_merge:
+                reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", 
+                    "هل تريد حذف السور الفردية التي تم تحميلها لهذه العملية الملغاة؟", "نعم", "لا")
+                if reply == 0:
+                    for f_path in self.files_to_delete_after_merge:
+                        if os.path.exists(f_path):
+                            try: os.remove(f_path)
+                            except: pass
+        elif success:
+            merged_files_names = [f" {item['surah']}" for item in self.merge_list]
+            details = "\n".join(merged_files_names)
+            success_message = f"تم دمج السور بنجاح:\n{details}"
+            guiTools.qMessageBox.MessageBox.view(self, "نجاح", success_message)
+            if self.files_to_delete_after_merge:
+                reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", 
+                    "هل تريد حذف السور الفردية التي تم تحميلها للدمج؟", "نعم", "لا")
+                if reply == 0:
+                    for f_path in self.files_to_delete_after_merge:
+                        if os.path.exists(f_path):
+                            try: os.remove(f_path)
+                            except: pass
+        else:
+            guiTools.qMessageBox.MessageBox.error(self, "فشل", message)        
+        self.cancellation_requested = False
+        self.cancel_merge()
+        self.files_to_delete_after_merge.clear()
+        self.completed_merge_downloads.clear()    
+    def set_ui_enabled(self, enabled):
+        widgets_to_toggle = [
+            self.recitersListWidget, self.surahListWidget,
+            self.reciterSearchEdit, self.surahSearchEdit,
+            self.reciterSearchLabel, self.surahSearchLabel,
+            self.dl_all, self.dl_all_app, self.delete,
+            self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
+            self.Slider, self.openBookmarks, self.User_guide,
+            self.merge_all_from_start_button, self.merge_all_from_end_button,
+            self.recitersLabel, self.surahsLabel,
+            self.duration, self.info_menu,
+            self.merge_feedback_label
+        ]
+        for widget in widgets_to_toggle:
+            widget.setEnabled(enabled)
+        if not enabled:
+            self.merge_action_button.setEnabled(True)
+    def set_ui_for_merge_download(self, enabled):
+        widgets_to_toggle = [
+            self.recitersListWidget,
+            self.reciterSearchEdit, self.surahSearchEdit,
+            self.reciterSearchLabel, self.surahSearchLabel,
+            self.dl_all, self.dl_all_app, self.delete,
+            self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
+            self.Slider, self.openBookmarks, self.User_guide,
+            self.merge_all_from_start_button, self.merge_all_from_end_button,
+            self.recitersLabel,
+            self.duration, self.info_menu,
+            self.merge_action_button
+        ]
+        for widget in widgets_to_toggle:
+            widget.setEnabled(enabled)
     def cleanup_pending_deletions(self):        
         quran_reciters_dir = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters")
         if os.path.exists(quran_reciters_dir):
@@ -545,12 +894,19 @@ class QuranPlayer(qt.QWidget):
     def on_reciter_selected(self):
         self.mp.stop()
         self.surahListWidget.clear()
+        self.cancel_merge()
         selected_reciter_item = self.recitersListWidget.currentItem()
         if selected_reciter_item:
+            self.merge_all_from_start_button.setEnabled(True)
+            self.merge_all_from_end_button.setEnabled(True)
             reciter = selected_reciter_item.text()
             for surah, link in self.reciters_data[reciter].items():
                 self.surahListWidget.addItem(surah)
             self.check_all_surahs_downloaded()
+        else:
+            self.merge_all_from_start_button.setEnabled(False)
+            self.merge_all_from_end_button.setEnabled(False)
+
     def search(self, search_text, data):
         return [item for item in data if search_text in item.lower()]
     def reciter_onsearch(self):
@@ -631,6 +987,27 @@ class QuranPlayer(qt.QWidget):
         boldFont=menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
+
+        merge_menu = menu.addMenu("دمج السور")
+        if not self.merge_list:
+            start_merge_action = qt1.QAction("بدء الدمج من هذه السورة", self)
+            start_merge_action.triggered.connect(self.add_to_merge_list)
+            merge_menu.addAction(start_merge_action)
+        else:
+            add_next_action = qt1.QAction(f"إضافة السورة رقم {len(self.merge_list) + 1}", self)
+            add_next_action.triggered.connect(self.add_to_merge_list)
+            merge_menu.addAction(add_next_action)
+            
+            undo_action = qt1.QAction("التراجع عن تحديد سورة", self)
+            undo_action.triggered.connect(self.remove_from_merge_list)
+            merge_menu.addAction(undo_action)
+
+            cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
+            cancel_merge_action.triggered.connect(self.cancel_merge)
+            merge_menu.addAction(cancel_merge_action)
+
+        menu.addSeparator()
+
         repeateFromPositionTopositionMenue = menu.addMenu("التكرار من موضع إلى موضع")
         setStartingPositionAction = qt1.QAction("تحديد موضع البداية", self)
         setStartingPositionAction.triggered.connect(self.onChangeStartingPosition)
@@ -702,16 +1079,17 @@ class QuranPlayer(qt.QWidget):
             self.mp.play()
     def increase_volume(self):
         current_volume = self.au.volume()
-        new_volume = current_volume + 0.10
+        new_volume = min(current_volume + 0.10, 1.0)
         self.au.setVolume(new_volume)
     def decrease_volume(self):
         current_volume = self.au.volume()
-        new_volume = current_volume - 0.10
+        new_volume = max(current_volume - 0.10, 0.0)
         self.au.setVolume(new_volume)
     def set_position_from_slider(self, value):
         duration = self.mp.duration()
-        new_position = int((value / 100) * duration)
-        self.mp.setPosition(new_position)
+        if duration > 0:
+            new_position = int((value / 100) * duration)
+            self.mp.setPosition(new_position)
     def update_slider(self):
         if self.isAMustToGoToBookmark and self.mp.position() >= 3000:
             self.isAMustToGoToBookmark = False
@@ -722,13 +1100,20 @@ class QuranPlayer(qt.QWidget):
                 self.mp.setPosition(self.startingPosition)
                 self.mp.play()
                 return
-        try:
-            self.Slider.blockSignals(True)
-            self.Slider.setValue(int((self.mp.position() / self.mp.duration()) * 100))
-            self.Slider.blockSignals(False)
-            self.time_VA()
-        except:
-            self.duration.setText("خطأ في الحصول على مدة المقطع")
+        if self.mp.duration() > 0:
+            try:
+                self.Slider.blockSignals(True)
+                position_ratio = self.mp.position() / self.mp.duration()
+                self.Slider.setValue(int(position_ratio * 100))
+                self.Slider.blockSignals(False)
+                self.time_VA()
+            except ZeroDivisionError:
+                self.Slider.setValue(0)
+                self.duration.setText("00:00:00")
+        else:
+            self.Slider.setValue(0)
+            self.duration.setText("00:00:00")
+
     def time_VA(self):
         position = self.mp.position()
         duration = self.mp.duration()
@@ -775,7 +1160,7 @@ class QuranPlayer(qt.QWidget):
         gui.book_marcks(self, "quran").exec()
     def onAddNewBookmark(self):
         name, ok = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب اسم العلامة المرجعية")
-        if ok:
+        if ok and name:
             type = self.recitersListWidget.currentRow()
             surah = self.surahListWidget.currentRow()
             position = self.mp.position()

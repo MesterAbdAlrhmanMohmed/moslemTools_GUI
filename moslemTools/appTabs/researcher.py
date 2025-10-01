@@ -45,9 +45,11 @@ class SearchModeDialog(qt.QDialog):
         self.apply_button = guiTools.QPushButton("تطبيق التغييرات")
         self.apply_button.setObjectName("applySearchModeChangesButton")
         self.apply_button.clicked.connect(self.accept)        
+        self.apply_button.setAutoDefault(False)
         self.cancel_button = guiTools.QPushButton("إلغاء")
         self.cancel_button.setObjectName("cancelButton")
         self.cancel_button.clicked.connect(self.reject)        
+        self.cancel_button.setAutoDefault(False)
         buttons_layout.addStretch(1)
         buttons_layout.addWidget(self.apply_button)
         buttons_layout.addWidget(self.cancel_button)
@@ -65,7 +67,6 @@ class SearchModeDialog(qt.QDialog):
             "ignore_hamza": self.ignore_hamza,
             "ignore_symbols": self.ignore_symbols
         }
-
 class Albaheth(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -224,6 +225,7 @@ class Albaheth(qt.QWidget):
         self.serch_laibol_content.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         self.serch_input = qt.QLineEdit()
         self.serch_input.setAccessibleName("أكتب محتوى البحث")        
+        self.serch_input.returnPressed.connect(self.onSearchClicked)
         self.ignore_tashkeel = True
         self.ignore_hamza = True
         self.ignore_symbols = True        
@@ -482,7 +484,7 @@ class Albaheth(qt.QWidget):
             ayah_menu.addAction(translation_action)            
             iarab_action = qt1.QAction("إعراب الآية", self)
             iarab_action.setShortcut("Ctrl+I")
-            iarab_action.triggered.connect(lambda: self.show_iarab(metadata))
+            iarاب_action.triggered.connect(lambda: self.show_iarab(metadata))
             ayah_menu.addAction(iarab_action)            
             tanzil_action = qt1.QAction("أسباب نزول الآية", self)
             tanzil_action.setShortcut("Ctrl+R")

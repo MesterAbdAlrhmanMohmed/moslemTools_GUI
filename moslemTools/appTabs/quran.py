@@ -112,6 +112,7 @@ class Quran(qt.QWidget):
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)
         self.info = guiTools.QListWidget()        
+        self.info.setSpacing(1)
         font=qt1.QFont()
         font.setBold(True)        
         self.info.setFont(font)

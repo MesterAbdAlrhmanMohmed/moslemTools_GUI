@@ -22,6 +22,7 @@ class ProphetStories(qt.QWidget):
         font=qt1.QFont()
         font.setBold(True)        
         self.list_of_aProphetStories = guiTools.QListWidget()
+        self.list_of_aProphetStories.setSpacing(1)
         self.list_of_aProphetStories.setFont(font)
         self.list_of_aProphetStories.itemClicked.connect(self.open)        
         layout = qt.QVBoxLayout(self)

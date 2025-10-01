@@ -107,6 +107,7 @@ class prayer_times(qt.QWidget):
         self.timer = qt2.QTimer(self)
         self.timer.timeout.connect(self.onTimer)
         self.information = qt.QListWidget()
+        self.information.setSpacing(1)
         self.worning = qt.QLabel()
         self.worning.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.worning.setText("F5: لإعادة تحميل مواقيت الصلاة")
