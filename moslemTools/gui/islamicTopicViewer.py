@@ -38,7 +38,7 @@ class IslamicTopicViewer(qt.QDialog):
         self.font_laybol = qt.QLabel("حجم الخط")        
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font = qt.QLabel(str(self.font_size))
-        self.show_font.setAccessibleName("حجم الخط")
+        self.show_font.setAccessibleDescription("حجم الخط")
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         self.info = qt.QLabel(self.current_title)
