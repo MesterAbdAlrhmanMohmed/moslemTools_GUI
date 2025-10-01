@@ -20,12 +20,33 @@ class NotesDialog(qt.QDialog):
         qt1.QShortcut(qt1.QKeySequence("Ctrl+O"), self).activated.connect(self.handle_view)
         self.resize(800,450)
         layout = qt.QVBoxLayout(self)                
-        self.tabWidget = qt.QTabWidget()
+        self.tabWidget = qt.QTabWidget()        
         self.tabWidget.setStyleSheet("""
-            QTabBar::tab { font-weight: bold; padding: 10px; }
-            QTabBar::tab:selected { background: #0078d7; color: white; }
-        """)
-        
+            QTabWidget::pane {
+                border: 1px solid #444;
+                border-radius: 6px;
+                background-color: #1e1e1e;
+            }
+            QTabBar::tab {
+                background: #2b2b2b;
+                color: white;
+                padding: 10px 20px;
+                border: 1px solid #444;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                margin: 2px;
+                min-width: 100px;
+                font-weight: bold;
+            }
+            QTabBar::tab:selected {
+                background: #0078d7;
+                color: white;
+                border: 1px solid #0078d7;
+            }
+            QTabBar::tab:hover {
+                background: #3a3a3a;
+            }
+        """)        
         self.tabs = []
         self.notes_lists = []        
         categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المنوعة"]
