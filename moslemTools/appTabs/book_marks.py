@@ -136,7 +136,7 @@ class book_marcks(qt.QDialog):
                     guiTools.speak("تم حذف العلامة المرجعية")
                     self.onCategoryChanged(tab_index)
             else:
-                guiTools.qMessageBox.MessageBox.error(self, "تحذير", "الرجاء تحديد علامة مرجعية للحذف.")
+                pass
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ أثناء حذف العلامة المرجعية: {e}")    
     def onRemoveAllCurrentCategory(self):
