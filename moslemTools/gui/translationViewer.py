@@ -52,6 +52,9 @@ class translationViewer(qt.QDialog):
         self.show_font.setText(str(self.font_size))
         fontLayout.addWidget(self.show_font)
         bottomLayout.addLayout(fontLayout)
+        self.warning_label = qt.QLabel("تنبيه: إذا غيرت الترجمة ولم يظهر النص، اختر نفس الترجمة مرة أخرى.")
+        self.warning_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        bottomLayout.addWidget(self.warning_label, 0, qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addLayout(bottomLayout)
         self.getResult()
     def OnContextMenu(self):

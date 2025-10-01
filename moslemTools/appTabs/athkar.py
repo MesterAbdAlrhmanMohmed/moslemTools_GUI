@@ -37,6 +37,11 @@ class Athker(qt.QWidget):
         self.info1.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info1.setText("لحذف أي نوع من الأذكار تم تحميله، نستخدم زر الحذف أو زر التطبيقات")
         layout.addWidget(self.info1)
+        self.info2=qt.QLabel()
+        self.info2.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.info2.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.info2.setText("يمكنكم تحميل الأذكار الصوتية لتشغيلها بدون انترنت من تحميل موارد إضافية من الإعدادات")    
+        layout.addWidget(self.info2)
     def onDelete(self):
         itemText = self.athkerList.currentItem()
         if itemText:
