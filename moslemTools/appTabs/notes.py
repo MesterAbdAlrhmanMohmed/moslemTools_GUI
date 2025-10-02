@@ -113,6 +113,9 @@ class NotesDialog(qt.QDialog):
         item = notes_list.itemAt(pos)
         if not item: return    
         menu = qt.QMenu(self)            
+        font=qt1.QFont()
+        font.setBold(True)
+        menu.setFont(font)
         view_action = menu.addAction("عرض الملاحظة")
         view_action.setShortcut("Ctrl+O")
         view_action.triggered.connect(lambda: self.view_note(item.text(), tab_index))
