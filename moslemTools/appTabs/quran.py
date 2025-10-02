@@ -421,8 +421,7 @@ class Quran(qt.QWidget):
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
                 self.merge_thread.stop()
     def onMergeActionTriggered(self):
-        if not self.info.currentItem():
-            guiTools.qMessageBox.MessageBox.information(self, "تنبيه", "يرجى تحديد فئة أولاً من القائمة للقيام بعملية الدمج.")
+        if not self.info.currentItem():            
             return
         if not os.path.exists(self.ffmpeg_path):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
