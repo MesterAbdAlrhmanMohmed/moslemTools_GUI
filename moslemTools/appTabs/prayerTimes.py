@@ -8,7 +8,7 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 class PrayerTimesWorker(qt2.QObject):
     finished = qt2.pyqtSignal(object, object, object, object, object, object, object, object)
-    error = qt2.pyqtSignal(str)
+    error = qt2.pyqtSignal(str)    
     def get_dates_info(self):        
         gregorian_months = [
             "يَنَايِر", "فِبْرَايِر", "مَارِس", "أَبْرِيل", "مَايُو", "يُونْيُو",
@@ -49,7 +49,7 @@ class PrayerTimesWorker(qt2.QObject):
                 ramadan_countdown_message = f"باقي على شهر رمضان: {months} شهر بالضبط"
             elif months == 0 and days > 0:
                 ramadan_countdown_message = f"باقي على شهر رمضان: {days} يوم"        
-        return gregorian_date, hijri_date, ramadan_countdown_message, day
+        return gregorian_date, hijri_date, ramadan_countdown_message, day        
     def run(self):
         try:            
             gregorian_date, hijri_date, ramadan_countdown_message, day = self.get_dates_info()            
@@ -105,7 +105,10 @@ class prayer_times(qt.QWidget):
         self.prayers = []
         self.times = []
         self.timer = qt2.QTimer(self)
-        self.timer.timeout.connect(self.onTimer)
+        self.timer.timeout.connect(self.onTimer)        
+        self.next_prayer_item = None
+        self.countdown_timer = qt2.QTimer(self)
+        self.countdown_timer.timeout.connect(self.update_next_prayer_countdown)
         self.information = qt.QListWidget()
         self.information.setSpacing(1)
         self.worning = qt.QLabel()
@@ -144,6 +147,60 @@ class prayer_times(qt.QWidget):
         layout.addWidget(self.worning)
         self.setLayout(layout)
         self.display_prayer_times()        
+    def format_arabic_time_unit(self, number, units):
+        if number == 0:
+            return ""
+        if number == 1:
+            return units['singular']
+        elif number == 2:
+            return units['dual']
+        elif 3 <= number <= 10:
+            return f"{number} {units['plural']}"
+        else:
+            return f"{number} {units['singular_acc']}"
+    def update_next_prayer_countdown(self):
+        if not self.times or not self.prayers:
+            return
+        now = datetime.now()
+        next_prayer_name = None
+        next_prayer_time_obj = None
+        for i, time_str in enumerate(self.times):
+            try:
+                prayer_time_obj = datetime.strptime(time_str, "%I:%M %p").replace(year=now.year, month=now.month, day=now.day)
+                if prayer_time_obj > now:
+                    next_prayer_time_obj = prayer_time_obj
+                    next_prayer_name = self.prayers[i]
+                    break
+            except ValueError:
+                continue
+        if next_prayer_name is None:
+            fajr_time_str = self.times[0]
+            tomorrow = now + timedelta(days=1)
+            next_prayer_time_obj = datetime.strptime(fajr_time_str, "%I:%M %p").replace(year=tomorrow.year, month=tomorrow.month, day=tomorrow.day)
+            next_prayer_name = self.prayers[0]
+        time_left = next_prayer_time_obj - now
+        total_seconds = int(time_left.total_seconds())
+        if total_seconds < 0:
+             total_seconds = 0
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        hour_units = {'singular': 'ساعة', 'dual': 'ساعتين', 'plural': 'ساعات', 'singular_acc': 'ساعة'}
+        minute_units = {'singular': 'دقيقة', 'dual': 'دقيقتين', 'plural': 'دقائق', 'singular_acc': 'دقيقة'}
+        second_units = {'singular': 'ثانية', 'dual': 'ثانيتين', 'plural': 'ثواني', 'singular_acc': 'ثانية'}
+        h_str = self.format_arabic_time_unit(hours, hour_units)
+        m_str = self.format_arabic_time_unit(minutes, minute_units)
+        s_str = self.format_arabic_time_unit(seconds, second_units)    
+        parts = [p for p in [h_str, m_str, s_str] if p]        
+        time_str = ""
+        if len(parts) > 0:
+            time_str = " و ".join(parts)
+        else:             
+            self.update_next_prayer_countdown()
+            return
+        countdown_message = f"متبقي على صلاة {next_prayer_name} {time_str}"
+        if self.next_prayer_item:
+            self.next_prayer_item.setText(countdown_message)
     def onTimer(self):
         currentTimeOBJ = datetime.now()
         currentTime=currentTimeOBJ.strftime("%I:%M %p")
@@ -209,6 +266,7 @@ class prayer_times(qt.QWidget):
             winsound.Beep(1000, 100)    
             speak("تم نسخ المحتوى المحدد بنجاح")    
     def display_prayer_times(self):
+        self.countdown_timer.stop()
         self.information.clear()
         self.information.addItem("جاري تحميل مواقيت الصلاة...")                
         self.worker = PrayerTimesWorker()
@@ -224,23 +282,29 @@ class prayer_times(qt.QWidget):
         self.information.clear()
         self.prayers = prayers
         self.times = times
-        self.day = day                
+        self.day = day                    
         if prayers and times:
             for i in range(len(prayers)):
-                self.information.addItem(f"{prayers[i]}: {times[i]}")                
+                self.information.addItem(f"{prayers[i]}: {times[i]}")        
+            self.next_prayer_item = qt.QListWidgetItem("جاري حساب الوقت المتبقي...")
+            self.information.addItem(self.next_prayer_item)
         self.information.addItem("التاريخ الميلادي: " + gregorian_date)
         self.information.addItem("التاريخ الهجري: " + hijri_date)                
         if ramadan_countdown_message:
             self.information.addItem(ramadan_countdown_message)                
         if error_message:
-            self.information.addItem(error_message)                
+            self.information.addItem(error_message)                        
         if not self.timer.isActive() and prayers and times:
             self.timer.start(10000)    
+        if prayers and times:
+            self.update_next_prayer_countdown()
+            self.countdown_timer.start(1000)
     def on_prayer_times_error(self, error_message):        
         self.thread.quit()
         self.thread.wait()                
         self.information.clear()
         self.information.addItem(error_message)                
+        self.countdown_timer.stop()
         try:
             gregorian_months = [
                 "يَنَايِر", "فِبْرَايِر", "مَارِس", "أَبْرِيل", "مَايُو", "يُونْيُو",
