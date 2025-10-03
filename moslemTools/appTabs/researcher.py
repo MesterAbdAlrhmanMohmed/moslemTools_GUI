@@ -484,7 +484,7 @@ class Albaheth(qt.QWidget):
             ayah_menu.addAction(translation_action)            
             iarab_action = qt1.QAction("إعراب الآية", self)
             iarab_action.setShortcut("Ctrl+I")
-            iarاب_action.triggered.connect(lambda: self.show_iarab(metadata))
+            iarab_action.triggered.connect(lambda: self.show_iarab(metadata))
             ayah_menu.addAction(iarab_action)            
             tanzil_action = qt1.QAction("أسباب نزول الآية", self)
             tanzil_action.setShortcut("Ctrl+R")
