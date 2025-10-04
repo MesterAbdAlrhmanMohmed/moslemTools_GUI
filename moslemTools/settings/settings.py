@@ -6,7 +6,7 @@ from PyQt6.QtCore import Qt
 class settings(qt.QDialog):
     def __init__(self, p):
         super().__init__(p)
-        self.resize(550,430)
+        self.resize(590,430)
         self.center()
         self.setWindowTitle("الإعدادات")
         self.p = p
