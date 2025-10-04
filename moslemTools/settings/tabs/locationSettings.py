@@ -1,7 +1,8 @@
 from settings import settings_handler
+from guiTools import speak
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
-import webbrowser
+import pyperclip,winsound
 class LocationSettings(qt.QWidget):
     def __init__(self, p):
         super().__init__()
@@ -34,7 +35,7 @@ class LocationSettings(qt.QWidget):
         self.LT1.setVisible(p.cbts(settings_handler.get("location","autoDetect"))==False)
         layout.addWidget(self.LT1l)
         layout.addWidget(self.LT1)
-        self.LT2l=qt.QLabel("خط الطول")
+        self.LT2l=qt.QLabel("دائرة العرض") # <-- تم تعديل النص هنا ليعكس المحتوى الصحيح
         self.LT2l.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.LT2=qt.QDoubleSpinBox()
         self.LT2.setAccessibleName("دائرة العرض")
@@ -43,19 +44,23 @@ class LocationSettings(qt.QWidget):
         self.LT2.setDecimals(8)
         self.LT2.setVisible(p.cbts(settings_handler.get("location","autoDetect"))==False)
         layout.addWidget(self.LT2l)
-        layout.addWidget(self.LT2)
-        self.dl_app=qt.QPushButton("تحميل تطبيق معرفة خطوط الطول ودوائر العرض للأندرويد")
-        self.dl_app.clicked.connect(lambda: webbrowser.open("https://play.google.com/store/apps/details?id=com.mylocation.latitudelongitude"))
+        layout.addWidget(self.LT2)                                
+        def copy_and_beep(link):
+            pyperclip.copy(link)
+            winsound.Beep(1000, 100)
+            speak("تم نسخ رابط التحميل بنجاح")
+        self.dl_app=qt.QPushButton("نسخ رابط تحميل تطبيق معرفة خطوط الطول ودوائر العرض للأندرويد")        
+        self.dl_app.clicked.connect(lambda: copy_and_beep("https://play.google.com/store/apps/details?id=com.mylocation.latitudelongitude"))
         self.dl_app.setStyleSheet("background-color: #0000AA; color: #e0e0e0;")
         self.dl_app.setVisible(p.cbts(settings_handler.get("location","autoDetect"))==False)
         self.LT2l.setVisible(p.cbts(settings_handler.get("location","autoDetect"))==False)
         self.LT1l.setVisible(p.cbts(settings_handler.get("location","autoDetect"))==False)
-        layout.addWidget(self.dl_app)
-        self.dl_app1=qt.QPushButton("تحميل تطبيق معرفة خطوط الطول ودوائر العرض للios")
-        self.dl_app1.clicked.connect(lambda: webbrowser.open("https://apps.apple.com/us/app/find-my-latitude-and-longitude/id668745605"))
+        layout.addWidget(self.dl_app)        
+        self.dl_app1=qt.QPushButton("نسخ رابط تحميل تطبيق معرفة خطوط الطول ودوائر العرض للـ iOS")        
+        self.dl_app1.clicked.connect(lambda: copy_and_beep("https://apps.apple.com/us/app/find-my-latitude-and-longitude/id668745605"))
         self.dl_app1.setStyleSheet("background-color: #0000AA; color: #e0e0e0;")
         self.dl_app1.setVisible(p.cbts(settings_handler.get("location","autoDetect"))==False)
-        layout.addWidget(self.dl_app1)
+        layout.addWidget(self.dl_app1)                        
         self.info=qt.QLabel("تنبيه هام، عند تحديد الموقع الجغرافي يجب إعادة تحميل مواقيت الصلاة")
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
