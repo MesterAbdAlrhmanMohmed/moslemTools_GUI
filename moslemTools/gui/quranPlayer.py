@@ -113,7 +113,7 @@ class QuranPlayer(qt.QDialog):
         self.audioOutput=QAudioOutput(self)
         self.media.setAudioOutput(self.audioOutput)
         self.media.mediaStatusChanged.connect(self.on_state)
-        self.index=index-1
+        self.index=index
         self.quranText=text.split("\n")
         self.text=guiTools.QReadOnlyTextEdit()
         self.text.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
@@ -122,7 +122,7 @@ class QuranPlayer(qt.QDialog):
         option.setAlignment(qt2.Qt.AlignmentFlag.AlignRight)
         option.setTextDirection(qt2.Qt.LayoutDirection.RightToLeft)
         self.text.document().setDefaultTextOption(option)
-        self.text.setText(text[index-1])
+        self.text.setText(self.quranText[self.index])
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
         self.text.setFocus()
@@ -523,15 +523,17 @@ class QuranPlayer(qt.QDialog):
             self.media.pause()
             self.PPS.setText("تشغيل")
     def gotoayah(self):
-        if self.media.isPlaying():
-            self.media.stop()
+        self.pause_for_action()
         number,ok=guiTools.QInputDialog.getInt(self,"الذهاب إلى آية","أكتب رقم الآية",self.index+1,1,len(self.quranText))
         if ok:
             self.currentTime=1
             self.index=number-1
             self.text.setText(self.quranText[self.index])
             self.update_font_size()
+            self.media.stop()
             self.on_play()
+        else:
+            self.resume_after_action()
     def onNextAyah(self):
         self.currentTime=1
         if self.index+1==len(self.quranText):
@@ -574,10 +576,10 @@ class QuranPlayer(qt.QDialog):
         name=list(reciters.keys())[index]
         return name
     def getCurentAyahTafseer(self):
-        if self.media.isPlaying():
-            self.media.stop()
+        self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
         TafaseerViewer(self,AyahNumber,AyahNumber).exec()
+        self.resume_after_action()
     def safeClose(self):
         if self.media.isPlaying():
             self.media.stop()
@@ -604,37 +606,41 @@ class QuranPlayer(qt.QDialog):
             self.media.stop()
             super().closeEvent(event)
     def getCurentAyahIArab(self):
-        if self.media.isPlaying():
-            self.media.stop()
+        self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
         result=functions.iarab.getIarab(AyahNumber,AyahNumber)
         guiTools.TextViewer(self,"إعراب",result).exec()
+        self.resume_after_action()
     def getCurrentAyahTanzel(self):
-        if self.media.isPlaying():
-            self.media.stop()
+        self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
         result=functions.tanzil.gettanzil(AyahNumber)
         if result:
             guiTools.TextViewer(self,"اسباب النزول",result).exec()
         else:
             guiTools.qMessageBox.MessageBox.view(self,"تنبيه","لا توجد أسباب نزول متاحة لهذه الآية")
+        self.resume_after_action()
     def getAyahInfo(self):
-        if self.media.isPlaying():
-            self.media.stop()
+        self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
         sajda=""
         if juz[3]:
             sajda="الآية تحتوي على سجدة"
         guiTools.qMessageBox.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nالجزء {} \nالربع {} \nالصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
+        self.resume_after_action()
     def getCurentAyahTranslation(self):
-        if self.media.isPlaying():
-            self.media.stop()
+        self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
         translationViewer(self,AyahNumber,AyahNumber).exec()
+        self.resume_after_action()
     def volume_up(self):
-        self.audioOutput.setVolume(self.audioOutput.volume()+0.10)
+        volume = self.audioOutput.volume()
+        if volume < 1.0:
+            self.audioOutput.setVolume(min(1.0, volume + 0.10))
     def volume_down(self):
-        self.audioOutput.setVolume(self.audioOutput.volume()-0.10)
+        volume = self.audioOutput.volume()
+        if volume > 0.0:
+            self.audioOutput.setVolume(max(0.0, volume - 0.10))
     def set_position_from_slider(self, value):
         duration = self.media.duration()
         new_position = int((value / 100) * duration)
@@ -660,15 +666,15 @@ class QuranPlayer(qt.QDialog):
         remaining_str = f"{remaining_sec // 60}:{remaining_sec % 60:02d}"
         self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
     def onChangeRecitersContextMenuRequested(self):
-        if self.media.isPlaying():
-            self.media.stop()
+        self.pause_for_action()
         RL=list(reciters.keys())
         dlg=ChangeReciter(self,RL,self.currentReciter)
         code=dlg.exec()
         if code==dlg.DialogCode.Accepted:
             self.currentReciter=list(reciters.keys()).index(dlg.recitersListWidget.currentItem().text())
-        self.on_play()
+        self.resume_after_action()
     def set_font_size_dialog(self):
+        self.pause_for_action()
         try:
             size, ok = guiTools.QInputDialog.getInt(
                 self,
@@ -685,3 +691,5 @@ class QuranPlayer(qt.QDialog):
                 guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))
+        finally:
+            self.resume_after_action()
