@@ -167,7 +167,6 @@ class Albaheth(qt.QWidget):
         qt1.QShortcut("Ctrl+A", self).activated.connect(self.copy_text)    
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
     def on_shortcut_activated(self, action_func):        
-        self.pause_for_action()        
         cursor = self.results.textCursor()
         line_number = cursor.blockNumber() + 1
         metadata = self.search_metadata.get(line_number)
@@ -670,6 +669,7 @@ class Albaheth(qt.QWidget):
             self.currentReciter = dlg.recitersListWidget.currentRow()                
         self.resume_after_action()
     def set_font_size_dialog(self):
+        self.pause_for_action()
         try:
             size, ok = guiTools.QInputDialog.getInt(
                 self,
@@ -686,3 +686,5 @@ class Albaheth(qt.QWidget):
                 guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))
+        finally:
+            self.resume_after_action()
