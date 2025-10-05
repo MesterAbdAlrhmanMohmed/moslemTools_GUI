@@ -160,8 +160,12 @@ class prayer_times(qt.QWidget):
             parts = [p for p in [h_str, m_str, s_str] if p]
             time_str = " و ".join(parts) if parts else ""
             if self.next_prayer_item:
-                if time_str:
-                    self.next_prayer_item.setText(f"متبقي على صلاة {next_prayer_name} {time_str}")
+                if time_str:                    
+                    if next_prayer_name == 'الشروق':
+                        display_text = f"متبقي على شروق الشمس {time_str}"
+                    else:
+                        display_text = f"متبقي على صلاة {next_prayer_name} {time_str}"
+                    self.next_prayer_item.setText(display_text)                    
                 else:
                     self.update_countdowns()
         if self.ramadan_start_greg:
@@ -283,10 +287,9 @@ class prayer_times(qt.QWidget):
         if error_message:
             self.information.addItem(error_message)
         if not self.timer.isActive() and prayers and times:
-            self.timer.start(10000)
-        if prayers and times:
-            self.update_countdowns()
-            self.countdown_timer.start(1000)
+            self.timer.start(10000)        
+        self.update_countdowns()
+        self.countdown_timer.start(1000)
     def on_prayer_times_error(self, error_message):
         self.thread.quit()
         self.thread.wait()
