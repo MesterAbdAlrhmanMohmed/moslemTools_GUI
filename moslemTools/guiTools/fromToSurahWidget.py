@@ -94,38 +94,46 @@ class FromToSurahWidget(qt.QDialog):
         font = qt1.QFont()
         font.setBold(True)
         self.setFont(font)         
+
+        item_name = ""
         if index == 0:
             self.surahs = functions.quranJsonControl.getSurahs()
             self.setWindowTitle("تحديد سور القرآن الكريم")
+            item_name = "السورة"
         elif index == 1:
             self.surahs = functions.quranJsonControl.getPage()
             self.setWindowTitle("تحديد صفحات القرآن الكريم")
+            item_name = "الصفحة"
         elif index == 2:
             self.surahs = functions.quranJsonControl.getJuz()
             self.setWindowTitle("تحديد أجزاء القرآن الكريم")
+            item_name = "الجزء"
         elif index == 3:
             self.surahs = functions.quranJsonControl.getHezb()
             self.setWindowTitle("تحديد أرباع القرآن الكريم")
+            item_name = "الربع"
         elif index == 4:
             self.surahs = functions.quranJsonControl.getHizb()
-            self.setWindowTitle("تحديد أحزاب القرآن الكريم")        
-        self.label_from_surah = qt.QLabel("من")
+            self.setWindowTitle("تحديد أحزاب القرآن الكريم")
+            item_name = "الحزب"
+        
+        self.label_from_surah = qt.QLabel(f"من {item_name}")
         self.combo_from_surah = qt.QComboBox()
-        self.combo_from_surah.setAccessibleName("من")
+        self.combo_from_surah.setAccessibleName(f"من {item_name}")
         self.combo_from_surah.addItems(self.surahs.keys())
         self.combo_from_surah.setFont(font)        
         self.label_from_verse = qt.QLabel("من الآية")
         self.spin_from_verse = qt.QSpinBox()
         self.spin_from_verse.setAccessibleName("من الآية")
         self.spin_from_verse.setFont(font)        
-        self.label_to_surah = qt.QLabel("الى")
+        self.label_to_surah = qt.QLabel(f"إلى {item_name}")
         self.combo_to_surah = qt.QComboBox()
-        self.combo_to_surah.setAccessibleName("الى")
+        self.combo_to_surah.setAccessibleName(f"إلى {item_name}")
         self.combo_to_surah.addItems(self.surahs.keys())
         self.combo_to_surah.setFont(font)
-        self.label_to_verse = qt.QLabel("الى الآية")
+        self.label_to_verse = qt.QLabel("إلى الآية")
         self.spin_to_verse = qt.QSpinBox()
-        self.spin_to_verse.setAccessibleName("الى الآية")
+        self.spin_to_verse.setAccessibleName("إلى الآية")
         self.spin_to_verse.setFont(font)
         self.go = guiTools.QPushButton("خيارات")
         self.go.setStyleSheet("""
