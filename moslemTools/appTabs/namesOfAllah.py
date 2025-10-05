@@ -6,35 +6,30 @@ import PyQt6.QtCore as qt2
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 class NamesOfAllah(qt.QWidget):
     def __init__(self):
-        super().__init__()        
+        super().__init__()
+        self.font_is_bold = settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings_handler.get("font", "size"))
         font = qt1.QFont()
         font.setBold(True)
-        self.setFont(font)        
+        self.setFont(font)
         with open("data/json/namesOfAllah.json", "r", encoding="utf-8") as file:
-            all_data = json.load(file)                
-        self.data = all_data.get("ar", []) 
+            all_data = json.load(file)
+        self.data = all_data.get("ar", [])
         layout = qt.QVBoxLayout(self)
         self.information = guiTools.QReadOnlyTextEdit()
-        font1 = qt1.QFont()
-        font1.setBold(True)
-        self.information.setFont(font1)                        
         formatted_text = ""
         for item in self.data:
             name = item.get("name", "اسم غير موجود")
             meaning = item.get("meaning", "معنى غير موجود")
             formatted_text += f"{name}\n{meaning}\n"
-        self.information.setText(formatted_text.strip())        
+        self.information.setText(formatted_text.strip())
         self.information.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.information.customContextMenuRequested.connect(self.OnContextMenu)
-        self.font_size = 12
-        font = self.font()
-        font.setPointSize(self.font_size)
-        self.information.setFont(font)
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font = qt.QLabel()
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_font.setAccessibleDescription("حجم النص")                
+        self.show_font.setAccessibleDescription("حجم النص")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.setText(str(self.font_size))
         layout.addWidget(self.information)
@@ -45,8 +40,9 @@ class NamesOfAllah(qt.QWidget):
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
-        qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)        
+        qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
+        self.update_font_size()
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
         bold_font = qt1.QFont()
@@ -58,11 +54,11 @@ class NamesOfAllah(qt.QWidget):
         text_options.setFont(bold_font)
         save = text_options.addAction("حفظ كملف نصي")
         save.setShortcut("ctrl+s")
-        save.triggered.connect(self.save_text_as_txt)        
+        save.triggered.connect(self.save_text_as_txt)
         print_action = text_options.addAction("طباعة")
         print_action.setShortcut("ctrl+p")
         print_action.triggered.connect(self.print_text)
-        copy_all = text_options.addAction("نسخ النص كاملا")        
+        copy_all = text_options.addAction("نسخ النص كاملا")
         copy_all.setShortcut("ctrl+a")
         copy_all.triggered.connect(self.copy_text)
         copy_selected_text = text_options.addAction("نسخ النص المحدد")
@@ -87,7 +83,7 @@ class NamesOfAllah(qt.QWidget):
         menu.addMenu(fontMenu)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
@@ -101,9 +97,10 @@ class NamesOfAllah(qt.QWidget):
     def update_font_size(self):
         cursor = self.information.textCursor()
         self.information.selectAll()
-        font = self.information.font()
+        font = qt1.QFont()
         font.setPointSize(self.font_size)
-        self.information.setCurrentFont(font)        
+        font.setBold(self.font_is_bold)
+        self.information.setCurrentFont(font)
         self.information.setTextCursor(cursor)
     def print_text(self):
         try:
@@ -112,7 +109,7 @@ class NamesOfAllah(qt.QWidget):
             if dialog.exec() == QPrintDialog.DialogCode.Accepted:
                 self.information.print(printer)
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def save_text_as_txt(self):
         try:
             file_dialog = qt.QFileDialog()
@@ -123,34 +120,34 @@ class NamesOfAllah(qt.QWidget):
                 file_name = file_dialog.selectedFiles()[0]
                 with open(file_name, 'w', encoding='utf-8') as file:
                     text = self.information.toPlainText()
-                    file.write(text)                 
+                    file.write(text)
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_line(self):
         try:
             cursor = self.information.textCursor()
             if cursor.hasSelection():
                 selected_text = cursor.selectedText()
-                pyperclip.copy(selected_text) 
+                pyperclip.copy(selected_text)
                 winsound.Beep(1000, 100)
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
         try:
             text = self.information.toPlainText()
-            pyperclip.copy(text)            
+            pyperclip.copy(text)
             winsound.Beep(1000, 100)
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def set_font_size_dialog(self):
         try:
             size, ok = guiTools.QInputDialog.getInt(
                 self,
                 "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 50):",
+                "أدخل حجم الخط (من 1 الى 100):",
                 value=self.font_size,
                 min=1,
-                max=50
+                max=100
             )
             if ok:
                 self.font_size = size
@@ -158,4 +155,4 @@ class NamesOfAllah(qt.QWidget):
                 self.update_font_size()
                 guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "حدث خطأ", str(error))  

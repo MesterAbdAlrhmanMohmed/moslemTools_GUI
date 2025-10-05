@@ -1,6 +1,6 @@
 from guiTools import note_dialog
 import functions.notesManager as notesManager
-import guiTools, pyperclip, winsound, functions
+import guiTools, pyperclip, winsound, functions, settings
 import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
@@ -9,7 +9,9 @@ from docx import Document
 class book_viewer(qt.QDialog):
     def __init__(self, p, book_name, partName: str, content: list, index: int = 0):
         super().__init__(p)
-        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)        
+        self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings.settings_handler.get("font", "size"))
         self.data = content
         self.index = index
         self.bookName = book_name
@@ -35,11 +37,7 @@ class book_viewer(qt.QDialog):
         self.text = guiTools.QReadOnlyTextEdit()
         self.text.setText(self.data[self.index])
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.text.customContextMenuRequested.connect(self.OnContextMenu)
-        self.font_size = 12
-        font = self.font()
-        font.setPointSize(self.font_size)
-        self.text.setFont(font)
+        self.text.customContextMenuRequested.connect(self.OnContextMenu)        
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font = qt.QLabel()
@@ -74,6 +72,7 @@ class book_viewer(qt.QDialog):
         layout1.addWidget(self.P_book)
         layout1.addWidget(self.N_book)        
         layout.addLayout(layout1)        
+        self.update_font_size()
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
         boldFont = menu.font()
@@ -354,7 +353,7 @@ class book_viewer(qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
@@ -368,8 +367,9 @@ class book_viewer(qt.QDialog):
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
-        font = self.text.font()
+        font = qt1.QFont()
         font.setPointSize(self.font_size)
+        font.setBold(self.font_is_bold)
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
     def copy_line(self):
@@ -420,12 +420,14 @@ class book_viewer(qt.QDialog):
     def next_book(self):
         self.index = 0 if self.index == len(self.data) - 1 else self.index + 1
         self.text.setText(self.data[self.index])
+        self.update_font_size()
         guiTools.speak(str(self.index + 1))
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         winsound.PlaySound("data/sounds/next_page.wav", 1)
     def previous_book(self):
         self.index = len(self.data) - 1 if self.index == 0 else self.index - 1
         self.text.setText(self.data[self.index])
+        self.update_font_size()
         guiTools.speak(str(self.index + 1))
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         winsound.PlaySound("data/sounds/previous_page.wav", 1)
@@ -434,6 +436,7 @@ class book_viewer(qt.QDialog):
         if OK:
             self.index = book - 1
             self.text.setText(self.data[self.index])
+            self.update_font_size()
             self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
     def onDeleteNoteShortcut(self):
         position_data = {
@@ -451,10 +454,10 @@ class book_viewer(qt.QDialog):
             size, ok = guiTools.QInputDialog.getInt(
                 self,
                 "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 50):",
+                "أدخل حجم الخط (من 1 الى 100):",
                 value=self.font_size,
                 min=1,
-                max=50
+                max=100
             )
             if ok:
                 self.font_size = size

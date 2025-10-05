@@ -1,6 +1,6 @@
 from guiTools import note_dialog
 import functions.notesManager as notesManager
-import guiTools, pyperclip, winsound, functions
+import guiTools, pyperclip, winsound, functions, settings
 import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
@@ -19,7 +19,9 @@ class IslamicTopicViewer(qt.QDialog):
         qt1.QShortcut("ctrl+b", self).activated.connect(self.onAddOrRemoveBookmark)
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
-        qt1.QShortcut("ctrl+1", self).activated.connect(self.set_font_size_dialog)        
+        qt1.QShortcut("ctrl+1", self).activated.connect(self.set_font_size_dialog)                
+        self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings.settings_handler.get("font", "size"))
         self.file_path = file_path
         self.all_topics = all_topics
         self.current_title = title                
@@ -29,12 +31,7 @@ class IslamicTopicViewer(qt.QDialog):
         self.text = guiTools.QReadOnlyTextEdit()
         self.text.setText(content)
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.text.customContextMenuRequested.connect(self.OnContextMenu)                
-        self.font_size = 12
-        font = self.font()
-        font.setPointSize(self.font_size)
-        font.setBold(True)
-        self.text.setFont(font)                
+        self.text.customContextMenuRequested.connect(self.OnContextMenu)                        
         self.font_laybol = qt.QLabel("حجم الخط")        
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font = qt.QLabel(str(self.font_size))
@@ -65,6 +62,7 @@ class IslamicTopicViewer(qt.QDialog):
         buttonsLayout.addWidget(self.previous)
         buttonsLayout.addWidget(self.next)
         layout.addLayout(buttonsLayout)        
+        self.update_font_size()    
         if index > 0:
             cursor = self.text.textCursor()
             cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
@@ -233,16 +231,21 @@ class IslamicTopicViewer(qt.QDialog):
         self.current_title = self.topic_titles[self.currentIndex]
         content = self.all_topics[self.current_title]
         self.text.setText(content)
+        self.update_font_size()
         self.info.setText(self.current_title)
         winsound.PlaySound("data/sounds/next_page.wav", winsound.SND_ASYNC)
         guiTools.speak(self.current_title)
     def update_font_size(self):
-        font = self.text.font()
+        cursor = self.text.textCursor()
+        self.text.selectAll()
+        font = qt1.QFont()
         font.setPointSize(self.font_size)
-        self.text.setFont(font)
+        font.setBold(self.font_is_bold)
+        self.text.setCurrentFont(font)
+        self.text.setTextCursor(cursor)
         self.show_font.setText(str(self.font_size))
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.update_font_size()
@@ -252,7 +255,7 @@ class IslamicTopicViewer(qt.QDialog):
             guiTools.speak(str(self.font_size))
             self.update_font_size()
     def set_font_size_dialog(self):
-        size, ok = guiTools.QInputDialog.getInt(self, "تغيير حجم الخط", "أدخل حجم الخط (1-50):", self.font_size, 1, 50)
+        size, ok = guiTools.QInputDialog.getInt(self, "تغيير حجم الخط", "أدخل حجم الخط (1-100):", self.font_size, 1, 100)
         if ok:
             self.font_size = size
             self.update_font_size()

@@ -89,6 +89,8 @@ class QuranPlayer(qt.QDialog):
     def __init__(self,p,text,index:int,type,category):
         super().__init__(p)
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
+        self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings.settings_handler.get("font", "size"))
         self.currentReciter=int(settings.settings_handler.get("g","reciter"))
         self.resize(1200,600)
         font = qt1.QFont()
@@ -101,7 +103,7 @@ class QuranPlayer(qt.QDialog):
         self.was_playing_before_action = False
         self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
         if not os.path.exists(self.ffmpeg_path):
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ فادح", "لم يتم العثور على أداة الدمج FFmpeg. خاصية دمج الآيات لن تعمل.")
+            guiTools.MessageBox.error(self, "خطأ فادح", "لم يتم العثور على أداة الدمج FFmpeg. خاصية دمج الآيات لن تعمل.")
         self.merge_list = []
         self.files_to_delete_after_merge = []
         self.is_merging = False
@@ -126,10 +128,6 @@ class QuranPlayer(qt.QDialog):
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
         self.text.setFocus()
-        self.font_size=12
-        font=self.font()
-        font.setPointSize(self.font_size)
-        self.text.setFont(font)
         self.media_progress=qt.QSlider(qt2.Qt.Orientation.Horizontal)
         self.media_progress.setRange(0,100)
         self.media_progress.valueChanged.connect(self.set_position_from_slider)
@@ -152,7 +150,6 @@ class QuranPlayer(qt.QDialog):
         self.N_aya.setAutoDefault(False)
         self.N_aya.setStyleSheet("background-color: #0000AA; color: white;")
         self.N_aya.clicked.connect(self.onNextAyah)
-        self.N_aya.setStyleSheet("background-color: #0000AA; color: white;")
         self.N_aya.setAccessibleDescription("alt زائد السهم الأيمن")
         self.PPS=guiTools.QPushButton("تشغيل")
         self.PPS.setAutoDefault(False)
@@ -161,7 +158,6 @@ class QuranPlayer(qt.QDialog):
         self.PPS.setStyleSheet("background-color: #0000AA; color: white;")
         self.P_aya=guiTools.QPushButton("الآيا السابقة")
         self.P_aya.setAutoDefault(False)
-        self.P_aya.setStyleSheet("background-color: #0000AA; color: white;")
         self.P_aya.setStyleSheet("background-color: #0000AA; color: white;")
         self.P_aya.clicked.connect(self.onPreviousAyah)
         self.P_aya.setAccessibleDescription("alt زائد السهم الأيسر")
@@ -219,6 +215,7 @@ class QuranPlayer(qt.QDialog):
         qt1.QShortcut("ctrl+f", self).activated.connect(self.getAyahInfo)
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.mergeAyahs)
+        self.update_font_size()
         self.on_play()
     def pause_for_action(self):
         if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -258,7 +255,7 @@ class QuranPlayer(qt.QDialog):
     def mergeAyahs(self):
         self.pause_for_action()
         if not os.path.exists(self.ffmpeg_path):
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
+            guiTools.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
             self.resume_after_action()
             return
         self.merge_list.clear()
@@ -375,14 +372,14 @@ class QuranPlayer(qt.QDialog):
         self.is_merging = False
         self.merge_phase = 'idle'
         if self.cancellation_requested:
-            guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الدمج.")
+            guiTools.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الدمج.")
             if hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
                 try: os.remove(self.current_merge_output_path)
                 except: pass
         elif success:
-            guiTools.qMessageBox.MessageBox.view(self, "نجاح", "تم دمج الآيات بنجاح.")
+            guiTools.MessageBox.view(self, "نجاح", "تم دمج الآيات بنجاح.")
         else:
-            guiTools.qMessageBox.MessageBox.error(self, "فشل", message)
+            guiTools.MessageBox.error(self, "فشل", message)
         if self.files_to_delete_after_merge:
             reply = guiTools.QQuestionMessageBox.view(self, "تنظيف",
                 "هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
@@ -476,7 +473,7 @@ class QuranPlayer(qt.QDialog):
             self.media.play()
             self.PPS.setText("إيقاف مؤقت")
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
@@ -490,8 +487,9 @@ class QuranPlayer(qt.QDialog):
     def update_font_size(self):
         cursor=self.text.textCursor()
         self.text.selectAll()
-        font=self.text.font()
+        font=qt1.QFont()
         font.setPointSize(self.font_size)
+        font.setBold(self.font_is_bold)
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
     def on_set(self):
@@ -589,7 +587,7 @@ class QuranPlayer(qt.QDialog):
     def closeEvent(self, event):
         if self.is_merging:
             if self.merge_phase == 'downloading':
-                guiTools.qMessageBox.MessageBox.error(self, "غير مسموح", "لا يمكن إغلاق البرنامج أثناء مرحلة تحميل الآيات. الرجاء الانتظار.")
+                guiTools.MessageBox.error(self, "غير مسموح", "لا يمكن إغلاق البرنامج أثناء مرحلة تحميل الآيات. الرجاء الانتظار.")
                 event.ignore()
             elif self.merge_phase == 'merging':
                 reply = guiTools.QQuestionMessageBox.view(self, "تأكيد", "عملية الدمج قيد التشغيل. هل تريد إلغاءها والخروج؟", "نعم", "لا")
@@ -618,7 +616,7 @@ class QuranPlayer(qt.QDialog):
         if result:
             guiTools.TextViewer(self,"اسباب النزول",result).exec()
         else:
-            guiTools.qMessageBox.MessageBox.view(self,"تنبيه","لا توجد أسباب نزول متاحة لهذه الآية")
+            guiTools.MessageBox.view(self,"تنبيه","لا توجد أسباب نزول متاحة لهذه الآية")
         self.resume_after_action()
     def getAyahInfo(self):
         self.pause_for_action()
@@ -626,7 +624,7 @@ class QuranPlayer(qt.QDialog):
         sajda=""
         if juz[3]:
             sajda="الآية تحتوي على سجدة"
-        guiTools.qMessageBox.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nالجزء {} \nالربع {} \nالصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
+        guiTools.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nالجزء {} \nالربع {} \nالصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
         self.resume_after_action()
     def getCurentAyahTranslation(self):
         self.pause_for_action()
@@ -679,10 +677,10 @@ class QuranPlayer(qt.QDialog):
             size, ok = guiTools.QInputDialog.getInt(
                 self,
                 "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 50):",
+                "أدخل حجم الخط (من 1 الى 100):",
                 value=self.font_size,
                 min=1,
-                max=50
+                max=100
             )
             if ok:
                 self.font_size = size
@@ -690,6 +688,6 @@ class QuranPlayer(qt.QDialog):
                 self.update_font_size()
                 guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "حدث خطأ", str(error))
         finally:
             self.resume_after_action()

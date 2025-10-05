@@ -76,6 +76,10 @@ settingsConfig={
         "asr": "asr.mp3",
         "maghrib": "maghrib.mp3",
         "isha": "isha.mp3"
+    },
+    "font":{
+        "bold":"False",
+        "size":"12"
     }
 }
 if not os.path.exists(cpath):

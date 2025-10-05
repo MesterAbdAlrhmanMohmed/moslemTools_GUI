@@ -7,3 +7,4 @@ from .downloadSettings import Download
 from .prayerTimesSettings import PrayerTimesSettings
 from .quranPlayerSettings import QuranPlayerSettings
 from .locationSettings import LocationSettings
+from .font_settings import FontSettings 

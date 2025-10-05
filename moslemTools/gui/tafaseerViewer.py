@@ -14,7 +14,9 @@ class TafaseerViewer(qt.QDialog):
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
+        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)        
+        self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings.settings_handler.get("font", "size"))
         self.index = settings.settings_handler.get("tafaseer", "tafaseer")
         self.context_menu_active = False
         self.saved_text = ""
@@ -26,13 +28,7 @@ class TafaseerViewer(qt.QDialog):
         self.resize(1200, 600)
         self.text = guiTools.QReadOnlyTextEdit()
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.text.customContextMenuRequested.connect(self.OnContextMenu)
-        self.font_size = 12
-        font = qt1.QFont()
-        font.setPointSize(self.font_size)
-        font.setBold(True)
-        self.text.setFont(font)
-        self.text.setStyleSheet(f"font-size: {self.font_size}pt;")
+        self.text.customContextMenuRequested.connect(self.OnContextMenu)        
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.text)
         bottomLayout = qt.QHBoxLayout()
@@ -104,6 +100,7 @@ class TafaseerViewer(qt.QDialog):
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
         self.text.setText('\n'.join(lines[:40]))
+        self.update_font_size()
         self.text.setUpdatesEnabled(True)
         if self.saved_cursor_position is not None:
             cursor = self.text.textCursor()
@@ -114,6 +111,7 @@ class TafaseerViewer(qt.QDialog):
     def restore_full_content(self):    
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
+            self.update_font_size()
             if self.saved_cursor_position is not None:
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
@@ -172,7 +170,7 @@ class TafaseerViewer(qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
@@ -186,8 +184,9 @@ class TafaseerViewer(qt.QDialog):
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
-        font = self.text.font()
+        font = qt1.QFont()
         font.setPointSize(self.font_size)
+        font.setBold(self.font_is_bold)
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
     def copy_line(self):
@@ -222,12 +221,14 @@ class TafaseerViewer(qt.QDialog):
             self.From, self.to
         )
         lines = self.full_content.split('\n')
-        self.text.setText('\n'.join(lines[:40   ]))
+        self.text.setText('\n'.join(lines[:40]))
+        self.update_font_size()
         if len(lines) > 40:
             QTimer.singleShot(500, self.display_full_content)
     def display_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.full_content)
+            self.update_font_size()
             if self.saved_cursor_position is not None:
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
@@ -237,10 +238,10 @@ class TafaseerViewer(qt.QDialog):
             size, ok = guiTools.QInputDialog.getInt(
                 self,
                 "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 50):",
+                "أدخل حجم الخط (من 1 الى 100):",
                 value=self.font_size,
                 min=1,
-                max=50
+                max=100
             )
             if ok:
                 self.font_size = size

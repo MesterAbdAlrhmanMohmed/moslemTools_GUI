@@ -1,4 +1,4 @@
-import guiTools, pyperclip, winsound
+import guiTools, pyperclip, winsound, settings
 import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
@@ -7,7 +7,9 @@ from PyQt6.QtCore import QTimer
 class TextViewer(qt.QDialog):
     def __init__(self, p, title, text):
         super().__init__(p)
-        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)        
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
+        self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings.settings_handler.get("font", "size"))
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
@@ -25,11 +27,6 @@ class TextViewer(qt.QDialog):
         self.text = guiTools.QReadOnlyTextEdit()
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
-        self.font_size = 12
-        font = qt1.QFont()
-        font.setPointSize(self.font_size)
-        font.setBold(True)
-        self.text.setFont(font)
         self._set_text_with_delay(text)
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -97,6 +94,7 @@ class TextViewer(qt.QDialog):
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
         self.text.setText('\n'.join(lines[:40]))
+        self.update_font_size()
         self.text.setUpdatesEnabled(True)
         if self.saved_cursor_position is not None:
             cursor = self.text.textCursor()
@@ -107,6 +105,7 @@ class TextViewer(qt.QDialog):
     def restore_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
+            self.update_font_size()
             if self.saved_cursor_position is not None:
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
@@ -118,7 +117,7 @@ class TextViewer(qt.QDialog):
             if dialog.exec() == QPrintDialog.DialogCode.Accepted:
                 self.text.print(printer)
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def save_text_as_txt(self):
         try:
             file_dialog = qt.QFileDialog()
@@ -131,9 +130,9 @@ class TextViewer(qt.QDialog):
                     text = self.text.toPlainText()
                     file.write(text)
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
@@ -147,12 +146,15 @@ class TextViewer(qt.QDialog):
     def update_font_size(self):
         cursor = self.text.textCursor()
         selected_text_start = cursor.selectionStart()
-        selected_text_end = cursor.selectionEnd()    
+        selected_text_end = cursor.selectionEnd()
         fmt = qt1.QTextCharFormat()
         fmt.setFontPointSize(self.font_size)
-        fmt.setFontWeight(qt1.QFont.Weight.Bold)    
+        if self.font_is_bold:
+            fmt.setFontWeight(qt1.QFont.Weight.Bold)
+        else:
+            fmt.setFontWeight(qt1.QFont.Weight.Normal)
         cursor.select(qt1.QTextCursor.SelectionType.Document)
-        cursor.mergeCharFormat(fmt)    
+        cursor.mergeCharFormat(fmt)
         cursor.setPosition(selected_text_start)
         if selected_text_start != selected_text_end:
             cursor.setPosition(selected_text_end, qt1.QTextCursor.MoveMode.KeepAnchor)
@@ -165,14 +167,14 @@ class TextViewer(qt.QDialog):
                 winsound.Beep(1000, 100)
                 guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
         try:
             pyperclip.copy(self.saved_text)
             winsound.Beep(1000, 100)
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def _set_text_with_delay(self, full_text):
         self.saved_text = full_text
         lines = full_text.split('\n')
@@ -183,6 +185,7 @@ class TextViewer(qt.QDialog):
     def _display_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
+            self.update_font_size()
             if self.saved_cursor_position is not None:
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
@@ -192,10 +195,10 @@ class TextViewer(qt.QDialog):
             size, ok = guiTools.QInputDialog.getInt(
                 self,
                 "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 50):",
+                "أدخل حجم الخط (من 1 الى 100):",
                 value=self.font_size,
                 min=1,
-                max=50
+                max=100
             )
             if ok:
                 self.font_size = size
@@ -203,7 +206,7 @@ class TextViewer(qt.QDialog):
                 self.update_font_size()
                 guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "حدث خطأ", str(error))
     def copy_current_selection(self):
         try:
             cursor = self.text.textCursor()
@@ -213,4 +216,4 @@ class TextViewer(qt.QDialog):
                 winsound.Beep(1000, 100)
                 guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))

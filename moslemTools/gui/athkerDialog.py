@@ -10,7 +10,9 @@ class AthkerDialog (qt.QDialog):
         super().__init__(p)        
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)        
         self.setWindowTitle(title)
-        layout=qt.QVBoxLayout(self)
+        layout=qt.QVBoxLayout(self)        
+        self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings.settings_handler.get("font", "size"))
         self.media=QMediaPlayer(self)
         self.audioOutput=QAudioOutput(self)
         self.media.setAudioOutput(self.audioOutput)
@@ -23,12 +25,7 @@ class AthkerDialog (qt.QDialog):
         self.athkerViewer=guiTools.QReadOnlyTextEdit()                                        
         self.athkerViewer.setText(self.athkerList[self.inex]["text"])
         self.athkerViewer.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.athkerViewer.customContextMenuRequested.connect(self.OnContextMenu)
-        self.font_size=12
-        font=self.font()
-        font.setPointSize(self.font_size)
-        font.setBold(True)
-        self.athkerViewer.setFont(font)                
+        self.athkerViewer.customContextMenuRequested.connect(self.OnContextMenu)    
         self.media_progress = qt.QSlider(qt2.Qt.Orientation.Horizontal)
         self.media_progress.setVisible(False)
         self.media_progress.setRange(0, 100)
@@ -42,8 +39,7 @@ class AthkerDialog (qt.QDialog):
         self.time_label.setVisible(False)
         progress_time_layout = qt.QHBoxLayout()
         progress_time_layout.addWidget(self.media_progress, 3)
-        progress_time_layout.addWidget(self.time_label)
-        
+        progress_time_layout.addWidget(self.time_label)        
         self.font_laybol=qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font=qt.QLabel()
@@ -74,7 +70,8 @@ class AthkerDialog (qt.QDialog):
         layout1.addWidget(self.P_thekr)
         layout1.addWidget(self.PPS)        
         layout1.addWidget(self.N_theker)
-        layout.addLayout(layout1)
+        layout.addLayout(layout1)        
+        self.update_font_size()
         qt1.QShortcut("alt+right",self).activated.connect(self.onNextThker)
         qt1.QShortcut("alt+left",self).activated.connect(self.onPreviousThker)
         qt1.QShortcut("space",self).activated.connect(self.onPlay)
@@ -151,6 +148,7 @@ class AthkerDialog (qt.QDialog):
         else:
             self.inex+=1
         self.athkerViewer.setText(self.athkerList[self.inex]["text"])
+        self.update_font_size()
         winsound.PlaySound("data/sounds/next_page.wav",1)        
     def onPreviousThker(self):
         self.media.stop()
@@ -163,6 +161,7 @@ class AthkerDialog (qt.QDialog):
         else:
             self.inex-=1
         self.athkerViewer.setText(self.athkerList[self.inex]["text"])
+        self.update_font_size()
         winsound.PlaySound("data/sounds/previous_page.wav",1)                
     def OnContextMenu(self):                        
         self.was_playing = self.media.isPlaying()                
@@ -246,7 +245,7 @@ class AthkerDialog (qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))            
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
@@ -260,8 +259,9 @@ class AthkerDialog (qt.QDialog):
     def update_font_size(self):
         cursor=self.athkerViewer.textCursor()
         self.athkerViewer.selectAll()
-        font=self.athkerViewer.font()
+        font=qt1.QFont()
         font.setPointSize(self.font_size)
+        font.setBold(self.font_is_bold)
         self.athkerViewer.setCurrentFont(font)        
         self.athkerViewer.setTextCursor(cursor)        
     def copy_line(self):
@@ -291,10 +291,10 @@ class AthkerDialog (qt.QDialog):
             size, ok = guiTools.QInputDialog.getInt(
                 self,
                 "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 50):",
+                "أدخل حجم الخط (من 1 الى 100):",
                 value=self.font_size,
                 min=1,
-                max=50
+                max=100
             )
             if ok:
                 self.font_size = size

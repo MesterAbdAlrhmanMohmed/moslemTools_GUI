@@ -12,10 +12,8 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6.QtCore import QTimer
 import guiTools, settings, functions
-
 with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
     reciters = json.load(file)
-
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
@@ -154,7 +152,9 @@ class SearchModeDialog(qt.QDialog):
 class QuranViewer(qt.QDialog):
     def __init__(self,p,text:str,type:int,category,index=0,enableNextPreviouseButtons=False,typeResult=[],CurrentIndex=0,enableBookmarks=True):
         super().__init__(p)
-        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)                
+        self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings.settings_handler.get("font", "size"))
         self.currentReciter=int(settings.settings_handler.get("g","reciter"))
         self.nameOfBookmark=""
         self.enableBookmarks=enableBookmarks
@@ -215,14 +215,9 @@ class QuranViewer(qt.QDialog):
             QPushButton#clearResultsButton:hover, QPushButton#cancelButton:hover { background-color: #c82333; }
             QPushButton#clearResultsButton:pressed, QPushButton#cancelButton:pressed { background-color: #bd2130; }
         """)
-        self.text=guiTools.QReadOnlyTextEdit()
-        self.font_size = 12
-        font = qt1.QFont()
-        font.setPointSize(self.font_size)
-        font.setBold(True)
-        self.text.setFont(font)
-        self.text.setStyleSheet(f"font-size: {self.font_size}pt;")
-        self._set_text_with_delay(text)
+        self.text=guiTools.QReadOnlyTextEdit()    
+        self._set_text_with_delay(text)                
+        self.update_font_size()
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.oncontextMenu)
         self.text.viewport().installEventFilter(self)                
@@ -611,7 +606,8 @@ class QuranViewer(qt.QDialog):
             guiTools.speak(header)
             display_text = [header, ""] + results
             self.quranText = "\n".join(results)
-            self.text.setText("\n".join(display_text))
+            self.text.setText("\n".join(display_text))                    
+            self.update_font_size()
             self.clear_results_button.show()
             if self.media.isPlaying():
                 self.media.stop()
@@ -621,7 +617,8 @@ class QuranViewer(qt.QDialog):
         self.is_search_view = False
         self.enableBookmarks = self.initial_enableBookmarks
         self.quranText = self.original_quran_text
-        self.text.setText(self.original_quran_text)
+        self.text.setText(self.original_quran_text)                
+        self.update_font_size()
         self.clear_results_button.hide()
         self.search_input.clear()
         guiTools.speak("تمت العودة إلى العرض الأصلي")
@@ -656,6 +653,7 @@ class QuranViewer(qt.QDialog):
     def _display_full_content(self):                
         if not hasattr(self, 'context_menu_active') or not self.context_menu_active:
             self.text.setText(self.saved_text)                        
+            self.update_font_size()                        
     def restore_after_menu(self):                
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
@@ -1001,26 +999,32 @@ class QuranViewer(qt.QDialog):
         else:
             Ayah=str(Ayah)
         return surah+Ayah+".mp3"    
-    def on_play(self):        
+    def on_play(self):
         self.media_progress.setVisible(True)
-        self.time_label.setVisible(True)        
-        if not self.media.isPlaying():
-            current_ayah_index = self.getCurrentAyah()
-            if current_ayah_index < 0: return
-            
-            file_name = self.on_set(current_ayah_index)
-            if not file_name: return
-
-            if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],file_name)):
-                path=qt2.QUrl.fromLocalFile(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],file_name))
-            else:
-                path=qt2.QUrl(reciters[self.getCurrentReciter()] + file_name)
-            if not self.media.source()==path:
-                self.media.stop()
-                self.media.setSource(path)
-            self.media.play()
+        self.time_label.setVisible(True)
+        current_ayah_index = self.getCurrentAyah()
+        if current_ayah_index < 0:
+            return
+        file_name = self.on_set(current_ayah_index)
+        if not file_name:
+            return
+        reciter_key = self.getCurrentReciter()
+        reciter_folder = reciters[reciter_key].split("/")[-3]
+        local_file_path = os.path.join(os.getenv('appdata'), settings.app.appName, "reciters", reciter_folder, file_name)
+        if os.path.exists(local_file_path):
+            path = qt2.QUrl.fromLocalFile(local_file_path)
         else:
-            self.media.pause()    
+            path = qt2.QUrl(reciters[reciter_key] + file_name)
+        is_playing_this_verse = (self.media.playbackState() != QMediaPlayer.PlaybackState.StoppedState) and (self.media.source() == path)
+        if is_playing_this_verse:
+            if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+                self.media.pause()
+            elif self.media.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+                self.media.play()
+        else:
+            self.media.stop()
+            self.media.setSource(path)
+            self.media.play()
     def getCurrentReciter(self):
         index=self.currentReciter
         name=list(reciters.keys())[index]
@@ -1053,7 +1057,7 @@ class QuranViewer(qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))        
     def increase_font_size(self):
-        if self.font_size < 50:
+        if self.font_size < 100:
             self.font_size += 1
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
@@ -1064,11 +1068,12 @@ class QuranViewer(qt.QDialog):
             guiTools.speak(str(self.font_size))
             self.show_font.setText(str(self.font_size))
             self.update_font_size()        
-    def update_font_size(self):
+    def update_font_size(self):        
         cursor=self.text.textCursor()
         self.text.selectAll()
-        font=self.text.font()
+        font=qt1.QFont()
         font.setPointSize(self.font_size)
+        font.setBold(self.font_is_bold)
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)            
     def copy_text(self):
@@ -1294,6 +1299,7 @@ class QuranViewer(qt.QDialog):
         self.quranText=self.typeResult[indexs][1]
         self.original_quran_text = self.quranText
         self._set_text_with_delay(self.quranText)
+        self.update_font_size()
         winsound.PlaySound("data/sounds/next_page.wav",1)
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
@@ -1310,6 +1316,7 @@ class QuranViewer(qt.QDialog):
         self.quranText=self.typeResult[indexs][1]
         self.original_quran_text = self.quranText
         self._set_text_with_delay(self.quranText)
+        self.update_font_size()
         winsound.PlaySound("data/sounds/previous_page.wav",1)
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
@@ -1326,6 +1333,7 @@ class QuranViewer(qt.QDialog):
             self.quranText=self.typeResult[indexs][1]
             self.original_quran_text = self.quranText
             self._set_text_with_delay(self.quranText)
+            self.update_font_size()
         self.resume_after_action()        
     def onChangeCategory(self):
         self.pause_for_action()
@@ -1369,6 +1377,7 @@ class QuranViewer(qt.QDialog):
         self.quranText=self.typeResult[indexs][1]
         self.original_quran_text = self.quranText
         self._set_text_with_delay(self.quranText)
+        self.update_font_size()
         self.resume_after_action()        
     def onRemoveBookmark(self):
         self.pause_for_action()
@@ -1457,15 +1466,15 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
         self.resume_after_action()
-    def set_font_size_dialog(self):
+    def set_font_size_dialog(self):        
         try:
             size, ok = guiTools.QInputDialog.getInt(
                 self,
                 "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 50):",
+                "أدخل حجم الخط (من 1 الى 100):",
                 value=self.font_size,
                 min=1,
-                max=50
+                max=100
             )
             if ok:
                 self.font_size = size

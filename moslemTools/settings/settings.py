@@ -35,7 +35,9 @@ class settings(qt.QDialog):
         self.cancel.clicked.connect(self.fcancel)
         self.cancel.setStyleSheet("background-color: #333333; color: #e0e0e0; padding: 12px; font-weight: bold;")
         self.layout1 = tabs.Genral(self)
-        self.sectian.add("الإعدادات العامة", self.layout1)
+        self.sectian.add("الإعدادات العامة", self.layout1)                
+        self.fontSettings = tabs.FontSettings()
+        self.sectian.add("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings)
         self.tafaseerSettings = tabs.TafaseerSettings()
         self.sectian.add("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings)
         self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
@@ -46,10 +48,10 @@ class settings(qt.QDialog):
         self.sectian.add("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes)
         self.sectian.add("إعدادات التحديثات", self.update)
         self.athkar = tabs.AthkarSettings()
-        self.sectian.add("إعدادات الأذكار العشوائية", self.athkar)        
+        self.sectian.add("إعدادات الأذكار العشوائية", self.athkar)
         self.sectian.add("تحميل موارد", tabs.Download())
         restoar = tabs.Restoar(self)
-        self.sectian.add("النسخ الاحتياطي والاستعادةة", restoar)        
+        self.sectian.add("النسخ الاحتياطي والاستعادة", restoar)
         buttonsLayout.addWidget(self.ok)
         buttonsLayout.addWidget(self.defolt)
         buttonsLayout.addWidget(self.cancel)
@@ -60,10 +62,14 @@ class settings(qt.QDialog):
         screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
         frame_geometry.moveCenter(screen_center)
         self.move(frame_geometry.topLeft())
+
     def fok(self):
-        aa = 0
+        restart_required = 0
+        original_font_bold = settings_handler.get("font", "bold")
+        original_font_size = settings_handler.get("font", "size")
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
-        settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
+        if self.layout1.reciter.count() > 0:
+             settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
         settings_handler.set("prayerTimes","volume",str(self.prayerTimesSettings.Sound_level.value()))
         settings_handler.set("location","autoDetect",str(self.locationSettings.autoDetectLocation.isChecked()))
         settings_handler.set("location","LT1",str(self.locationSettings.LT1.value()))
@@ -87,10 +93,16 @@ class settings(qt.QDialog):
         settings_handler.set("quranPlayer", "replay", str(self.quranPlayerTimes.replay.isChecked()))
         settings_handler.set("update", "beta", str(self.update.update_beta.isChecked()))
         settings_handler.set("prayerTimes", "playPrayerAfterAdhaan", str(self.prayerTimesSettings.playPrayerAfterAdhaan.isChecked()))
+        new_font_bold = str(self.fontSettings.bold_checkbox.isChecked())
+        new_font_size = str(self.fontSettings.font_size_spinbox.value())
+        settings_handler.set("font", "bold", new_font_bold)
+        settings_handler.set("font", "size", new_font_size)
+        if original_font_bold != new_font_bold or original_font_size != new_font_size:
+            restart_required = 1
         self.p.runAudioThkarTimer()
         self.p.notification_random_thecker()
         self.p.audio_output.setVolume(int(settings_handler.get("athkar", "voiceVolume")) / 100)
-        if aa == 1:
+        if restart_required == 1:
             mb = guiTools.QQuestionMessageBox.view(self,"تم تحديث الإعدادات","يجب عليك إعادة تشغيل البرنامج لتطبيق التغييرات. هل تريد إعادة التشغيل الآن؟","إعادة التشغيل الآن","إعادة التشغيل لاحقا")
             if mb==0:
                 subprocess.Popen([sys.executable] + sys.argv)
@@ -99,6 +111,7 @@ class settings(qt.QDialog):
                 self.close()
         else:
             self.close()
+
     def default(self):
         mb = guiTools.QQuestionMessageBox.view(self,"تنبيه","هل تريد إعادة تعيين إعداداتك؟ إذا قمت بالنقر على إعادة تعيين، سيعيد البرنامج التشغيل لإكمال إعادة التعيين.","إعادة التعيين وإعادة التشغيل","إلغاء")
         if mb==0:
