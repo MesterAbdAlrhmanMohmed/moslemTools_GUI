@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "moslem tools, alcoder"
-#define MyAppVersion "2.5"
+#define MyAppVersion "2.6"
 #define MyAppPublisher "abd alrhman mohamed alcoder"
 #define MyAppURL "https://github.com/MesterAbdAlrhmanMohmed"
 #define MyAppExeName "moslem_tools.exe"
@@ -60,10 +60,45 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+var
+  DeleteAllData: Boolean;
+
 function GetUserProfileDataDir(Param: String): String;
 var
   UserProfile: String;
 begin
   UserProfile := GetEnv('USERPROFILE');
   Result := UserProfile + '\data';
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  UserDataDir, LocalAppDir, RoamingAppDir: String;
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    if MsgBox('Do you want to completely remove all files including user data and settings?', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+    begin
+      DeleteAllData := True;
+      Log('User chose to delete all data.');
+    end
+    else
+    begin
+      DeleteAllData := False;
+      Log('User chose to keep data.');
+    end;
+  end;
+
+  if (CurUninstallStep = usPostUninstall) and DeleteAllData then
+  begin
+    UserDataDir := GetUserProfileDataDir('');
+    LocalAppDir := ExpandConstant('{localappdata}\{#MyAppName}');
+    RoamingAppDir := ExpandConstant('{userappdata}\{#MyAppName}');
+
+    DelTree(UserDataDir, True, True, True);
+    DelTree(LocalAppDir, True, True, True);
+    DelTree(RoamingAppDir, True, True, True);
+
+    Log('All user data and AppData directories have been deleted.');
+  end;
 end;
