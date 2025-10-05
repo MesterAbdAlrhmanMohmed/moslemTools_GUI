@@ -495,7 +495,7 @@ class QuranPlayer(qt.QDialog):
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
     def on_set(self):
-        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         if int(surah)<10:
             surah="00" + surah
         elif int(surah)<100:
@@ -577,7 +577,7 @@ class QuranPlayer(qt.QDialog):
         return name
     def getCurentAyahTafseer(self):
         self.pause_for_action()
-        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         TafaseerViewer(self,AyahNumber,AyahNumber).exec()
         self.resume_after_action()
     def safeClose(self):
@@ -607,13 +607,13 @@ class QuranPlayer(qt.QDialog):
             super().closeEvent(event)
     def getCurentAyahIArab(self):
         self.pause_for_action()
-        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         result=functions.iarab.getIarab(AyahNumber,AyahNumber)
         guiTools.TextViewer(self,"إعراب",result).exec()
         self.resume_after_action()
     def getCurrentAyahTanzel(self):
         self.pause_for_action()
-        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         result=functions.tanzil.gettanzil(AyahNumber)
         if result:
             guiTools.TextViewer(self,"اسباب النزول",result).exec()
@@ -622,7 +622,7 @@ class QuranPlayer(qt.QDialog):
         self.resume_after_action()
     def getAyahInfo(self):
         self.pause_for_action()
-        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         sajda=""
         if juz[3]:
             sajda="الآية تحتوي على سجدة"
@@ -630,7 +630,7 @@ class QuranPlayer(qt.QDialog):
         self.resume_after_action()
     def getCurentAyahTranslation(self):
         self.pause_for_action()
-        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText())
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         translationViewer(self,AyahNumber,AyahNumber).exec()
         self.resume_after_action()
     def volume_up(self):
