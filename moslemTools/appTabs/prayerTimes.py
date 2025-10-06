@@ -211,8 +211,7 @@ class prayer_times(qt.QWidget):
             ZoharDay="gomaasoon.mp3"
         else:
             ZoharDay="zohrsoon.mp3"
-        for time_str in self.times:
-            index = self.times.index(time_str)
+        for index, time_str in enumerate(self.times):
             prayer_name = self.prayers[index]
             if currentTime == time_str:
                 self.reminded=False
@@ -222,8 +221,8 @@ class prayer_times(qt.QWidget):
                         sound_file = settings_handler.get("adhanSounds", prayer_key)
                         sound_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", sound_file)
                         gui.AdaanDialog(self, index, prayer_name, sound_path).exec()
-                        self.timer.stop()
-                        self.timer.singleShot(60000, qt2.Qt.TimerType.PreciseTimer, lambda: self.timer.start(10000))
+                        self.timer.stop()                        
+                        self.timer.singleShot(60000, qt2.Qt.TimerType.PreciseTimer, lambda: self.timer.start(1000))                                                
                         return
             if beforeOptions != "3":
                 if beforeOptions in beforeChoises:
@@ -239,7 +238,8 @@ class prayer_times(qt.QWidget):
                         if self.p.media_player.isPlaying():
                             self.p.media_player.stop()
                         if index in medias:
-                            self.p.media_player.setSource(qt2.QUrl.fromLocalFile("data\\sounds\\before_azan\\" + medias[index]))
+                            before_azan_sound = os.path.join("data", "sounds", "before_azan", medias[index])
+                            self.p.media_player.setSource(qt2.QUrl.fromLocalFile(before_azan_sound))
                             self.p.media_player.play()
     def get_prayer_key(self, prayer_name_ar):
         prayer_map = {"الفجر": "fajr", "الظهر": "dhuhr", "العصر": "asr", "المغرب": "maghrib", "العشاء": "isha"}
@@ -286,8 +286,8 @@ class prayer_times(qt.QWidget):
             self.information.addItem(self.ramadan_countdown_item)
         if error_message:
             self.information.addItem(error_message)
-        if not self.timer.isActive() and prayers and times:
-            self.timer.start(10000)        
+        if not self.timer.isActive() and prayers and times:            
+            self.timer.start(1000)        
         self.update_countdowns()
         self.countdown_timer.start(1000)
     def on_prayer_times_error(self, error_message):
