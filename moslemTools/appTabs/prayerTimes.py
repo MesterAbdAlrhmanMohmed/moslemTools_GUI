@@ -60,7 +60,8 @@ class PrayerTimesWorker(qt2.QObject):
                 self.finished.emit([], [], gregorian_date, hijri_date, day, f"حدث خطأ غير متوقع: {str(e)}", ramadan_start_greg)
             except Exception as e_inner:
                 self.error.emit(f"حدث خطأ غير متوقع: {str(e_inner)}")
-class prayer_times(qt.QWidget):
+class prayer_times(qt.QWidget):        
+    TEST_MODE = False    
     def __init__(self,p):
         super().__init__()
         self.p=p
@@ -113,8 +114,29 @@ class prayer_times(qt.QWidget):
         layout.addWidget(self.worning1)
         layout.addWidget(self.worning2)
         layout.addWidget(self.worning)
-        self.setLayout(layout)
-        self.display_prayer_times()
+        self.setLayout(layout)                
+        if self.TEST_MODE:
+            print("---!!! تم تشغيل وضع الاختبار السريع (10 ثواني) !!!---")
+            self.information.addItem("وضع الاختبار يعمل...")
+            self.information.addItem("سيتم رفع أذان الظهر بعد 10 ثوانٍ.")            
+            qt2.QTimer.singleShot(10000, self.trigger_test_adhan)
+        else:            
+            self.display_prayer_times()
+    def trigger_test_adhan(self):        
+        print("--> حان وقت أذان الاختبار، جاري التشغيل...")
+        test_index = 2
+        test_prayer_name = "الظهر (اختبار)"
+        prayer_key = self.get_prayer_key(test_prayer_name)        
+        if prayer_key:
+            sound_file = settings_handler.get("adhanSounds", prayer_key)
+            sound_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", sound_file)
+            self.information.addItem(f"تم تشغيل أذان {test_prayer_name}")
+            gui.AdaanDialog(self, test_index, test_prayer_name, sound_path).exec()
+            print("--> انتهى اختبار الأذان.")
+            self.information.addItem("انتهى الاختبار بنجاح.")
+        else:
+            print("--> خطأ: لم يتم العثور على مفتاح الصلاة للاختبار.")
+            self.information.addItem("خطأ في تشغيل الاختبار.")
     def format_arabic_time_unit(self, number, units):
         if number == 0:
             return ""
@@ -125,7 +147,7 @@ class prayer_times(qt.QWidget):
         elif 3 <= number <= 10:
             return f"{number} {units['plural']}"
         else:
-            return f"{number} {units['singular_acc']}"
+            return f"{number} {units['singular_acc']}"        
     def update_countdowns(self):
         now = datetime.now()
         if self.times and self.prayers:
@@ -160,14 +182,12 @@ class prayer_times(qt.QWidget):
             parts = [p for p in [h_str, m_str, s_str] if p]
             time_str = " و ".join(parts) if parts else ""
             if self.next_prayer_item:
-                if time_str:                    
+                if time_str:
                     if next_prayer_name == 'الشروق':
                         display_text = f"متبقي على شروق الشمس {time_str}"
                     else:
                         display_text = f"متبقي على صلاة {next_prayer_name} {time_str}"
-                    self.next_prayer_item.setText(display_text)                    
-                else:
-                    self.update_countdowns()
+                    self.next_prayer_item.setText(display_text)
         if self.ramadan_start_greg:
             ramadan_start_dt = datetime.combine(self.ramadan_start_greg, datetime.min.time())
             if now >= ramadan_start_dt and now.date() <= (ramadan_start_dt + timedelta(days=29)).date():
@@ -201,7 +221,7 @@ class prayer_times(qt.QWidget):
                     ramadan_message = "رمضان على الأبواب!"
             if self.ramadan_countdown_item:
                 self.ramadan_countdown_item.setText(ramadan_message)
-                self.ramadan_countdown_item.setHidden(not ramadan_message)
+                self.ramadan_countdown_item.setHidden(not ramadan_message)                
     def onTimer(self):
         currentTimeOBJ = datetime.now()
         currentTime=currentTimeOBJ.strftime("%I:%M %p")
@@ -240,35 +260,38 @@ class prayer_times(qt.QWidget):
                         if index in medias:
                             before_azan_sound = os.path.join("data", "sounds", "before_azan", medias[index])
                             self.p.media_player.setSource(qt2.QUrl.fromLocalFile(before_azan_sound))
-                            self.p.media_player.play()
+                            self.p.media_player.play()                            
     def get_prayer_key(self, prayer_name_ar):
-        prayer_map = {"الفجر": "fajr", "الظهر": "dhuhr", "العصر": "asr", "المغرب": "maghrib", "العشاء": "isha"}
-        return prayer_map.get(prayer_name_ar, None)
+        if "الظهر" in prayer_name_ar:
+            return "dhuhr"
+        prayer_map = {"الفجر": "fajr", "العصر": "asr", "المغرب": "maghrib", "العشاء": "isha"}
+        return prayer_map.get(prayer_name_ar, None)    
     def copy_all_items(self):
         all_text = "\n".join([self.information.item(i).text() for i in range(self.information.count())])
         pyperclip.copy(all_text)
         speak("تم نسخ كل المحتوى بنجاح")
-        winsound.Beep(1000, 100)
+        winsound.Beep(1000, 100)        
     def copy_selected_item(self):
         selected_item = self.information.currentItem()
         if selected_item:
             pyperclip.copy(selected_item.text())
             winsound.Beep(1000, 100)
-            speak("تم نسخ المحتوى المحدد بنجاح")
+            speak("تم نسخ المحتوى المحدد بنجاح")            
     def display_prayer_times(self):
         self.countdown_timer.stop()
         self.information.clear()
         self.information.addItem("جاري تحميل مواقيت الصلاة...")
         self.worker = PrayerTimesWorker()
-        self.thread = qt2.QThread()
-        self.worker.moveToThread(self.thread)
+        self.worker_thread = qt2.QThread()
+        self.worker.moveToThread(self.worker_thread)
         self.worker.finished.connect(self.on_prayer_times_ready)
         self.worker.error.connect(self.on_prayer_times_error)
-        self.thread.started.connect(self.worker.run)
-        self.thread.start()
+        self.worker_thread.started.connect(self.worker.run)
+        self.worker_thread.start()        
     def on_prayer_times_ready(self, prayers, times, gregorian_date, hijri_date, day, error_message, ramadan_start_greg):
-        self.thread.quit()
-        self.thread.wait()
+        if hasattr(self, 'worker_thread'):
+            self.worker_thread.quit()
+            self.worker_thread.wait()
         self.information.clear()
         self.prayers = prayers
         self.times = times
@@ -289,10 +312,11 @@ class prayer_times(qt.QWidget):
         if not self.timer.isActive() and prayers and times:            
             self.timer.start(1000)        
         self.update_countdowns()
-        self.countdown_timer.start(1000)
+        self.countdown_timer.start(1000)        
     def on_prayer_times_error(self, error_message):
-        self.thread.quit()
-        self.thread.wait()
+        if hasattr(self, 'worker_thread'):
+            self.worker_thread.quit()
+            self.worker_thread.wait()
         self.information.clear()
         self.information.addItem(error_message)
         self.countdown_timer.stop()
