@@ -430,7 +430,8 @@ class QuranViewer(qt.QDialog):
                     new_lines.append(re.sub(r' \(\d+\)$', '', line))
             elif self.verse_numbering_mode == "cumulative":
                 for line in lines:
-                    base_text = re.sub(r' \(\d+\)$', '', line)                    _, _, _, _, cumulative_num = functions.quranJsonControl.getAyah(line, self.category, self.type)
+                    base_text = re.sub(r' \(\d+\)$', '', line)
+                    _, _, _, _, cumulative_num = functions.quranJsonControl.getAyah(base_text, self.category, self.type)                    
                     new_lines.append(f"{base_text} ({cumulative_num})")            
             formatted_text = "\n".join(new_lines)
             self.text_cache[self.verse_numbering_mode] = formatted_text        
