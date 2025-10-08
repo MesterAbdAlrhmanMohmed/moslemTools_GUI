@@ -89,6 +89,7 @@ class MergeThread(qt2.QThread):
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
+
 class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
         super().__init__(parent)
@@ -149,6 +150,7 @@ class SearchModeDialog(qt.QDialog):
             "ignore_hamza": self.ignore_hamza,
             "ignore_symbols": self.ignore_symbols
         }
+
 class QuranViewer(qt.QDialog):
     def __init__(self,p,text:str,type:int,category,index=0,enableNextPreviouseButtons=False,typeResult=[],CurrentIndex=0,enableBookmarks=True):
         super().__init__(p)
@@ -187,6 +189,8 @@ class QuranViewer(qt.QDialog):
         self.cancellation_requested = False
         self.completed_merge_downloads = set()
         self.current_download_url = None
+        self.verse_numbering_mode = "by_surah"
+        self.text_cache = {"by_surah": self.original_quran_text}
         self.media=QMediaPlayer(self)
         self.audioOutput=QAudioOutput(self)
         self.media.setAudioOutput(self.audioOutput)
@@ -334,12 +338,19 @@ class QuranViewer(qt.QDialog):
         self.toggle_search_button.setAutoDefault(False)
         self.toggle_search_button.setStyleSheet("background-color: #0000AA; color: white;")
         self.toggle_search_button.clicked.connect(self.toggle_search_bar)
-        self.toggle_search_button.setAccessibleDescription("control plus shift plus q")        
+        self.toggle_search_button.setAccessibleDescription("control plus shift plus q")                
+        self.numbering_button = guiTools.QPushButton("طريقة عرض الآيات")
+        self.numbering_button.setAutoDefault(False)
+        self.numbering_button.setStyleSheet("background-color: #0000AA; color: white;")
+        self.numbering_button.setShortcut("ctrl+shift+s")
+        self.numbering_button.setAccessibleDescription("control plus shift plus s")
+        self.numbering_button.clicked.connect(self._show_numbering_options)        
         buttonsLayout.addWidget(self.changeCurrentReciterButton)
         buttonsLayout.addWidget(self.previous)
         buttonsLayout.addWidget(self.changeCategory)
         buttonsLayout.addWidget(self.next)
         buttonsLayout.addWidget(self.toggle_search_button)
+        buttonsLayout.addWidget(self.numbering_button)
         layout.addLayout(buttonsLayout)        
         if not self.initial_ayah_index == 0:
             QTimer.singleShot(501, self._set_initial_ayah_position)            
@@ -375,6 +386,56 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)            
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)    
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)    
+    def _show_numbering_options(self):
+        self.saved_cursor_position = self.text.textCursor().position()
+        self.saved_ayah_index = self.getCurrentAyah()
+        self.saved_text = self.text.toPlainText()
+        self.text.setUpdatesEnabled(False)
+        self.text.clear()
+        self.context_menu_active = True
+        self.pause_for_action()
+        menu = qt.QMenu(self)
+        action_group = qt1.QActionGroup(self)
+        action_group.setExclusive(True)
+        by_surah_action = qt1.QAction("إظهار الأرقام بحسب السورة (افتراضي)", self, checkable=True)
+        by_surah_action.setChecked(self.verse_numbering_mode == "by_surah")
+        by_surah_action.triggered.connect(lambda: self._set_numbering_mode("by_surah"))        
+        cumulative_action = qt1.QAction("إظهار الأرقام بشكل تراكمي", self, checkable=True)
+        cumulative_action.setChecked(self.verse_numbering_mode == "cumulative")
+        cumulative_action.triggered.connect(lambda: self._set_numbering_mode("cumulative"))
+        none_action = qt1.QAction("إخفاء أرقام الآيات", self, checkable=True)
+        none_action.setChecked(self.verse_numbering_mode == "none")
+        none_action.triggered.connect(lambda: self._set_numbering_mode("none"))
+        action_group.addAction(by_surah_action)
+        action_group.addAction(cumulative_action)
+        action_group.addAction(none_action)
+        menu.addAction(by_surah_action)
+        menu.addAction(cumulative_action)
+        menu.addAction(none_action)    
+        menu.aboutToHide.connect(self.restore_after_menu)
+        menu.exec(qt1.QCursor.pos())
+    def _set_numbering_mode(self, mode):
+        if self.verse_numbering_mode == mode:
+            return
+        self.verse_numbering_mode = mode
+        self._update_display_text()
+    def _update_display_text(self):
+        if self.verse_numbering_mode in self.text_cache:
+            formatted_text = self.text_cache[self.verse_numbering_mode]
+        else:
+            lines = self.original_quran_text.split('\n')
+            new_lines = []
+            if self.verse_numbering_mode == "none":
+                for line in lines:
+                    new_lines.append(re.sub(r' \(\d+\)$', '', line))
+            elif self.verse_numbering_mode == "cumulative":
+                for line in lines:
+                    base_text = re.sub(r' \(\d+\)$', '', line)                    _, _, _, _, cumulative_num = functions.quranJsonControl.getAyah(line, self.category, self.type)
+                    new_lines.append(f"{base_text} ({cumulative_num})")            
+            formatted_text = "\n".join(new_lines)
+            self.text_cache[self.verse_numbering_mode] = formatted_text        
+        self.quranText = formatted_text        
+        self._set_text_with_delay(formatted_text)
     def handle_merge_action(self):
         if self.is_merging and self.merge_phase == 'merging':
             self.confirm_and_cancel_merge()
@@ -1090,7 +1151,7 @@ class QuranViewer(qt.QDialog):
         if current_ayah < 0: 
             self.resume_after_action()
             return
-        current_line = self.quranText.split("\n")[current_ayah]
+        current_line = self.original_quran_text.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         self.text.setUpdatesEnabled(False)
         TafaseerViewer(self,AyahNumber,AyahNumber).exec()
@@ -1098,7 +1159,7 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()    
     def getTafaseerForSurah(self):
         self.pause_for_action()
-        ayahList=self.quranText.split("\n")
+        ayahList=self.original_quran_text.split("\n")
         Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[0], self.category, self.type)
         Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
         self.text.setUpdatesEnabled(False)
@@ -1111,7 +1172,7 @@ class QuranViewer(qt.QDialog):
         if current_ayah < 0: 
             self.resume_after_action()
             return
-        current_line = self.quranText.split("\n")[current_ayah]
+        current_line = self.original_quran_text.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         with open("data/json/files/all_surahs.json","r",encoding="utf-8") as file:
             data=json.load(file)
@@ -1148,7 +1209,7 @@ class QuranViewer(qt.QDialog):
         if current_ayah < 0: 
             self.resume_after_action()
             return
-        current_line = self.quranText.split("\n")[current_ayah]
+        current_line = self.original_quran_text.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         result=functions.iarab.getIarab(AyahNumber,AyahNumber)
         self.text.setUpdatesEnabled(False)
@@ -1157,7 +1218,7 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()        
     def getIArabForSurah(self):
         self.pause_for_action()
-        ayahList=self.quranText.split("\n")
+        ayahList=self.original_quran_text.split("\n")
         Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[0], self.category, self.type)
         Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
         result=functions.iarab.getIarab(AyahNumber1,AyahNumber2)
@@ -1171,7 +1232,7 @@ class QuranViewer(qt.QDialog):
         if current_ayah < 0: 
             self.resume_after_action()
             return
-        current_line = self.quranText.split("\n")[current_ayah]
+        current_line = self.original_quran_text.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         result=functions.tanzil.gettanzil(AyahNumber)
         if result:
@@ -1187,7 +1248,7 @@ class QuranViewer(qt.QDialog):
         if current_ayah < 0:
             self.resume_after_action()
             return
-        current_line = self.quranText.split("\n")[current_ayah]
+        current_line = self.original_quran_text.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         sajda=""
         if juz[3]:
@@ -1200,7 +1261,7 @@ class QuranViewer(qt.QDialog):
         if current_ayah < 0: 
             self.resume_after_action()
             return
-        current_line = self.quranText.split("\n")[current_ayah]
+        current_line = self.original_quran_text.split("\n")[current_ayah]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         self.text.setUpdatesEnabled(False)
         translationViewer(self,AyahNumber,AyahNumber).exec()
@@ -1208,7 +1269,7 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()        
     def getTranslationForSurah(self):
         self.pause_for_action()
-        ayahList=self.quranText.split("\n")
+        ayahList=self.original_quran_text.split("\n")
         Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[0], self.category, self.type)
         Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
         self.text.setUpdatesEnabled(False)
@@ -1233,12 +1294,12 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()
     def playFromVersToVers(self):
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.quranText.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الررقم",len(self.quranText.split("\n")),1,len(self.quranText.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الررقم",len(self.original_quran_text.split("\n")),1,len(self.original_quran_text.split("\n")))
             if ok:
                 verses=[]
-                allVerses=self.quranText.split("\n")
+                allVerses=self.original_quran_text.split("\n")
                 for vers in allVerses:
                     index=allVerses.index(vers)+1
                     if index>=FromVers and index<=toVers:
@@ -1249,11 +1310,11 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()        
     def TafseerFromVersToVers(self):
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.quranText.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.quranText.split("\n")),1,len(self.quranText.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.original_quran_text.split("\n")),1,len(self.original_quran_text.split("\n")))
             if ok:
-                ayahList=self.quranText.split("\n")
+                ayahList=self.original_quran_text.split("\n")
                 Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[FromVers-1], self.category, self.type)
                 Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[toVers-1], self.category, self.type)
                 self.text.setUpdatesEnabled(False)
@@ -1262,11 +1323,11 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()    
     def translateFromVersToVers(self):
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.quranText.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.quranText.split("\n")),1,len(self.quranText.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.original_quran_text.split("\n")),1,len(self.original_quran_text.split("\n")))
             if ok:
-                ayahList=self.quranText.split("\n")
+                ayahList=self.original_quran_text.split("\n")
                 Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[FromVers-1], self.category, self.type)
                 Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[toVers-1], self.category, self.type)
                 self.text.setUpdatesEnabled(False)
@@ -1275,11 +1336,11 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()        
     def IArabFromVersToVers(self):
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.quranText.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.quranText.split("\n")),1,len(self.quranText.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.original_quran_text.split("\n")),1,len(self.original_quran_text.split("\n")))
             if ok:
-                ayahList=self.quranText.split("\n")
+                ayahList=self.original_quran_text.split("\n")
                 Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[FromVers-1], self.category, self.type)
                 Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[toVers-1], self.category, self.type)
                 self.text.setUpdatesEnabled(False)
@@ -1287,6 +1348,13 @@ class QuranViewer(qt.QDialog):
                 guiTools.TextViewer(self,"إعراب",result).exec()
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()        
+    
+    def _update_view_for_new_content(self, new_text):
+        self.quranText = new_text
+        self.original_quran_text = new_text
+        self.text_cache = {"by_surah": self.original_quran_text}
+        self._update_display_text()
+
     def onNext(self):
         self.pause_for_action()
         if self.CurrentIndex==len(self.typeResult)-1:
@@ -1296,14 +1364,13 @@ class QuranViewer(qt.QDialog):
         indexs=list(self.typeResult.keys())[self.CurrentIndex]
         formatted_name = self.format_category_name(self.type, indexs)
         self.category = indexs 
-        self.quranText=self.typeResult[indexs][1]
-        self.original_quran_text = self.quranText
-        self._set_text_with_delay(self.quranText)
-        self.update_font_size()
+        new_text = self.typeResult[indexs][1]
+        self._update_view_for_new_content(new_text)
         winsound.PlaySound("data/sounds/next_page.wav",1)
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
         self.resume_after_action()        
+    
     def onPreviouse(self):
         self.pause_for_action()
         if self.CurrentIndex==0:
@@ -1313,14 +1380,13 @@ class QuranViewer(qt.QDialog):
         indexs=list(self.typeResult.keys())[self.CurrentIndex]
         formatted_name = self.format_category_name(self.type, indexs)
         self.category = indexs 
-        self.quranText=self.typeResult[indexs][1]
-        self.original_quran_text = self.quranText
-        self._set_text_with_delay(self.quranText)
-        self.update_font_size()
+        new_text = self.typeResult[indexs][1]
+        self._update_view_for_new_content(new_text)
         winsound.PlaySound("data/sounds/previous_page.wav",1)
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
         self.resume_after_action()        
+    
     def goToCategory(self):
         self.pause_for_action()
         category,OK=qt.QInputDialog.getItem(self,"الذهاب إلى محتوى فئة","اختر عنصر",list(self.typeResult.keys()),self.CurrentIndex,False)
@@ -1330,11 +1396,10 @@ class QuranViewer(qt.QDialog):
             formatted_name = self.format_category_name(self.type, indexs)
             self.category = indexs
             self.info.setText(formatted_name)
-            self.quranText=self.typeResult[indexs][1]
-            self.original_quran_text = self.quranText
-            self._set_text_with_delay(self.quranText)
-            self.update_font_size()
+            new_text = self.typeResult[indexs][1]
+            self._update_view_for_new_content(new_text)
         self.resume_after_action()        
+    
     def onChangeCategory(self):
         self.pause_for_action()
         categories=["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"]
@@ -1354,6 +1419,7 @@ class QuranViewer(qt.QDialog):
             action.triggered.connect(self.ONChangeCategoryRequested)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
         self.resume_after_action()        
+    
     def ONChangeCategoryRequested(self):
         self.pause_for_action()
         categories=["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"]
@@ -1374,11 +1440,10 @@ class QuranViewer(qt.QDialog):
         indexs=list(self.typeResult.keys())[self.CurrentIndex]
         formatted_name = self.format_category_name(self.type, indexs)
         self.info.setText(formatted_name)
-        self.quranText=self.typeResult[indexs][1]
-        self.original_quran_text = self.quranText
-        self._set_text_with_delay(self.quranText)
-        self.update_font_size()
+        new_text = self.typeResult[indexs][1]
+        self._update_view_for_new_content(new_text)
         self.resume_after_action()        
+    
     def onRemoveBookmark(self):
         self.pause_for_action()
         try:
