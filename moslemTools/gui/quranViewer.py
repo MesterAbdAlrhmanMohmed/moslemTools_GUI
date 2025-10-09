@@ -741,6 +741,7 @@ class QuranViewer(qt.QDialog):
         lines = full_text.split('\n')                
         initial_text_chunk = '\n'.join(lines[:40])
         self.text.setText(initial_text_chunk)
+        self.update_font_size()
         if len(lines) > 40:
             qt2.QTimer.singleShot(500, self._display_full_content)
     def _display_full_content(self):                
@@ -751,6 +752,7 @@ class QuranViewer(qt.QDialog):
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
         self.text.setText('\n'.join(lines[:40]))
+        self.update_font_size()
         self.text.setUpdatesEnabled(True)    
         if len(lines) > 40:
             QTimer.singleShot(500, self.restore_full_content)        
@@ -762,6 +764,7 @@ class QuranViewer(qt.QDialog):
     def restore_full_content(self):    
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
+            self.update_font_size()
             if self.saved_cursor_position is not None:
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
