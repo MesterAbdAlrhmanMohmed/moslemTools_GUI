@@ -28,7 +28,7 @@ class settings(qt.QDialog):
         self.ok.setDefault(True)
         self.ok.clicked.connect(self.fok)
         self.ok.setStyleSheet("background-color: #006400; color: #e0e0e0; padding: 12px; font-weight: bold;")
-        self.defolt = guiTools.QPushButton("استعادة الإعدادات الإفتراضية")
+        self.defolt = guiTools.QPushButton("استعادة الإعدادات الافتراضية")
         self.defolt.clicked.connect(self.default)
         self.defolt.setStyleSheet("background-color: #8B0000; color: #e0e0e0; padding: 12px; font-weight: bold;")
         self.cancel = guiTools.QPushButton("إلغاء")
