@@ -381,6 +381,7 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+alt+i", self).activated.connect(self.IArabFromVersToVers)
         qt1.QShortcut("ctrl+alt+p", self).activated.connect(self.playFromVersToVers)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.mergeAyahs)
+        qt1.QShortcut("ctrl+shift+c", self).activated.connect(self.copyFromVersToVers)
         qt1.QShortcut("ctrl+shift+p", self).activated.connect(lambda: QuranPlayer(self, self.quranText, self.getCurrentAyah(), self.type, self.category).exec())
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)            
@@ -400,17 +401,22 @@ class QuranViewer(qt.QDialog):
         by_surah_action = qt1.QAction("إظهار الأرقام بحسب السورة (افتراضي)", self, checkable=True)
         by_surah_action.setChecked(self.verse_numbering_mode == "by_surah")
         by_surah_action.triggered.connect(lambda: self._set_numbering_mode("by_surah"))
-        cumulative_action = qt1.QAction("إظهار الأرقام بشكل تراكمي", self, checkable=True)
+        cumulative_action = qt1.QAction("إظهار الأرقام بحسب الفئة", self, checkable=True)
         cumulative_action.setChecked(self.verse_numbering_mode == "cumulative")
         cumulative_action.triggered.connect(lambda: self._set_numbering_mode("cumulative"))
+        quran_wide_action = qt1.QAction("إظهار الأرقام بحسب القرآن كاملا", self, checkable=True)
+        quran_wide_action.setChecked(self.verse_numbering_mode == "quran_wide")
+        quran_wide_action.triggered.connect(lambda: self._set_numbering_mode("quran_wide"))
         none_action = qt1.QAction("إخفاء أرقام الآيات", self, checkable=True)
         none_action.setChecked(self.verse_numbering_mode == "none")
         none_action.triggered.connect(lambda: self._set_numbering_mode("none"))
         action_group.addAction(by_surah_action)
         action_group.addAction(cumulative_action)
+        action_group.addAction(quran_wide_action)
         action_group.addAction(none_action)
         menu.addAction(by_surah_action)
         menu.addAction(cumulative_action)
+        menu.addAction(quran_wide_action)
         menu.addAction(none_action)    
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(qt1.QCursor.pos())
@@ -461,6 +467,19 @@ class QuranViewer(qt.QDialog):
                     formatted_text = "\n".join(new_lines)
                 else:
                     formatted_text = self.original_quran_text
+            elif self.verse_numbering_mode == "quran_wide":
+                for line in lines:
+                    if not line.strip():
+                        new_lines.append(line)
+                        continue
+                    try:
+                        _, _, _, _, ayah_number_in_quran = functions.quranJsonControl.getAyah(line, self.category, self.type)
+                        base_text = re.sub(r'\s*\(\d+\)$', '', line)
+                        new_lines.append(f"{base_text} ({ayah_number_in_quran})")
+                    except Exception as e:
+                        print(f"Could not get Quran-wide number for line: '{line}'. Error: {e}")
+                        new_lines.append(line)
+                formatted_text = "\n".join(new_lines)
             else:
                 formatted_text = self.original_quran_text
 
@@ -908,6 +927,10 @@ class QuranViewer(qt.QDialog):
         IArabFromVersToVersAction.setShortcut("ctrl+alt+i")
         surahOption.addAction(IArabFromVersToVersAction)
         IArabFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.IArabFromVersToVers))    
+        copyFromVersToVersAction = qt1.QAction("نسخ من آية إلى آية", self)
+        copyFromVersToVersAction.setShortcut("ctrl+shift+c")
+        surahOption.addAction(copyFromVersToVersAction)
+        copyFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.copyFromVersToVers))
         playFromVersToVersAction = qt1.QAction("التشغيل من آية إلى آية", self)
         playFromVersToVersAction.setShortcut("ctrl+alt+p")
         surahOption.addAction(playFromVersToVersAction)
@@ -1598,3 +1621,22 @@ class QuranViewer(qt.QDialog):
                 guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+    def copyFromVersToVers(self):
+        self.pause_for_action()
+        total_ayahs = len(self.original_quran_text.split("\n"))
+        FromVers, ok = guiTools.QInputDialog.getInt(self, "نسخ من الآية", "أكتب رقم الآية للبداية:", self.getCurrentAyah() + 1, 1, total_ayahs)
+        if ok:
+            toVers, ok = guiTools.QInputDialog.getInt(self, "نسخ إلى الآية", "أكتب رقم الآية للنهاية:", total_ayahs, FromVers, total_ayahs)
+            if ok:
+                start_index = FromVers - 1
+                end_index = toVers
+                allVerses = self.original_quran_text.split("\n")
+                verses_to_copy = allVerses[start_index:end_index]
+                if verses_to_copy:
+                    text_to_copy = "\n".join(verses_to_copy)
+                    pyperclip.copy(text_to_copy)
+                    winsound.Beep(1000, 100)
+                    guiTools.speak(f"تم نسخ {len(verses_to_copy)} آيات بنجاح")
+                else:
+                    guiTools.speak("لم يتم تحديد آيات للنسخ")
+        self.resume_after_action()
