@@ -68,12 +68,14 @@ class StoryViewer(qt.QDialog):
         layout.addLayout(buttonsLayout)
         if index != 0:
             cerser = self.text.textCursor()
-            cerser.movePosition(cerser.MoveOperation.Start)
-            for _ in range(index - 1):
+            cerser.movePosition(cerser.MoveOperation.Start)            
+            for _ in range(index):
                 cerser.movePosition(cerser.MoveOperation.Down)
             self.text.setTextCursor(cerser)
         self.update_font_size()
-    def OnContextMenu(self):
+    def OnContextMenu(self):        
+        current_line = self.getCurrentLine()
+
         cursor = self.text.textCursor()
         self.saved_selection_start = cursor.selectionStart()
         self.saved_selection_end = cursor.selectionEnd()
@@ -105,11 +107,11 @@ class StoryViewer(qt.QDialog):
         story_options = qt.QMenu("خيارات القصة", self)
         story_options.setFont(boldFont)
         story_options.addAction("القصة التالية", self.onNext).setShortcut("alt+right")
-        story_options.addAction("القصة السابقة", self.onPreviouse).setShortcut("alt+left")
+        story_options.addAction("القصة السابقة", self.onPreviouse).setShortcut("alt+left")                
         story_position = {
             "type": self.type,
             "category": self.category,
-            "line": self.getCurrentLine()
+            "line": current_line
         }
         note_exists = notesManager.getNotesForPosition("stories", story_position)
         if note_exists:
@@ -130,9 +132,9 @@ class StoryViewer(qt.QDialog):
             note_action = qt1.QAction("إضافة ملاحظة للسطر الحالي", self)
             note_action.setShortcut("ctrl+n")
             note_action.triggered.connect(lambda: self.onAddNote(story_position))
-            story_options.addAction(note_action)
+            story_options.addAction(note_action)                
         state, bookmark_name = functions.bookMarksManager.getStoriesBookmarkName(
-            self.category, self.getCurrentLine()
+            self.category, current_line
         )
         if state:
             delete_bookmark_action = qt.QWidgetAction(self)
