@@ -497,12 +497,15 @@ class QuranViewer(qt.QDialog):
             self.cancellation_requested = True
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
                 self.merge_thread.stop()
+    def _handle_search_view_restriction(self):
+        """Handles user attempts to use a feature disabled in search view."""
+        winsound.Beep(440, 200)
+        guiTools.speak("هذا الخيار غير متاح في وضع البحث")
     def mergeAyahs(self):
-        self.pause_for_action()
         if self.is_search_view:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يمكن دمج الآيات في وضع البحث.")
-            self.resume_after_action()
+            self._handle_search_view_restriction()
             return
+        self.pause_for_action()
         if not os.path.exists(self.ffmpeg_path):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
             self.resume_after_action()
@@ -899,56 +902,56 @@ class QuranViewer(qt.QDialog):
         printSurah.setShortcut("ctrl+p")
         surahOption.addAction(printSurah)
         printSurah.triggered.connect(lambda: QTimer.singleShot(501, self.print_text))    
-        tafaseerSurahAction = qt1.QAction("تفسير الفئة", self)
-        tafaseerSurahAction.setShortcut("ctrl+shift+t")
-        surahOption.addAction(tafaseerSurahAction)
-        tafaseerSurahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getTafaseerForSurah))    
-        IArabSurah = qt1.QAction("إعراب الفئة", self)
-        IArabSurah.setShortcut("ctrl+shift+i")
-        surahOption.addAction(IArabSurah)
-        IArabSurah.triggered.connect(lambda: QTimer.singleShot(501, self.getIArabForSurah))    
-        translationSurahAction = qt1.QAction("ترجمة  الفئة", self)
-        translationSurahAction.setShortcut("ctrl+shift+l")
-        surahOption.addAction(translationSurahAction)
-        translationSurahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getTranslationForSurah))    
         SurahInfoAction = qt1.QAction("معلومات السورة", self)
         SurahInfoAction.setShortcut("ctrl+shift+f")
         surahOption.addAction(SurahInfoAction)
         SurahInfoAction.triggered.connect(lambda: QTimer.singleShot(501, self.onSurahInfo))    
-        tafseerFromVersToVersAction = qt1.QAction("التفسير من آية إلى آية")
-        tafseerFromVersToVersAction.setShortcut("ctrl+alt+t")
-        surahOption.addAction(tafseerFromVersToVersAction)
-        tafseerFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.TafseerFromVersToVers))    
-        translateFromVersToVersAction = qt1.QAction("الترجمة من آية إلى آية")
-        translateFromVersToVersAction.setShortcut("ctrl+alt+l")
-        surahOption.addAction(translateFromVersToVersAction)
-        translateFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.translateFromVersToVers))    
-        IArabFromVersToVersAction = qt1.QAction("الإعراب من آية إلى آية", self)
-        IArabFromVersToVersAction.setShortcut("ctrl+alt+i")
-        surahOption.addAction(IArabFromVersToVersAction)
-        IArabFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.IArabFromVersToVers))    
-        copyFromVersToVersAction = qt1.QAction("نسخ من آية إلى آية", self)
-        copyFromVersToVersAction.setShortcut("ctrl+shift+c")
-        surahOption.addAction(copyFromVersToVersAction)
-        copyFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.copyFromVersToVers))
-        playFromVersToVersAction = qt1.QAction("التشغيل من آية إلى آية", self)
-        playFromVersToVersAction.setShortcut("ctrl+alt+p")
-        surahOption.addAction(playFromVersToVersAction)
-        playFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.playFromVersToVers))    
-        if not self.is_search_view:
-            mergeAyahsAction = qt1.QAction("دمج الآيات", self)
-            mergeAyahsAction.setShortcut("ctrl+alt+d")
-            surahOption.addAction(mergeAyahsAction)
-            mergeAyahsAction.triggered.connect(lambda: QTimer.singleShot(501, self.mergeAyahs))
         playSurahToEnd = qt1.QAction("التشغيل إلى نهاية الفئة", self)
         playSurahToEnd.setShortcut("ctrl+shift+p")
         surahOption.addAction(playSurahToEnd)
         playSurahToEnd.triggered.connect(lambda: QTimer.singleShot(501, lambda: QuranPlayer(self, self.quranText, self.saved_ayah_index, self.type, self.category).exec()))   
-        if self.enableNextPreviouseButtons:
-            goToCategoryAction = qt1.QAction("الذهاب إلى محتوى فئة", self)
-            goToCategoryAction.setShortcut("ctrl+shift+g")
-            goToCategoryAction.triggered.connect(lambda: QTimer.singleShot(501, self.goToCategory))
-            surahOption.addAction(goToCategoryAction)    
+        if not self.is_search_view:
+            tafaseerSurahAction = qt1.QAction("تفسير الفئة", self)
+            tafaseerSurahAction.setShortcut("ctrl+shift+t")
+            surahOption.addAction(tafaseerSurahAction)
+            tafaseerSurahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getTafaseerForSurah))
+            IArabSurah = qt1.QAction("إعراب الفئة", self)
+            IArabSurah.setShortcut("ctrl+shift+i")
+            surahOption.addAction(IArabSurah)
+            IArabSurah.triggered.connect(lambda: QTimer.singleShot(501, self.getIArabForSurah))
+            translationSurahAction = qt1.QAction("ترجمة  الفئة", self)
+            translationSurahAction.setShortcut("ctrl+shift+l")
+            surahOption.addAction(translationSurahAction)
+            translationSurahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getTranslationForSurah))
+            tafseerFromVersToVersAction = qt1.QAction("التفسير من آية إلى آية")
+            tafseerFromVersToVersAction.setShortcut("ctrl+alt+t")
+            surahOption.addAction(tafseerFromVersToVersAction)
+            tafseerFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.TafseerFromVersToVers))
+            translateFromVersToVersAction = qt1.QAction("الترجمة من آية إلى آية")
+            translateFromVersToVersAction.setShortcut("ctrl+alt+l")
+            surahOption.addAction(translateFromVersToVersAction)
+            translateFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.translateFromVersToVers))
+            IArabFromVersToVersAction = qt1.QAction("الإعراب من آية إلى آية", self)
+            IArabFromVersToVersAction.setShortcut("ctrl+alt+i")
+            surahOption.addAction(IArabFromVersToVersAction)
+            IArabFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.IArabFromVersToVers))
+            copyFromVersToVersAction = qt1.QAction("نسخ من آية إلى آية", self)
+            copyFromVersToVersAction.setShortcut("ctrl+shift+c")
+            surahOption.addAction(copyFromVersToVersAction)
+            copyFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.copyFromVersToVers))
+            playFromVersToVersAction = qt1.QAction("التشغيل من آية إلى آية", self)
+            playFromVersToVersAction.setShortcut("ctrl+alt+p")
+            surahOption.addAction(playFromVersToVersAction)
+            playFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.playFromVersToVers))
+            mergeAyahsAction = qt1.QAction("دمج الآيات", self)
+            mergeAyahsAction.setShortcut("ctrl+alt+d")
+            surahOption.addAction(mergeAyahsAction)
+            mergeAyahsAction.triggered.connect(lambda: QTimer.singleShot(501, self.mergeAyahs))
+            if self.enableNextPreviouseButtons:
+                goToCategoryAction = qt1.QAction("الذهاب إلى محتوى فئة", self)
+                goToCategoryAction.setShortcut("ctrl+shift+g")
+                goToCategoryAction.triggered.connect(lambda: QTimer.singleShot(501, self.goToCategory))
+                surahOption.addAction(goToCategoryAction)
         menu.addMenu(surahOption)        
         fontMenu = qt.QMenu("حجم الخط", self)
         fontMenu.setFont(font)
@@ -1212,6 +1215,9 @@ class QuranViewer(qt.QDialog):
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()    
     def getTafaseerForSurah(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         ayahList=self.original_quran_text.split("\n")
         Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[0], self.category, self.type)
@@ -1271,6 +1277,9 @@ class QuranViewer(qt.QDialog):
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()        
     def getIArabForSurah(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         ayahList=self.original_quran_text.split("\n")
         Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[0], self.category, self.type)
@@ -1322,6 +1331,9 @@ class QuranViewer(qt.QDialog):
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()        
     def getTranslationForSurah(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         ayahList=self.original_quran_text.split("\n")
         Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[0], self.category, self.type)
@@ -1347,6 +1359,9 @@ class QuranViewer(qt.QDialog):
             functions.bookMarksManager.addNewQuranBookMark(self.type, self.category, current_ayah, False, name)
         self.resume_after_action()
     def playFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
@@ -1363,6 +1378,9 @@ class QuranViewer(qt.QDialog):
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()        
     def TafseerFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
@@ -1376,6 +1394,9 @@ class QuranViewer(qt.QDialog):
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()    
     def translateFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
@@ -1389,6 +1410,9 @@ class QuranViewer(qt.QDialog):
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()        
     def IArabFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
@@ -1451,6 +1475,9 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()        
     
     def goToCategory(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         category,OK=qt.QInputDialog.getItem(self,"الذهاب إلى محتوى فئة","اختر عنصر",list(self.typeResult.keys()),self.CurrentIndex,False)
         if OK:
@@ -1622,6 +1649,9 @@ class QuranViewer(qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copyFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
         total_ayahs = len(self.original_quran_text.split("\n"))
         FromVers, ok = guiTools.QInputDialog.getInt(self, "نسخ من الآية", "أكتب رقم الآية للبداية:", self.getCurrentAyah() + 1, 1, total_ayahs)
