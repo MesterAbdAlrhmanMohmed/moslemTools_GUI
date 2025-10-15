@@ -9,3 +9,4 @@ geocoder
 pywin32
 keyboard
 pyinstaller
+UniversalSpeech
