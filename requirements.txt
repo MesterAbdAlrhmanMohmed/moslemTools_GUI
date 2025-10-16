@@ -8,4 +8,5 @@ pyperclip
 geocoder
 pywin32
 keyboard
-pyinstaller
+cx_Freeze
+python-docx
