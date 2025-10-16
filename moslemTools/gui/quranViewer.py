@@ -1170,8 +1170,9 @@ class QuranViewer(qt.QDialog):
     def onPlayToEnd(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
-            return
-        QuranPlayer(self, self.quranText, self.getCurrentAyah(), self.type, self.category).exec()
+            return        
+        text_for_player = self.original_quran_text if not self.is_search_view else self.quranText
+        QuranPlayer(self, text_for_player, self.getCurrentAyah(), self.type, self.category).exec()
     def getCurrentReciter(self):
         index=self.currentReciter
         name=list(reciters.keys())[index]
