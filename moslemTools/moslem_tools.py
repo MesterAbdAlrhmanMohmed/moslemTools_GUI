@@ -2,7 +2,7 @@ from custome_errors import *
 import sys
 sys.excepthook = my_excepthook
 import update,guiTools,json,random,os,shutil,datetime,webbrowser,requests,keyboard,pyperclip,winsound,ctypes    
-from hijri_converter import Gregorian
+from hijridate import Gregorian
 from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
