@@ -56,6 +56,7 @@ class NotesDialog(qt.QDialog):
             search_label = qt.QLabel("البحث عن ملاحظة")
             search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
             search_bar = qt.QLineEdit()
+            search_bar.setAccessibleName(search_label.text())
             search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
             search_bar.textChanged.connect(lambda text, idx=i: self.on_search_tab(text, idx))            
             notes_list = qt.QListWidget()
