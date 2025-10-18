@@ -2,13 +2,15 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
+from guiTools import speak
 global_player = None
 global_audio_output = None
 global_current_url = None
 class other_brotcasts(qt.QWidget):
-    def __init__(self, audio_output_instance):
+    def __init__(self, audio_output_instance, parent_widget):
         super().__init__()
         self.audio_output = audio_output_instance
+        self.parent_widget = parent_widget
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_other = qt.QListWidget()
         self.list_of_other.setSpacing(1)
@@ -131,16 +133,25 @@ class other_brotcasts(qt.QWidget):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
-            self.audio_output.setVolume(new_volume)            
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
     def decrease_volume(self):        
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
-            self.audio_output.setVolume(new_volume)            
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
 class brotcasts_of_suplications(qt.QWidget):
-    def __init__(self, audio_output_instance):
+    def __init__(self, audio_output_instance, parent_widget):
         super().__init__()
         self.audio_output = audio_output_instance
+        self.parent_widget = parent_widget
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_adhkar = qt.QListWidget()
         self.list_of_adhkar.setSpacing(1)
@@ -163,7 +174,7 @@ class brotcasts_of_suplications(qt.QWidget):
             return
         station_name = selected_item.text()
         url_to_play = None
-        if station_name == "اذكار الصباح":
+        if station_name == "أذكار الصباح":
             url_to_play = qt2.QUrl("https://qurango.net/radio/athkar_sabah")
         elif station_name == "أذكار المساء":
             url_to_play = qt2.QUrl("https://qurango.net/radio/athkar_masa")
@@ -182,16 +193,25 @@ class brotcasts_of_suplications(qt.QWidget):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
-            self.audio_output.setVolume(new_volume)            
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
     def decrease_volume(self):        
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
-            self.audio_output.setVolume(new_volume)            
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
 class brotcasts_of_tafseer(qt.QWidget):
-    def __init__(self, audio_output_instance):
+    def __init__(self, audio_output_instance, parent_widget):
         super().__init__()
         self.audio_output = audio_output_instance
+        self.parent_widget = parent_widget
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_tafseer = qt.QListWidget()
         self.list_of_tafseer.setSpacing(1)
@@ -239,16 +259,25 @@ class brotcasts_of_tafseer(qt.QWidget):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
-            self.audio_output.setVolume(new_volume)            
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
     def decrease_volume(self):        
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
-            self.audio_output.setVolume(new_volume)            
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
 class brotcasts_of_reciters(qt.QWidget):
-    def __init__(self, audio_output_instance):
+    def __init__(self, audio_output_instance, parent_widget):
         super().__init__()
         self.audio_output = audio_output_instance
+        self.parent_widget = parent_widget
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_reciters = qt.QListWidget()
         self.list_of_reciters.setSpacing(1)
@@ -374,16 +403,25 @@ class brotcasts_of_reciters(qt.QWidget):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
-            self.audio_output.setVolume(new_volume)            
-    def decrease_volume(self):        
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
+    def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
-            self.audio_output.setVolume(new_volume)            
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
 class quran_brotcast(qt.QWidget):
-    def __init__(self, audio_output_instance):
+    def __init__(self, audio_output_instance, parent_widget):
         super().__init__()
         self.audio_output = audio_output_instance
+        self.parent_widget = parent_widget
         style_sheet = "QListWidget::item { font-weight: bold; }"
         self.list_of_quran_brotcasts = qt.QListWidget()
         self.list_of_quran_brotcasts.setSpacing(1)
@@ -449,12 +487,20 @@ class quran_brotcast(qt.QWidget):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
-            self.audio_output.setVolume(new_volume)            
+            self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
     def decrease_volume(self):        
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
             self.audio_output.setVolume(new_volume)
+            volume_percent = int(new_volume * 100)
+            speak(f"نسبة الصوت {volume_percent}")
+            self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
+            self.parent_widget.volume_timer.start(1000)
 class protcasts(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -464,16 +510,20 @@ class protcasts(qt.QWidget):
         global_player.setAudioOutput(global_audio_output)
         global_audio_output.setVolume(0.5)
         global_current_url = None
+        self.volume_timer = qt2.QTimer(self)
+        self.volume_timer.setSingleShot(True)
+        self.volume_timer.timeout.connect(self.restore_aud_text)
         self.brotcasts_tab = qt.QTabWidget()        
-        self.brotcasts_tab.addTab(quran_brotcast(global_audio_output), "إذاعات القرآن الكريم")
-        self.brotcasts_tab.addTab(brotcasts_of_reciters(global_audio_output), "إذاعات القراء")
-        self.brotcasts_tab.addTab(brotcasts_of_tafseer(global_audio_output), "إذاعات التفاسير")
-        self.brotcasts_tab.addTab(brotcasts_of_suplications(global_audio_output), "إذاعات الأذكار والأدعية")
-        self.brotcasts_tab.addTab(other_brotcasts(global_audio_output), "إذاعات إسلامية أخرى")
+        self.brotcasts_tab.addTab(quran_brotcast(global_audio_output, self), "إذاعات القرآن الكريم")
+        self.brotcasts_tab.addTab(brotcasts_of_reciters(global_audio_output, self), "إذاعات القراء")
+        self.brotcasts_tab.addTab(brotcasts_of_tafseer(global_audio_output, self), "إذاعات التفاسير")
+        self.brotcasts_tab.addTab(brotcasts_of_suplications(global_audio_output, self), "إذاعات الأذكار والأدعية")
+        self.brotcasts_tab.addTab(other_brotcasts(global_audio_output, self), "إذاعات إسلامية أخرى")        
         self.aud = qt.QLabel()
-        self.aud.setText("لرفع أو خفض الصوت: اضغط في القائمة ثم استخدم Shift + الأسهم، أعلى وأسفل")
+        self.original_aud_text = "لرفع أو خفض الصوت: اضغط في القائمة ثم استخدم Shift + الأسهم، أعلى وأسفل"
+        self.aud.setText(self.original_aud_text)
         self.aud.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.aud.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.aud.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         self.brotcasts_tab.setStyleSheet("""
 QTabWidget::pane {
     border: 1px solid #444;
@@ -503,3 +553,5 @@ QTabBar::tab:hover {
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.brotcasts_tab)
         layout.addWidget(self.aud)
+    def restore_aud_text(self):
+        self.aud.setText(self.original_aud_text)

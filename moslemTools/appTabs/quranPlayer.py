@@ -1,5 +1,6 @@
 import guiTools, requests, json, os, winsound, gui, functions, subprocess, shutil
 from guiTools import TextViewer
+from guiTools import speak
 from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -109,7 +110,10 @@ class QuranPlayer(qt.QWidget):
         qt1.QShortcut("shift+down", self).activated.connect(self.decrease_volume)
         qt1.QShortcut("[", self).activated.connect(self.onChangeStartingPosition)
         qt1.QShortcut("]", self).activated.connect(self.onChangeEndingPosition)
-        qt1.QShortcut("backspace", self).activated.connect(self.removePosition)
+        qt1.QShortcut("backspace", self).activated.connect(self.removePosition)        
+        self.volume_timer = qt2.QTimer(self)
+        self.volume_timer.setSingleShot(True)
+        self.volume_timer.timeout.connect(self.restore_duration_text)        
         self.bookmarksPosition = None
         self.isAMustToGoToBookmark = False
         self.startingPosition = None
@@ -1076,15 +1080,25 @@ class QuranPlayer(qt.QWidget):
         if self.mp.isPlaying():
             self.mp.pause()
         else:
-            self.mp.play()
+            self.mp.play()    
+    def restore_duration_text(self):
+        self.time_VA()
     def increase_volume(self):
         current_volume = self.au.volume()
         new_volume = min(current_volume + 0.10, 1.0)
         self.au.setVolume(new_volume)
+        volume_percent = int(new_volume * 100)
+        speak(f"نسبة الصوت {volume_percent}")
+        self.duration.setText(f"نسبة الصوت: {volume_percent}%")
+        self.volume_timer.start(1000)
     def decrease_volume(self):
         current_volume = self.au.volume()
         new_volume = max(current_volume - 0.10, 0.0)
         self.au.setVolume(new_volume)
+        volume_percent = int(new_volume * 100)
+        speak(f"نسبة الصوت {volume_percent}")
+        self.duration.setText(f"نسبة الصوت: {volume_percent}%")
+        self.volume_timer.start(1000)    
     def set_position_from_slider(self, value):
         duration = self.mp.duration()
         if duration > 0:
@@ -1109,12 +1123,15 @@ class QuranPlayer(qt.QWidget):
                 self.time_VA()
             except ZeroDivisionError:
                 self.Slider.setValue(0)
-                self.duration.setText("00:00:00")
+                if not self.volume_timer.isActive():
+                    self.duration.setText("00:00:00")
         else:
             self.Slider.setValue(0)
-            self.duration.setText("00:00:00")
-
-    def time_VA(self):
+            if not self.volume_timer.isActive():
+                self.duration.setText("00:00:00")
+    def time_VA(self):        
+        if self.volume_timer.isActive():
+            return        
         position = self.mp.position()
         duration = self.mp.duration()
         remaining = duration - position

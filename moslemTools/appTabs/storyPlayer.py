@@ -1,5 +1,6 @@
 import guiTools, requests, json, os,gui,functions, subprocess, shutil, winsound
 from guiTools import TextViewer
+from guiTools import speak
 from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -106,7 +107,10 @@ class StoryPlayer(qt.QWidget):
         qt1.QShortcut("ctrl+8", self).activated.connect(self.t80)
         qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("shift+up", self).activated.connect(self.increase_volume)
-        qt1.QShortcut("shift+down", self).activated.connect(self.decrease_volume)        
+        qt1.QShortcut("shift+down", self).activated.connect(self.decrease_volume)                
+        self.volume_timer = qt2.QTimer(self)
+        self.volume_timer.setSingleShot(True)
+        self.volume_timer.timeout.connect(self.restore_duration_text)        
         self.merge_list = []
         self.files_to_delete_after_merge = []
         self.is_merging = False
@@ -996,15 +1000,25 @@ class StoryPlayer(qt.QWidget):
         if self.mp.isPlaying():
             self.mp.pause()
         else:
-            self.mp.play()
+            self.mp.play()    
+    def restore_duration_text(self):
+        self.time_VA()
     def increase_volume(self):
         current_volume = self.au.volume()
         new_volume = min(current_volume + 0.10, 1.0)
         self.au.setVolume(new_volume)
+        volume_percent = int(new_volume * 100)
+        speak(f"نسبة الصوت {volume_percent}")
+        self.duration.setText(f"نسبة الصوت: {volume_percent}%")
+        self.volume_timer.start(1000)
     def decrease_volume(self):
         current_volume = self.au.volume()
         new_volume = max(current_volume - 0.10, 0.0)
         self.au.setVolume(new_volume)
+        volume_percent = int(new_volume * 100)
+        speak(f"نسبة الصوت {volume_percent}")
+        self.duration.setText(f"نسبة الصوت: {volume_percent}%")
+        self.volume_timer.start(1000)    
     def set_position_from_slider(self, value):
         duration = self.mp.duration()
         if duration > 0:
@@ -1020,12 +1034,15 @@ class StoryPlayer(qt.QWidget):
                 self.time_VA()
             except ZeroDivisionError:
                 self.Slider.setValue(0)
-                self.duration.setText("00:00:00")
+                if not self.volume_timer.isActive():
+                    self.duration.setText("00:00:00")
         else:
             self.Slider.setValue(0)
-            self.duration.setText("00:00:00")
-
-    def time_VA(self):
+            if not self.volume_timer.isActive():
+                self.duration.setText("00:00:00")
+    def time_VA(self):        
+        if self.volume_timer.isActive():
+            return        
         position = self.mp.position()
         duration = self.mp.duration()
         remaining = duration - position
