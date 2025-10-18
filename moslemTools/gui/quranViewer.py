@@ -1696,14 +1696,14 @@ class QuranViewer(qt.QDialog):
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        total_ayahs = len(self.original_quran_text.split("\n"))
+        total_ayahs = len(self.quranText.split("\n"))
         FromVers, ok = guiTools.QInputDialog.getInt(self, "نسخ من الآية", "أكتب رقم الآية للبداية:", self.getCurrentAyah() + 1, 1, total_ayahs)
         if ok:
             toVers, ok = guiTools.QInputDialog.getInt(self, "نسخ إلى الآية", "أكتب رقم الآية للنهاية:", total_ayahs, FromVers, total_ayahs)
             if ok:
                 start_index = FromVers - 1
                 end_index = toVers
-                allVerses = self.original_quran_text.split("\n")
+                allVerses = self.quranText.split("\n")
                 verses_to_copy = allVerses[start_index:end_index]
                 if verses_to_copy:
                     text_to_copy = "\n".join(verses_to_copy)
