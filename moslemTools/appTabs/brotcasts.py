@@ -15,8 +15,8 @@ class other_brotcasts(qt.QWidget):
         self.list_of_other = qt.QListWidget()
         self.list_of_other.setSpacing(1)
         self.list_of_other.setStyleSheet(style_sheet)
-        self.list_of_other.itemActivated.connect(self.play)        
-        self.list_of_other.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
+        self.list_of_other.itemActivated.connect(self.play)
+        self.list_of_other.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.list_of_other.addItem("تَكْبِيرَات العيد")
         self.list_of_other.addItem("الرقية الشرعية")
         self.list_of_other.addItem("إذاعة الصحابة")
@@ -48,7 +48,7 @@ class other_brotcasts(qt.QWidget):
         self.list_of_other.addItem("الدكتور سعد الحميد")
         self.list_of_other.addItem("الدكتور خالد الجريسي")
         layout = qt.QVBoxLayout(self)
-        layout.addWidget(self.list_of_other)                
+        layout.addWidget(self.list_of_other)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_other)
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_other)
@@ -59,7 +59,7 @@ class other_brotcasts(qt.QWidget):
         if not selected_item:
             return
         station_name = selected_item.text()
-        url_to_play = None        
+        url_to_play = None
         if station_name == "تَكْبِيرَات العيد":
             url_to_play = qt2.QUrl("http://live.mp3quran.net:9728")
         elif station_name == "الرقية الشرعية":
@@ -129,7 +129,7 @@ class other_brotcasts(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
-    def increase_volume(self):        
+    def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
@@ -138,7 +138,7 @@ class other_brotcasts(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
-    def decrease_volume(self):        
+    def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
@@ -162,7 +162,7 @@ class brotcasts_of_suplications(qt.QWidget):
         self.list_of_adhkar.addItem("أذكار المساء")
         self.list_of_adhkar.addItem("أدعية وأذكار يومية")
         layout = qt.QVBoxLayout(self)
-        layout.addWidget(self.list_of_adhkar)        
+        layout.addWidget(self.list_of_adhkar)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_adhkar)
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_adhkar)
@@ -189,7 +189,7 @@ class brotcasts_of_suplications(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
-    def increase_volume(self):        
+    def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
@@ -198,7 +198,7 @@ class brotcasts_of_suplications(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
-    def decrease_volume(self):        
+    def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
@@ -224,7 +224,7 @@ class brotcasts_of_tafseer(qt.QWidget):
         self.list_of_tafseer.addItem("المختصر في التفسير")
         self.list_of_tafseer.addItem("إذاعة التفسير")
         layout = qt.QVBoxLayout(self)
-        layout.addWidget(self.list_of_tafseer)        
+        layout.addWidget(self.list_of_tafseer)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_tafseer)
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_tafseer)
@@ -255,7 +255,7 @@ class brotcasts_of_tafseer(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
-    def increase_volume(self):        
+    def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
@@ -264,7 +264,7 @@ class brotcasts_of_tafseer(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
-    def decrease_volume(self):        
+    def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
@@ -283,7 +283,7 @@ class brotcasts_of_reciters(qt.QWidget):
         self.list_of_reciters.setSpacing(1)
         self.list_of_reciters.setStyleSheet(style_sheet)
         self.list_of_reciters.itemActivated.connect(self.play)
-        self.list_of_reciters.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
+        self.list_of_reciters.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.list_of_reciters.addItem("إذاعة القُراء")
         self.list_of_reciters.addItem("القارء أبو بكر الشاطري")
         self.list_of_reciters.addItem("القارئ إدريس أبكر")
@@ -316,7 +316,7 @@ class brotcasts_of_reciters(qt.QWidget):
         self.list_of_reciters.addItem("القارئ الشيخ العيون الكوشي - ورش عن نافع")
         self.list_of_reciters.addItem("القارِء الشيخ سعد الغامدي")
         layout = qt.QVBoxLayout(self)
-        layout.addWidget(self.list_of_reciters)        
+        layout.addWidget(self.list_of_reciters)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_reciters)
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_reciters)
@@ -327,7 +327,7 @@ class brotcasts_of_reciters(qt.QWidget):
         if not selected_item:
             return
         reciter_name = selected_item.text()
-        url_to_play = None        
+        url_to_play = None
         if reciter_name == "إذاعة القُراء":
             url_to_play = qt2.QUrl("http://live.mp3quran.net:8006")
         elif reciter_name == "القارء أبو بكر الشاطري":
@@ -399,7 +399,7 @@ class brotcasts_of_reciters(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
-    def increase_volume(self):        
+    def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
@@ -440,7 +440,7 @@ class quran_brotcast(qt.QWidget):
         self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من فَلَسطين")
         self.list_of_quran_brotcasts.addItem("إذاعة تراتيل")
         layout = qt.QVBoxLayout(self)
-        layout.addWidget(self.list_of_quran_brotcasts)        
+        layout.addWidget(self.list_of_quran_brotcasts)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_quran_brotcasts)
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_quran_brotcasts)
@@ -483,7 +483,7 @@ class quran_brotcast(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
-    def increase_volume(self):        
+    def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
@@ -492,7 +492,7 @@ class quran_brotcast(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
-    def decrease_volume(self):        
+    def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
@@ -508,22 +508,22 @@ class protcasts(qt.QWidget):
         global_player = QMediaPlayer()
         global_audio_output = QAudioOutput()
         global_player.setAudioOutput(global_audio_output)
-        global_audio_output.setVolume(0.5)
+        global_audio_output.setVolume(1.0)
         global_current_url = None
         self.volume_timer = qt2.QTimer(self)
         self.volume_timer.setSingleShot(True)
         self.volume_timer.timeout.connect(self.restore_aud_text)
-        self.brotcasts_tab = qt.QTabWidget()        
+        self.brotcasts_tab = qt.QTabWidget()
         self.brotcasts_tab.addTab(quran_brotcast(global_audio_output, self), "إذاعات القرآن الكريم")
         self.brotcasts_tab.addTab(brotcasts_of_reciters(global_audio_output, self), "إذاعات القراء")
         self.brotcasts_tab.addTab(brotcasts_of_tafseer(global_audio_output, self), "إذاعات التفاسير")
         self.brotcasts_tab.addTab(brotcasts_of_suplications(global_audio_output, self), "إذاعات الأذكار والأدعية")
-        self.brotcasts_tab.addTab(other_brotcasts(global_audio_output, self), "إذاعات إسلامية أخرى")        
+        self.brotcasts_tab.addTab(other_brotcasts(global_audio_output, self), "إذاعات إسلامية أخرى")
         self.aud = qt.QLabel()
         self.original_aud_text = "لرفع أو خفض الصوت: اضغط في القائمة ثم استخدم Shift + الأسهم، أعلى وأسفل"
         self.aud.setText(self.original_aud_text)
         self.aud.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.aud.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
+        self.aud.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.brotcasts_tab.setStyleSheet("""
 QTabWidget::pane {
     border: 1px solid #444;
