@@ -500,7 +500,7 @@ class QuranViewer(qt.QDialog):
                 self.merge_thread.stop()
     def _handle_search_view_restriction(self):
         winsound.Beep(440, 200)
-        guiTools.speak("هذا الخيار غير متاح في وضع البحث")
+        guiTools.speak("هذا الخيار غير متاح في وضع البحث أو التصفح المخصص")
     def mergeAyahs(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -820,10 +820,11 @@ class QuranViewer(qt.QDialog):
         menu.setFocus()
         ayahOptions = qt.QMenu("خيارات الآية الحالية", self)
         ayahOptions.setFont(font)
-        goToAyah = qt1.QAction("الذهاب إلى آية", self)
-        goToAyah.setShortcut("ctrl+g")
-        ayahOptions.addAction(goToAyah)
-        goToAyah.triggered.connect(lambda: QTimer.singleShot(501, self.goToAyah))
+        if not self.is_search_view:
+            goToAyah = qt1.QAction("الذهاب إلى آية", self)
+            goToAyah.setShortcut("ctrl+g")
+            ayahOptions.addAction(goToAyah)
+            goToAyah.triggered.connect(lambda: QTimer.singleShot(501, self.goToAyah))
         playCurrentAyahAction = qt1.QAction("تشغيل الآية الحالية", self)
         playCurrentAyahAction.setShortcut("space")
         ayahOptions.addAction(playCurrentAyahAction)
@@ -851,23 +852,22 @@ class QuranViewer(qt.QDialog):
         copy_aya = qt1.QAction("نسخ الآية الحالية", self)
         ayahOptions.addAction(copy_aya)
         copy_aya.triggered.connect(lambda: QTimer.singleShot(501, self.copyAya))
-        state, self.nameOfBookmark = functions.bookMarksManager.getQuranBookmarkName(self.type, self.category, self.saved_ayah_index, isPlayer=False)
-        if state:
-            removeBookmarkAction = qt.QWidgetAction(self)
-            delete_button = qt.QPushButton("حذف العلامة المرجعية للآياة الحالية: CTRL+B")
-            delete_button.setDefault(True)
-            delete_button.setShortcut("ctrl+b")
-            delete_button.setStyleSheet("background-color: #8B0000; color: white;")
-            delete_button.clicked.connect(lambda: QTimer.singleShot(501, self.onRemoveBookmark))
-            removeBookmarkAction.setDefaultWidget(delete_button)
-            ayahOptions.addAction(removeBookmarkAction)
-        else:
-            addNewBookMark = qt1.QAction("إضافة علامة مرجعية للآياة الحالية", self)
-            addNewBookMark.setShortcut("ctrl+b")
-            ayahOptions.addAction(addNewBookMark)
-            addNewBookMark.triggered.connect(lambda: QTimer.singleShot(501, self.onAddBookMark))
-            addNewBookMark.setEnabled(self.enableBookmarks)
         if self.enableBookmarks:
+            state, self.nameOfBookmark = functions.bookMarksManager.getQuranBookmarkName(self.type, self.category, self.saved_ayah_index, isPlayer=False)
+            if state:
+                removeBookmarkAction = qt.QWidgetAction(self)
+                delete_button = qt.QPushButton("حذف العلامة المرجعية للآياة الحالية: CTRL+B")
+                delete_button.setDefault(True)
+                delete_button.setShortcut("ctrl+b")
+                delete_button.setStyleSheet("background-color: #8B0000; color: white;")
+                delete_button.clicked.connect(lambda: QTimer.singleShot(501, self.onRemoveBookmark))
+                removeBookmarkAction.setDefaultWidget(delete_button)
+                ayahOptions.addAction(removeBookmarkAction)
+            else:
+                addNewBookMark = qt1.QAction("إضافة علامة مرجعية للآياة الحالية", self)
+                addNewBookMark.setShortcut("ctrl+b")
+                ayahOptions.addAction(addNewBookMark)
+                addNewBookMark.triggered.connect(lambda: QTimer.singleShot(501, self.onAddBookMark))
             ayah_position = {
                 "ayah_text": self.quranText.split("\n")[self.saved_ayah_index],
                 "ayah_number": self.saved_ayah_index,
@@ -1028,7 +1028,8 @@ class QuranViewer(qt.QDialog):
             return
         self.pause_for_action()
         if not self.enableBookmarks:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا يمكن إدارة الملاحظات عند تصفح القرآن بشكل مخصص")
+            winsound.Beep(440, 200)
+            guiTools.speak("لا يمكن إدارة الملاحظات في وضع البحث أو التصفح المخصص")
             self.resume_after_action()
             return
         ayah_position = {
@@ -1048,7 +1049,8 @@ class QuranViewer(qt.QDialog):
             return
         self.pause_for_action()
         if not self.enableBookmarks:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا يمكن عرض الملاحظات عند تصفح القرآن بشكل مخصص")
+            winsound.Beep(440, 200)
+            guiTools.speak("لا يمكن عرض الملاحظات في وضع البحث أو التصفح المخصص")
             self.resume_after_action()
             return
         ayah_position = {
@@ -1591,7 +1593,8 @@ class QuranViewer(qt.QDialog):
             return
         self.pause_for_action()
         if not self.enableBookmarks:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا يمكن إدارة العلامات المرجعية في هذا العرض")
+            winsound.Beep(440, 200)
+            guiTools.speak("لا يمكن إدارة العلامات المرجعية في وضع البحث أو التصفح المخصص")
             self.resume_after_action()
             return
         current_ayah = self.getCurrentAyah()
@@ -1649,7 +1652,8 @@ class QuranViewer(qt.QDialog):
             return
         self.pause_for_action()
         if not self.enableBookmarks:
-            guiTools.speak("لا يمكن حذف الملاحظات في هذا الوضع")
+            winsound.Beep(440, 200)
+            guiTools.speak("لا يمكن حذف الملاحظات في وضع البحث أو التصفح المخصص")
             self.resume_after_action()
             return
         current_ayah = self.getCurrentAyah()
