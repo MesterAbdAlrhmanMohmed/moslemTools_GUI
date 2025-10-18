@@ -58,8 +58,7 @@ class main(qt.QMainWindow):
         tabs = [    
             (prayer_times(self), "مواقيت الصلاة والتاريخ"),
             (Quran(), "القرآن الكريم مكتوب"),
-            (self.quranPlayer, "القرآن الكريم صوتي"),
-            (QuranRecitations(), "قراءات القرآن الكريم"),
+            (self.quranPlayer, "القرآن الكريم صوتي"),            
             (Athker(), "الأذكار والأدعية"),
             (sibha(), "سبحة إلكترونية"),    
             (hadeeth(), "الأحاديث النبوية والقدسية"),
