@@ -108,56 +108,76 @@ class DateConverter(qt.QWidget):
         self.day.textChanged.connect(self.max_number)
         day_layout.addWidget(self.day, 2)
         day_layout.addWidget(self.l_day, 1)
-        content_layout.addLayout(day_layout)
+        content_layout.addLayout(day_layout)                
         result_controls_layout = qt.QHBoxLayout()
-        result_controls_layout.setSpacing(10)
-        self.Convert = guiTools.QPushButton("التحويل الى ميلادي")
+        result_controls_layout.setSpacing(10)        
+        self.Convert = guiTools.QPushButton("التحويل")
         self.Convert.setObjectName("convertButton")        
-        self.Convert.clicked.connect(self.convert_date)
+        self.Convert.clicked.connect(self.convert_date)        
+        self.l_result = qt.QLabel("النتيجة")
+        self.l_result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)                
+        result_area_layout = qt.QVBoxLayout()
+        result_area_layout.setSpacing(20)         
         self.result = qt.QLabel()
         self.result.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.l_result = qt.QLabel("النتيجة")
-        self.l_result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        result_area_layout.addWidget(self.result)                
+        self.clear_result = guiTools.QPushButton("حذف النتيجة")
+        self.clear_result.setStyleSheet("background-color: #8B0000; color: white;")
+        self.clear_result.clicked.connect(self.clear_action)
+        self.clear_result.setFixedWidth(180) 
+        self.clear_result.setEnabled(False)
+        self.clear_result.setVisible(False)                 
+        clear_button_layout = qt.QHBoxLayout()
+        clear_button_layout.addStretch()
+        clear_button_layout.addWidget(self.clear_result)
+        clear_button_layout.addStretch()
+        result_area_layout.addLayout(clear_button_layout)        
         self.copy_result = guiTools.QPushButton("نسخ النتيجة")
         self.copy_result.setObjectName("copyButton")    
         self.copy_result.clicked.connect(self.copy)
-        self.copy_result.setEnabled(False)
+        self.copy_result.setEnabled(False)        
         result_controls_layout.addWidget(self.Convert)
         result_controls_layout.addWidget(self.l_result)
-        result_controls_layout.addWidget(self.result, 1)
-        result_controls_layout.addWidget(self.copy_result)
+        result_controls_layout.addLayout(result_area_layout, 1)
+        result_controls_layout.addWidget(self.copy_result)        
         content_layout.addLayout(result_controls_layout)        
         content_layout.addStretch(1)                
         main_layout = qt.QHBoxLayout()
         main_layout.setContentsMargins(150, 20, 150, 20)
         main_layout.addLayout(content_layout)    
-        self.setLayout(main_layout)
+        self.setLayout(main_layout)                
         self.update_month_combo()        
         self.year.textChanged.connect(self._reset_result_state)
         self.day.textChanged.connect(self._reset_result_state)
         self.month_combo.currentIndexChanged.connect(self._reset_result_state)
         self.Converter_combo.currentIndexChanged.connect(self._reset_result_state)
         self.Converter_combo.currentIndexChanged.connect(self.update_month_combo)
-        self.Converter_combo.currentIndexChanged.connect(self.update_button_text)
+        self.Converter_combo.currentIndexChanged.connect(self.update_button_text)    
+    def clear_action(self):
+        self._reset_result_state()
+        self.Converter_combo.setFocus()
     def _reset_result_state(self):
         self.result.clear()
         self.copy_result.setEnabled(False)
+        self.clear_result.setEnabled(False)
+        self.clear_result.setVisible(False)     
     def max_number(self):
         try:
             if int(self.day.text()) > 31:
                 self.day.setText("31")
         except (ValueError, TypeError):
-            pass        
+            pass                    
     def copy(self):
-        pyperclip.copy(self.result.text())
-        winsound.Beep(1000, 100)
-        guiTools.speak("تم نسخ النتيجة")        
+        if self.result.text():
+            pyperclip.copy(self.result.text())
+            winsound.Beep(1000, 100)
+            guiTools.speak("تم نسخ النتيجة")            
     def update_button_text(self):
         if self.Converter_combo.currentIndex() == 0:
             self.Convert.setText("التحويل الى ميلادي")
         else:
-            self.Convert.setText("التحويل الى هجري")            
+            self.Convert.setText("التحويل الى هجري")                        
     def update_month_combo(self):
         self.month_combo.clear()
         if self.Converter_combo.currentIndex() == 0:
@@ -172,57 +192,56 @@ class DateConverter(qt.QWidget):
                 "مايو", "يونيو", "يوليو", "أغسطس",
                 "سِبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
             ]
-        self.month_combo.addItems(months)        
+        self.month_combo.addItems(months)            
     def convert_date(self):
         days_of_week = [
             "الإثنين", "الثلثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"
         ]
         year_text = self.year.text()
-        day_text = self.day.text()
-        month = self.month_combo.currentIndex() + 1
-        if not (year_text.isdigit() and day_text.isdigit() and int(year_text) > 0 and int(day_text) > 0):
+        day_text = self.day.text()        
+        if not (year_text.isdigit() and day_text.isdigit()):
             self._reset_result_state()
-            self.result.setText("الرجاء إدخال أرقام صحيحة وموجبة.")
+            self.result.setText("الرجاء إدخال أرقام صحيحة.")
             self.result.setFocus()
             return
         year = int(year_text)
-        day = int(day_text)        
-        if self.Converter_combo.currentIndex() == 0:
-            if year < 1:
-                self._reset_result_state()
-                self.result.setText("التاريخ الهجري يجب أن يكون بعد العام 1.")
-                self.result.setFocus()
-                return
-            try:
+        day = int(day_text)
+        month = self.month_combo.currentIndex() + 1    
+        if not (year > 0 and day > 0):
+            self._reset_result_state()
+            self.result.setText("الرجاء إدخال أرقام موجبة.")
+            self.result.setFocus()
+            return            
+        try:
+            if self.Converter_combo.currentIndex() == 0:
+                if year < 1:
+                    raise ValueError("التاريخ الهجري يجب أن يكون بعد العام 1.")
                 hijri_date = Hijri(year, month, day)
                 gregorian_date = hijri_date.to_gregorian()
                 result_str = f"{days_of_week[gregorian_date.weekday()]} - {gregorian_date.day} {self.get_gregorian_month_name(gregorian_date.month)} {gregorian_date.year}"
-                self.result.setText(result_str)
-                self.copy_result.setEnabled(True)
-                self.result.setFocus()
-            except Exception:
-                self._reset_result_state()
-                self.result.setText("تاريخ هجري غير صالح.")
-                self.result.setFocus()
-        else:
-            try:
+            else:
                 gregorian_date = Gregorian(year, month, day)
                 hijri_date = gregorian_date.to_hijri()
                 result_str = f"{days_of_week[gregorian_date.weekday()]} - {hijri_date.day} {self.get_hijri_month_name(hijri_date.month)} {hijri_date.year}"
-                self.result.setText(result_str)
-                self.copy_result.setEnabled(True)
-                self.result.setFocus()
-            except Exception:
-                self._reset_result_state()
-                self.result.setText("تاريخ ميلادي غير صالح.")
-                self.result.setFocus()                
+            self.result.setText(result_str)
+            self.copy_result.setEnabled(True)
+            self.clear_result.setEnabled(True)
+            self.clear_result.setVisible(True)
+            self.result.setFocus()
+        except Exception as e:
+            self._reset_result_state()
+            error_message = "تاريخ هجري غير صالح." if self.Converter_combo.currentIndex() == 0 else "تاريخ ميلادي غير صالح."
+            if isinstance(e, ValueError):
+                error_message = str(e)
+            self.result.setText(error_message)
+            self.result.setFocus()            
     def get_gregorian_month_name(self, month):
         months = [
             "يَنايِر", "فَبرايِر", "مارِس", "أبريل",
             "مايو", "يونيو", "يوليو", "أغسطس",
             "سِبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
         ]
-        return months[month - 1]        
+        return months[month - 1]            
     def get_hijri_month_name(self, month):
         months = [
             "مُحرَّم", "صَفَر", "رَبيع الأوَّل", "رَبيع الآخِر",
