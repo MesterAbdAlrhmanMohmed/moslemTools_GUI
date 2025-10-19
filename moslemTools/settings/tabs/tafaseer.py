@@ -67,17 +67,7 @@ class TafaseerSettings(qt.QWidget):
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setStyleSheet("font-weight: bold;")
-        main_layout.addWidget(self.info)                        
-        self.selectTafaseer.currentTextChanged.connect(self.onTafaseerChanged)
-        self.selecttranslation.currentTextChanged.connect(self.onTranslationChanged)    
-    def onTafaseerChanged(self, text):
-        if text and text in tafseer.tafaseers:            
-            filename = tafseer.tafaseers[text]
-            settings_handler.set("tafaseer", "tafaseer", filename)    
-    def onTranslationChanged(self, text):
-        if text and text in translater.translations:            
-            filename = translater.translations[text]
-            settings_handler.set("translation", "translation", filename)    
+        main_layout.addWidget(self.info)                            
     def onDelete1(self):
         selectedItem = self.selecttranslation.currentText()
         if selectedItem:

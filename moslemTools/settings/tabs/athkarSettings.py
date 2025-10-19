@@ -81,13 +81,6 @@ class AthkarSettings(qt.QWidget):
         info_layout.addWidget(self.info1)
         info_layout.addWidget(self.info2)
         info_layout.addWidget(self.info)        
-        main_layout.addLayout(info_layout)        
-        self.voiceSelection.currentIndexChanged.connect(
-            lambda index: settings_handler.set("athkar", "voice", str(index))
-        )
-        self.textSelection.currentIndexChanged.connect(
-            lambda index: settings_handler.set("athkar", "text", str(index))
-        )    
+        main_layout.addLayout(info_layout)                
     def onVoiceVolumeChanged(self, value):        
         self.voiceVolumeLabel.setText(f"مستوى صوت الأذكار الصوتية: {value}%")
-        settings_handler.set("athkar", "voiceVolume", str(value))
