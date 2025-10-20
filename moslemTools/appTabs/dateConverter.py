@@ -111,7 +111,7 @@ class DateConverter(qt.QWidget):
         content_layout.addLayout(day_layout)                
         result_controls_layout = qt.QHBoxLayout()
         result_controls_layout.setSpacing(10)        
-        self.Convert = guiTools.QPushButton("التحويل")
+        self.Convert = guiTools.QPushButton("التحويل الى ميلادي")
         self.Convert.setObjectName("convertButton")        
         self.Convert.clicked.connect(self.convert_date)        
         self.l_result = qt.QLabel("النتيجة")
