@@ -19,6 +19,7 @@ class SelectAthkar(qt.QDialog):
         with open("data/json/athkar.json","r",encoding="utf-8-sig") as data:
             self.reciterData=json.load(data)
         self.reciters=guiTools.QListWidget()
+        self.reciters.setSpacing(3)
         font=qt1.QFont()
         font.setBold(True)
         self.reciters.setFont(font)

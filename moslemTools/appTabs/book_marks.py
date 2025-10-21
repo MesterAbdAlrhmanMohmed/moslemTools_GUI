@@ -52,7 +52,7 @@ class book_marcks(qt.QDialog):
             search_bar.textChanged.connect(lambda text, idx=i: self.onsearch_tab(text, idx))
             search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)            
             results = qt.QListWidget()            
-            results.setSpacing(1)
+            results.setSpacing(3)
             results.itemActivated.connect(lambda item, idx=i: self.onItemClicked(item, idx))            
             tab_layout.addWidget(search_label)
             tab_layout.addWidget(search_bar)

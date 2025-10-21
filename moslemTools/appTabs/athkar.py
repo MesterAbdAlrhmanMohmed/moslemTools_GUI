@@ -25,7 +25,7 @@ class Athker(qt.QWidget):
         self.athkerList = guiTools.QListWidget()
         self.athkars1 = []
         for athker in self.data:
-            self.athkerList.setSpacing(1)
+            self.athkerList.setSpacing(3)
             self.athkars1.append(athker["name"])
         self.athkerList.clicked.connect(lambda:gui.AthkerDialog(self,self.athkerList.currentItem().text(),self.data[self.athkerList.currentRow()]["content"]).exec())        
         self.athkerList.addItems(self.athkars1)

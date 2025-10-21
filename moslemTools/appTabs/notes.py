@@ -60,7 +60,7 @@ class NotesDialog(qt.QDialog):
             search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
             search_bar.textChanged.connect(lambda text, idx=i: self.on_search_tab(text, idx))            
             notes_list = qt.QListWidget()
-            notes_list.setSpacing(1)
+            notes_list.setSpacing(3)
             font = qt1.QFont()
             font.setBold(True)
             notes_list.setFont(font)            

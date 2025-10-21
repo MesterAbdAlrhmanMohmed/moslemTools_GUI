@@ -9,6 +9,7 @@ class PartSelection (qt.QDialog):
         self.content=content
         layout=qt.QVBoxLayout(self)
         self.parts=qt.QListWidget()
+        self.parts.setSpacing(3)
         self.parts.addItems(content)
         self.parts.itemActivated.connect(self.openPart)
         layout.addWidget(self.parts)

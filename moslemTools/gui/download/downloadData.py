@@ -19,6 +19,7 @@ class SelectItem(qt.QDialog):
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)
         self.item=guiTools.QListWidget()        
+        self.item.setSpacing(3)
         font=qt1.QFont()
         font.setBold(True)
         self.item.setFont(font)

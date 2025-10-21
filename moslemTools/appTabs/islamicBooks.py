@@ -36,7 +36,7 @@ class IslamicBooks(qt.QWidget):
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)        
         self.list_of_abook=guiTools.QListWidget()
-        self.list_of_abook.setSpacing(1)
+        self.list_of_abook.setSpacing(3)
         self.list_of_abook.addItems(functions.islamicBooks.books.keys())
         self.list_of_abook.itemClicked.connect(self.open)
         layout.addWidget(self.list_of_abook)        

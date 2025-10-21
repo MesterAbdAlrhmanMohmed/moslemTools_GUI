@@ -54,7 +54,7 @@ class main(qt.QMainWindow):
         content_layout = qt.QHBoxLayout()
         self.list_widget = guiTools.listBook()
         self.list_widget.currentItemChanged.connect(self.onToolChanged)
-        self.list_widget.setSpacing(1)
+        self.list_widget.setSpacing(3)
         self.quranPlayer = QuranPlayer()
         self.storiesPlayer = StoryPlayer()
         self.researcher = Albaheth()

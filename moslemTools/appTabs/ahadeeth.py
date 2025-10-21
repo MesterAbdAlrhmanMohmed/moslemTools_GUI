@@ -40,7 +40,7 @@ class hadeeth(qt.QWidget):
         self.info2.setText("يمكنكم تحميل المزيد من تحميل موارد إضافية من الإعدادات")    
         layout.addWidget(self.info2)
         self.list_of_ahadeeth.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.list_of_ahadeeth.setSpacing(1)
+        self.list_of_ahadeeth.setSpacing(3)
         self.list_of_ahadeeth.customContextMenuRequested.connect(self.onDelete)
         qt1.QShortcut("delete",self).activated.connect(self.onDelete)
     def onDelete(self):

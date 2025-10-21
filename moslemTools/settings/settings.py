@@ -9,7 +9,7 @@ class settings(qt.QDialog):
         self.resize(590,430)
         self.center()
         self.setWindowTitle("الإعدادات")
-        self.p = p
+        self.p = p                
         layout = qt.QVBoxLayout()
         self.sectian_l=qt.QLabel("اختر قسم")
         layout.addWidget(self.sectian_l,alignment=Qt.AlignmentFlag.AlignCenter)

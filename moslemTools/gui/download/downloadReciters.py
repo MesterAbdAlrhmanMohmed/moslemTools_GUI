@@ -19,6 +19,7 @@ class SelectReciter(qt.QDialog):
         layout.addWidget(self.search_bar)
         self.reciterData=gui.reciters
         self.reciters=guiTools.QListWidget()
+        self.reciters.setSpacing(3)
         font=qt1.QFont()
         font.setBold(True)
         self.reciters.setFont(font)

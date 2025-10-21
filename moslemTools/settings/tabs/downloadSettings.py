@@ -20,6 +20,7 @@ class Download(qt.QDialog):
         self.types.addItems(["كتاب تفسير لتبويبة القرآن الكريم مكتوب", "ترجمة للقرآن الكريم لتبويبة القرآن الكريم مكتوب", "كتاب حديث", "قارئ للقرآن لتبويبة القرآن الكريم مكتوب", "أذكار وأدعية صوتية لتبويبة الأذكار", "الكتب الإسلامية"])
         self.types.setFont(font)
         self.types.clicked.connect(self.onItemClicked)
+        self.types.setSpacing(3)
         self.adminstration = qt.QLabel()
         self.adminstration.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.adminstration.setText("تنبيه هام , لتثبيت موارد خارجية, يجب أولا منح صلاحيات المشرف للبرنامج")
