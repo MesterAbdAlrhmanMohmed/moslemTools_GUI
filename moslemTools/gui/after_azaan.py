@@ -102,8 +102,11 @@ class AfterAdaan(qt.QDialog):
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", str(e))
     def closewindow(self):
-        self.media_player.stop()
-        self.accept()
+        if self.media_player.isPlaying():
+            self.media_player.stop()
+            self.accept()
+        else:
+            self.accept()
     def set_font_size_dialog(self):
         try:
             size, ok = guiTools.QInputDialog.getInt(
