@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "moslem tools, alcoder"
-#define MyAppVersion "3.3"
+#define MyAppVersion "3.4"
 #define MyAppPublisher "abd alrhman mohamed alcoder"
 #define MyAppURL "https://github.com/MesterAbdAlrhmanMohmed"
 #define MyAppExeName "moslem_tools.exe"
