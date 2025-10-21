@@ -65,7 +65,7 @@ Moslem Tools ليس مجرد تجميعة أدوات، بل هو منظومة م
 [https://youtu.be/lWqtLWlSYKg?si=mRlPwy-ig-rYh7bj](https://youtu.be/lWqtLWlSYKg?si=mRlPwy-ig-rYh7bj)
 
 **رابط التحميل المباشر:**  
-[https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.3/moslem_tools_version_3.3.exe](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.3/moslem_tools_version_3.3.exe)
+[https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.3/moslem_tools_version_3.3.exe](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.4/moslem_tools_version_3.4.exe)
 
 **رابط المستودع على GitHub:**  
 [https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI)
