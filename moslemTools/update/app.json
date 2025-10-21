@@ -1,7 +1,7 @@
 {
   "name": "moslem tools",
-  "version": 3.3,
-  "what is new": "إضافة نطق تغييرات مستوى الصوت لمستخدمين NVDA وعرضها للمبصرين\nإصلاح بعض المشاكل في حفظ الإعدادات\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.3/moslem_tools_version_3.3.exe",
-  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.3/moslem_tools_version_3.3.exe",
+  "version": 3.4,
+  "what is new": "التأكد من دخول اليوم الجديد بدون إعادة تشغيل البرنامج\nإصلاح بعض المشاكل الأخرى\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.4/moslem_tools_version_3.4.exe",
+  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.4/moslem_tools_version_3.4.exe",
   "is_beta": false
 }
