@@ -122,7 +122,7 @@ class main(qt.QMainWindow):
         action_whats_new.triggered.connect(self.whats_new_funktion)
         self.moreOptionsMenu.addAction(action_whats_new)
         action_sheck_message=qt1.QAction("التحقق من وجود رسالة من المطور", self)
-        action_sheck_message.setShortcut("ctrl+f5")
+        action_sheck_message.setShortcut("ctrl+shift+m")
         action_sheck_message.triggered.connect(lambda:guiTools.messageHandler.check(self))
         self.moreOptionsMenu.addAction(action_sheck_message)
         action_viewLastMessage = qt1.QAction("إظهار آخر رسالة من المطور", self)
@@ -182,7 +182,7 @@ class main(qt.QMainWindow):
         self.notification_random_thecker()
         self.tray_menu.setFont(font)
         self.a=qt2.QTimer.singleShot(0, self._restore)        
-        qt1.QShortcut("ctrl+f5",self).activated.connect(lambda:guiTools.messageHandler.check(self))        
+        qt1.QShortcut("ctrl+shift+m",self).activated.connect(lambda:guiTools.messageHandler.check(self))        
         guiTools.messageHandler.check(self)
         if settings_handler.get("update", "autoCheck") == "True":
             update.check(self, message=False)    
