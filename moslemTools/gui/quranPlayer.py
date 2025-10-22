@@ -581,7 +581,7 @@ class QuranPlayer(qt.QDialog):
     def safeClose(self):
         if self.media.isPlaying():
             self.media.stop()
-            self.close()
+            qt2.QTimer.singleShot(100,self.close)
         else:
             self.close()
     def closeEvent(self, event):
