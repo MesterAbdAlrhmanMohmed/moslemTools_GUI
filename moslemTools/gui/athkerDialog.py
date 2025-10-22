@@ -137,7 +137,7 @@ class AthkerDialog (qt.QDialog):
     def closeEvent (self,event):
         if self.media.isPlaying():
             self.media.stop()        
-            self.close()        
+            qt2.QTimer.singleShot(100,self.close)
         else:
             self.close()        
     def onNextThker(self):

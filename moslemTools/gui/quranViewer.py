@@ -386,7 +386,7 @@ class QuranViewer(qt.QDialog):
     def close_window(self):
         if self.media.isPlaying():
             self.media.stop()
-            self.close()
+            qt2.QTimer.singleShot(100,self.close)
         else:
             self.close()
     def _is_invalid_search_line(self):
