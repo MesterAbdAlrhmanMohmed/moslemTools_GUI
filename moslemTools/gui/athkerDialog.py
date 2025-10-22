@@ -135,8 +135,11 @@ class AthkerDialog (qt.QDialog):
             self.time_label.setVisible(True)
             self.PPS.setText("إيقاف مؤقت")            
     def closeEvent (self,event):
-        self.media.stop()        
-        self.close()        
+        if self.media.isPlaying():
+            self.media.stop()        
+            self.close()        
+        else:
+            self.close()        
     def onNextThker(self):
         self.media.stop()
         self.media_progress.setVisible(False)

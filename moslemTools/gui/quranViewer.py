@@ -351,6 +351,7 @@ class QuranViewer(qt.QDialog):
             QTimer.singleShot(501, self._set_initial_ayah_position)
         if enableNextPreviouseButtons:
             qt1.QShortcut("ctrl+shift+g",self).activated.connect(self.goToCategory)
+            qt1.QShortcut("escape",self).activated.connect(self.close_window)
         qt1.QShortcut("ctrl+shift+q", self).activated.connect(self.toggle_search_bar)
         qt1.QShortcut("space",self).activated.connect(self.on_play)
         qt1.QShortcut("ctrl+g",self).activated.connect(self.goToAyah)
@@ -359,8 +360,7 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
-        qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
-        qt1.QShortcut("escape",self).activated.connect(self.close)
+        qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)        
         qt1.QShortcut("ctrl+t", self).activated.connect(self.getCurentAyahTafseer)
         qt1.QShortcut("ctrl+i", self).activated.connect(self.getCurentAyahIArab)
         qt1.QShortcut("ctrl+r", self).activated.connect(self.getCurrentAyahTanzel)
@@ -383,6 +383,12 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         qt1.QShortcut("ctrl+shift+s", self).activated.connect(self._show_numbering_options)
+    def close_window(self):
+        if self.media.isPlaying():
+            self.media.stop()
+            self.close()
+        else:
+            self.close()
     def _is_invalid_search_line(self):
         if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):
             if self.text.textCursor().blockNumber() < 2:
