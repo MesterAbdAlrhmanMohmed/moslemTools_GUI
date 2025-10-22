@@ -104,7 +104,7 @@ class AfterAdaan(qt.QDialog):
     def closewindow(self):
         if self.media_player.isPlaying():
             self.media_player.stop()
-            self.accept()
+            qt2.QTimer.singleShot(100,self.accept)
         else:
             self.accept()
     def set_font_size_dialog(self):
