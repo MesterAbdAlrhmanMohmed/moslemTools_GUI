@@ -1,7 +1,7 @@
 from .changeReciter import ChangeReciter
 from .translationViewer import translationViewer
 from .tafaseerViewer import TafaseerViewer
-import time,os,json,requests,subprocess,shutil
+import time,os,json,requests,subprocess,shutil,re
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -116,15 +116,17 @@ class QuranPlayer(qt.QDialog):
         self.media.setAudioOutput(self.audioOutput)
         self.media.mediaStatusChanged.connect(self.on_state)
         self.index=index
-        self.quranText=text.split("\n")
+        self.quranText=text.split("\n")                
+        self.show_diacritics = True
+        self.original_ayah_text = self.quranText[self.index]
         self.text=guiTools.QReadOnlyTextEdit()
         self.text.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
         self.text.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
         option = self.text.document().defaultTextOption()
         option.setAlignment(qt2.Qt.AlignmentFlag.AlignRight)
         option.setTextDirection(qt2.Qt.LayoutDirection.RightToLeft)
-        self.text.document().setDefaultTextOption(option)
-        self.text.setText(self.quranText[self.index])
+        self.text.document().setDefaultTextOption(option)                        
+        self.update_display_text()        
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
         self.text.setFocus()
@@ -216,7 +218,20 @@ class QuranPlayer(qt.QDialog):
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.mergeAyahs)
         self.update_font_size()
-        self.on_play()
+        self.on_play()    
+    def _remove_diacritics(self, text):        
+        return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
+    def update_display_text(self):
+        text_to_display = self.original_ayah_text
+        if not self.show_diacritics:
+            text_to_display = self._remove_diacritics(text_to_display)
+        self.text.setText(text_to_display)
+        self.update_font_size()
+    def on_toggle_diacritics(self):
+        self.show_diacritics = not self.show_diacritics
+        if hasattr(self, 'toggleDiacriticsAction'):
+            self.toggleDiacriticsAction.setChecked(not self.show_diacritics)
+        self.update_display_text()    
     def pause_for_action(self):
         if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.was_playing_before_action = True
@@ -448,7 +463,13 @@ class QuranPlayer(qt.QDialog):
         next_aya=qt1.QAction("الآيا التالية",self)
         next_aya.setShortcut("alt+right")
         aya.addAction(next_aya)
-        next_aya.triggered.connect(self.onNextAyah)
+        next_aya.triggered.connect(self.onNextAyah)                
+        aya.addSeparator()
+        self.toggleDiacriticsAction = qt1.QAction("إخفاء التشكيل", self)
+        self.toggleDiacriticsAction.setCheckable(True)
+        self.toggleDiacriticsAction.setChecked(not self.show_diacritics)
+        self.toggleDiacriticsAction.triggered.connect(self.on_toggle_diacritics)
+        aya.addAction(self.toggleDiacriticsAction)        
         menu.setFocus()
         fontMenu=qt.QMenu("حجم الخط",self)
         incressFontAction=qt1.QAction("تكبير الخط",self)
@@ -468,8 +489,8 @@ class QuranPlayer(qt.QDialog):
         menu.addMenu(fontMenu)
         menu.aboutToHide.connect(self.resume_playback)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
-    def resume_playback(self):
-        if hasattr(self, 'was_playing') and self.was_playing and not self.media.isPlaying():
+    def resume_playback(self):        
+        if hasattr(self, 'was_playing') and self.was_playing and not self.media.isPlaying() and not self.is_merging:
             self.media.play()
             self.PPS.setText("إيقاف مؤقت")
     def increase_font_size(self):
@@ -525,9 +546,9 @@ class QuranPlayer(qt.QDialog):
         number,ok=guiTools.QInputDialog.getInt(self,"الذهاب إلى آية","أكتب رقم الآية",self.index+1,1,len(self.quranText))
         if ok:
             self.currentTime=1
-            self.index=number-1
-            self.text.setText(self.quranText[self.index])
-            self.update_font_size()
+            self.index=number-1            
+            self.original_ayah_text = self.quranText[self.index]
+            self.update_display_text()
             self.media.stop()
             self.on_play()
         else:
@@ -537,9 +558,9 @@ class QuranPlayer(qt.QDialog):
         if self.index+1==len(self.quranText):
             self.index=0
         else:
-            self.index+=1
-        self.text.setText(self.quranText[self.index])
-        self.update_font_size()
+            self.index+=1        
+        self.original_ayah_text = self.quranText[self.index]
+        self.update_display_text()
         self.media.stop()
         self.on_play()
     def onPreviousAyah(self):
@@ -547,13 +568,13 @@ class QuranPlayer(qt.QDialog):
         if self.index==0:
             self.index=len(self.quranText)-1
         else:
-            self.index-=1
-        self.text.setText(self.quranText[self.index])
-        self.update_font_size()
+            self.index-=1        
+        self.original_ayah_text = self.quranText[self.index]
+        self.update_display_text()
         self.media.stop()
         self.on_play()
-    def getcurrentAyahText(self):
-        return self.text.toPlainText()
+    def getcurrentAyahText(self):        
+        return self.original_ayah_text
     def on_state(self,state):
         if state==QMediaPlayer.MediaStatus.EndOfMedia:
             if self.times==self.currentTime:
@@ -562,8 +583,9 @@ class QuranPlayer(qt.QDialog):
                         qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
                     else:
                         self.PPS.setText("تشغيل")
-                        self.index=0
-                        self.text.setText(self.quranText[self.index])
+                        self.index=0                        
+                        self.original_ayah_text = self.quranText[self.index]
+                        self.update_display_text()
                 else:
                     qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
             else:
