@@ -188,6 +188,7 @@ class QuranViewer(qt.QDialog):
         self.completed_merge_downloads = set()
         self.current_download_url = None
         self.verse_numbering_mode = "by_surah"
+        self.remove_tashkeel = False
         self.text_cache = {"by_surah": self.original_quran_text}
         self.media=QMediaPlayer(self)
         self.audioOutput=QAudioOutput(self)
@@ -382,6 +383,8 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
         qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
+        qt1.QShortcut("ctrl+x", self).activated.connect(self.removeTashkeelForAyah)
+        qt1.QShortcut("ctrl+shift+x", self).activated.connect(self.toggleTashkeelView)
         qt1.QShortcut("ctrl+shift+s", self).activated.connect(self._show_numbering_options)
     def close_window(self):
         if self.media.isPlaying():
@@ -397,6 +400,11 @@ class QuranViewer(qt.QDialog):
     def _handle_invalid_search_line_action(self):
         winsound.Beep(440, 200)
         guiTools.speak("لا يمكن تنفيذ هذا الإجراء على هذا السطر")
+    def _remove_tashkeel_from_text(self, text):
+        return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
+    def _toggle_tashkeel(self, checked):
+        self.remove_tashkeel = checked
+        self._update_display_text()
     def _show_numbering_options(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -431,6 +439,11 @@ class QuranViewer(qt.QDialog):
         menu.addAction(cumulative_action)
         menu.addAction(quran_wide_action)
         menu.addAction(none_action)
+        menu.addSeparator()
+        self.remove_tashkeel_action = qt1.QAction("إزالة التشكيل", self, checkable=True)
+        self.remove_tashkeel_action.setChecked(self.remove_tashkeel)
+        self.remove_tashkeel_action.triggered.connect(self._toggle_tashkeel)
+        menu.addAction(self.remove_tashkeel_action)
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(qt1.QCursor.pos())
     def _set_numbering_mode(self, mode):
@@ -493,7 +506,10 @@ class QuranViewer(qt.QDialog):
                 formatted_text = self.original_quran_text
             self.text_cache[self.verse_numbering_mode] = formatted_text
         self.quranText = formatted_text
-        self._set_text_with_delay(formatted_text)
+        display_text = formatted_text
+        if self.remove_tashkeel:
+            display_text = self._remove_tashkeel_from_text(formatted_text)
+        self._set_text_with_delay(display_text)
     def handle_merge_action(self):
         if self.is_merging and self.merge_phase == 'merging':
             self.confirm_and_cancel_merge()
@@ -506,7 +522,7 @@ class QuranViewer(qt.QDialog):
                 self.merge_thread.stop()
     def _handle_search_view_restriction(self):
         winsound.Beep(440, 200)
-        guiTools.speak("هذا الخيار غير متاح في وضع البحث أو التصفح المخصص")
+        guiTools.speak("هذا الخيار غير متاح في وضع البحث")
     def mergeAyahs(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -814,6 +830,13 @@ class QuranViewer(qt.QDialog):
         self.saved_cursor_position = self.text.textCursor().position()
         self.saved_ayah_index = self.getCurrentAyah()
         self.saved_text = self.text.toPlainText()
+        temp_cursor = self.text.textCursor()
+        current_line_text = temp_cursor.block().text()
+        no_tashkeel_text = self._remove_tashkeel_from_text(current_line_text)
+        if current_line_text == no_tashkeel_text:
+            ayah_tashkeel_text = "إظهار التشكيل للآية الحالية"
+        else:
+            ayah_tashkeel_text = "إزالة التشكيل من الآية الحالية"
         self.text.setUpdatesEnabled(False)
         self.text.clear()
         self.context_menu_active = True
@@ -858,6 +881,10 @@ class QuranViewer(qt.QDialog):
         copy_aya = qt1.QAction("نسخ الآية الحالية", self)
         ayahOptions.addAction(copy_aya)
         copy_aya.triggered.connect(lambda: QTimer.singleShot(501, self.copyAya))
+        removeTashkeelAyahAction = qt1.QAction(ayah_tashkeel_text, self)
+        removeTashkeelAyahAction.setShortcut("ctrl+x")
+        ayahOptions.addAction(removeTashkeelAyahAction)
+        removeTashkeelAyahAction.triggered.connect(lambda: QTimer.singleShot(501, lambda: self.removeTashkeelForAyah(cursor_pos=self.saved_cursor_position)))
         if self.enableBookmarks:
             state, self.nameOfBookmark = functions.bookMarksManager.getQuranBookmarkName(self.type, self.category, self.saved_ayah_index, isPlayer=False)
             if state:
@@ -958,6 +985,14 @@ class QuranViewer(qt.QDialog):
             mergeAyahsAction.setShortcut("ctrl+alt+d")
             surahOption.addAction(mergeAyahsAction)
             mergeAyahsAction.triggered.connect(lambda: QTimer.singleShot(501, self.mergeAyahs))
+            if self.remove_tashkeel:
+                category_tashkeel_text = "إظهار التشكيل للفئة"
+            else:
+                category_tashkeel_text = "إزالة التشكيل من الفئة"
+            removeTashkeelCategoryAction = qt1.QAction(category_tashkeel_text, self)
+            removeTashkeelCategoryAction.setShortcut("ctrl+shift+x")
+            surahOption.addAction(removeTashkeelCategoryAction)
+            removeTashkeelCategoryAction.triggered.connect(lambda: QTimer.singleShot(501, self.toggleTashkeelView))
             if self.enableNextPreviouseButtons:
                 goToCategoryAction = qt1.QAction("الذهاب إلى محتوى فئة", self)
                 goToCategoryAction.setShortcut("ctrl+shift+g")
@@ -981,6 +1016,73 @@ class QuranViewer(qt.QDialog):
         menu.addMenu(fontMenu)
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
+    def removeTashkeelForAyah(self, cursor_pos=None):
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
+        self.pause_for_action()
+        target_cursor = qt1.QTextCursor(self.text.document())
+        pos_in_block = 0
+        if cursor_pos is not None:
+            target_cursor.setPosition(cursor_pos)
+        else:
+            target_cursor = self.text.textCursor()
+        temp_cursor = qt1.QTextCursor(target_cursor)
+        temp_cursor.movePosition(qt1.QTextCursor.MoveOperation.StartOfBlock)
+        block_num = temp_cursor.blockNumber()
+        ayah_index = 0
+        if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):
+            ayah_index = block_num - 2
+        else:
+            ayah_index = block_num
+        if ayah_index < 0:
+            self._handle_invalid_search_line_action()
+            self.resume_after_action()
+            return
+        block = target_cursor.block()
+        if not block.isValid():
+            self.resume_after_action()
+            return
+        line_text = block.text()
+        if not line_text.strip():
+            self.resume_after_action()
+            return
+        no_tashkeel_text = self._remove_tashkeel_from_text(line_text)
+        lines = self.quranText.split('\n')
+        if ayah_index < 0 or ayah_index >= len(lines):
+             self.resume_after_action()
+             return
+        original_line_with_formatting = lines[ayah_index]
+        if line_text == no_tashkeel_text:
+            new_text = original_line_with_formatting
+            guiTools.speak("تم إظهار التشكيل للآية")
+        else:
+            new_text = no_tashkeel_text
+            guiTools.speak("تم إزالة التشكيل من الآية")
+        pos_in_block = target_cursor.positionInBlock()
+        target_cursor.movePosition(qt1.QTextCursor.MoveOperation.StartOfBlock)
+        target_cursor.movePosition(qt1.QTextCursor.MoveOperation.EndOfBlock, qt1.QTextCursor.MoveMode.KeepAnchor)
+        font = qt1.QFont()
+        font.setPointSize(self.font_size)
+        font.setBold(self.font_is_bold)
+        char_format = qt1.QTextCharFormat()
+        char_format.setFont(font)
+        target_cursor.insertText(new_text, char_format)
+        target_cursor.movePosition(qt1.QTextCursor.MoveOperation.StartOfBlock)
+        target_cursor.movePosition(qt1.QTextCursor.MoveOperation.Right, n=pos_in_block)
+        self.text.setTextCursor(target_cursor)
+        self.resume_after_action()
+    def toggleTashkeelView(self):
+        if self.is_search_view:
+            winsound.Beep(440, 200)
+            guiTools.speak("هذا الخيار غير متاح في وضع البحث")
+            return
+        new_state = not self.remove_tashkeel
+        self._toggle_tashkeel(new_state)
+        if new_state:
+            guiTools.speak("تم إزالة التشكيل من الفئة")
+        else:
+            guiTools.speak("تم إظهار التشكيل للفئة")
     def onAddNote(self, position_data):
         self.pause_for_action()
         dialog = note_dialog.NoteDialog(self, mode="add")
@@ -1706,14 +1808,14 @@ class QuranViewer(qt.QDialog):
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        total_ayahs = len(self.quranText.split("\n"))
+        allVerses = self.text.toPlainText().split("\n")
+        total_ayahs = len(allVerses)
         FromVers, ok = guiTools.QInputDialog.getInt(self, "نسخ من الآية", "أكتب رقم الآية للبداية:", self.getCurrentAyah() + 1, 1, total_ayahs)
         if ok:
             toVers, ok = guiTools.QInputDialog.getInt(self, "نسخ إلى الآية", "أكتب رقم الآية للنهاية:", total_ayahs, FromVers, total_ayahs)
             if ok:
                 start_index = FromVers - 1
                 end_index = toVers
-                allVerses = self.quranText.split("\n")
                 verses_to_copy = allVerses[start_index:end_index]
                 if verses_to_copy:
                     text_to_copy = "\n".join(verses_to_copy)

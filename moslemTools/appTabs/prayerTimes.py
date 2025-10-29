@@ -7,7 +7,7 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 class PrayerTimesWorker(qt2.QObject):
-    finished = qt2.pyqtSignal(object, object, object, object, object, object, object)
+    finished = qt2.pyqtSignal(object, object, object, object, object, object, object, object, object, object, object)
     error = qt2.pyqtSignal(str)
     def get_dates_info(self):
         gregorian_months = ["يَنَايِر", "فِبْرَايِر", "مَارِس", "أَبْرِيل", "مَايُو", "يُونْيُو", "يُولْيُو", "أَغُسْطُس", "سِبْتَمْبَر", "أُكْتُوبَر", "نُوفَمْبَر", "دِيسَمْبَر"]
@@ -16,20 +16,34 @@ class PrayerTimesWorker(qt2.QObject):
         now = datetime.now()
         day_name = days_of_week[now.weekday()]
         day = now.weekday()
-        gregorian_date = f"{day_name} - {now.day} {gregorian_months[now.month - 1]} {now.year}"
-        hijri_date_obj = Gregorian.today().to_hijri()
-        hijri_date = f"{hijri_date_obj.day} {hijri_months[hijri_date_obj.month - 1]} {hijri_date_obj.year}"
-        today_greg = datetime.now().date()
-        today_hijri = Gregorian.today().to_hijri()
+        current_greg_month_name = gregorian_months[now.month - 1]
+        gregorian_date = f"{day_name} - {now.day} {current_greg_month_name} {now.year}"
+        today_hijri = Gregorian(now.year, now.month, now.day).to_hijri()
+        current_hijri_month_name = hijri_months[today_hijri.month - 1]
+        hijri_date = f"{today_hijri.day} {current_hijri_month_name} {today_hijri.year}"
         ramadan_year = today_hijri.year
         if today_hijri.month >= 9:
             ramadan_year += 1
         ramadan_start_hijri = Hijri(ramadan_year, 9, 1)
         ramadan_start_greg = ramadan_start_hijri.to_gregorian()
-        return gregorian_date, hijri_date, day, ramadan_start_greg
+        next_month_year = now.year
+        next_month = now.month + 1
+        if next_month > 12:
+            next_month = 1
+            next_month_year += 1
+        greg_end_dt = datetime(next_month_year, next_month, 1)
+        next_hijri_month = today_hijri.month + 1
+        next_hijri_year = today_hijri.year
+        if next_hijri_month > 12:
+            next_hijri_month = 1
+            next_hijri_year += 1
+        first_day_next_hijri_obj = Hijri(next_hijri_year, next_hijri_month, 1)
+        first_day_next_hijri_greg = first_day_next_hijri_obj.to_gregorian()
+        hijri_end_dt = datetime(first_day_next_hijri_greg.year, first_day_next_hijri_greg.month, first_day_next_hijri_greg.day)
+        return gregorian_date, hijri_date, day, ramadan_start_greg, greg_end_dt, hijri_end_dt, current_greg_month_name, current_hijri_month_name
     def run(self):
         try:
-            gregorian_date, hijri_date, day, ramadan_start_greg = self.get_dates_info()
+            gregorian_date, hijri_date, day, ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month = self.get_dates_info()
             g = geocoder.ip('me')
             if g.ok:
                 if settings_handler.get("location","autoDetect")=="True":
@@ -49,15 +63,15 @@ class PrayerTimesWorker(qt2.QObject):
                         time_24h = data[prayer_en]
                         time_12h = datetime.strptime(time_24h, "%H:%M").strftime("%I:%M %p")
                         times.append(time_12h)
-                    self.finished.emit(prayers, times, gregorian_date, hijri_date, day, None, ramadan_start_greg)
+                    self.finished.emit(prayers, times, gregorian_date, hijri_date, day, None, ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month)
                 else:
-                    self.finished.emit([], [], gregorian_date, hijri_date, day, "حدث خطأ في جلب مواقيت الصلاة.", ramadan_start_greg)
+                    self.finished.emit([], [], gregorian_date, hijri_date, day, "حدث خطأ في جلب مواقيت الصلاة.", ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month)
             else:
-                self.finished.emit([], [], gregorian_date, hijri_date, day, "لم يتم تحديد الموقع. تأكد من اتصال الإنترنت.", ramadan_start_greg)
+                self.finished.emit([], [], gregorian_date, hijri_date, day, "لم يتم تحديد الموقع. تأكد من اتصال الإنترنت.", ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month)
         except Exception as e:
             try:
-                gregorian_date, hijri_date, day, ramadan_start_greg = self.get_dates_info()
-                self.finished.emit([], [], gregorian_date, hijri_date, day, f"حدث خطأ غير متوقع: {str(e)}", ramadan_start_greg)
+                gregorian_date, hijri_date, day, ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month = self.get_dates_info()
+                self.finished.emit([], [], gregorian_date, hijri_date, day, f"حدث خطأ غير متوقع: {str(e)}", ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month)
             except Exception as e_inner:
                 self.error.emit(f"حدث خطأ غير متوقع: {str(e_inner)}")
 class prayer_times(qt.QWidget):        
@@ -75,7 +89,13 @@ class prayer_times(qt.QWidget):
         self.timer.timeout.connect(self.onTimer)
         self.next_prayer_item = None
         self.ramadan_countdown_item = None
+        self.greg_month_countdown_item = None
+        self.hijri_month_countdown_item = None
+        self.current_greg_month = ""
+        self.current_hijri_month = ""
         self.ramadan_start_greg = None
+        self.greg_end_dt = None
+        self.hijri_end_dt = None
         self.countdown_timer = qt2.QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdowns)
         self.information = qt.QListWidget()
@@ -148,6 +168,25 @@ class prayer_times(qt.QWidget):
             return f"{number} {units['plural']}"
         else:
             return f"{number} {units['singular_acc']}"        
+    def format_timedelta_arabic(self, td):
+        total_seconds = int(td.total_seconds())
+        if total_seconds < 0: total_seconds = 0
+        days = total_seconds // (24 * 3600)
+        total_seconds = total_seconds % (24 * 3600)
+        hours = total_seconds // 3600
+        total_seconds = total_seconds % 3600
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+        day_units = {'singular': 'يوم', 'dual': 'يومين', 'plural': 'أيام', 'singular_acc': 'يوماً'}
+        hour_units = {'singular': 'ساعة', 'dual': 'ساعتين', 'plural': 'ساعات', 'singular_acc': 'ساعة'}
+        minute_units = {'singular': 'دقيقة', 'dual': 'دقيقتين', 'plural': 'دقائق', 'singular_acc': 'دقيقة'}
+        second_units = {'singular': 'ثانية', 'dual': 'ثانيتين', 'plural': 'ثواني', 'singular_acc': 'ثانية'}
+        d_str = self.format_arabic_time_unit(days, day_units)
+        h_str = self.format_arabic_time_unit(hours, hour_units)
+        m_str = self.format_arabic_time_unit(minutes, minute_units)
+        s_str = self.format_arabic_time_unit(seconds, second_units)
+        parts = [p for p in [d_str, h_str, m_str, s_str] if p]
+        return " و ".join(parts) if parts else "لحظات"
     def update_countdowns(self):
         now = datetime.now()
         if self.times and self.prayers:
@@ -197,31 +236,32 @@ class prayer_times(qt.QWidget):
             else:
                 time_left = ramadan_start_dt - now
                 days_total = time_left.days
-                seconds_total = time_left.seconds
+                if days_total < 0: days_total = 0
                 months = days_total // 30
                 days = days_total % 30
-                hours = seconds_total // 3600
-                minutes = (seconds_total % 3600) // 60
-                seconds = seconds_total % 60
                 month_units = {'singular': 'شهر', 'dual': 'شهرين', 'plural': 'أشهر', 'singular_acc': 'شهراً'}
                 day_units = {'singular': 'يوم', 'dual': 'يومين', 'plural': 'أيام', 'singular_acc': 'يوماً'}
-                hour_units = {'singular': 'ساعة', 'dual': 'ساعتين', 'plural': 'ساعات', 'singular_acc': 'ساعة'}
-                minute_units = {'singular': 'دقيقة', 'dual': 'دقيقتين', 'plural': 'دقائق', 'singular_acc': 'دقيقة'}
-                second_units = {'singular': 'ثانية', 'dual': 'ثانيتين', 'plural': 'ثواني', 'singular_acc': 'ثانية'}
                 mo_str = self.format_arabic_time_unit(months, month_units)
                 d_str = self.format_arabic_time_unit(days, day_units)
-                h_str = self.format_arabic_time_unit(hours, hour_units)
-                m_str = self.format_arabic_time_unit(minutes, minute_units)
-                s_str = self.format_arabic_time_unit(seconds, second_units)
-                parts = [p for p in [mo_str, d_str, h_str, m_str, s_str] if p]
+                parts = [p for p in [mo_str, d_str] if p]
                 if parts:
                     time_str = " و ".join(parts)
-                    ramadan_message = f"باقي على شهر رمضان: {time_str}"
+                    ramadan_message = f"باقي على شهر رمضان حوالي: {time_str}"
                 else:
                     ramadan_message = "رمضان على الأبواب!"
             if self.ramadan_countdown_item:
                 self.ramadan_countdown_item.setText(ramadan_message)
-                self.ramadan_countdown_item.setHidden(not ramadan_message)                
+                self.ramadan_countdown_item.setHidden(not ramadan_message)
+        if hasattr(self, 'greg_end_dt') and self.greg_end_dt and hasattr(self, 'current_greg_month') and self.current_greg_month:
+            greg_time_left = self.greg_end_dt - now
+            greg_time_str = self.format_timedelta_arabic(greg_time_left)
+            if self.greg_month_countdown_item:
+                self.greg_month_countdown_item.setText(f"متبقي على نهاية شهر {self.current_greg_month}: {greg_time_str}")
+        if hasattr(self, 'hijri_end_dt') and self.hijri_end_dt and hasattr(self, 'current_hijri_month') and self.current_hijri_month:
+            hijri_time_left = self.hijri_end_dt - now
+            hijri_time_str = self.format_timedelta_arabic(hijri_time_left)
+            if self.hijri_month_countdown_item:
+                self.hijri_month_countdown_item.setText(f"متبقي على نهاية شهر {self.current_hijri_month}: {hijri_time_str}")
     def onTimer(self):
         currentTimeOBJ = datetime.now()
         currentTime=currentTimeOBJ.strftime("%I:%M %p")
@@ -288,7 +328,7 @@ class prayer_times(qt.QWidget):
         self.worker.error.connect(self.on_prayer_times_error)
         self.worker_thread.started.connect(self.worker.run)
         self.worker_thread.start()        
-    def on_prayer_times_ready(self, prayers, times, gregorian_date, hijri_date, day, error_message, ramadan_start_greg):
+    def on_prayer_times_ready(self, prayers, times, gregorian_date, hijri_date, day, error_message, ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month):
         if hasattr(self, 'worker_thread'):
             self.worker_thread.quit()
             self.worker_thread.wait()
@@ -297,6 +337,10 @@ class prayer_times(qt.QWidget):
         self.times = times
         self.day = day
         self.ramadan_start_greg = ramadan_start_greg
+        self.greg_end_dt = greg_end_dt
+        self.hijri_end_dt = hijri_end_dt
+        self.current_greg_month = greg_month
+        self.current_hijri_month = hijri_month
         if prayers and times:
             for i in range(len(prayers)):
                 self.information.addItem(f"{prayers[i]}: {times[i]}")
@@ -304,6 +348,10 @@ class prayer_times(qt.QWidget):
             self.information.addItem(self.next_prayer_item)
         self.information.addItem("التاريخ الميلادي: " + gregorian_date)
         self.information.addItem("التاريخ الهجري: " + hijri_date)
+        self.greg_month_countdown_item = qt.QListWidgetItem("...")
+        self.information.addItem(self.greg_month_countdown_item)
+        self.hijri_month_countdown_item = qt.QListWidgetItem("...")
+        self.information.addItem(self.hijri_month_countdown_item)
         if self.ramadan_start_greg:
             self.ramadan_countdown_item = qt.QListWidgetItem("...")
             self.information.addItem(self.ramadan_countdown_item)
