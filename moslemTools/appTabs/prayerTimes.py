@@ -82,7 +82,7 @@ class prayer_times(qt.QWidget):
         self.day=0
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_selected_item)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_all_items)
-        qt1.QShortcut("f5", selfT).activated.connect(self.display_prayer_times)
+        qt1.QShortcut("f5", self).activated.connect(self.display_prayer_times)
         self.prayers = []
         self.times = []
         self.timer = qt2.QTimer(self)
