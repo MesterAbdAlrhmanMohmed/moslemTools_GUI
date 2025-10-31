@@ -6,6 +6,7 @@ from datetime import datetime,timedelta
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 class PrayerTimesWorker(qt2.QObject):
     finished = qt2.pyqtSignal(object, object, object, object, object, object, object, object, object, object, object)
     error = qt2.pyqtSignal(str)
@@ -75,7 +76,7 @@ class PrayerTimesWorker(qt2.QObject):
             except Exception as e_inner:
                 self.error.emit(f"حدث خطأ غير متوقع: {str(e_inner)}")
 class prayer_times(qt.QWidget):        
-    TEST_MODE = False    
+    TEST_MODE = False
     def __init__(self,p):
         super().__init__()
         self.p=p
@@ -154,7 +155,9 @@ class prayer_times(qt.QWidget):
             self.information.addItem(f"تم تشغيل أذان {test_prayer_name}")
             gui.AdaanDialog(self, test_index, test_prayer_name, sound_path).exec()
             print("--> انتهى اختبار الأذان.")
-            self.information.addItem("انتهى الاختبار بنجاح.")
+            print(f"--> جدولة اختبار الإقامة (based on key: {prayer_key})...")
+            self.schedule_iqama_timer(prayer_key)
+            self.information.addItem("انتهى الاختبار بنجاح (وجاري انتظار الإقامة إذا تم ضبطها).")
         else:
             print("--> خطأ: لم يتم العثور على مفتاح الصلاة للاختبار.")
             self.information.addItem("خطأ في تشغيل الاختبار.")
@@ -286,6 +289,7 @@ class prayer_times(qt.QWidget):
                         sound_file = settings_handler.get("adhanSounds", prayer_key)
                         sound_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", sound_file)
                         gui.AdaanDialog(self, index, prayer_name, sound_path).exec()
+                        self.schedule_iqama_timer(prayer_key)
                         self.timer.stop()                        
                         self.timer.singleShot(60000, qt2.Qt.TimerType.PreciseTimer, lambda: self.timer.start(1000))                                                
                         return
@@ -310,7 +314,41 @@ class prayer_times(qt.QWidget):
         if "الظهر" in prayer_name_ar:
             return "dhuhr"
         prayer_map = {"الفجر": "fajr", "العصر": "asr", "المغرب": "maghrib", "العشاء": "isha"}
-        return prayer_map.get(prayer_name_ar, None)    
+        return prayer_map.get(prayer_name_ar, None)
+    def play_iqama_sound(self):
+        if self.p.media_player.isPlaying():
+            self.p.media_player.stop()
+        sound_file = settings_handler.get("adhanSounds", "iqama")
+        sound_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", sound_file)
+        if not os.path.exists(sound_path):
+            print(f"Iqama sound file not found: {sound_path}")
+            return
+        try:
+            self.iqama_media_player = QMediaPlayer() 
+            self.iqama_audio_output = QAudioOutput()
+            self.iqama_audio_output.setVolume(int(settings_handler.get("prayerTimes", "iqamaVolume")) / 100)
+            self.iqama_media_player.setAudioOutput(self.iqama_audio_output)
+            self.iqama_media_player.setSource(qt2.QUrl.fromLocalFile(sound_path))
+            self.iqama_media_player.mediaStatusChanged.connect(self.on_iqama_finished)
+            self.iqama_media_player.play()
+        except Exception as e:
+            print(f"Error playing iqama sound: {e}")
+    def on_iqama_finished(self, status):
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            if hasattr(self, 'iqama_media_player'):
+                self.iqama_media_player.deleteLater()
+                self.iqama_audio_output.deleteLater()
+    def schedule_iqama_timer(self, prayer_key):
+        if prayer_key is None:
+            return
+        iqama_setting = settings_handler.get("prayerTimes", "remindAfterAdaan")
+        if iqama_setting == "3":
+            return
+        minutes_map = {"0": 5, "1": 10, "2": 15}
+        minutes_to_wait = minutes_map.get(iqama_setting)
+        if minutes_to_wait:
+            milliseconds_to_wait = minutes_to_wait * 60 * 1000
+            qt2.QTimer.singleShot(milliseconds_to_wait, self.play_iqama_sound)
     def copy_all_items(self):
         all_text = "\n".join([self.information.item(i).text() for i in range(self.information.count())])
         pyperclip.copy(all_text)
