@@ -17,6 +17,7 @@ if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"addan")):
     shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","asr.mp3"))
     shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","maghrib.mp3"))
     shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","isha.mp3"))
+    shutil.copy("data/sounds/adaan/ecama_alsalah.m4a",os.path.join(os.getenv('appdata'),appName,"addan","ecama_alsalah.m4a"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"quran surah reciters")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"quran surah reciters"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"athkar")):
@@ -54,7 +55,9 @@ settingsConfig={
         "adaanReminder":"True",
         "playPrayerAfterAdhaan":"True",
         "volume":"100",        
-        "remindBeforeAdaan":"0" 
+        "remindBeforeAdaan":"0",
+        "remindAfterAdaan":"3",
+        "iqamaVolume":"100"
     },
     "location":{
         "autoDetect":"True",
@@ -75,7 +78,8 @@ settingsConfig={
         "dhuhr": "dhuhr.mp3",
         "asr": "asr.mp3",
         "maghrib": "maghrib.mp3",
-        "isha": "isha.mp3"
+        "isha": "isha.mp3",
+        "iqama": "ecama_alsalah.m4a"
     },
     "font":{
         "bold":"False",
