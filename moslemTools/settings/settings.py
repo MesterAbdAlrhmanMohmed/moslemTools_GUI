@@ -62,7 +62,6 @@ class settings(qt.QDialog):
         screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
         frame_geometry.moveCenter(screen_center)
         self.move(frame_geometry.topLeft())
-
     def fok(self):
         restart_required = 0
         original_font_bold = settings_handler.get("font", "bold")
@@ -75,6 +74,8 @@ class settings(qt.QDialog):
         settings_handler.set("location","LT1",str(self.locationSettings.LT1.value()))
         settings_handler.set("location","LT2",str(self.locationSettings.LT2.value()))
         settings_handler.set("prayerTimes","remindBeforeAdaan",str(self.prayerTimesSettings.before.currentIndex()))
+        settings_handler.set("prayerTimes", "remindAfterAdaan", str(self.prayerTimesSettings.iqamaTime.currentIndex()))
+        settings_handler.set("prayerTimes", "iqamaVolume", str(self.prayerTimesSettings.iqamaVolumeSlider.value()))
         try:
             settings_handler.set("tafaseer", "tafaseer", functions.tafseer.tafaseers[self.tafaseerSettings.selectTafaseer.currentText()])
         except:
@@ -111,7 +112,6 @@ class settings(qt.QDialog):
                 self.close()
         else:
             self.close()
-
     def default(self):
         mb = guiTools.QQuestionMessageBox.view(self,"تنبيه","هل تريد إعادة تعيين إعداداتك؟ إذا قمت بالنقر على إعادة تعيين، سيعيد البرنامج التشغيل لإكمال إعادة التعيين.","إعادة التعيين وإعادة التشغيل","إلغاء")
         if mb==0:
