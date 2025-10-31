@@ -82,7 +82,7 @@ class prayer_times(qt.QWidget):
         self.day=0
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_selected_item)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_all_items)
-        qt1.QShortcut("f5", self).activated.connect(self.display_prayer_times)
+        qt1.QShortcut("f5", selfT).activated.connect(self.display_prayer_times)
         self.prayers = []
         self.times = []
         self.timer = qt2.QTimer(self)
@@ -96,6 +96,7 @@ class prayer_times(qt.QWidget):
         self.ramadan_start_greg = None
         self.greg_end_dt = None
         self.hijri_end_dt = None
+        self.current_day_check = datetime.now().day
         self.countdown_timer = qt2.QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdowns)
         self.information = qt.QListWidget()
@@ -189,6 +190,10 @@ class prayer_times(qt.QWidget):
         return " و ".join(parts) if parts else "لحظات"
     def update_countdowns(self):
         now = datetime.now()
+        if now.day != self.current_day_check:
+            self.current_day_check = now.day
+            self.display_prayer_times()
+            return
         if self.times and self.prayers:
             next_prayer_name = None
             next_prayer_time_obj = None
