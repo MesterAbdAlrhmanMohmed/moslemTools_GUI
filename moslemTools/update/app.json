@@ -1,7 +1,7 @@
 {
   "name": "moslem tools",
-  "version": 3.9,
-  "what is new": "إضافة خيار إقامة الصلاة في إعدادات الأذان\nإصلاح خطأ مهم في تبويبة مواقيت الصلاة والتاريخ\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.9/moslem_tools_version_3.9.exe",
-  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_3.9/moslem_tools_version_3.9.exe",
+  "version": 4.0,
+  "what is new": "تصحيح خطأ إقامة الصلاة\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_4.0/moslem_tools_version_4.0.exe",
+  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_4.0/moslem_tools_version_4.0.exe",
   "is_beta": false
 }
