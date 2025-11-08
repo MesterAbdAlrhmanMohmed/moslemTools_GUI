@@ -95,7 +95,7 @@ class IslamicTopicsTab(qt.QWidget):
         files_order = [
             "55 وصية من النبي.json", "الإيمان بالله تعالى.json", "الجنة ما هي وما درجاتها.json",
             "الرقية الشرعية.json", "رياض الصالحين.json", "علمنى شيء فى الإسلام.json",
-            "فضائل الاعمال عند الله تعالى.json", "فرص ذهبية.json"
+            "فضائل الأعمال عند الله تعالى.json", "فرص ذهبية.json"
         ]
         file_mapping = {}
         for filename in files_order:
