@@ -330,6 +330,7 @@ class QuranPlayer(qt.QWidget):
         self.merge_list.append(surah_info)
         winsound.Beep(440, 100)
         self.update_merge_ui()
+        self.update_download_batch_ui()
     def remove_from_merge_list(self):
         if not self.merge_list:
             return        
@@ -345,6 +346,7 @@ class QuranPlayer(qt.QWidget):
                 del self.merge_list[number - 1]
                 winsound.Beep(600, 150)
                 self.update_merge_ui()
+                self.update_download_batch_ui()
             else:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
     def update_merge_ui(self):
@@ -352,19 +354,18 @@ class QuranPlayer(qt.QWidget):
         if count > 0:
             self.merge_feedback_label.setText(f"تم تحديد {count} سورة للدمج.")
             self.merge_feedback_label.setVisible(True)
-            self.merge_all_from_start_button.setEnabled(False)
-            self.merge_all_from_end_button.setEnabled(False)
         else:
             self.merge_feedback_label.setVisible(False)
-            self.merge_all_from_start_button.setEnabled(True)
-            self.merge_all_from_end_button.setEnabled(True)
         self.merge_action_button.setVisible(count >= 2)
+        is_merging = count > 0
+        self.batch_download_action_button.setEnabled(not is_merging)
+        self.dl_all_app.setEnabled(not is_merging)
+        self.merge_all_from_start_button.setEnabled(not is_merging)
+        self.merge_all_from_end_button.setEnabled(not is_merging)
     def cancel_merge(self):
         self.merge_list.clear()
-        self.merge_feedback_label.setVisible(False)
-        self.merge_action_button.setVisible(False)
-        self.merge_all_from_start_button.setEnabled(True)
-        self.merge_all_from_end_button.setEnabled(True)
+        self.update_merge_ui()
+        self.update_download_batch_ui()
     def prepare_merge_all_from_start(self):
         if not self.recitersListWidget.currentItem():
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء اختيار قارئ أولاً.")
@@ -571,6 +572,7 @@ class QuranPlayer(qt.QWidget):
         self.download_batch_list.append(surah_info)
         winsound.Beep(440, 100)
         self.update_download_batch_ui()
+        self.update_merge_ui()
     def remove_from_download_batch(self):
         if not self.download_batch_list:
             return        
@@ -586,6 +588,7 @@ class QuranPlayer(qt.QWidget):
                 del self.download_batch_list[number - 1]
                 winsound.Beep(600, 150)
                 self.update_download_batch_ui()
+                self.update_merge_ui()
             else:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
     def update_download_batch_ui(self):
@@ -593,10 +596,8 @@ class QuranPlayer(qt.QWidget):
         if count > 0:
             self.batch_download_feedback_label.setText(f"تم تحديد {count} سورة للتحميل.")
             self.batch_download_feedback_label.setVisible(True)
-            self.dl_all_app.setEnabled(False)
         else:
             self.batch_download_feedback_label.setVisible(False)
-            self.dl_all_app.setEnabled(True)
         self.batch_download_action_button.setVisible(count > 0)
         if self.is_downloading_batch:
             self.batch_download_action_button.setText("إلغاء تحميل الدفعة")
@@ -604,17 +605,22 @@ class QuranPlayer(qt.QWidget):
         else:
             self.batch_download_action_button.setText("بدء تحميل السور المحددة")
             self.batch_download_action_button.setStyleSheet("")
+        is_batching = count > 0
+        self.merge_action_button.setEnabled(not is_batching)
+        self.merge_all_from_start_button.setEnabled(not is_batching)
+        self.merge_all_from_end_button.setEnabled(not is_batching)
+        self.dl_all_app.setEnabled(not is_batching)
     def cancel_download_batch(self):
         self.download_batch_list.clear()
         self.batch_download_feedback_label.setVisible(False)
         self.batch_download_action_button.setVisible(False)
-        self.dl_all_app.setEnabled(True)
         if self.is_downloading_batch:
             self.is_downloading_batch = False
             self.set_ui_for_batch_download(True) 
-            self.update_download_batch_ui()
             self.progressBar.setVisible(False)
             self.cancel_download_button.setVisible(False)
+        self.update_download_batch_ui()
+        self.update_merge_ui()
     def prepare_batch_download(self):
         if not self.download_batch_list:
             guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لم يتم تحديد أي سور للتحميل.")
@@ -666,7 +672,8 @@ class QuranPlayer(qt.QWidget):
             self.merge_all_from_start_button, self.merge_all_from_end_button,
             self.recitersLabel, self.surahsLabel,
             self.duration, self.info_menu,
-            self.merge_feedback_label
+            self.merge_feedback_label,
+            self.batch_download_action_button
         ]
         for widget in widgets_to_toggle:
             widget.setEnabled(enabled)
@@ -683,7 +690,8 @@ class QuranPlayer(qt.QWidget):
             self.merge_all_from_start_button, self.merge_all_from_end_button,
             self.recitersLabel,
             self.duration, self.info_menu,
-            self.merge_action_button
+            self.merge_action_button,
+            self.batch_download_action_button
         ]
         for widget in widgets_to_toggle:
             widget.setEnabled(enabled)
@@ -1165,38 +1173,40 @@ class QuranPlayer(qt.QWidget):
         boldFont=menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
-        merge_menu = menu.addMenu("دمج السور")
-        if not self.merge_list:
-            start_merge_action = qt1.QAction("بدء الدمج من هذه السورة", self)
-            start_merge_action.triggered.connect(self.add_to_merge_list)
-            merge_menu.addAction(start_merge_action)
-        else:
-            add_next_action = qt1.QAction(f"إضافة السورة رقم {len(self.merge_list) + 1}", self)
-            add_next_action.triggered.connect(self.add_to_merge_list)
-            merge_menu.addAction(add_next_action)
-            undo_action = qt1.QAction("التراجع عن تحديد سورة", self)
-            undo_action.triggered.connect(self.remove_from_merge_list)
-            merge_menu.addAction(undo_action)
-            cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
-            cancel_merge_action.triggered.connect(self.cancel_merge)
-            merge_menu.addAction(cancel_merge_action)
-        menu.addSeparator()
-        batch_download_menu = menu.addMenu("تحميل مخصص (تحديد سور)")
         if not self.download_batch_list:
-            start_batch_dl_action = qt1.QAction("بدء التحميل المخصص من هذه السورة", self)
-            start_batch_dl_action.triggered.connect(self.add_to_download_batch)
-            batch_download_menu.addAction(start_batch_dl_action)
-        else:
-            add_next_dl_action = qt1.QAction(f"إضافة السورة رقم {len(self.download_batch_list) + 1} للتحميل", self)
-            add_next_dl_action.triggered.connect(self.add_to_download_batch)
-            batch_download_menu.addAction(add_next_dl_action)
-            remove_dl_action = qt1.QAction("إزالة سورة من قائمة التحميل", self)
-            remove_dl_action.triggered.connect(self.remove_from_download_batch)
-            batch_download_menu.addAction(remove_dl_action)
-            cancel_batch_dl_action = qt1.QAction("إلغاء التحميل المخصص", self)
-            cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
-            batch_download_menu.addAction(cancel_batch_dl_action)
-        menu.addSeparator()
+            merge_menu = menu.addMenu("دمج السور")
+            if not self.merge_list:
+                start_merge_action = qt1.QAction("بدء الدمج من هذه السورة", self)
+                start_merge_action.triggered.connect(self.add_to_merge_list)
+                merge_menu.addAction(start_merge_action)
+            else:
+                add_next_action = qt1.QAction(f"إضافة السورة رقم {len(self.merge_list) + 1}", self)
+                add_next_action.triggered.connect(self.add_to_merge_list)
+                merge_menu.addAction(add_next_action)
+                undo_action = qt1.QAction("التراجع عن تحديد سورة", self)
+                undo_action.triggered.connect(self.remove_from_merge_list)
+                merge_menu.addAction(undo_action)
+                cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
+                cancel_merge_action.triggered.connect(self.cancel_merge)
+                merge_menu.addAction(cancel_merge_action)
+            menu.addSeparator()
+        if not self.merge_list:
+            batch_download_menu = menu.addMenu("تحميل مخصص (تحديد سور)")
+            if not self.download_batch_list:
+                start_batch_dl_action = qt1.QAction("بدء التحميل المخصص من هذه السورة", self)
+                start_batch_dl_action.triggered.connect(self.add_to_download_batch)
+                batch_download_menu.addAction(start_batch_dl_action)
+            else:
+                add_next_dl_action = qt1.QAction(f"إضافة السورة رقم {len(self.download_batch_list) + 1} للتحميل", self)
+                add_next_dl_action.triggered.connect(self.add_to_download_batch)
+                batch_download_menu.addAction(add_next_dl_action)
+                remove_dl_action = qt1.QAction("إزالة سورة من قائمة التحميل", self)
+                remove_dl_action.triggered.connect(self.remove_from_download_batch)
+                batch_download_menu.addAction(remove_dl_action)
+                cancel_batch_dl_action = qt1.QAction("إلغاء التحميل المخصص", self)
+                cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
+                batch_download_menu.addAction(cancel_batch_dl_action)
+            menu.addSeparator()
         repeateFromPositionTopositionMenue = menu.addMenu("التكرار من موضع إلى موضع")
         setStartingPositionAction = qt1.QAction("تحديد موضع البداية", self)
         setStartingPositionAction.setShortcut("shift+1")
