@@ -120,11 +120,15 @@ class QuranPlayer(qt.QWidget):
         self.endingPosition = None
         self.repeatFromPositionToPosition = False
         self.merge_list = []
+        self.download_batch_list = []
         self.files_to_delete_after_merge = []
         self.is_merging = False
+        self.is_downloading_batch = False
         self.cancellation_requested = False
         self.completed_merge_downloads = set()
         self.current_download_url = None
+        self.successfully_downloaded_in_batch = []
+        self.full_batch_cancellation_requested = False
         self.reciters_data = self.load_reciters()
         self.recitersLabel = qt.QLabel("إختيار قارئ")
         self.recitersLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -232,9 +236,16 @@ class QuranPlayer(qt.QWidget):
         self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.merge_feedback_label.setVisible(False)    
+        self.batch_download_feedback_label = qt.QLabel()
+        self.batch_download_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.batch_download_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.batch_download_feedback_label.setVisible(False)    
         self.merge_action_button = guiTools.QPushButton("بدء دمج السور المحددة")
         self.merge_action_button.clicked.connect(self.handle_merge_action)
         self.merge_action_button.setVisible(False)        
+        self.batch_download_action_button = guiTools.QPushButton("بدء تحميل السور المحددة")
+        self.batch_download_action_button.clicked.connect(self.handle_batch_download_action)
+        self.batch_download_action_button.setVisible(False)
         self.merge_all_from_start_button = guiTools.QPushButton("دمج كل السور من البداية الى النهاية")
         self.merge_all_from_start_button.clicked.connect(self.prepare_merge_all_from_start)
         self.merge_all_from_start_button.setVisible(True)        
@@ -252,9 +263,11 @@ class QuranPlayer(qt.QWidget):
         surahsLayout.addWidget(self.surahSearchEdit)
         surahsLayout.addWidget(self.surahListWidget)
         surahsLayout.addWidget(self.info_menu)
-        surahsLayout.addWidget(self.merge_feedback_label)        
+        surahsLayout.addWidget(self.merge_feedback_label)
+        surahsLayout.addWidget(self.batch_download_feedback_label)
         merge_buttons_layout = qt.QVBoxLayout()
         merge_buttons_layout.addWidget(self.merge_action_button)
+        merge_buttons_layout.addWidget(self.batch_download_action_button)
         merge_buttons_layout.addWidget(self.merge_all_from_start_button)
         merge_buttons_layout.addWidget(self.merge_all_from_end_button)
         surahsLayout.addLayout(merge_buttons_layout)        
@@ -389,9 +402,7 @@ class QuranPlayer(qt.QWidget):
             local_path = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter, f"{surah}.mp3")
             if not os.path.exists(local_path):
                 urls_to_download.append(item["url"])
-        
         num_files_to_download = len(urls_to_download)
-        
         if num_files_to_download > 0:
             confirm_message = (
                 f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} سورة غير موجودة.\n"
@@ -406,7 +417,6 @@ class QuranPlayer(qt.QWidget):
                 "ستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة باستثناء زر إلغاء الدمج.\n\n"
                 "هل تريد المتابعة؟"
             )
-
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
         if reply != 0:
             if is_all:
@@ -417,9 +427,7 @@ class QuranPlayer(qt.QWidget):
             if is_all:
                 self.cancel_merge()
             return
-        
         self.set_ui_for_merge_download(False)
-        
         self.current_merge_output_path = output_filename
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()        
@@ -460,7 +468,6 @@ class QuranPlayer(qt.QWidget):
         self.process_next_in_merge_queue()
     def finalize_and_execute_merge(self):
         self.set_ui_for_merge_download(True)
-        
         files_for_ffmpeg = []
         self.files_to_delete_after_merge.clear()
         output_dir = os.path.dirname(self.current_merge_output_path)
@@ -533,6 +540,121 @@ class QuranPlayer(qt.QWidget):
         self.cancel_merge()
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()    
+    def handle_batch_download_action(self):
+        if self.is_downloading_batch:
+            self.full_batch_cancellation_requested = True
+            self.cancel_current_download()
+        else:
+            self.prepare_batch_download()
+    def add_to_download_batch(self):
+        selected_reciter_item = self.recitersListWidget.currentItem()
+        selected_surah_item = self.surahListWidget.currentItem()
+        if not selected_reciter_item or not selected_surah_item:
+            return        
+        reciter = selected_reciter_item.text()
+        surah = selected_surah_item.text()        
+        if self.download_batch_list and self.download_batch_list[0]["reciter"] != reciter:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يمكنك إضافة سور من قراء مختلفين في دفعة واحدة. سيتم إلغاء الدفعة السابقة.")
+            self.cancel_download_batch()
+        local_path = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter, f"{surah}.mp3")
+        if os.path.exists(local_path):
+            guiTools.qMessageBox.MessageBox.view(self, "ملاحظة", f"سورة {surah} تم تحميلها بالفعل.")
+            return
+        surah_info = {
+            "reciter": reciter,
+            "surah": surah,
+            "url": self.reciters_data[reciter][surah]
+        }
+        if surah_info in self.download_batch_list:
+            guiTools.qMessageBox.MessageBox.view(self, "ملاحظة", "تم إضافة هذه السورة إلى القائمة بالفعل.")
+            return
+        self.download_batch_list.append(surah_info)
+        winsound.Beep(440, 100)
+        self.update_download_batch_ui()
+    def remove_from_download_batch(self):
+        if not self.download_batch_list:
+            return        
+        num_items = len(self.download_batch_list)
+        number, ok = guiTools.QInputDialog.getSingleInt(
+            self, 
+            "إزالة سورة", 
+            f"أدخل رقم السورة لإزالتها من قائمة التحميل (من 1 إلى {num_items})", 
+            1
+        )
+        if ok:
+            if 1 <= number <= num_items:
+                del self.download_batch_list[number - 1]
+                winsound.Beep(600, 150)
+                self.update_download_batch_ui()
+            else:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
+    def update_download_batch_ui(self):
+        count = len(self.download_batch_list)
+        if count > 0:
+            self.batch_download_feedback_label.setText(f"تم تحديد {count} سورة للتحميل.")
+            self.batch_download_feedback_label.setVisible(True)
+            self.dl_all_app.setEnabled(False)
+        else:
+            self.batch_download_feedback_label.setVisible(False)
+            self.dl_all_app.setEnabled(True)
+        self.batch_download_action_button.setVisible(count > 0)
+        if self.is_downloading_batch:
+            self.batch_download_action_button.setText("إلغاء تحميل الدفعة")
+            self.batch_download_action_button.setStyleSheet("background-color: #8B0000; color: white;")
+        else:
+            self.batch_download_action_button.setText("بدء تحميل السور المحددة")
+            self.batch_download_action_button.setStyleSheet("")
+    def cancel_download_batch(self):
+        self.download_batch_list.clear()
+        self.batch_download_feedback_label.setVisible(False)
+        self.batch_download_action_button.setVisible(False)
+        self.dl_all_app.setEnabled(True)
+        if self.is_downloading_batch:
+            self.is_downloading_batch = False
+            self.set_ui_for_batch_download(True) 
+            self.update_download_batch_ui()
+            self.progressBar.setVisible(False)
+            self.cancel_download_button.setVisible(False)
+    def prepare_batch_download(self):
+        if not self.download_batch_list:
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لم يتم تحديد أي سور للتحميل.")
+            return
+        count = len(self.download_batch_list)
+        response = guiTools.QQuestionMessageBox.view(
+            self,
+            "تأكيد التحميل",
+            f"هل تريد بالتأكيد تحميل الـ {count} سور المحددة؟","نعم","لا")
+        if response != 0:
+            return
+        self.successfully_downloaded_in_batch.clear()
+        reciter = self.download_batch_list[0]["reciter"]
+        self.files_to_download = []
+        for item in self.download_batch_list:
+            self.files_to_download.append( (item["surah"], item["url"]) )
+        self.current_file_index = 0
+        app_folder = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter)
+        os.makedirs(app_folder, exist_ok=True)
+        self.save_folder = app_folder
+        self.is_downloading_batch = True
+        self.set_ui_for_batch_download(False)
+        self.update_download_batch_ui()
+        self.cancel_download_button.setVisible(True)
+        self.current_download_reciter = reciter 
+        self.download_next_audio_to_app()
+    def set_ui_for_batch_download(self, enabled):
+        widgets_to_toggle = [
+            self.recitersListWidget, self.surahListWidget,
+            self.reciterSearchEdit, self.surahSearchEdit,
+            self.dl_all, self.dl_all_app, self.delete,
+            self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
+            self.Slider, self.openBookmarks, self.User_guide,
+            self.merge_action_button, self.merge_all_from_start_button, 
+            self.merge_all_from_end_button
+        ]
+        for widget in widgets_to_toggle:
+            widget.setEnabled(enabled)
+        if not enabled:
+            self.batch_download_action_button.setEnabled(True)
     def set_ui_enabled(self, enabled):
         widgets_to_toggle = [
             self.recitersListWidget, self.surahListWidget,
@@ -725,7 +847,7 @@ class QuranPlayer(qt.QWidget):
                 os.makedirs(audio_folder, exist_ok=True)
                 filepath = os.path.join(audio_folder, f"{selected_item.text()}.mp3")
                 if self.is_audio_downloaded(filepath):
-                    guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "السورة محملة بالفعل.")
+                    guiTools.qMessageBox.MessageBox.view(self, "تنبيه", f"سورة {selected_item.text()} تم تحميلها بالفعل.")
                     return
                 self.progressBar.setVisible(True)
                 self.cancel_download_button.setVisible(True)
@@ -761,6 +883,7 @@ class QuranPlayer(qt.QWidget):
                 "تأكيد التحميل",
                 "هل تريد تحميل جميع السور المتاحة لهذا القارئ؟","نعم","لا")
             if response == 0:
+                self.successfully_downloaded_in_batch.clear()
                 app_folder = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter)
                 os.makedirs(app_folder, exist_ok=True)
                 self.save_folder = app_folder
@@ -774,6 +897,10 @@ class QuranPlayer(qt.QWidget):
             self.cancel_download_button.setVisible(False)
     def is_audio_downloaded(self, filepath):
         return os.path.exists(filepath)
+    def on_single_batch_download_finished(self):
+        if hasattr(self, 'current_download_filename'):
+            self.successfully_downloaded_in_batch.append(self.current_download_filename)
+        self.download_next_audio_to_app()
     def download_next_audio_to_app(self):
         if self.current_file_index < len(self.files_to_download):
             file_name, url = self.files_to_download[self.current_file_index]
@@ -787,13 +914,23 @@ class QuranPlayer(qt.QWidget):
             self.current_download_filename = file_name
             self.download_thread = DownloadThread(url, filepath)
             self.download_thread.progress.connect(self.progressBar.setValue)
-            self.download_thread.finished.connect(self.download_next_audio_to_app)
+            self.download_thread.finished.connect(self.on_single_batch_download_finished)
             self.download_thread.cancelled.connect(self.on_download_cancelled_batch_internal)
             self.download_thread.start()
         else:
             self.progressBar.setVisible(False)
             self.cancel_download_button.setVisible(False)
-            guiTools.qMessageBox.MessageBox.view(self, "تم", "تم تحميل جميع السور بنجاح.")
+            if self.successfully_downloaded_in_batch:
+                downloaded_names = "\n".join([f"- {name}" for name in self.successfully_downloaded_in_batch])
+                success_message = f"تم تحميل جميع السور بنجاح:\n{downloaded_names}"
+            else:
+                success_message = "اكتملت عملية التحميل (لم يتم تحميل ملفات جديدة)."
+            guiTools.qMessageBox.MessageBox.view(self, "تم", success_message)
+            self.successfully_downloaded_in_batch.clear()
+            if self.is_downloading_batch:
+                self.is_downloading_batch = False
+                self.set_ui_for_batch_download(True)
+                self.cancel_download_batch()
     def download_audio_complete(self):
         self.progressBar.setValue(100)
         self.progressBar.setVisible(False)
@@ -850,8 +987,23 @@ class QuranPlayer(qt.QWidget):
         if hasattr(self, 'current_download_filename'):
             del self.current_download_filename
     def cancel_current_download(self):
-        if hasattr(self, 'download_thread') and self.download_thread.isRunning():
-            self.download_thread.cancel()            
+        is_batch_download = self.is_downloading_batch or (hasattr(self, 'files_to_download') and self.current_file_index < len(self.files_to_download) and hasattr(self, 'current_download_reciter'))
+        if is_batch_download and not self.full_batch_cancellation_requested:
+            current_surah_name = self.current_download_filename
+            remaining_files = len(self.files_to_download) - self.current_file_index
+            reply = guiTools.QQuestionMessageBox.view(self, "إلغاء سورة",
+                f"هل تريد إلغاء تحميل السورة الحالية ({current_surah_name}) ومتابعة تحميل باقي السور ({remaining_files} سور)؟\n\n"
+                "اضغط 'نعم' للمتابعة، 'لا' لإلغاء الدفعة بالكامل.", "نعم", "لا")
+            if reply == 0:
+                if hasattr(self, 'download_thread') and self.download_thread.isRunning():
+                    self.download_thread.cancel()
+            else:
+                self.full_batch_cancellation_requested = True
+                if hasattr(self, 'download_thread') and self.download_thread.isRunning():
+                    self.download_thread.cancel()
+        else:
+            if hasattr(self, 'download_thread') and self.download_thread.isRunning():
+                self.download_thread.cancel()
     def on_download_cancelled(self):        
         self.progressBar.setVisible(False)
         self.cancel_download_button.setVisible(False)
@@ -860,15 +1012,37 @@ class QuranPlayer(qt.QWidget):
             del self.current_download_filename
             del self.current_download_reciter
         guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل السورة.")
-    def on_download_cancelled_batch_internal(self):        
-        self.progressBar.setVisible(False)
-        self.cancel_download_button.setVisible(False)        
-        if hasattr(self, 'current_download_filename') and hasattr(self, 'current_download_reciter'):
+    def on_download_cancelled_batch_internal(self):
+        if self.full_batch_cancellation_requested:
+            self.full_batch_cancellation_requested = False
+            self.current_file_index = len(self.files_to_download)
+            self.progressBar.setVisible(False)
+            self.cancel_download_button.setVisible(False)
+            files_to_delete = list(self.successfully_downloaded_in_batch)
+            if hasattr(self, 'current_download_filename') and self.current_download_filename not in files_to_delete:
+                files_to_delete.append(self.current_download_filename)
+            if files_to_delete and hasattr(self, 'current_download_reciter'):
+                reciter = self.current_download_reciter
+                for file_name in files_to_delete:
+                    self.mark_for_deletion(file_name, reciter, app_internal=True)
+                guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", f"تم إلغاء تحميل الدفعة وحذف {len(files_to_delete)} ملفات تم تحميلها.")
+            else:
+                guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل الدفعة.")
+            self.successfully_downloaded_in_batch.clear()
+            if hasattr(self, 'current_download_filename'): del self.current_download_filename
+            if hasattr(self, 'current_download_reciter'): del self.current_download_reciter
+            if self.is_downloading_batch:
+                self.is_downloading_batch = False
+                self.set_ui_for_batch_download(True)
+                self.cancel_download_batch()
+        else:
+            self.progressBar.setVisible(False)
+            self.cancel_download_button.setVisible(False)
+            current_surah_name = self.current_download_filename
             self.mark_for_deletion(self.current_download_filename, self.current_download_reciter, app_internal=True)
             del self.current_download_filename
-            del self.current_download_reciter        
-        self.current_file_index = len(self.files_to_download)
-        guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل جميع السور، لكن سيتم حذف آخر سورة كان يتم تحميلها")
+            guiTools.qMessageBox.MessageBox.view(self, "تخطي السورة", f"تم إلغاء تحميل {current_surah_name} وسيتم متابعة الباقي.")
+            self.download_next_audio_to_app()
     def on_download_cancelled_batch_external(self):        
         self.progressBar.setVisible(False)
         self.cancel_download_button.setVisible(False)
@@ -899,6 +1073,7 @@ class QuranPlayer(qt.QWidget):
         self.mp.stop()
         self.surahListWidget.clear()
         self.cancel_merge()
+        self.cancel_download_batch()
         selected_reciter_item = self.recitersListWidget.currentItem()
         if selected_reciter_item:
             self.merge_all_from_start_button.setEnabled(True)
@@ -910,7 +1085,6 @@ class QuranPlayer(qt.QWidget):
         else:
             self.merge_all_from_start_button.setEnabled(False)
             self.merge_all_from_end_button.setEnabled(False)
-
     def search(self, search_text, data):
         return [item for item in data if search_text in item.lower()]
     def reciter_onsearch(self):
@@ -991,7 +1165,6 @@ class QuranPlayer(qt.QWidget):
         boldFont=menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
-
         merge_menu = menu.addMenu("دمج السور")
         if not self.merge_list:
             start_merge_action = qt1.QAction("بدء الدمج من هذه السورة", self)
@@ -1001,17 +1174,29 @@ class QuranPlayer(qt.QWidget):
             add_next_action = qt1.QAction(f"إضافة السورة رقم {len(self.merge_list) + 1}", self)
             add_next_action.triggered.connect(self.add_to_merge_list)
             merge_menu.addAction(add_next_action)
-            
             undo_action = qt1.QAction("التراجع عن تحديد سورة", self)
             undo_action.triggered.connect(self.remove_from_merge_list)
             merge_menu.addAction(undo_action)
-
             cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
             cancel_merge_action.triggered.connect(self.cancel_merge)
             merge_menu.addAction(cancel_merge_action)
-
         menu.addSeparator()
-
+        batch_download_menu = menu.addMenu("تحميل مخصص (تحديد سور)")
+        if not self.download_batch_list:
+            start_batch_dl_action = qt1.QAction("بدء التحميل المخصص من هذه السورة", self)
+            start_batch_dl_action.triggered.connect(self.add_to_download_batch)
+            batch_download_menu.addAction(start_batch_dl_action)
+        else:
+            add_next_dl_action = qt1.QAction(f"إضافة السورة رقم {len(self.download_batch_list) + 1} للتحميل", self)
+            add_next_dl_action.triggered.connect(self.add_to_download_batch)
+            batch_download_menu.addAction(add_next_dl_action)
+            remove_dl_action = qt1.QAction("إزالة سورة من قائمة التحميل", self)
+            remove_dl_action.triggered.connect(self.remove_from_download_batch)
+            batch_download_menu.addAction(remove_dl_action)
+            cancel_batch_dl_action = qt1.QAction("إلغاء التحميل المخصص", self)
+            cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
+            batch_download_menu.addAction(cancel_batch_dl_action)
+        menu.addSeparator()
         repeateFromPositionTopositionMenue = menu.addMenu("التكرار من موضع إلى موضع")
         setStartingPositionAction = qt1.QAction("تحديد موضع البداية", self)
         setStartingPositionAction.setShortcut("shift+1")
