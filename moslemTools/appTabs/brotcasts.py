@@ -237,7 +237,7 @@ class other_brotcasts(qt.QWidget):
         super().__init__()
         self.audio_output = audio_output_instance
         self.parent_widget = parent_widget
-        style_sheet = "QListWidget::item { font-weight: bold; }"
+        style_sheet = "QListWidget::item { font-weight: bold; font-size: 12pt; }"
         self.list_of_other = qt.QListWidget()
         self.list_of_other.setSpacing(3)
         self.list_of_other.setStyleSheet(style_sheet)
@@ -347,7 +347,7 @@ class brotcasts_of_suplications(qt.QWidget):
         super().__init__()
         self.audio_output = audio_output_instance
         self.parent_widget = parent_widget
-        style_sheet = "QListWidget::item { font-weight: bold; }"
+        style_sheet = "QListWidget::item { font-weight: bold; font-size: 12pt; }"
         self.list_of_adhkar = qt.QListWidget()
         self.list_of_adhkar.setSpacing(3)
         self.list_of_adhkar.setStyleSheet(style_sheet)
@@ -403,7 +403,7 @@ class brotcasts_of_tafseer(qt.QWidget):
         super().__init__()
         self.audio_output = audio_output_instance
         self.parent_widget = parent_widget
-        style_sheet = "QListWidget::item { font-weight: bold; }"
+        style_sheet = "QListWidget::item { font-weight: bold; font-size: 12pt; }"
         self.list_of_tafseer = qt.QListWidget()
         self.list_of_tafseer.setSpacing(3)
         self.list_of_tafseer.setStyleSheet(style_sheet)
@@ -463,7 +463,7 @@ class brotcasts_of_reciters(qt.QWidget):
         super().__init__()
         self.audio_output = audio_output_instance
         self.parent_widget = parent_widget
-        style_sheet = "QListWidget::item { font-weight: bold; }"
+        style_sheet = "QListWidget::item { font-weight: bold; font-size: 12pt; }"
         self.list_of_reciters = qt.QListWidget()
         self.list_of_reciters.setSpacing(3)
         self.list_of_reciters.setStyleSheet(style_sheet)
@@ -575,7 +575,7 @@ class quran_brotcast(qt.QWidget):
         super().__init__()
         self.audio_output = audio_output_instance
         self.parent_widget = parent_widget
-        style_sheet = "QListWidget::item { font-weight: bold; }"
+        style_sheet = "QListWidget::item { font-weight: bold; font-size: 12pt; }"
         self.list_of_quran_brotcasts = qt.QListWidget()
         self.list_of_quran_brotcasts.setSpacing(3)
         self.list_of_quran_brotcasts.setStyleSheet(style_sheet)
