@@ -117,7 +117,7 @@ class main(qt.QMainWindow):
         action_notes.setShortcut("ctrl+n")
         action_notes.triggered.connect(lambda: notes.NotesDialog(self).exec())
         self.moreOptionsMenu.addAction(action_notes)
-        action_whats_new = qt1.QAction("ما الجديد في هذا الإصدار", self)
+        action_whats_new = qt1.QAction("ما الجديد في آخر إصدار من البرنامج", self)
         action_whats_new.setShortcut("ctrl+w")
         action_whats_new.triggered.connect(self.whats_new_funktion)
         self.moreOptionsMenu.addAction(action_whats_new)
