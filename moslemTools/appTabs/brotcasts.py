@@ -224,6 +224,10 @@ class SchedulingDialog(qt.QDialog):
         layout.addLayout(wrapper)
         qt1.QShortcut("Escape", self).activated.connect(self.reject)
     def validate_and_accept(self):
+        total_start_time = (self.start_h_spin.value() * 3600) + (self.start_m_spin.value() * 60) + self.start_s_spin.value()
+        if total_start_time == 0:
+             guiTools.qMessageBox.MessageBox.error(self, "خطأ في الإدخال", "يجب تحديد وقت لبدء التسجيل (ثانية واحدة على الأقل).")
+             return
         total_duration = (self.dur_h_spin.value() * 3600) + (self.dur_m_spin.value() * 60) + self.dur_s_spin.value()
         if total_duration == 0:
              guiTools.qMessageBox.MessageBox.error(self, "خطأ في الإدخال", "يجب تحديد مدة للتسجيل (ثانية واحدة على الأقل).")
