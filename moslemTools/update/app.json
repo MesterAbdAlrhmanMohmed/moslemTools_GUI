@@ -1,7 +1,7 @@
 {
   "name": "moslem tools",
-  "version": 4.2,
-  "what is new": "الجديد للإصدار 4.2\nتم إضافة ميزة تسجيل الصوت في تبويبة إذاعات الراديو الإسلامية\nتم تصحيح بعض الأخطاء في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_4.2/moslem_tools_version_4.2.exe",
-  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_4.2/moslem_tools_version_4.2.exe",
+  "version": 4.3,
+  "what is new": "الجديد للإصدار 4.3\nتم إضافة اختصارات لأزرار التسجيل في تبويبة الراديو\nctrl+r لبدء التسجيل\nctrl+p للإيقاف المؤقت والاستئناف\nctrl+s للإيقاف\nctrl+g لجدولة التسجيل\nتم إصلاح بعض الأخطاء في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_4.3/moslem_tools_version_4.3.exe",
+  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_4.3/moslem_tools_version_4.3.exe",
   "is_beta": false
 }
