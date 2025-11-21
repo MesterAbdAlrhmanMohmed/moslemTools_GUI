@@ -20,7 +20,7 @@ TMP_DIR = Path(tempfile.gettempdir()) / "radio_recordings_temp"
 TMP_DIR.mkdir(exist_ok=True)
 class WasapiRecorder(qt2.QObject):
     error = qt2.pyqtSignal(str)
-    recording_stopped = qt2.pyqtSignal(str)
+    recording_stopped = qt2.pyqtSignal(str, str)
     def __init__(self, ffmpeg_path="ffmpeg"):
         super().__init__()
         self.ffmpeg_path = ffmpeg_path
@@ -35,6 +35,7 @@ class WasapiRecorder(qt2.QObject):
         self.channels = None
         self.device_id = None
         self._is_ready = False
+        self._stop_requested = False
         if sd is None or sf is None or np is None:
             self.error.emit("مكتبات التسجيل غير مثبتة.")
             return
@@ -93,6 +94,15 @@ class WasapiRecorder(qt2.QObject):
             if self._sf_handle:
                 self._sf_handle.close()
                 self._sf_handle = None
+        if self._stop_requested:
+            temp_file = self._temp_wav_path
+            self._temp_wav_path = None
+            self._stop_requested = False
+            if not temp_file or not temp_file.exists():
+                self.error.emit("لم يتم العثور على ملف التسجيل.")
+                self.recording_stopped.emit("FAILED", "")
+                return
+            self.recording_stopped.emit("STOPPED", str(temp_file))
     def start(self):
         if not self._is_ready:
             return
@@ -100,6 +110,7 @@ class WasapiRecorder(qt2.QObject):
             if self._running: return
             self._running = True
             self._paused = False
+            self._stop_requested = False
         self._thread = threading.Thread(target=self._run_stream, daemon=True)
         self._thread.start()
     def pause(self):
@@ -108,22 +119,25 @@ class WasapiRecorder(qt2.QObject):
     def resume(self):
         with self._lock:
             self._paused = False
-    def stop(self, output_filename=None):
+    def stop(self, cleanup_only=False):
         with self._lock:
             if not self._running: return
             self._running = False
+            self._stop_requested = not cleanup_only
         if self._thread:
             self._thread.join(timeout=2.0)
             self._thread = None
-        temp_file = self._temp_wav_path
-        self._temp_wav_path = None
-        if not temp_file or not temp_file.exists():
-            self.error.emit("لم يتم العثور على ملف التسجيل.")
-            return
-        if output_filename is None:
-            try: temp_file.unlink(missing_ok=True)
-            except: pass
-            self.recording_stopped.emit("CLEANUP_ONLY")
+        if cleanup_only:
+            try:
+                if self._temp_wav_path and self._temp_wav_path.exists():
+                    self._temp_wav_path.unlink(missing_ok=True)
+            except:
+                pass
+            self.recording_stopped.emit("CLEANUP_ONLY", "")
+    def convert_and_cleanup(self, temp_file_path, output_filename):
+        temp_file = Path(temp_file_path)
+        if not temp_file.exists():
+            self.error.emit("لم يتم العثور على ملف التسجيل المؤقت للتحويل.")
             return
         try:
             final_path = Path(output_filename)
@@ -132,7 +146,7 @@ class WasapiRecorder(qt2.QObject):
             if proc.returncode != 0:
                 self.error.emit(f"فشل التحويل: {proc.stderr}")
                 return
-            self.recording_stopped.emit(str(final_path))
+            self.recording_stopped.emit("CONVERTED", str(final_path))
         except Exception as e:
             self.error.emit(str(e))
         finally:
@@ -679,6 +693,7 @@ class protcasts(qt.QWidget):
         self.remaining_duration_seconds = 0
         self.scheduled_file_path = ""
         self.is_scheduled_recording = False
+        self.temp_wav_to_convert = None
         self.brotcasts_tab = qt.QTabWidget()
         self.brotcasts_tab.addTab(quran_brotcast(global_audio_output, self), "إذاعات القرآن الكريم")
         self.brotcasts_tab.addTab(brotcasts_of_reciters(global_audio_output, self), "إذاعات القراء")
@@ -752,7 +767,7 @@ class protcasts(qt.QWidget):
     def startRecording(self):
         if not self.check_is_playing(): return
         if not self.recorder.is_ready():
-             self.recorder.error.emit(self.recorder.error.string) if hasattr(self.recorder.error, 'string') else self.recorder.error.emit("خطأ في تهيئة المسجل.")
+             self.recorder.error.emit("خطأ في تهيئة المسجل.")
              return
         if self.recorder._running:
              guiTools.qMessageBox.MessageBox.error(self, "خطأ", "التسجيل يعمل بالفعل.")
@@ -793,7 +808,7 @@ class protcasts(qt.QWidget):
                 guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الجدولة.")
     def updateCountdown(self):
         if not global_player or global_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
-            self.stopRecording()
+            self.stopRecording(skip_save_dialog=True)
             return
         if self.remaining_seconds_to_start > 0:
             self.remaining_seconds_to_start -= 1
@@ -807,7 +822,7 @@ class protcasts(qt.QWidget):
         else:
             self.countdown_timer.stop()
             if not self.recorder.is_ready():
-                self.stopRecording()
+                self.stopRecording(skip_save_dialog=True)
                 self.recorder.error.emit("فشل بدء التسجيل المجدول: المسجل غير جاهز.")
                 return
             self.recorder.start()
@@ -832,7 +847,7 @@ class protcasts(qt.QWidget):
             self.aud.setText(msg)
             self.current_status_text = msg
         else:
-            self.stopRecording()
+            self.stopRecording(skip_save_dialog=False)
     def format_time_arabic(self, h, m, s):
         parts = []
         if h == 1: parts.append("ساعة واحدة")
@@ -867,7 +882,8 @@ class protcasts(qt.QWidget):
         try: self.pauseBtn.clicked.disconnect()
         except TypeError: pass
         self.pauseBtn.clicked.connect(self.pauseRecording)
-    def stopRecording(self):
+    def stopRecording(self, skip_save_dialog=False):
+        if not self.recorder._running and not self.countdown_timer.isActive(): return
         self.startBtn.setEnabled(False)
         self.pauseBtn.setEnabled(False)
         self.stopBtn.setEnabled(False)
@@ -882,31 +898,51 @@ class protcasts(qt.QWidget):
             self.duration_timer.stop()
             try: self.duration_timer.timeout.disconnect()
             except: pass
-        if self.is_scheduled_recording and self.scheduled_file_path:
-            self.aud.setText("جاري حفظ التسجيل المجدول...")
-            self.current_status_text = "جاري حفظ التسجيل المجدول..."
-            self.convert_thread_worker = threading.Thread(target=self.recorder.stop, args=(self.scheduled_file_path,), daemon=True)
-            self.convert_thread_worker.start()
+        if not self.recorder._running: return
+        if self.is_scheduled_recording and self.scheduled_file_path and skip_save_dialog:
+            self.aud.setText("تم إيقاف التسجيل المجدول بنجاح.")
+            self.current_status_text = "تم إيقاف التسجيل المجدول بنجاح."
             self.is_scheduled_recording = False
             self.scheduled_file_path = ""
-        else:
-            filePath, _ = qt.QFileDialog.getSaveFileName(self, "حفظ التسجيل", f"{self.get_current_station_name()}.mp3", "Audio Files (*.mp3);;All Files (*)")
-            if filePath:
-                self.aud.setText("جاري تحويل الملف إلى MP3، يرجى الانتظار...")
-                self.aud.setFocus()
-                self.current_status_text = "جاري تحويل الملف إلى MP3، يرجى الانتظار..."
-                self.convert_thread_worker = threading.Thread(target=self.recorder.stop, args=(filePath,), daemon=True)
-                self.convert_thread_worker.start()
-            else:
-                guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الحفظ. سيتم حذف الملف المؤقت.")
-                self.convert_thread_worker = threading.Thread(target=self.recorder.stop, args=(None,), daemon=True)
-                self.convert_thread_worker.start()
-    @qt2.pyqtSlot(str)
-    def on_recording_stopped(self, final_path):
+            self.recorder.stop(cleanup_only=True)
+            return
+        elif self.is_scheduled_recording and self.scheduled_file_path:
+            self.aud.setText("تم إيقاف التسجيل. جاري تحويل الملف المجدول...")
+            self.current_status_text = "تم إيقاف التسجيل. جاري تحويل الملف المجدول..."
+            self.is_scheduled_recording = False
+            self.recorder.stop(cleanup_only=False)
+            return
+        self.aud.setText("جاري إيقاف التسجيل...")
+        self.current_status_text = "جاري إيقاف التسجيل..."
+        self.recorder.stop(cleanup_only=False)
+    @qt2.pyqtSlot(str, str)
+    def on_recording_stopped(self, status, path):
         self.restore_aud_text()
-        if final_path != "CLEANUP_ONLY":
+        if status == "STOPPED":
+            self.temp_wav_to_convert = path
+            self.convert_and_save_prompt()
+        elif status == "CONVERTED":
             guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", "تم حفظ الملف بنجاح.")
-        self.resetRecorderState()
+            self.resetRecorderState()
+        elif status == "CLEANUP_ONLY":
+            self.resetRecorderState()
+        elif status == "FAILED":
+            self.resetRecorderState()
+    def convert_and_save_prompt(self):
+        if self.temp_wav_to_convert is None: return
+        filePath, _ = qt.QFileDialog.getSaveFileName(self, "حفظ التسجيل", f"{self.get_current_station_name()}.mp3", "Audio Files (*.mp3);;All Files (*)")
+        if filePath:
+            self.aud.setText("جاري تحويل الملف إلى MP3، يرجى الانتظار...")
+            self.aud.setFocus()
+            self.current_status_text = "جاري تحويل الملف إلى MP3، يرجى الانتظار..."
+            self.convert_thread_worker = threading.Thread(target=self.recorder.convert_and_cleanup, args=(self.temp_wav_to_convert, filePath), daemon=True)
+            self.convert_thread_worker.start()
+        else:
+            guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الحفظ. سيتم حذف الملف المؤقت.")
+            try: Path(self.temp_wav_to_convert).unlink(missing_ok=True)
+            except: pass
+            self.resetRecorderState()
+        self.temp_wav_to_convert = None
     @qt2.pyqtSlot(str)
     def recordingError(self, error_msg):
         self.restore_aud_text()
@@ -914,7 +950,10 @@ class protcasts(qt.QWidget):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ في التسجيل", "يبدو أن جهاز تسجيل صوت الكمبيوتر stereo mix لا يعمل، لتشغيله اتبع الخطوات التالية\n\n1 فتح قائمة Run عن طريق الاختصار Windows + R ثم اكتب هذا الأمر:\nrundll32.exe shell32.dll,Control_RunDLL mmsys.cpl,,1\n2 اذهب إلى تبويبة التسجيل Recording واختر منها Stereo Mix ثم اضغط عليه بزر الفأرة الأيمن أو زر التطبيقات واختر Enable ثم اضغط OK.\nلمن واجه أي مشكلة يمكنه التواصل معي على حسابي في تليجرام من قسم (عن المطور) في قائمة المزيد من الخيارات.")
         self.resetRecorderState()
     def resetRecorderState(self):
-        if self.recorder._running: self.recorder.stop(None)
+        if self.temp_wav_to_convert:
+            try: Path(self.temp_wav_to_convert).unlink(missing_ok=True)
+            except: pass
+            self.temp_wav_to_convert = None
         self.convert_thread_worker = None
         self.countdown_timer.stop()
         self.duration_timer.stop()
