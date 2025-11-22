@@ -344,7 +344,7 @@ class Quran(qt.QWidget):
         menu.addAction(iarabAction)
         iarabAction.triggered.connect(self.onIarabActionTriggered)        
         menu.addSeparator()
-        mergeAction = qt1.QAction("دمج", self)
+        mergeAction = qt1.QAction("دمج الآيات", self)
         mergeAction.setShortcut("ctrl+alt+d")
         menu.addAction(mergeAction)
         mergeAction.triggered.connect(self.onMergeActionTriggered)
