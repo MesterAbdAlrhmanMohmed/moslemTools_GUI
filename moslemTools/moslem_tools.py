@@ -9,6 +9,7 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 from appTabs import *
+import threading
 username = os.getlogin()
 guiTools.speak(f"مرحبا يا {username} في moslem tools، جاري تشغيل البرنامج، الرجاء الانتظار.")
 try:
@@ -17,6 +18,18 @@ try:
         shutil.rmtree(updatePath)
 except:
     pass
+class MessageCheckWorker(qt2.QObject):
+    finished = qt2.pyqtSignal()
+    def __init__(self, parent_window):
+        super().__init__()
+        self.parent_window = parent_window
+    def check_for_message(self):
+        try:
+            guiTools.messageHandler.check(self.parent_window)
+        except Exception as e:
+            print(f"Error checking for message in thread: {e}")
+        finally:
+            self.finished.emit()
 class main(qt.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -122,7 +135,7 @@ class main(qt.QMainWindow):
         action_whats_new.triggered.connect(self.whats_new_funktion)
         self.moreOptionsMenu.addAction(action_whats_new)
         action_sheck_message=qt1.QAction("التحقق من وجود رسالة من المطور", self)        
-        action_sheck_message.triggered.connect(lambda:guiTools.messageHandler.check(self))
+        action_sheck_message.triggered.connect(self.start_message_check_thread)
         self.moreOptionsMenu.addAction(action_sheck_message)
         action_viewLastMessage = qt1.QAction("إظهار آخر رسالة من المطور", self)
         action_viewLastMessage.setShortcut("ctrl+m")
@@ -185,9 +198,16 @@ class main(qt.QMainWindow):
         self.notification_random_thecker()
         self.tray_menu.setFont(font)
         self.a=qt2.QTimer.singleShot(0, self._restore)                
-        guiTools.messageHandler.check(self)
+        self.start_message_check_thread()
         if settings_handler.get("update", "autoCheck") == "True":
-            update.check(self, message=False)    
+            update.check(self, message=False)
+    def start_message_check_thread(self):
+        self.message_worker = MessageCheckWorker(self)
+        self.message_worker.finished.connect(self.message_worker.deleteLater)
+        self.message_worker.finished.connect(lambda: setattr(self, 'message_worker', None))
+        thread = threading.Thread(target=self.message_worker.check_for_message)
+        thread.daemon = True
+        thread.start()
     def showEvent(self, event):
         super().showEvent(event)        
         MF_BYCOMMAND = 0x00000000
