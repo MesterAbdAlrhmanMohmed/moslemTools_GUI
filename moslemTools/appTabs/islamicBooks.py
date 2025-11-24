@@ -18,6 +18,23 @@ class Worker(qt2.QObject):
             print(f"Error in refresh thread: {e}")
         finally:
             self.finished.emit()
+class DeleteWorker(qt2.QObject):
+    finished = qt2.pyqtSignal()
+    deletion_complete = qt2.pyqtSignal(bool)
+    def __init__(self, itemText):
+        super().__init__()
+        self.itemText = itemText
+    def delete_book(self):
+        try:
+            name=functions.islamicBooks.books[self.itemText]
+            os.remove(os.path.join(os.getenv('appdata'),app.appName,"islamicBooks",name))
+            functions.islamicBooks.setbook()
+            self.deletion_complete.emit(True)
+        except Exception as e:
+            print(f"Error during deletion: {e}")
+            self.deletion_complete.emit(False)
+        finally:
+            self.finished.emit()
 class IslamicBooks(qt.QWidget):
     def __init__(self):
         super().__init__()                
@@ -26,6 +43,7 @@ class IslamicBooks(qt.QWidget):
         self.setFont(font)
         layout=qt.QVBoxLayout(self)                
         self.worker = None        
+        self.delete_worker = None
         qt1.QShortcut("f5",self).activated.connect(self.start_threaded_refresh)        
         serch=qt.QLabel("البحث عن كتاب")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -76,6 +94,22 @@ class IslamicBooks(qt.QWidget):
         self.list_of_abook.clear()
         self.list_of_abook.addItems(book_list)
         self.list_of_abook.setFocus()    
+    def start_threaded_delete(self, itemText):
+        if self.delete_worker is None:
+            self.delete_worker = DeleteWorker(itemText)
+            self.delete_worker.deletion_complete.connect(self.handle_deletion_complete)
+            self.delete_worker.finished.connect(self.delete_worker.deleteLater)
+            self.delete_worker.finished.connect(lambda: setattr(self, 'delete_worker', None))
+            thread = threading.Thread(target=self.delete_worker.delete_book)
+            thread.daemon = True
+            thread.start()
+    def handle_deletion_complete(self, success):
+        if success:
+            self.list_of_abook.clear()
+            self.list_of_abook.addItems(functions.islamicBooks.books.keys())
+            guiTools.speak("تم الحذف")
+        else:
+            guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر حذف الملف ")
     def onDelete(self):
         selectedItem=self.list_of_abook.currentItem()
         if selectedItem:
@@ -85,12 +119,7 @@ class IslamicBooks(qt.QWidget):
             else:
                 question=guiTools.QQuestionMessageBox.view(self,"تنبيه","هل تريد حذف هذا الكتاب","نعم","لا")
                 if question==0:
-                    name=functions.islamicBooks.books[itemText]
-                    os.remove(os.path.join(os.getenv('appdata'),app.appName,"islamicBooks",name))
-                    functions.islamicBooks.setbook()
-                    self.list_of_abook.clear()
-                    self.list_of_abook.addItems(functions.islamicBooks.books.keys())
-                    guiTools.speak("تم الحذف")    
+                    self.start_threaded_delete(itemText)
     def open(self):
         try:
             with open(os.path.join(os.getenv('appdata'),app.appName,"islamicBooks",functions.islamicBooks.books[self.list_of_abook.currentItem().text()]),"r",encoding="utf-8") as f:
