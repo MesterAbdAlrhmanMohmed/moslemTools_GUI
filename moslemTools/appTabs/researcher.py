@@ -67,6 +67,83 @@ class SearchModeDialog(qt.QDialog):
             "ignore_hamza": self.ignore_hamza,
             "ignore_symbols": self.ignore_symbols
         }
+class SearchThread(qt2.QThread):
+    searchFinished = qt2.pyqtSignal(list, dict, int)
+    def __init__(self, parent, search_type, search_text, surah_index, ahadeeth_text, ignore_tashkeel, ignore_hamza, ignore_symbols):
+        super().__init__(parent)
+        self.parent_widget = parent
+        self.search_type = search_type
+        self.search_text = search_text
+        self.surah_index = surah_index
+        self.ahadeeth_text = ahadeeth_text
+        self.ignore_tashkeel = ignore_tashkeel
+        self.ignore_hamza = ignore_hamza
+        self.ignore_symbols = ignore_symbols
+    def _search(self, pattern, text_list):
+        def remove_tashkeel(text):
+            return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
+        def normalize_hamza(text):
+            return re.sub(r'[أإآ]', 'ا', text)
+        def normalize(text):
+            normalized_text = text
+            if self.ignore_tashkeel:
+                normalized_text = remove_tashkeel(normalized_text)
+            if self.ignore_hamza:
+                normalized_text = normalize_hamza(normalized_text)
+            return normalized_text
+        normalized_pattern = normalize(pattern)
+        return [text for text in text_list if normalized_pattern in normalize(text)]
+    def run(self):
+        display_text = []
+        search_metadata = {}
+        total_results_count = 0
+        if self.search_type == 0:
+            listOfWords = functions.quranJsonControl.getQuran()
+            if self.surah_index != 0:
+                surah_key_part = list(self.parent_widget.surahsList.keys())[self.surah_index - 1].split(' ')[0]
+                listOfWords = [line for line in listOfWords if line.startswith(surah_key_part)]
+            result = self._search(self.search_text, listOfWords)
+            if result:
+                header = "عدد نتائج البحث " + str(len(result))
+                display_text.extend([header, ""])
+                current_line_number = 3
+                for line in result:
+                    display_text.append(line)
+                    metadata = self.parent_widget.get_metadata_from_result(line)
+                    if metadata:
+                        search_metadata[current_line_number] = metadata
+                    current_line_number += 1
+                total_results_count = len(result)
+        else:
+            search_books = {}
+            if self.ahadeeth_text == "البحث في جميع كتب الأحاديث المتاحة":
+                search_books = functions.ahadeeth.ahadeeths
+            else:
+                search_books = {self.ahadeeth_text: functions.ahadeeth.ahadeeths[self.ahadeeth_text]}
+            for book_name_ar, file_name in search_books.items():
+                try:
+                    full_path = os.path.join(os.getenv("appdata"), settings.app.appName, "ahadeeth", file_name)
+                    with open(full_path, "r", encoding="utf-8") as f:
+                        ahadeeth_data = json.load(f)
+                    if isinstance(ahadeeth_data, list):
+                        listOfWords = [str(i + 1) + ". " + item for i, item in enumerate(ahadeeth_data)]
+                        result = self._search(self.search_text, listOfWords)
+                        if result:
+                            display_text.append(f"عدد النتائج في كتاب {book_name_ar}, {len(result)} نتيجة")
+                            display_text.append("")
+                            display_text.extend(result)
+                            display_text.append("")
+                            total_results_count += len(result)
+                    else:
+                        qt.QMetaObject.invokeMethod(self.parent_widget, "handle_error", qt2.Qt.ConnectionType.QueuedConnection, qt2.Q_ARG(str, f"خطأ في البيانات: تنسيق ملف الأحاديث غير صحيح لكتاب: {book_name_ar}."))
+                except Exception as e:
+                    qt.QMetaObject.invokeMethod(self.parent_widget, "handle_error", qt2.Qt.ConnectionType.QueuedConnection, qt2.Q_ARG(str, f"خطأ غير متوقع أثناء تحميل الأحاديث لكتاب {book_name_ar}: {e}"))
+            if display_text:
+                if display_text[-1] == "":
+                    display_text.pop()
+                display_text.insert(0, f"إجمالي عدد النتائج: {total_results_count}")
+                display_text.insert(1, "")
+        self.searchFinished.emit(display_text, search_metadata, total_results_count)
 class Albaheth(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -79,6 +156,7 @@ class Albaheth(qt.QWidget):
         self.audio_output = QAudioOutput(self)
         self.media_player.setAudioOutput(self.audio_output)
         self.was_playing_before_action = False
+        self.current_search_thread = None
         self.setStyleSheet("""QPushButton {background-color: #007bff; color: white; border: none; border-radius: 6px; padding: 10px 15px; min-height: 40px; font-weight: bold; outline: none; } QPushButton:hover { background-color: #0056b3; } QPushButton:pressed { background-color: #003d80; } QPushButton#searchModeButton { background-color: #0056b3; } QPushButton#searchModeButton:hover { background-color: #003d80; } QPushButton#searchModeButton:pressed { background-color: #003d80; } QPushButton#startButton { background-color: #28a745; } QPushButton#startButton:hover { background-color: #218838; } QPushButton#startButton:pressed { background-color: #218838; } QPushButton#applySearchModeChangesButton { background-color: #28a745; } QPushButton#applySearchModeChangesButton:hover { background-color: #218838; } QPushButton#applySearchModeChangesButton:pressed { background-color: #218838; } QPushButton#cancelButton { background-color: #dc3545; } QPushButton#cancelButton:hover { background-color: #c82333; } QPushButton#cancelButton:pressed { background-color: #bd2130; } QPushButton#clearResultsButton { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 10px 15px; min-height: 40px; font-weight: bold; outline: none; } QPushButton#clearResultsButton:hover { background-color: #c82333; } QPushButton#clearResultsButton:pressed { background-color: #bd2130; } """)
         self.init_ui()
         self.create_shortcuts()
@@ -274,88 +352,44 @@ class Albaheth(qt.QWidget):
         else:
             guiTools.speak("تم إلغاء التغييرات")
         self.resume_after_action()
-    def search(self, pattern, text_list):
-        def remove_tashkeel(text):
-            return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
-        def normalize_hamza(text):
-            return re.sub(r'[أإآ]', 'ا', text)
-        def normalize(text):
-            normalized_text = text
-            if self.ignore_tashkeel:
-                normalized_text = remove_tashkeel(normalized_text)
-            if self.ignore_hamza:
-                normalized_text = normalize_hamza(normalized_text)
-            return normalized_text
-        normalized_pattern = normalize(pattern)
-        return [text for text in text_list if normalized_pattern in normalize(text)]
+    @qt2.pyqtSlot(str)
+    def handle_error(self, error_msg):
+        if "خطأ في البيانات" in error_msg:
+            guiTools.MessageBox.error(self, "خطأ في البيانات", error_msg.split(': ', 1)[1])
+        elif "خطأ غير متوقع" in error_msg:
+            guiTools.MessageBox.error(self, "خطأ غير متوقع", error_msg.split(': ', 1)[1])
     def onSearchClicked(self):
         if not self.serch_input.text():
             guiTools.MessageBox.error(self, "تنبيه", "يرجى كتابة محتوى للبحث")
+            return
+        if self.current_search_thread and self.current_search_thread.isRunning():
+            guiTools.speak("جاري تنفيذ عملية بحث أخرى. يرجى الانتظار")
             return
         self.results.clear()
         self.search_metadata.clear()
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
-        index = self.serch.currentIndex()
-        if index == 0:
-            listOfWords = functions.quranJsonControl.getQuran()
-            if self.surahs.currentIndex() != 0:
-                surah_key_part = self.surahs.currentText().split(' ')[0]
-                listOfWords = [line for line in listOfWords if line.startswith(surah_key_part)]
-            result = self.search(self.serch_input.text(), listOfWords)
-            if result:
-                header = "عدد نتائج البحث " + str(len(result))
-                display_text = [header, ""]
-                current_line_number = 3
-                for line in result:
-                    display_text.append(line)
-                    metadata = self.get_metadata_from_result(line)
-                    if metadata:
-                        self.search_metadata[current_line_number] = metadata
-                    current_line_number += 1
-                self.results.setText("\n".join(display_text))
-                self.update_font_size()
-                self.clear_results_button.setDisabled(False)
-            else:
-                guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
-                self.clear_results_button.setDisabled(True)
+        self.start.setEnabled(False)
+        self.start.setText("جاري البحث...")
+        search_type = self.serch.currentIndex()
+        search_text = self.serch_input.text()
+        surah_index = self.surahs.currentIndex()
+        ahadeeth_text = self.ahadeeth.currentText()
+        self.current_search_thread = SearchThread(self, search_type, search_text, surah_index, ahadeeth_text, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
+        self.current_search_thread.searchFinished.connect(self.onSearchFinished)
+        self.current_search_thread.start()
+    @qt2.pyqtSlot(list, dict, int)
+    def onSearchFinished(self, display_text, search_metadata, total_results_count):
+        self.start.setEnabled(True)
+        self.start.setText("البحث")
+        self.search_metadata = search_metadata
+        if total_results_count > 0:
+            self.results.setText("\n".join(display_text))
+            self.update_font_size()
+            self.clear_results_button.setDisabled(False)
         else:
-            search_books = {}
-            if self.ahadeeth.currentText() == "البحث في جميع كتب الأحاديث المتاحة":
-                search_books = functions.ahadeeth.ahadeeths
-            else:
-                search_books = {self.ahadeeth.currentText(): functions.ahadeeth.ahadeeths[self.ahadeeth.currentText()]}
-            all_results = []
-            total_results_count = 0
-            for book_name_ar, file_name in search_books.items():
-                try:
-                    full_path = os.path.join(os.getenv("appdata"), settings.app.appName, "ahadeeth", file_name)
-                    with open(full_path, "r", encoding="utf-8") as f:
-                        ahadeeth_data = json.load(f)
-                    if isinstance(ahadeeth_data, list):
-                        listOfWords = [str(i + 1) + ". " + item for i, item in enumerate(ahadeeth_data)]
-                        result = self.search(self.serch_input.text(), listOfWords)
-                        if result:
-                            all_results.append(f"عدد النتائج في كتاب {book_name_ar}, {len(result)} نتيجة")
-                            all_results.append("")
-                            all_results.extend(result)
-                            all_results.append("")
-                            total_results_count += len(result)
-                    else:
-                        guiTools.MessageBox.error(self, "خطأ في البيانات", f"تنسيق ملف الأحاديث غير صحيح لكتاب: {book_name_ar}.")
-                except Exception as e:
-                    guiTools.MessageBox.error(self, "خطأ غير متوقع", f"حدث خطأ أثناء تحميل الأحاديث لكتاب {book_name_ar}: {e}")
-            if all_results:
-                if all_results[-1] == "":
-                    all_results.pop()
-                all_results.insert(0, f"إجمالي عدد النتائج: {total_results_count}")
-                all_results.insert(1, "")
-                self.results.setText("\n".join(all_results))
-                self.update_font_size()
-                self.clear_results_button.setDisabled(False)
-            else:
-                guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
-                self.clear_results_button.setDisabled(True)
+            guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
+            self.clear_results_button.setDisabled(True)
         self.results.setFocus()
     def get_metadata_from_result(self, result_text):
         match = re.search(r'^(\d+)(.+?)\s(.+)\((\d+)\)$', result_text)
