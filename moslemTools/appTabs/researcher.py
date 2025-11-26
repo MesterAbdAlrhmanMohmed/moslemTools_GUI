@@ -140,7 +140,8 @@ class Albaheth(qt.QWidget):
         self.ahadeeth_laibol = qt.QLabel("إختيار الكتاب")
         self.ahadeeth_laibol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.ahadeeth = qt.QComboBox()
-        self.ahadeeth.addItems(functions.ahadeeth.ahadeeths.keys())
+        ahadeeth_items = ["البحث في جميع كتب الأحاديث المتاحة"] + list(functions.ahadeeth.ahadeeths.keys())
+        self.ahadeeth.addItems(ahadeeth_items)
         self.ahadeeth.setFont(font_combo)
         self.ahadeeth.setAccessibleName("إختيار الكتاب")
         self.ahadeeth.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
@@ -319,27 +320,42 @@ class Albaheth(qt.QWidget):
                 guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
                 self.clear_results_button.setDisabled(True)
         else:
-            try:
-                book_name = functions.ahadeeth.ahadeeths[self.ahadeeth.currentText()]
-                full_path = os.path.join(os.getenv("appdata"), settings.app.appName, "ahadeeth", book_name)
-                with open(full_path, "r", encoding="utf-8") as f:
-                    ahadeeth_data = json.load(f)
-                if isinstance(ahadeeth_data, list):
-                    listOfWords = [str(i + 1) + ". " + item for i, item in enumerate(ahadeeth_data)]
-                    result = self.search(self.serch_input.text(), listOfWords)
-                    if result:
-                        header = "عدد نتائج البحث " + str(len(result))
-                        display_text = [header, ""] + result
-                        self.results.setText("\n".join(display_text))
-                        self.update_font_size()
-                        self.clear_results_button.setDisabled(False)
+            search_books = {}
+            if self.ahadeeth.currentText() == "البحث في جميع كتب الأحاديث المتاحة":
+                search_books = functions.ahadeeth.ahadeeths
+            else:
+                search_books = {self.ahadeeth.currentText(): functions.ahadeeth.ahadeeths[self.ahadeeth.currentText()]}
+            all_results = []
+            total_results_count = 0
+            for book_name_ar, file_name in search_books.items():
+                try:
+                    full_path = os.path.join(os.getenv("appdata"), settings.app.appName, "ahadeeth", file_name)
+                    with open(full_path, "r", encoding="utf-8") as f:
+                        ahadeeth_data = json.load(f)
+                    if isinstance(ahadeeth_data, list):
+                        listOfWords = [str(i + 1) + ". " + item for i, item in enumerate(ahadeeth_data)]
+                        result = self.search(self.serch_input.text(), listOfWords)
+                        if result:
+                            all_results.append(f"عدد النتائج في كتاب {book_name_ar}, {len(result)} نتيجة")
+                            all_results.append("")
+                            all_results.extend(result)
+                            all_results.append("")
+                            total_results_count += len(result)
                     else:
-                        guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
-                        self.clear_results_button.setDisabled(True)
-                else:
-                    guiTools.MessageBox.error(self, "خطأ في البيانات", "تنسيق ملف الأحاديث غير صحيح.")
-            except Exception as e:
-                guiTools.MessageBox.error(self, "خطأ غير متوقع", f"حدث خطأ أثناء تحميل الأحاديث: {e}")
+                        guiTools.MessageBox.error(self, "خطأ في البيانات", f"تنسيق ملف الأحاديث غير صحيح لكتاب: {book_name_ar}.")
+                except Exception as e:
+                    guiTools.MessageBox.error(self, "خطأ غير متوقع", f"حدث خطأ أثناء تحميل الأحاديث لكتاب {book_name_ar}: {e}")
+            if all_results:
+                if all_results[-1] == "":
+                    all_results.pop()
+                all_results.insert(0, f"إجمالي عدد النتائج: {total_results_count}")
+                all_results.insert(1, "")
+                self.results.setText("\n".join(all_results))
+                self.update_font_size()
+                self.clear_results_button.setDisabled(False)
+            else:
+                guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
+                self.clear_results_button.setDisabled(True)
         self.results.setFocus()
     def get_metadata_from_result(self, result_text):
         match = re.search(r'^(\d+)(.+?)\s(.+)\((\d+)\)$', result_text)
