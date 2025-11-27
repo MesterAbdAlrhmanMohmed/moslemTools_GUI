@@ -215,6 +215,7 @@ class SchedulingDialog(qt.QDialog):
         self.dur_s_spin = qt.QSpinBox()
         self.dur_s_spin.setRange(0, 59)
         self.dur_s_spin.setAccessibleName("مدة التسجيل بالثواني")
+        self.dur_s_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         dur_v_layout.addWidget(self.dur_s_spin)
         main_h_layout.addLayout(start_v_layout)
         line = qt.QFrame()
@@ -746,6 +747,33 @@ class protcasts(qt.QWidget):
         self.stop_shortcut.activated.connect(lambda: self.stopRecording() if self.stopBtn.isEnabled() else None)
         self.schedule_shortcut = qt1.QShortcut(qt1.QKeySequence("Ctrl+G"), self)
         self.schedule_shortcut.activated.connect(lambda: self.scheduleRecording() if self.scheduleBtn.isEnabled() else None)
+        global_player.playbackStateChanged.connect(self.on_radio_state_changed)
+    def on_radio_state_changed(self, state):
+        if state == QMediaPlayer.PlaybackState.StoppedState and global_current_url is not None:
+            if self.recorder._running and not self.is_scheduled_recording:
+                self.handle_manual_recording_stop_due_to_radio()
+            elif self.countdown_timer.isActive() or self.duration_timer.isActive():
+                self.handle_scheduled_recording_stop_due_to_radio()
+    def handle_manual_recording_stop_due_to_radio(self):
+        self.recorder.stop(cleanup_only=False)
+        result = guiTools.QQuestionMessageBox.view(self, "إيقاف التسجيل", "تم إيقاف التسجيل بسبب إيقاف الإذاعة. هل تريد حفظ التسجيل؟", "نعم", "لا")
+        if result == 0:
+            self.manual_stop_save_pending = True
+        else:
+            self.recorder.stop(cleanup_only=True)
+            self.resetRecorderState()
+            guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الحفظ.")
+    def handle_scheduled_recording_stop_due_to_radio(self):
+        if self.countdown_timer.isActive():
+            self.countdown_timer.stop()
+        if self.duration_timer.isActive():
+            self.duration_timer.stop()
+        if self.recorder._running:
+            self.recorder.stop(cleanup_only=False)
+            self.scheduled_stop_due_to_radio = True
+        else:
+            guiTools.qMessageBox.MessageBox.view(self, "إيقاف التسجيل المجدول", "تم إيقاف التسجيل المجدول بسبب إيقاف الإذاعة. لم يتم بدء التسجيل بعد.")
+            self.resetRecorderState()
     def restore_aud_text(self):
         if not self.convert_thread_worker and not self.countdown_timer.isActive():
             self.aud.setText(self.current_status_text)
@@ -805,10 +833,14 @@ class protcasts(qt.QWidget):
                 self.updateCountdown()
                 self.countdown_timer.start(1000)
             else:
-                guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الجدولة.")
+                result = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل تريد إلغاء الجدولة؟", "نعم", "لا")
+                if result == 0:
+                    guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الجدولة.")
+                else:
+                    self.scheduleRecording()
     def updateCountdown(self):
         if not global_player or global_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
-            self.stopRecording(skip_save_dialog=True)
+            self.handle_scheduled_recording_stop_due_to_radio()
             return
         if self.remaining_seconds_to_start > 0:
             self.remaining_seconds_to_start -= 1
@@ -822,7 +854,7 @@ class protcasts(qt.QWidget):
         else:
             self.countdown_timer.stop()
             if not self.recorder.is_ready():
-                self.stopRecording(skip_save_dialog=True)
+                self.handle_scheduled_recording_stop_due_to_radio()
                 self.recorder.error.emit("فشل بدء التسجيل المجدول: المسجل غير جاهز.")
                 return
             self.recorder.start()
@@ -837,6 +869,9 @@ class protcasts(qt.QWidget):
             self.duration_timer.start(1000)
             self.updateDurationCountdown()
     def updateDurationCountdown(self):
+        if not global_player or global_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+            self.handle_scheduled_recording_stop_due_to_radio()
+            return
         if self.remaining_duration_seconds > 0:
             self.remaining_duration_seconds -= 1
             h = self.remaining_duration_seconds // 3600
@@ -919,10 +954,28 @@ class protcasts(qt.QWidget):
     def on_recording_stopped(self, status, path):
         self.restore_aud_text()
         if status == "STOPPED":
-            self.temp_wav_to_convert = path
-            self.convert_and_save_prompt()
+            if hasattr(self, 'scheduled_stop_due_to_radio') and self.scheduled_stop_due_to_radio:
+                self.scheduled_stop_due_to_radio = False
+                if self.scheduled_file_path:
+                    self.aud.setText("جاري تحويل الملف إلى MP3، يرجى الانتظار...")
+                    self.current_status_text = "جاري تحويل الملف إلى MP3، يرجى الانتظار..."
+                    self.convert_thread_worker = threading.Thread(target=self.recorder.convert_and_cleanup, args=(path, self.scheduled_file_path), daemon=True)
+                    self.convert_thread_worker.start()
+                else:
+                    self.temp_wav_to_convert = path
+                    self.convert_and_save_prompt()
+            elif hasattr(self, 'manual_stop_save_pending') and self.manual_stop_save_pending:
+                self.manual_stop_save_pending = False
+                self.temp_wav_to_convert = path
+                self.convert_and_save_prompt()
+            else:
+                self.temp_wav_to_convert = path
+                self.convert_and_save_prompt()
         elif status == "CONVERTED":
-            guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", "تم حفظ الملف بنجاح.")
+            if hasattr(self, 'scheduled_stop_due_to_radio') and self.scheduled_stop_due_to_radio:
+                guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", "تم حفظ الملف بنجاح في المسار المحدد.")
+            else:
+                guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", "تم حفظ الملف بنجاح.")
             self.resetRecorderState()
         elif status == "CLEANUP_ONLY":
             self.resetRecorderState()
@@ -938,10 +991,14 @@ class protcasts(qt.QWidget):
             self.convert_thread_worker = threading.Thread(target=self.recorder.convert_and_cleanup, args=(self.temp_wav_to_convert, filePath), daemon=True)
             self.convert_thread_worker.start()
         else:
-            guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الحفظ. سيتم حذف الملف المؤقت.")
-            try: Path(self.temp_wav_to_convert).unlink(missing_ok=True)
-            except: pass
-            self.resetRecorderState()
+            result = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل تريد إلغاء حفظ الملف؟", "نعم", "لا")
+            if result == 0:
+                try: Path(self.temp_wav_to_convert).unlink(missing_ok=True)
+                except: pass
+                guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الحفظ.")
+                self.resetRecorderState()
+            else:
+                self.convert_and_save_prompt()
         self.temp_wav_to_convert = None
     @qt2.pyqtSlot(str)
     def recordingError(self, error_msg):
@@ -950,6 +1007,10 @@ class protcasts(qt.QWidget):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ في التسجيل", "يبدو أن جهاز تسجيل صوت الكمبيوتر stereo mix لا يعمل، لتشغيله اتبع الخطوات التالية\n\n1 فتح قائمة Run عن طريق الاختصار Windows + R ثم اكتب هذا الأمر:\nrundll32.exe shell32.dll,Control_RunDLL mmsys.cpl,,1\n2 اذهب إلى تبويبة التسجيل Recording واختر منها Stereo Mix ثم اضغط عليه بزر الفأرة الأيمن أو زر التطبيقات واختر Enable ثم اضغط OK.\nلمن واجه أي مشكلة يمكنه التواصل معي على حسابي في تليجرام من قسم (عن المطور) في قائمة المزيد من الخيارات.")
         self.resetRecorderState()
     def resetRecorderState(self):
+        if hasattr(self, 'scheduled_stop_due_to_radio'):
+            del self.scheduled_stop_due_to_radio
+        if hasattr(self, 'manual_stop_save_pending'):
+            del self.manual_stop_save_pending
         if self.temp_wav_to_convert:
             try: Path(self.temp_wav_to_convert).unlink(missing_ok=True)
             except: pass
