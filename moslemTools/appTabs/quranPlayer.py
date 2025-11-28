@@ -89,14 +89,14 @@ class QuranPlayer(qt.QWidget):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ فادح", "لم يتم العثور على أداة الدمج FFmpeg. خاصية دمج السور لن تعمل.")
         qt1.QShortcut("ctrl+s", self).activated.connect(lambda: self.mp.stop())
         qt1.QShortcut("space", self).activated.connect(self.play)
-        qt1.QShortcut("alt+right", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 5000))
-        qt1.QShortcut("alt+left", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() - 5000))
-        qt1.QShortcut("alt+up", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 10000))
-        qt1.QShortcut("alt+down", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() - 10000))
-        qt1.QShortcut("ctrl+right", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 30000))
-        qt1.QShortcut("ctrl+left", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() - 30000))
-        qt1.QShortcut("ctrl+up", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 60000))
-        qt1.QShortcut("ctrl+down", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() - 60000))
+        qt1.QShortcut("alt+right", self).activated.connect(self.skip_forward_5s)
+        qt1.QShortcut("alt+left", self).activated.connect(self.skip_backward_5s)
+        qt1.QShortcut("alt+up", self).activated.connect(self.skip_forward_10s)
+        qt1.QShortcut("alt+down", self).activated.connect(self.skip_backward_10s)
+        qt1.QShortcut("ctrl+right", self).activated.connect(self.skip_forward_30s)
+        qt1.QShortcut("ctrl+left", self).activated.connect(self.skip_backward_30s)
+        qt1.QShortcut("ctrl+up", self).activated.connect(self.skip_forward_1m)
+        qt1.QShortcut("ctrl+down", self).activated.connect(self.skip_backward_1m)
         qt1.QShortcut("ctrl+1", self).activated.connect(self.t10)
         qt1.QShortcut("ctrl+2", self).activated.connect(self.t20)
         qt1.QShortcut("ctrl+3", self).activated.connect(self.t30)
@@ -304,6 +304,62 @@ class QuranPlayer(qt.QWidget):
         self.surahListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
         self.update_repeat_button_state()
+    def skip_forward_5s(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        new_position = self.mp.position() + 5000
+        self.mp.setPosition(new_position)
+        speak("تقديم 5 ثواني")
+    def skip_backward_5s(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        new_position = max(0, self.mp.position() - 5000)
+        self.mp.setPosition(new_position)
+        speak("ترجيع 5 ثواني")
+    def skip_forward_10s(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        new_position = self.mp.position() + 10000
+        self.mp.setPosition(new_position)
+        speak("تقديم 10 ثواني")
+    def skip_backward_10s(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        new_position = max(0, self.mp.position() - 10000)
+        self.mp.setPosition(new_position)
+        speak("ترجيع 10 ثواني")
+    def skip_forward_30s(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        new_position = self.mp.position() + 30000
+        self.mp.setPosition(new_position)
+        speak("تقديم 30 ثانية")
+    def skip_backward_30s(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        new_position = max(0, self.mp.position() - 30000)
+        self.mp.setPosition(new_position)
+        speak("ترجيع 30 ثانية")
+    def skip_forward_1m(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        new_position = self.mp.position() + 60000
+        self.mp.setPosition(new_position)
+        speak("تقديم دقيقة واحدة")
+    def skip_backward_1m(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        new_position = max(0, self.mp.position() - 60000)
+        self.mp.setPosition(new_position)
+        speak("ترجيع دقيقة واحدة")
     def handle_merge_action(self):
         if self.is_merging:
             self.confirm_and_cancel_merge()
