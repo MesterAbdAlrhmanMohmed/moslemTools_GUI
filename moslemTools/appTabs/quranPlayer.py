@@ -303,6 +303,7 @@ class QuranPlayer(qt.QWidget):
         self.surahListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.surahListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
+        self.update_repeat_button_state()
     def handle_merge_action(self):
         if self.is_merging:
             self.confirm_and_cancel_merge()
@@ -1129,6 +1130,7 @@ class QuranPlayer(qt.QWidget):
                     url = self.reciters_data[reciter][selected_item.text()]
                     self.mp.setSource(qt2.QUrl(url))
                     self.mp.play()
+                self.update_repeat_button_state()
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء تشغيل المقطع:" + str(e))
     def download_selected_audio(self):
@@ -1207,21 +1209,24 @@ class QuranPlayer(qt.QWidget):
                 cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
                 batch_download_menu.addAction(cancel_batch_dl_action)
             menu.addSeparator()
-        repeateFromPositionTopositionMenue = menu.addMenu("التكرار من موضع إلى موضع")
-        setStartingPositionAction = qt1.QAction("تحديد موضع البداية", self)
-        setStartingPositionAction.setShortcut("shift+1")
-        setStartingPositionAction.triggered.connect(self.onChangeStartingPosition)
-        repeateFromPositionTopositionMenue.addAction(setStartingPositionAction)
-        repeateFromPositionTopositionMenue.setDefaultAction(setStartingPositionAction)
-        setEndingPositionAction = qt1.QAction("تحديد موضع النهاية", self)
-        setEndingPositionAction.setShortcut("shift+2")
-        setEndingPositionAction.triggered.connect(self.onChangeEndingPosition)
-        repeateFromPositionTopositionMenue.addAction(setEndingPositionAction)
-        resetAndStopRepeatingAction = qt1.QAction("حذف الموضع المحدد وإيقاف التكرار", self)
-        resetAndStopRepeatingAction.setShortcut("backspace")
-        resetAndStopRepeatingAction.triggered.connect(self.removePosition)
-        repeateFromPositionTopositionMenue.addAction(resetAndStopRepeatingAction)
-        repeateFromPositionTopositionMenue.setFont(boldFont)
+
+        if self.mp.duration() > 0:
+            repeateFromPositionTopositionMenue = menu.addMenu("التكرار من موضع إلى موضع")
+            setStartingPositionAction = qt1.QAction("تحديد موضع البداية", self)
+            setStartingPositionAction.setShortcut("shift+1")
+            setStartingPositionAction.triggered.connect(self.onChangeStartingPosition)
+            repeateFromPositionTopositionMenue.addAction(setStartingPositionAction)
+            repeateFromPositionTopositionMenue.setDefaultAction(setStartingPositionAction)
+            setEndingPositionAction = qt1.QAction("تحديد موضع النهاية", self)
+            setEndingPositionAction.setShortcut("shift+2")
+            setEndingPositionAction.triggered.connect(self.onChangeEndingPosition)
+            repeateFromPositionTopositionMenue.addAction(setEndingPositionAction)
+            resetAndStopRepeatingAction = qt1.QAction("حذف الموضع المحدد وإيقاف التكرار", self)
+            resetAndStopRepeatingAction.setShortcut("backspace")
+            resetAndStopRepeatingAction.triggered.connect(self.removePosition)
+            repeateFromPositionTopositionMenue.addAction(resetAndStopRepeatingAction)
+            repeateFromPositionTopositionMenue.setFont(boldFont)
+
         play_action = qt1.QAction("تشغيل السورة المحددة", self)
         play_action.triggered.connect(self.play_selected_audio)
         menu.addAction(play_action)
@@ -1248,30 +1253,57 @@ class QuranPlayer(qt.QWidget):
         addNewBookmarkAction.triggered.connect(self.onAddNewBookmark)
         menu.exec(self.surahListWidget.viewport().mapToGlobal(position))
     def t10(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.1))
     def t20(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.2))
     def t30(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.3))
     def t40(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.4))
     def t50(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.5))
     def t60(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.6))
     def t70(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.7))
     def t80(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.8))
     def t90(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.9))
     def play(self):
@@ -1347,12 +1379,18 @@ class QuranPlayer(qt.QWidget):
         with open(file_path, 'r', encoding='utf-8') as file:
             return json.load(file)
     def onChangeStartingPosition(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         position = self.mp.position()
         self.startingPosition = position
         self.endingPosition = None
         self.repeatFromPositionToPosition = False
         winsound.Beep(400, 500)
     def onChangeEndingPosition(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
         if self.startingPosition is not None:
             if self.startingPosition == self.mp.position():
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يمكن أن يكون موضع البداية هو نفس موضع النهاية")
@@ -1386,3 +1424,8 @@ class QuranPlayer(qt.QWidget):
             guiTools.qMessageBox.MessageBox.view(self,"تم","تم الحذف")
         except:
             guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر حذف العلامة المرجعية")
+    def update_repeat_button_state(self):
+        if self.mp.duration() == 0:
+            self.repeat_surah_button.setEnabled(False)
+        else:
+            self.repeat_surah_button.setEnabled(True)
