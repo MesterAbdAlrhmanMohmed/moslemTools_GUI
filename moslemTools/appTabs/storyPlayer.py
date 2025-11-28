@@ -89,14 +89,14 @@ class StoryPlayer(qt.QWidget):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ فادح", "لم يتم العثور على أداة الدمج FFmpeg. خاصية دمج القصص لن تعمل.")
         qt1.QShortcut("ctrl+s", self).activated.connect(lambda: self.mp.stop())
         qt1.QShortcut("space", self).activated.connect(self.play)
-        qt1.QShortcut("alt+right", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 5000))
-        qt1.QShortcut("alt+left", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() - 5000))
-        qt1.QShortcut("alt+up", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 10000))
-        qt1.QShortcut("alt+down", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() - 10000))
-        qt1.QShortcut("ctrl+right", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 30000))
-        qt1.QShortcut("ctrl+left", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() - 30000))
-        qt1.QShortcut("ctrl+up", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() + 60000))
-        qt1.QShortcut("ctrl+down", self).activated.connect(lambda: self.mp.setPosition(self.mp.position() - 60000))
+        qt1.QShortcut("alt+right", self).activated.connect(self.seek_forward_5s)
+        qt1.QShortcut("alt+left", self).activated.connect(self.seek_backward_5s)
+        qt1.QShortcut("alt+up", self).activated.connect(self.seek_forward_10s)
+        qt1.QShortcut("alt+down", self).activated.connect(self.seek_backward_10s)
+        qt1.QShortcut("ctrl+right", self).activated.connect(self.seek_forward_30s)
+        qt1.QShortcut("ctrl+left", self).activated.connect(self.seek_backward_30s)
+        qt1.QShortcut("ctrl+up", self).activated.connect(self.seek_forward_60s)
+        qt1.QShortcut("ctrl+down", self).activated.connect(self.seek_backward_60s)
         qt1.QShortcut("ctrl+1", self).activated.connect(self.t10)
         qt1.QShortcut("ctrl+2", self).activated.connect(self.t20)
         qt1.QShortcut("ctrl+3", self).activated.connect(self.t30)
@@ -195,6 +195,7 @@ class StoryPlayer(qt.QWidget):
         self.repeat_story_button.setShortcut("ctrl+r")
         self.repeat_story_button.toggled.connect(lambda checked: self.update_button_style(self.repeat_story_button, checked))
         self.repeat_story_button.toggled.connect(self.handle_repeat_toggled)
+        self.repeat_story_button.setEnabled(False)
         self.Slider = qt.QSlider(qt2.Qt.Orientation.Horizontal)
         self.Slider.setAccessibleName("التحكم في تقدم القصة")
         self.Slider.setRange(0, 100)        
@@ -285,6 +286,43 @@ class StoryPlayer(qt.QWidget):
         self.storyListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.storyListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
+    def check_media_loaded(self):
+        if self.mp.duration() <= 0:
+            speak("لا يوجد مقطع مشغل حاليا")
+            return False
+        return True
+    def seek_forward_5s(self):
+        if not self.check_media_loaded():
+            return
+        self.mp.setPosition(self.mp.position() + 5000)
+    def seek_backward_5s(self):
+        if not self.check_media_loaded():
+            return
+        self.mp.setPosition(self.mp.position() - 5000)
+    def seek_forward_10s(self):
+        if not self.check_media_loaded():
+            return
+        self.mp.setPosition(self.mp.position() + 10000)
+    def seek_backward_10s(self):
+        if not self.check_media_loaded():
+            return
+        self.mp.setPosition(self.mp.position() - 10000)
+    def seek_forward_30s(self):
+        if not self.check_media_loaded():
+            return
+        self.mp.setPosition(self.mp.position() + 30000)
+    def seek_backward_30s(self):
+        if not self.check_media_loaded():
+            return
+        self.mp.setPosition(self.mp.position() - 30000)
+    def seek_forward_60s(self):
+        if not self.check_media_loaded():
+            return
+        self.mp.setPosition(self.mp.position() + 60000)
+    def seek_backward_60s(self):
+        if not self.check_media_loaded():
+            return
+        self.mp.setPosition(self.mp.position() - 60000)
     def handle_merge_action(self):
         if self.is_merging:
             self.confirm_and_cancel_merge()
@@ -678,6 +716,16 @@ class StoryPlayer(qt.QWidget):
     def handle_play_all_toggled(self, checked):
         self.mp.stop()
         if checked:
+            reply = guiTools.QQuestionMessageBox.view(
+                self,
+                "تفعيل التشغيل المتتابع",
+                "هل تريد تفعيل وضع التشغيل المتتابع؟",
+                "نعم",
+                "لا"
+            )
+            if reply != 0:
+                self.play_all_to_end.setChecked(False)
+                return
             self.repeat_story_button.setEnabled(False)
             if self.storyListWidget.currentRow() == -1 and self.storyListWidget.count() > 0:
                 self.storyListWidget.setCurrentRow(0)
@@ -687,6 +735,19 @@ class StoryPlayer(qt.QWidget):
     def handle_repeat_toggled(self, checked):
         self.mp.stop()
         if checked:
+            if not self.check_media_loaded():
+                self.repeat_story_button.setChecked(False)
+                return
+            reply = guiTools.QQuestionMessageBox.view(
+                self,
+                "تفعيل التكرار",
+                "هل تريد تفعيل وضع تكرار القصة؟",
+                "نعم",
+                "لا"
+            )
+            if reply != 0:
+                self.repeat_story_button.setChecked(False)
+                return
             self.play_all_to_end.setEnabled(False)
         else:
             self.play_all_to_end.setEnabled(True)
@@ -1021,6 +1082,7 @@ class StoryPlayer(qt.QWidget):
         self.storyListWidget.clear()
         self.cancel_merge()
         self.cancel_download_batch()
+        self.repeat_story_button.setEnabled(False)
         selected_category_item = self.categoriesListWidget.currentItem()
         if selected_category_item:
             self.merge_all_button.setEnabled(True)
@@ -1060,6 +1122,7 @@ class StoryPlayer(qt.QWidget):
                     url = self.categories_data[category][selected_item.text()]
                     self.mp.setSource(qt2.QUrl(url))
                     self.mp.play()
+                self.repeat_story_button.setEnabled(True)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء تشغيل المقطع:" + str(e))
     def download_selected_audio(self):
@@ -1164,30 +1227,48 @@ class StoryPlayer(qt.QWidget):
         addNewBookmarkAction.triggered.connect(self.onAddNewBookmark)
         menu.exec(self.storyListWidget.viewport().mapToGlobal(position))
     def t10(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.1))
     def t20(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.2))
     def t30(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.3))
     def t40(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.4))
     def t50(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.5))
     def t60(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.6))
     def t70(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.7))
     def t80(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.8))
     def t90(self):
+        if not self.check_media_loaded():
+            return
         total_duration = self.mp.duration()
         self.mp.setPosition(int(total_duration * 0.9))
     def play(self):
