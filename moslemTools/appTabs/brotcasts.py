@@ -755,10 +755,9 @@ class protcasts(qt.QWidget):
             elif self.countdown_timer.isActive() or self.duration_timer.isActive():
                 self.handle_scheduled_recording_stop_due_to_radio()
     def handle_manual_recording_stop_due_to_radio(self):
-        self.recorder.stop(cleanup_only=False)
         result = guiTools.QQuestionMessageBox.view(self, "إيقاف التسجيل", "تم إيقاف التسجيل بسبب إيقاف الإذاعة. هل تريد حفظ التسجيل؟", "نعم", "لا")
         if result == 0:
-            self.manual_stop_save_pending = True
+            self.recorder.stop(cleanup_only=False)
         else:
             self.recorder.stop(cleanup_only=True)
             self.resetRecorderState()
@@ -964,10 +963,6 @@ class protcasts(qt.QWidget):
                 else:
                     self.temp_wav_to_convert = path
                     self.convert_and_save_prompt()
-            elif hasattr(self, 'manual_stop_save_pending') and self.manual_stop_save_pending:
-                self.manual_stop_save_pending = False
-                self.temp_wav_to_convert = path
-                self.convert_and_save_prompt()
             else:
                 self.temp_wav_to_convert = path
                 self.convert_and_save_prompt()
@@ -1009,8 +1004,6 @@ class protcasts(qt.QWidget):
     def resetRecorderState(self):
         if hasattr(self, 'scheduled_stop_due_to_radio'):
             del self.scheduled_stop_due_to_radio
-        if hasattr(self, 'manual_stop_save_pending'):
-            del self.manual_stop_save_pending
         if self.temp_wav_to_convert:
             try: Path(self.temp_wav_to_convert).unlink(missing_ok=True)
             except: pass
