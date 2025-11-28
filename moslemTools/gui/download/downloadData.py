@@ -5,38 +5,13 @@ import PyQt6.QtCore as qt2
 def log_error(func_name, error): 
 	error_message = f"!!! خطأ فادح في {func_name}: {str(error)}"
 	print(error_message)
-class SelectItem(qt.QDialog):
-	def __init__(self, p, fileName: str, dirName):
-		super().__init__(p)
-		self.resize(900, 500)
-		self.data = {}
-		self.dirName = dirName
-		layout = qt.QVBoxLayout(self)
-		serch = qt.QLabel("بحث")
-		serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		layout.addWidget(serch)
-		self.search_bar = qt.QLineEdit()
-		self.search_bar.setPlaceholderText("بحث ...")
-		self.search_bar.textChanged.connect(self.onsearch)
-		self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		layout.addWidget(self.search_bar)
-		self.item = guiTools.QListWidget()
-		self.item.setSpacing(3)
-		font = qt1.QFont()
-		font.setBold(True)
-		self.item.setFont(font)
-		layout.addWidget(self.item)
-		self.item.clicked.connect(self.on_item_clicked)
+class DataLoaderThread(qt2.QThread):
+	data_loaded = qt2.pyqtSignal(object)
+	loading_error = qt2.pyqtSignal(str)
+	def __init__(self, fileName: str, parent=None):
+		super().__init__(parent)
 		self.fileName = fileName
-		self.onLoad()
-	def on_item_clicked(self):
-		try:
-			selected_item_text = self.item.currentItem().text()
-			if selected_item_text in self.data:
-				StartDownloading(self, self.data[selected_item_text], self.dirName).exec()
-		except Exception as e:
-			log_error("SelectItem.on_item_clicked", e)
-	def onLoad(self):
+	def run(self):
 		try:
 			url = "https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/refs/heads/main/moslemTools/data/json/files/" + self.fileName
 			headers = {
@@ -62,16 +37,61 @@ class SelectItem(qt.QDialog):
 				for data in downloadedData:
 					if data in jsonContent:
 						del jsonContent[data]
-				self.data = jsonContent
-				self.item.addItems(self.data.keys())
+				self.data_loaded.emit(jsonContent)
 			else:
-				log_error("onLoad", f"Status code {r.status_code} - فشل تحميل الخريطة من جيت هاب")
-				guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "حدث خطأ أثناء تحميل البيانات (Code 1)")
-				self.close()
+				self.loading_error.emit(f"Status code {r.status_code} - فشل تحميل الخريطة من جيت هاب")
 		except Exception as e:
-			log_error("onLoad", e)
-			guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "حدث خطأ أثناء تحميل البيانات (Code 2)")
-			self.accept()
+			log_error("DataLoaderThread.run", e)
+			self.loading_error.emit(str(e))
+class SelectItem(qt.QDialog):
+	def __init__(self, p, fileName: str, dirName):
+		super().__init__(p)
+		self.resize(900, 500)
+		self.data = {}
+		self.dirName = dirName
+		layout = qt.QVBoxLayout(self)
+		serch = qt.QLabel("بحث")
+		serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+		layout.addWidget(serch)
+		self.search_bar = qt.QLineEdit()
+		self.search_bar.setPlaceholderText("بحث ...")
+		self.search_bar.textChanged.connect(self.onsearch)
+		self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+		layout.addWidget(self.search_bar)
+		self.item = guiTools.QListWidget()
+		self.item.setSpacing(3)
+		font = qt1.QFont()
+		font.setBold(True)
+		self.item.setFont(font)
+		layout.addWidget(self.item)
+		self.item.clicked.connect(self.on_item_clicked)
+		self.fileName = fileName
+		self.loading_label = qt.QLabel("جاري تحميل البيانات، يرجى الانتظار...")
+		self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+		layout.addWidget(self.loading_label)
+		self.item.setVisible(False)
+		self.onLoad()
+	def on_item_clicked(self):
+		try:
+			selected_item_text = self.item.currentItem().text()
+			if selected_item_text in self.data:
+				StartDownloading(self, self.data[selected_item_text], self.dirName).exec()
+		except Exception as e:
+			log_error("SelectItem.on_item_clicked", e)
+	def onLoad(self):
+		self.loader_thread = DataLoaderThread(self.fileName)
+		self.loader_thread.data_loaded.connect(self.onDataLoaded)
+		self.loader_thread.loading_error.connect(self.onLoadingError)
+		self.loader_thread.start()
+	def onDataLoaded(self, jsonContent):
+		self.data = jsonContent
+		self.item.addItems(self.data.keys())
+		self.loading_label.setVisible(False)
+		self.item.setVisible(True)
+	def onLoadingError(self, error_message):
+		log_error("onLoad", error_message)
+		guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "حدث خطأ أثناء تحميل البيانات")
+		self.accept()
 	def search(self, pattern, text_list):
 		try:
 			tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
