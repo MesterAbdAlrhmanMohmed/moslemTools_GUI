@@ -81,7 +81,7 @@ class FromToSurahWidget(qt.QDialog):
         self.index = index
         self.original_height = 300
         self.merge_ui_height = 450
-        self.resize(450, self.original_height)                 
+        self.resize(400, self.original_height)                 
         self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
         self.merge_list = []
         self.files_to_delete_after_merge = []
@@ -94,7 +94,6 @@ class FromToSurahWidget(qt.QDialog):
         font = qt1.QFont()
         font.setBold(True)
         self.setFont(font)         
-
         item_name = ""
         if index == 0:
             self.surahs = functions.quranJsonControl.getSurahs()
@@ -159,28 +158,49 @@ class FromToSurahWidget(qt.QDialog):
         self.merge_widget = qt.QWidget()
         self.merge_widget.setLayout(merge_layout)
         self.merge_widget.setVisible(False)        
+        
+        # Start of Layout changes for spacing and alignment
         h_layout1 = qt.QHBoxLayout()
-        h_layout1.addWidget(self.label_from_surah)
-        h_layout1.addWidget(self.combo_from_surah)        
+        h_layout1.setSpacing(10) # Increased spacing to 10
+        h_layout1.addWidget(self.combo_from_surah) 
+        h_layout1.addWidget(self.label_from_surah) 
+        h_layout1.addStretch() 
+
         h_layout2 = qt.QHBoxLayout()
-        h_layout2.addWidget(self.label_from_verse)
-        h_layout2.addWidget(self.spin_from_verse)        
+        h_layout2.setSpacing(10) # Increased spacing to 10
+        h_layout2.addWidget(self.spin_from_verse) 
+        h_layout2.addWidget(self.label_from_verse) 
+        h_layout2.addStretch() 
+
         h_layout3 = qt.QHBoxLayout()
-        h_layout3.addWidget(self.label_to_surah)
-        h_layout3.addWidget(self.combo_to_surah)        
+        h_layout3.setSpacing(10) # Increased spacing to 10
+        h_layout3.addWidget(self.combo_to_surah) 
+        h_layout3.addWidget(self.label_to_surah) 
+        h_layout3.addStretch() 
+        
         h_layout4 = qt.QHBoxLayout()
-        h_layout4.addWidget(self.label_to_verse)
-        h_layout4.addWidget(self.spin_to_verse)    
+        h_layout4.setSpacing(10) # Increased spacing to 10
+        h_layout4.addWidget(self.spin_to_verse) 
+        h_layout4.addWidget(self.label_to_verse) 
+        h_layout4.addStretch() 
+
         self.controls_widget = qt.QWidget()
         controls_layout = qt.QVBoxLayout(self.controls_widget)
+        controls_layout.setContentsMargins(0, 0, 0, 0)
+        controls_layout.setSpacing(0)
         controls_layout.addLayout(h_layout1)
         controls_layout.addLayout(h_layout2)
         controls_layout.addLayout(h_layout3)
         controls_layout.addLayout(h_layout4)
         controls_layout.addWidget(self.go)
+        
         main_layout = qt.QVBoxLayout(self)
+        main_layout.setSpacing(0) 
+        main_layout.setContentsMargins(15, 15, 15, 15) # Increased margins to 15
         main_layout.addWidget(self.controls_widget)
-        main_layout.addWidget(self.merge_widget)        
+        main_layout.addWidget(self.merge_widget)
+        # End of Layout changes
+        
         self.combo_from_surah.currentIndexChanged.connect(self.update_spin_boxes)
         self.combo_to_surah.currentIndexChanged.connect(self.update_spin_boxes)
         self.spin_from_verse.valueChanged.connect(self.validate_verse_ranges)
