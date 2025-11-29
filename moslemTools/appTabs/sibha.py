@@ -3,6 +3,99 @@ from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+from PyQt6.QtCore import Qt
+class LimitInputDialog(qt.QDialog):
+    def __init__(self, parent, title: str):
+        super().__init__(parent)
+        self.resize(350, 200)
+        self.setWindowTitle(title)
+        layout = qt.QVBoxLayout(self)
+        self.name_label = qt.QLabel("أدخل اسم الحد")
+        self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.name_input = qt.QLineEdit()
+        self.name_input.setAccessibleName("أدخل اسم الحد")
+        self.name_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.name_input.textChanged.connect(self.validate_inputs)
+        self.value_label = qt.QLabel("أدخل عدد التسبيحات")
+        self.value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.value_input = qt.QSpinBox()
+        self.value_input.setRange(1, 1000000)
+        self.value_input.setValue(1)
+        self.value_input.setAccessibleName("أدخل عدد التسبيحات")
+        self.value_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.value_input.valueChanged.connect(self.validate_inputs)
+        layout.addWidget(self.name_label)
+        layout.addWidget(self.name_input)
+        layout.addWidget(self.value_label)
+        layout.addWidget(self.value_input)
+        self.OKBTN = guiTools.QPushButton("موافق")
+        self.OKBTN.setDisabled(True)
+        self.OKBTN.clicked.connect(self.accept)
+        self.OKBTN.setStyleSheet("""
+            QPushButton {
+                background-color: black;
+                color: white;
+                border-radius: 4px;
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+        """)
+        self.cancelBTN = guiTools.QPushButton("إلغاء")
+        self.cancelBTN.clicked.connect(self.reject)
+        self.cancelBTN.setStyleSheet("""
+            QPushButton {
+                background-color: #8B0000;
+                color: white;
+                border-radius: 4px;
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+        """)
+        buttonsLayout = qt.QHBoxLayout()
+        buttonsLayout.addWidget(self.OKBTN)
+        buttonsLayout.addWidget(self.cancelBTN)        
+        wrapper = qt.QHBoxLayout()
+        wrapper.addLayout(buttonsLayout)
+        wrapper.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.addLayout(wrapper)
+        qt1.QShortcut("Escape", self).activated.connect(self.reject)
+        self.name_input.setFocus()
+    def validate_inputs(self):
+        name_valid = bool(self.name_input.text().strip())
+        value_valid = self.value_input.value() > 0
+        is_valid = name_valid and value_valid
+        self.OKBTN.setDisabled(not is_valid)
+        if is_valid:
+            self.OKBTN.setStyleSheet("""
+                QPushButton {
+                    background-color: #008000;
+                    color: white;
+                    border-radius: 4px;
+                    padding: 8px 20px;
+                    font-size: 14px;
+                }
+            """)
+        else:
+            self.OKBTN.setStyleSheet("""
+                QPushButton {
+                    background-color: black;
+                    color: white;
+                    border-radius: 4px;
+                    padding: 8px 20px;
+                    font-size: 14px;
+                }
+            """)
+    def closeEvent(self, event):
+        self.reject()
+        event.accept()
+    @staticmethod
+    def getLimitData(parent):
+        dlg = LimitInputDialog(parent, "إضافة حد أقصى جديد")
+        result = dlg.exec()
+        if result == qt.QDialog.DialogCode.Accepted:
+            return dlg.name_input.text(), dlg.value_input.value(), True
+        else:
+            return "", 0, False
 path = os.path.join(os.getenv('appdata'), app.appName, "athkar.json")
 limits_path = os.path.join(os.getenv('appdata'), app.appName, "limits.json")
 if not os.path.exists(path):
@@ -23,8 +116,8 @@ class sibha(qt.QWidget):
         self.athkar_laybol = qt.QLabel("قم بتحديد الذكر")
         self.athkar_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         self.athkar = qt.QComboBox()
-        self.athkar.setAccessibleDescription("control plus c لنطق الذكر المحدد")
         self.athkar.setAccessibleName("قم بتحديد الذكر")
+        self.athkar.setAccessibleDescription("control plus c لنقط الذكر المحدد في أي مكان")
         self.athkar.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.athkar.customContextMenuRequested.connect(self.onDelete)
         qt1.QShortcut("delete", self).activated.connect(self.onDelete)
@@ -42,12 +135,12 @@ class sibha(qt.QWidget):
         ])
         self.athkar.addItems(self.externalAthkar)        
         self.numbers = qt.QLabel("0")
-        self.numbers.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.numbers.setAccessibleDescription("عدد التسبيحات")
+        self.numbers.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
+        self.numbers.setAccessibleDescription("عدد التسبيحات. لنطق عدد التسبيحات في أي مكان نستخدم الاختصار control plus s")
         self.numbers.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.numbers.setStyleSheet("font-size:300px;")    
         self.reset = guiTools.QPushButton("إعادة تعين")
-        self.reset.setAccessibleDescription("control plus R")        
+        self.reset.setAccessibleDescription("control plus r")        
         self.reset.setShortcut("ctrl+r")
         self.reset.clicked.connect(self.reset_count)
         self.reset.setObjectName("resetButton")        
@@ -77,6 +170,7 @@ class sibha(qt.QWidget):
         self.limit_button.setAccessibleDescription("control plus shift plus s")
         self.update_limit_button_text()
         self.line_of_thecr = qt.QLineEdit()
+        self.line_of_thecr.setAccessibleName("أكتب الذكر")
         self.line_of_thecr.textChanged.connect(self.onLineTextChanged)
         self.line_of_thecr.setPlaceholderText("أكتب الذكر")
         self.line_of_thecr.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)                
@@ -136,7 +230,7 @@ class sibha(qt.QWidget):
                 min-height: 40px;
                 font-size: 16px;
             }
-            QComboBox, QLineEdit {
+            QComboBox, QLineEdit, QSpinBox {
                 min-height: 40px;
                 font-size: 16px;
             }
@@ -155,14 +249,12 @@ class sibha(qt.QWidget):
         else:
             self.show_limits_menu()
     def add_new_limit(self):
-        name, ok = guiTools.QInputDialog.getText(self, "إضافة حد جديد", "أدخل اسم الحد الأقصى:")
+        name, value, ok = LimitInputDialog.getLimitData(self)
         if ok and name:
-            value, ok = guiTools.QInputDialog.getSingleInt(self, "إضافة حد جديد", "أدخل عدد التسبيحات:", 1,)
-            if ok:
-                self.limits_data["limits"][name] = value
-                self.save_limits()
-                self.update_limit_button_text()
-                guiTools.speak(f"تم إضافة الحد الأقصى {name} بقيمة {value}")
+            self.limits_data["limits"][name] = value
+            self.save_limits()
+            self.update_limit_button_text()
+            guiTools.speak(f"تم إضافة الحد الأقصى {name} بقيمة {value}")
     def show_limits_menu(self):
         menu = qt.QMenu(self)
         font=qt1.QFont()
@@ -274,7 +366,7 @@ class sibha(qt.QWidget):
         if itemText not in self.externalAthkar:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكنك حذف هذا الذكر")
         else:
-            question = guiTools.QQuestionMessageBox.view(self, "تنبيه", "هل تريد حذف هذا الذكر", "نعم", "لا")
+            question = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", "هل تريد حذف هذا الذكر", "نعم", "لا")
             if question == 0:
                 self.externalAthkar.remove(itemText)
                 self.athkar.removeItem(self.athkar.currentIndex())
