@@ -89,6 +89,53 @@ class MergeThread(qt2.QThread):
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
+class PreMergeCheckThread(qt2.QThread):
+    finished = qt2.pyqtSignal(list, list)
+    error = qt2.pyqtSignal(str)
+    def __init__(self, start_ayah_index, end_ayah_index, quran_text, category, type_index, current_reciter_index, reciters_data):
+        super().__init__()
+        self.start_ayah_index = start_ayah_index
+        self.end_ayah_index = end_ayah_index
+        self.quran_text = quran_text
+        self.category = category
+        self.type_index = type_index
+        self.current_reciter_index = current_reciter_index
+        self.reciters_data = reciters_data
+    def _get_current_reciter_name(self):
+        return list(self.reciters_data.keys())[self.current_reciter_index]
+    def _create_ayah_filename(self, ayah_text):
+        try:
+            Ayah, surah, _, _, _ = functions.quranJsonControl.getAyah(ayah_text, self.category, self.type_index)
+            surah_str = str(surah).zfill(3)
+            ayah_str = str(Ayah).zfill(3)
+            return f"{surah_str}{ayah_str}.mp3"
+        except:
+            return None
+    def run(self):
+        try:
+            lines = self.quran_text.split("\n")
+            reciter_name = self._get_current_reciter_name()
+            reciter_url_base = self.reciters_data[reciter_name]
+            reciter_folder_name = reciter_url_base.split("/")[-3]
+            reciter_local_path_base = os.path.join(os.getenv('appdata'), settings.app.appName, "reciters", reciter_folder_name)
+            merge_list = []
+            ayahs_to_download = []
+            for i in range(self.start_ayah_index, self.end_ayah_index):
+                ayah_text = lines[i]
+                ayah_filename = self._create_ayah_filename(ayah_text)
+                if not ayah_filename: continue
+                local_path = os.path.join(reciter_local_path_base, ayah_filename)
+                ayah_info = {
+                    "index": i, "filename": ayah_filename,
+                    "url": reciter_url_base + ayah_filename,
+                    "local_path": local_path
+                }
+                merge_list.append(ayah_info)
+                if not os.path.exists(local_path):
+                    ayahs_to_download.append(ayah_info)
+            self.finished.emit(merge_list, ayahs_to_download)
+        except Exception as e:
+            self.error.emit(f"حدث خطأ أثناء التحضير للدمج: {str(e)}")
 class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
         super().__init__(parent)
@@ -361,7 +408,7 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
-        qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)        
+        qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
         qt1.QShortcut("ctrl+t", self).activated.connect(self.getCurentAyahTafseer)
         qt1.QShortcut("ctrl+i", self).activated.connect(self.getCurentAyahIArab)
         qt1.QShortcut("ctrl+r", self).activated.connect(self.getCurrentAyahTanzel)
@@ -513,6 +560,11 @@ class QuranViewer(qt.QDialog):
     def handle_merge_action(self):
         if self.is_merging and self.merge_phase == 'merging':
             self.confirm_and_cancel_merge()
+        elif self.is_merging and self.merge_phase == 'preparing':
+            self.cancellation_requested = True
+            if hasattr(self, 'pre_merge_thread') and self.pre_merge_thread.isRunning():
+                self.pre_merge_thread.terminate()
+            self.on_merge_finished(False, "تم إلغاء عملية التحضير من قبل المستخدم.")
     def confirm_and_cancel_merge(self):
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء",
             "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
@@ -541,23 +593,24 @@ class QuranViewer(qt.QDialog):
         if not ok2:
             self.resume_after_action()
             return
-        self.merge_list.clear()
-        reciter_url_base = reciters[self.getCurrentReciter()]
-        reciter_folder_name = reciter_url_base.split("/")[-3]
-        reciter_local_path_base = os.path.join(os.getenv('appdata'), settings.app.appName, "reciters", reciter_folder_name)
-        ayahs_to_download = []
-        for i in range(start_ayah - 1, end_ayah):
-            ayah_filename = self.on_set(i)
-            if not ayah_filename: continue
-            local_path = os.path.join(reciter_local_path_base, ayah_filename)
-            ayah_info = {
-                "index": i, "filename": ayah_filename,
-                "url": reciter_url_base + ayah_filename,
-                "local_path": local_path
-            }
-            self.merge_list.append(ayah_info)
-            if not os.path.exists(local_path):
-                ayahs_to_download.append(ayah_info)
+        self.set_ui_for_merge(True)
+        self.merge_feedback_label.setText("جاري التحقق من الآيات المطلوبة...")
+        self.merge_action_button.setText("إلغاء العملية")
+        self.merge_action_button.show()
+        self.merge_phase = 'preparing'
+        self.cancellation_requested = False
+        start_index = start_ayah - 1
+        end_index = end_ayah
+        self.pre_merge_thread = PreMergeCheckThread(
+            start_index, end_index, self.quranText, self.category, self.type,
+            self.currentReciter, reciters
+        )
+        self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
+        self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
+        self.pre_merge_thread.start()
+    def on_pre_merge_check_finished(self, merge_list, ayahs_to_download):
+        if self.cancellation_requested: return
+        self.merge_list = merge_list
         num_files_to_download = len(ayahs_to_download)
         if num_files_to_download > 0:
             confirm_message = (
@@ -574,13 +627,14 @@ class QuranViewer(qt.QDialog):
             )
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
         if reply != 0:
+            self.set_ui_for_merge(False)
             self.resume_after_action()
             return
         output_filename, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف المدموج", "", "Audio Files (*.mp3)")
         if not output_filename:
+            self.set_ui_for_merge(False)
             self.resume_after_action()
             return
-        self.set_ui_for_merge(True)
         self.current_merge_output_path = output_filename
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()
@@ -1280,7 +1334,7 @@ class QuranViewer(qt.QDialog):
     def onPlayToEnd(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
-            return        
+            return
         text_for_player = self.original_quran_text if not self.is_search_view else self.quranText
         QuranPlayer(self, text_for_player, self.getCurrentAyah(), self.type, self.category).exec()
     def getCurrentReciter(self):
@@ -1389,8 +1443,8 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()
     def closeEvent(self, event):
         if self.is_merging:
-            if self.merge_phase == 'downloading':
-                guiTools.qMessageBox.MessageBox.error(self, "غير مسموح", "لا يمكن إغلاق البرنامج أثناء مرحلة تحميل الآيات. الرجاء الانتظار.")
+            if self.merge_phase == 'preparing' or self.merge_phase == 'downloading':
+                guiTools.qMessageBox.MessageBox.error(self, "غير مسموح", "لا يمكن إغلاق البرنامج أثناء مرحلة التحضير أو تحميل الآيات. الرجاء الانتظار.")
                 event.ignore()
             elif self.merge_phase == 'merging':
                 reply = guiTools.QQuestionMessageBox.view(self, "تأكيد", "عملية الدمج قيد التشغيل. هل تريد إلغاءها والخروج؟", "نعم", "لا")
