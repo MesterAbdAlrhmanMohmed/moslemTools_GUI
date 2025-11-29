@@ -82,6 +82,47 @@ class MergeThread(qt2.QThread):
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
+class PreMergeCheckThread(qt2.QThread):
+    finished = qt2.pyqtSignal(list, list, str, str)
+    error = qt2.pyqtSignal(str)
+    def __init__(self, all_ayahs_text, current_reciter, reciters_data, current_item_text, current_type_index):
+        super().__init__()
+        self.all_ayahs_text = all_ayahs_text
+        self.current_reciter = current_reciter
+        self.reciters_data = reciters_data
+        self.current_item_text = current_item_text
+        self.current_type_index = current_type_index
+    def _create_ayah_filename(self, ayah_text):
+        try:
+            Ayah, surah, _, _, _ = functions.quranJsonControl.getAyah(ayah_text, self.current_item_text, self.current_type_index)
+            surah_str = str(surah).zfill(3)
+            ayah_str = str(Ayah).zfill(3)
+            return f"{surah_str}{ayah_str}.mp3"
+        except:
+            return None
+    def run(self):
+        try:
+            reciter_name = list(self.reciters_data.keys())[self.current_reciter]
+            reciter_url_base = self.reciters_data[reciter_name]
+            reciter_folder_name = reciter_url_base.split("/")[-3]
+            reciter_local_path_base = os.path.join(os.getenv('appdata'), appName, "reciters", reciter_folder_name)
+            merge_list = []
+            ayahs_to_download = []
+            for ayah_text in self.all_ayahs_text:
+                ayah_filename = self._create_ayah_filename(ayah_text)
+                if not ayah_filename: continue
+                local_path = os.path.join(reciter_local_path_base, ayah_filename)
+                ayah_info = {
+                    "filename": ayah_filename,
+                    "url": reciter_url_base + ayah_filename,
+                    "local_path": local_path
+                }
+                merge_list.append(ayah_info)
+                if not os.path.exists(local_path):
+                    ayahs_to_download.append(ayah_info)
+            self.finished.emit(merge_list, ayahs_to_download, reciter_name, reciter_local_path_base)
+        except Exception as e:
+            self.error.emit(f"حدث خطأ أثناء التحضير للدمج: {str(e)}")
 class Quran(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -90,7 +131,7 @@ class Quran(qt.QWidget):
         qt1.QShortcut("ctrl+l",self).activated.connect(self.onTranslationActionTriggered)
         qt1.QShortcut("ctrl+i",self).activated.connect(self.onIarabActionTriggered)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.onMergeActionTriggered)
-        self.infoData = []        
+        self.infoData = []
         self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
         self.merge_list = []
         self.files_to_delete_after_merge = []
@@ -213,7 +254,7 @@ class Quran(qt.QWidget):
         self.info.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.info.customContextMenuRequested.connect(self.onContextMenu)
         self.info.itemActivated.connect(self.onItemTriggered)
-        layout.addWidget(self.info)        
+        layout.addWidget(self.info)
         self.merge_feedback_label = qt.QLabel()
         self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -342,7 +383,7 @@ class Quran(qt.QWidget):
         iarabAction = qt1.QAction("إعراب", self)
         iarabAction.setShortcut("ctrl+i")
         menu.addAction(iarabAction)
-        iarabAction.triggered.connect(self.onIarabActionTriggered)        
+        iarabAction.triggered.connect(self.onIarabActionTriggered)
         menu.addSeparator()
         mergeAction = qt1.QAction("دمج الآيات", self)
         mergeAction.setShortcut("ctrl+alt+d")
@@ -400,7 +441,7 @@ class Quran(qt.QWidget):
     def onCostumBTNRequested(self):
         categories=["من سورة الى سورة", "من صفحة الى صفحة", "من جزء الى جزء", "من ربع الى ربع", "من حزب الى حزب"]
         index=categories.index(self.sender().text())
-        guiTools.FromToSurahWidget(self,index).exec()    
+        guiTools.FromToSurahWidget(self,index).exec()
     def _get_current_reciter_name(self):
         return list(reciters.keys())[self.currentReciter]
     def _create_ayah_filename(self, ayah_text):
@@ -413,6 +454,11 @@ class Quran(qt.QWidget):
     def handle_merge_action(self):
         if self.is_merging and self.merge_phase == 'merging':
             self.confirm_and_cancel_merge()
+        elif self.is_merging and self.merge_phase == 'preparing':
+            self.cancellation_requested = True
+            if hasattr(self, 'pre_merge_thread') and self.pre_merge_thread.isRunning():
+                self.pre_merge_thread.terminate()
+            self.on_merge_finished(False, "تم إلغاء عملية التحضير من قبل المستخدم.")
     def confirm_and_cancel_merge(self):
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء",
             "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
@@ -421,7 +467,9 @@ class Quran(qt.QWidget):
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
                 self.merge_thread.stop()
     def onMergeActionTriggered(self):
-        if not self.info.currentItem():            
+        if not self.info.currentItem():
+            return
+        if self.is_merging:
             return
         if not os.path.exists(self.ffmpeg_path):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
@@ -429,23 +477,22 @@ class Quran(qt.QWidget):
         self.currentReciter = int(settings_handler.get("g", "reciter"))
         all_ayahs_text = self.getResult().split("\n")
         self.merge_list.clear()
-        reciter_name = self._get_current_reciter_name()
-        reciter_url_base = reciters[reciter_name]
-        reciter_folder_name = reciter_url_base.split("/")[-3]
-        reciter_local_path_base = os.path.join(os.getenv('appdata'), appName, "reciters", reciter_folder_name)
-        ayahs_to_download = []
-        for ayah_text in all_ayahs_text:
-            ayah_filename = self._create_ayah_filename(ayah_text)
-            if not ayah_filename: continue
-            local_path = os.path.join(reciter_local_path_base, ayah_filename)
-            ayah_info = {
-                "filename": ayah_filename,
-                "url": reciter_url_base + ayah_filename,
-                "local_path": local_path
-            }
-            self.merge_list.append(ayah_info)
-            if not os.path.exists(local_path):
-                ayahs_to_download.append(ayah_info)
+        self.set_ui_for_merge(True)
+        self.merge_feedback_label.setText("جاري التحقق من الآيات المطلوبة...")
+        self.merge_action_button.setText("إلغاء العملية")
+        self.merge_action_button.show()
+        self.merge_phase = 'preparing'
+        self.cancellation_requested = False
+        self.pre_merge_thread = PreMergeCheckThread(
+            all_ayahs_text, self.currentReciter, reciters,
+            self.info.currentItem().text(), self.type.currentIndex()
+        )
+        self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
+        self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
+        self.pre_merge_thread.start()
+    def on_pre_merge_check_finished(self, merge_list, ayahs_to_download, reciter_name, reciter_local_path_base):
+        if self.cancellation_requested: return
+        self.merge_list = merge_list
         num_files_to_download = len(ayahs_to_download)
         if num_files_to_download > 0:
             confirm_message = (
@@ -462,11 +509,12 @@ class Quran(qt.QWidget):
             )
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
         if reply != 0:
+            self.set_ui_for_merge(False)
             return
         output_filename, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف المدموج", "", "Audio Files (*.mp3)")
         if not output_filename:
+            self.set_ui_for_merge(False)
             return
-        self.set_ui_for_merge(True)
         self.current_merge_output_path = output_filename
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()
@@ -563,7 +611,7 @@ class Quran(qt.QWidget):
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()
     def set_ui_for_merge(self, is_active):
-        self.is_merging = is_active        
+        self.is_merging = is_active
         widgets_to_disable = [self.by, self.type, self.custom, self.serch, self.search_bar, self.info, self.info_of_quran, self.info1]
         for widget in widgets_to_disable:
             widget.setEnabled(not is_active)
