@@ -138,6 +138,7 @@ class QuranPlayer(qt.QWidget):
         self.reciterSearchEdit.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.reciterSearchEdit.setAccessibleName("ابحث عن قارئ")
         self.reciterSearchEdit.setObjectName("reciterSearch")
+        self.reciterSearchEdit.textChanged.connect(self.reciter_onsearch)
         self.recitersListWidget = guiTools.QListWidget()
         self.recitersListWidget.setSpacing(3)
         self.recitersListWidget.itemSelectionChanged.connect(self.on_reciter_selected)
@@ -149,11 +150,10 @@ class QuranPlayer(qt.QWidget):
         self.surahSearchEdit .setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.surahSearchEdit.setAccessibleName("ابحث عن سورة")
         self.surahSearchEdit.setObjectName("surahSearch")
+        self.surahSearchEdit.textChanged.connect(self.surah_onsearch)
         self.surahListWidget = guiTools.QListWidget()
         self.surahListWidget.setSpacing(3)
         self.surahListWidget.clicked.connect(self.play_selected_audio)
-        self.reciterSearchEdit.textChanged.connect(self.reciter_onsearch)
-        self.surahSearchEdit.textChanged.connect(self.surah_onsearch)
         self.recitersList = list(self.reciters_data.keys())
         self.recitersList.sort()
         self.recitersListWidget.addItems(self.recitersList)
@@ -408,17 +408,17 @@ class QuranPlayer(qt.QWidget):
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
     def update_merge_ui(self):
         count = len(self.merge_list)
+        is_merging_selected = count > 0
         if count > 0:
             self.merge_feedback_label.setText(f"تم تحديد {count} سورة للدمج.")
             self.merge_feedback_label.setVisible(True)
         else:
             self.merge_feedback_label.setVisible(False)
         self.merge_action_button.setVisible(count >= 2)
-        is_merging = count > 0
-        self.batch_download_action_button.setEnabled(not is_merging)
-        self.dl_all_app.setEnabled(not is_merging)
-        self.merge_all_from_start_button.setEnabled(not is_merging)
-        self.merge_all_from_end_button.setEnabled(not is_merging)
+        self.batch_download_action_button.setEnabled(not is_merging_selected)
+        self.dl_all_app.setEnabled(not is_merging_selected)
+        self.merge_all_from_start_button.setVisible(not is_merging_selected)
+        self.merge_all_from_end_button.setVisible(not is_merging_selected)
     def cancel_merge(self):
         self.merge_list.clear()
         self.update_merge_ui()
@@ -465,7 +465,7 @@ class QuranPlayer(qt.QWidget):
             confirm_message = (
                 f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} سورة غير موجودة.\n"
                 "سيتم الآن تحميل ودمج الملفات المحددة على مرحلتين:\n"
-                "مرحلة التحميل: سيتم تحميل الملفات تباعًا. في هذه الأثناء، يمكنك استخدام قائمة السور للتراجع عن تحديد أي سورة لم يبدأ تحميلها بعد، وبذلك يتم إلغاء تحميلها.\n"
+                "مرحلة التحميل: سيتم تحميل الملفات تباعًا. في هذه الأثناء، لا يمكنك إلغاء تحميل أي سورة.\n"
                 "مرحلة الدمج: بعد انتهاء التحميل، لن تتمكن من استخدام الواجهة إلا لإلغاء عملية الدمج بأكملها.\n\n"
                 "هل تريد المتابعة؟"
             )
@@ -493,6 +493,7 @@ class QuranPlayer(qt.QWidget):
     def process_next_in_merge_queue(self):
         output_dir = os.path.dirname(self.current_merge_output_path)
         next_item_to_download = None
+        count_pending_downloads = 0
         for item in self.merge_list:
             reciter = item["reciter"]
             surah = item["surah"]
@@ -502,22 +503,27 @@ class QuranPlayer(qt.QWidget):
                 continue            
             if url in self.completed_merge_downloads:
                 continue
-            next_item_to_download = item
-            break        
+            count_pending_downloads += 1
+            if next_item_to_download is None:
+                next_item_to_download = item
         if next_item_to_download:
             self.progressBar.setVisible(True)
+            self.cancel_download_button.setVisible(False)
             url = next_item_to_download['url']
             reciter = next_item_to_download['reciter']
             surah = next_item_to_download['surah']            
             safe_surah_name = "".join(c for c in surah if c.isalnum() or c in (' ', '_')).rstrip()
             download_path = os.path.join(output_dir, f"{reciter}_{safe_surah_name}.mp3")            
             self.current_download_url = url
+            self.merge_feedback_label.setVisible(True)                        
+            self.merge_feedback_label.setText(f"جاري تحميل: {reciter} - {surah} ({len(self.completed_merge_downloads) + 1} من {len([item for item in self.merge_list if not os.path.exists(os.path.join(os.getenv('appdata'), app.appName, 'quran surah reciters', item['reciter'], item['surah'] + '.mp3'))])} ملف)")
             self.download_thread = DownloadThread(url, download_path)
             self.download_thread.progress.connect(self.progressBar.setValue)
             self.download_thread.finished.connect(self.on_single_merge_download_finished)
             self.download_thread.start()
         else:
             self.progressBar.setVisible(False)
+            self.cancel_download_button.setVisible(False)
             self.finalize_and_execute_merge()
     def on_single_merge_download_finished(self):
         if self.current_download_url:
@@ -738,20 +744,23 @@ class QuranPlayer(qt.QWidget):
             self.merge_action_button.setEnabled(True)
     def set_ui_for_merge_download(self, enabled):
         widgets_to_toggle = [
-            self.recitersListWidget,
+            self.recitersListWidget, self.surahListWidget,
             self.reciterSearchEdit, self.surahSearchEdit,
             self.reciterSearchLabel, self.surahSearchLabel,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
             self.Slider, self.openBookmarks, self.User_guide,
             self.merge_all_from_start_button, self.merge_all_from_end_button,
-            self.recitersLabel,
+            self.recitersLabel, self.surahsLabel,
             self.duration, self.info_menu,
             self.merge_action_button,
             self.batch_download_action_button
         ]
         for widget in widgets_to_toggle:
             widget.setEnabled(enabled)
+        self.progressBar.setVisible(not enabled)
+        self.cancel_download_button.setVisible(False)
+        self.merge_feedback_label.setEnabled(True)
     def cleanup_pending_deletions(self):        
         quran_reciters_dir = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters")
         if os.path.exists(quran_reciters_dir):
@@ -1141,15 +1150,15 @@ class QuranPlayer(qt.QWidget):
         self.cancel_download_batch()
         selected_reciter_item = self.recitersListWidget.currentItem()
         if selected_reciter_item:
-            self.merge_all_from_start_button.setEnabled(True)
-            self.merge_all_from_end_button.setEnabled(True)
+            self.merge_all_from_start_button.setVisible(True)
+            self.merge_all_from_end_button.setVisible(True)
             reciter = selected_reciter_item.text()
             for surah, link in self.reciters_data[reciter].items():
                 self.surahListWidget.addItem(surah)
             self.check_all_surahs_downloaded()
         else:
-            self.merge_all_from_start_button.setEnabled(False)
-            self.merge_all_from_end_button.setEnabled(False)
+            self.merge_all_from_start_button.setVisible(False)
+            self.merge_all_from_end_button.setVisible(False)
     def search(self, search_text, data):
         return [item for item in data if search_text in item.lower()]
     def reciter_onsearch(self):
@@ -1265,7 +1274,6 @@ class QuranPlayer(qt.QWidget):
                 cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
                 batch_download_menu.addAction(cancel_batch_dl_action)
             menu.addSeparator()
-
         if self.mp.duration() > 0:
             repeateFromPositionTopositionMenue = menu.addMenu("التكرار من موضع إلى موضع")
             setStartingPositionAction = qt1.QAction("تحديد موضع البداية", self)
@@ -1282,7 +1290,6 @@ class QuranPlayer(qt.QWidget):
             resetAndStopRepeatingAction.triggered.connect(self.removePosition)
             repeateFromPositionTopositionMenue.addAction(resetAndStopRepeatingAction)
             repeateFromPositionTopositionMenue.setFont(boldFont)
-
         play_action = qt1.QAction("تشغيل السورة المحددة", self)
         play_action.triggered.connect(self.play_selected_audio)
         menu.addAction(play_action)

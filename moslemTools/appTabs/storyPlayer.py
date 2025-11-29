@@ -371,16 +371,16 @@ class StoryPlayer(qt.QWidget):
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
     def update_merge_ui(self):
         count = len(self.merge_list)
+        is_merging_selected = count > 0
         if count > 0:
             self.merge_feedback_label.setText(f"تم تحديد {count} قصة للدمج.")
             self.merge_feedback_label.setVisible(True)
         else:
             self.merge_feedback_label.setVisible(False)
         self.merge_action_button.setVisible(count >= 2)
-        is_merging = count > 0
-        self.merge_all_button.setEnabled(not is_merging)
-        self.batch_download_action_button.setEnabled(not is_merging)
-        self.dl_all_app.setEnabled(not is_merging)
+        self.merge_all_button.setVisible(not is_merging_selected)
+        self.batch_download_action_button.setEnabled(not is_merging_selected)
+        self.dl_all_app.setEnabled(not is_merging_selected)
     def cancel_merge(self):
         self.merge_list.clear()
         self.update_merge_ui()
@@ -414,7 +414,7 @@ class StoryPlayer(qt.QWidget):
             confirm_message = (
                 f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} قصة غير موجودة.\n\n"
                 "سيتم الآن تحميل ودمج الملفات المحددة على مرحلتين:\n"
-                "مرحلة التحميل: سيتم تحميل الملفات تباعًا. في هذه الأثناء، يمكنك استخدام قائمة القصص للتراجع عن تحديد أي قصة لم يبدأ تحميلها بعد، وبذلك يتم إلغاء تحميلها.\n"
+                "مرحلة التحميل: سيتم تحميل الملفات تباعًا. في هذه الأثناء، لا يمكنك إلغاء تحميل أي قصة.\n"
                 "مرحلة الدمج: بعد انتهاء التحميل، لن تتمكن من استخدام الواجهة إلا لإلغاء عملية الدمج بأكملها.\n\n"
                 "هل تريد المتابعة؟"
             )
@@ -455,18 +455,22 @@ class StoryPlayer(qt.QWidget):
             break        
         if next_item_to_download:
             self.progressBar.setVisible(True)
+            self.cancel_download_button.setVisible(False)
             url = next_item_to_download['url']
             category = next_item_to_download['category']
             story = next_item_to_download['story']            
             safe_story_name = "".join(c for c in story if c.isalnum() or c in (' ', '_')).rstrip()
             download_path = os.path.join(output_dir, f"{category}_{safe_story_name}.mp3")            
             self.current_download_url = url
+            self.merge_feedback_label.setVisible(True)
+            self.merge_feedback_label.setText(f"جاري تحميل: {category} - {story} ({len(self.completed_merge_downloads) + 1} من {len([item for item in self.merge_list if not os.path.exists(os.path.join(os.getenv('appdata'), app.appName, 'stories', item['category'], item['story'] + '.mp3'))])} ملف)")
             self.download_thread = DownloadThread(url, download_path)
             self.download_thread.progress.connect(self.progressBar.setValue)
             self.download_thread.finished.connect(self.on_single_merge_download_finished)
             self.download_thread.start()
         else:
             self.progressBar.setVisible(False)
+            self.cancel_download_button.setVisible(False)
             self.finalize_and_execute_merge()
     def on_single_merge_download_finished(self):
         if self.current_download_url:
@@ -683,19 +687,22 @@ class StoryPlayer(qt.QWidget):
             self.merge_action_button.setEnabled(True)
     def set_ui_for_merge_download(self, enabled):
         widgets_to_toggle = [
-            self.categoriesListWidget,
+            self.categoriesListWidget, self.storyListWidget,
             self.categorySearchEdit, self.storySearchEdit,
             self.categorySearchLabel, self.storySearchLabel,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.repeat_story_button,
             self.Slider, self.openBookmarks, self.User_guide,
-            self.merge_all_button, self.categoriesLabel,
+            self.merge_all_button, self.categoriesLabel, self.storiesLabel,
             self.duration, self.info_menu,
             self.merge_action_button,
             self.batch_download_action_button
         ]
         for widget in widgets_to_toggle:
             widget.setEnabled(enabled)
+        self.progressBar.setVisible(not enabled)
+        self.cancel_download_button.setVisible(False)
+        self.merge_feedback_label.setEnabled(True)
     def cleanup_pending_deletions(self):
         stories_dir = os.path.join(os.getenv('appdata'), app.appName, "stories")
         if os.path.exists(stories_dir):
@@ -1085,13 +1092,13 @@ class StoryPlayer(qt.QWidget):
         self.repeat_story_button.setEnabled(False)
         selected_category_item = self.categoriesListWidget.currentItem()
         if selected_category_item:
-            self.merge_all_button.setEnabled(True)
+            self.merge_all_button.setVisible(True)
             category = selected_category_item.text()
             for story, link in self.categories_data[category].items():
                 self.storyListWidget.addItem(story)
             self.check_all_stories_downloaded()
         else:
-            self.merge_all_button.setEnabled(False)
+            self.merge_all_button.setVisible(False)
     def search(self, search_text, data):
         return [item for item in data if search_text in item.lower()]
     def story_onsearch(self):
