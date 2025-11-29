@@ -81,7 +81,7 @@ class FromToSurahWidget(qt.QDialog):
         self.index = index
         self.original_height = 300
         self.merge_ui_height = 450
-        self.resize(400, self.original_height)                 
+        self.resize(300, self.original_height)                 
         self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
         self.merge_list = []
         self.files_to_delete_after_merge = []
