@@ -320,10 +320,10 @@ class main(qt.QMainWindow):
             elif hijri_date_obj.day in [13, 14, 15]:
                 self.info.setText(f"يا {username1} صيام الأيام القمرية، سنة عن النبي صل الله عليه وسلم")
             else:
-                self.info.setText("لا تَنْسوا ذِكْر الله")
+                self.info.setText("لا تَنْسوا ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صل الله عليه وسلم.")
         except Exception as e:
             print(f"حدث خطأ: {e}")
-            self.info.setText("لا تَنْسوا ذِكْر الله")
+            self.info.setText("لا تَنْسوا ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صل الله عليه وسلم.")
     def onViewLastMessageButtonClicked(self):
         with open(os.path.join(os.getenv('appdata'), settings_handler.appName, "message.json"), "r", encoding="utf-8") as file:
             data = json.load(file)
