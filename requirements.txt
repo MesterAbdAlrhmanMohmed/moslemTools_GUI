@@ -10,3 +10,4 @@ pywin32
 keyboard
 cx_Freeze
 python-docx
+accessible_output3
