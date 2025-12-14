@@ -1,6 +1,7 @@
 import guiTools, requests, json, os,gui,functions, subprocess, shutil, winsound
 from guiTools import TextViewer
 from guiTools import speak
+from guiTools.QCustomListDialog import QCustomListDialog
 from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -122,6 +123,7 @@ class StoryPlayer(qt.QWidget):
         self.successfully_downloaded_in_batch = []
         self.full_batch_cancellation_requested = False
         self.excluded_surahs_in_batch = []
+        self.first_merge_selection_index = None
         self.categories_data = self.load_categories()
         self.categoriesLabel = qt.QLabel("إختيار فئة")
         self.categoriesLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
@@ -349,23 +351,20 @@ class StoryPlayer(qt.QWidget):
             "url": self.categories_data[category][story]
         }
         self.merge_list.append(story_info)
-        winsound.Beep(440, 100)
         self.update_merge_ui()
         self.update_download_batch_ui()
     def remove_from_merge_list(self):
         if not self.merge_list:
-            return        
+            return
         num_items = len(self.merge_list)
-        number, ok = guiTools.QInputDialog.getSingleInt(
-            self, 
-            "إزالة قصة", 
-            f"أدخل رقم القصة لإزالتها (من 1 إلى {num_items})", 
-            1
-        )
-        if ok:
-            if 1 <= number <= num_items:
-                del self.merge_list[number - 1]
-                winsound.Beep(600, 150)
+        item_names = [f"{i+1}: {item['story']}" for i, item in enumerate(self.merge_list)]
+        
+        selected_item_str, ok = QCustomListDialog.getItem(self, "إزالة قصة", "اختر القصة لإزالتها:", item_names)
+
+        if ok and selected_item_str:
+            index_to_remove = int(selected_item_str.split(':')[0]) - 1
+            if 0 <= index_to_remove < num_items:
+                del self.merge_list[index_to_remove]
                 self.update_merge_ui()
                 self.update_download_batch_ui()
             else:
@@ -386,6 +385,49 @@ class StoryPlayer(qt.QWidget):
         self.merge_list.clear()
         self.update_merge_ui()
         self.update_download_batch_ui()
+
+    def set_as_merge_start(self):
+        self.first_merge_selection_index = self.storyListWidget.currentRow()
+        speak(f"تم تحديد {self.storyListWidget.currentItem().text()} كبداية للدمج")
+
+    def cancel_merge_start(self):
+        self.first_merge_selection_index = None
+        speak("تم إلغاء تحديد بداية الدمج")
+
+    def merge_from_start_to_here(self):
+        if self.first_merge_selection_index is None:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء تحديد بداية الدمج أولاً.")
+            return
+
+        end_index = self.storyListWidget.currentRow()
+        start_index = self.first_merge_selection_index
+
+        if start_index > end_index:
+            start_index, end_index = end_index, start_index
+
+        self.merge_list.clear()
+        category = self.categoriesListWidget.currentItem().text()
+        
+        for i in range(start_index, end_index + 1):
+            story_item = self.storyListWidget.item(i)
+            if story_item:
+                story = story_item.text()
+                story_info = {
+                    "category": category,
+                    "story": story,
+                    "url": self.categories_data[category][story]
+                }
+                self.merge_list.append(story_info)
+        
+        self.first_merge_selection_index = None
+
+        if len(self.merge_list) < 1:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم تحديد أي قصص للدمج.")
+            return
+
+        speak(f"سيتم دمج {len(self.merge_list)} قصة")
+        self.prepare_merge(is_all=True)
+
     def prepare_merge_all(self):
         if not self.categoriesListWidget.currentItem():
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء اختيار فئة أولاً.")
@@ -581,23 +623,20 @@ class StoryPlayer(qt.QWidget):
             guiTools.qMessageBox.MessageBox.view(self, "ملاحظة", "تم إضافة هذه القصة إلى القائمة بالفعل.")
             return
         self.download_batch_list.append(story_info)
-        winsound.Beep(440, 100)
         self.update_download_batch_ui()
         self.update_merge_ui()
     def remove_from_download_batch(self):
         if not self.download_batch_list:
-            return        
+            return
         num_items = len(self.download_batch_list)
-        number, ok = guiTools.QInputDialog.getSingleInt(
-            self, 
-            "إزالة قصة", 
-            f"أدخل رقم القصة لإزالتها من قائمة التحميل (من 1 إلى {num_items})", 
-            1
-        )
-        if ok:
-            if 1 <= number <= num_items:
-                del self.download_batch_list[number - 1]
-                winsound.Beep(600, 150)
+        item_names = [f"{i+1}: {item['story']}" for i, item in enumerate(self.download_batch_list)]
+        
+        selected_item_str, ok = QCustomListDialog.getItem(self, "إزالة قصة", "اختر القصة لإزالتها من قائمة التحميل:", item_names)
+        
+        if ok and selected_item_str:
+            index_to_remove = int(selected_item_str.split(':')[0]) - 1
+            if 0 <= index_to_remove < num_items:
+                del self.download_batch_list[index_to_remove]
                 self.update_download_batch_ui()
                 self.update_merge_ui()
             else:
@@ -1229,25 +1268,53 @@ class StoryPlayer(qt.QWidget):
         boldFont=menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
-        if not self.download_batch_list:
+
+        is_merging_active = self.merge_list or self.first_merge_selection_index is not None
+        is_batch_download_active = bool(self.download_batch_list)
+
+        if not is_batch_download_active:
             merge_menu = menu.addMenu("دمج القصص")
+            if self.first_merge_selection_index is None:
+                if not self.merge_list:
+                    start_merge_action = qt1.QAction("بدء الدمج من هذه القصة", self)
+                    start_merge_action.triggered.connect(self.add_to_merge_list)
+                    merge_menu.addAction(start_merge_action)
+                else:
+                    add_next_action = qt1.QAction(f"إضافة القصة رقم {len(self.merge_list) + 1}", self)
+                    add_next_action.triggered.connect(self.add_to_merge_list)
+                    merge_menu.addAction(add_next_action)
+                    undo_action = qt1.QAction("التراجع عن تحديد قصة", self)
+                    undo_action.triggered.connect(self.remove_from_merge_list)
+                    merge_menu.addAction(undo_action)
+                    cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
+                    cancel_merge_action.triggered.connect(self.cancel_merge)
+                    merge_menu.addAction(cancel_merge_action)
+            
+            merge_menu.addSeparator()
+
             if not self.merge_list:
-                start_merge_action = qt1.QAction("بدء الدمج من هذه القصة", self)
-                start_merge_action.triggered.connect(self.add_to_merge_list)
-                merge_menu.addAction(start_merge_action)
-            else:
-                add_next_action = qt1.QAction(f"إضافة القصة رقم {len(self.merge_list) + 1}", self)
-                add_next_action.triggered.connect(self.add_to_merge_list)
-                merge_menu.addAction(add_next_action)
-                undo_action = qt1.QAction("التراجع عن تحديد قصة", self)
-                undo_action.triggered.connect(self.remove_from_merge_list)
-                merge_menu.addAction(undo_action)
-                cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
-                cancel_merge_action.triggered.connect(self.cancel_merge)
-                merge_menu.addAction(cancel_merge_action)
+                if self.first_merge_selection_index is None:
+                    set_start_action = qt1.QAction("تحديد كبداية للدمج", self)
+                    set_start_action.triggered.connect(self.set_as_merge_start)
+                    merge_menu.addAction(set_start_action)
+                else:
+                    current_index = self.storyListWidget.currentRow()
+                    start_item_text = self.storyListWidget.item(self.first_merge_selection_index).text()
+                    merge_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
+                    
+                    if current_index != self.first_merge_selection_index:
+                        merge_range_action = qt1.QAction("الدمج من البداية المحددة إلى هنا", self)
+                        merge_range_action.triggered.connect(self.merge_from_start_to_here)
+                        merge_menu.addAction(merge_range_action)
+                    
+                    cancel_start_action = qt1.QAction("إلغاء تحديد بداية الدمج", self)
+                    cancel_start_action.triggered.connect(self.cancel_merge_start)
+                    merge_menu.addAction(cancel_start_action)
+
             menu.addSeparator()
-        if not self.merge_list:
-            batch_download_menu = menu.addMenu("تحميل مخصص (تحديد قصص)")
+
+        if not is_merging_active:
+            batch_download_menu = menu.addMenu("تحميل مخصص")
             if not self.download_batch_list:
                 start_batch_dl_action = qt1.QAction("بدء التحميل المخصص من هذه القصة", self)
                 start_batch_dl_action.triggered.connect(self.add_to_download_batch)
@@ -1263,6 +1330,7 @@ class StoryPlayer(qt.QWidget):
                 cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
                 batch_download_menu.addAction(cancel_batch_dl_action)
             menu.addSeparator()
+
         play_action = qt1.QAction("تشغيل القصة المحددة", self)
         play_action.triggered.connect(self.play_selected_audio)
         menu.addAction(play_action)
@@ -1281,9 +1349,11 @@ class StoryPlayer(qt.QWidget):
             download_device_action = qt1.QAction("تحميل القصة المحددة في الجهاز", self)
             download_device_action.triggered.connect(self.download_selected_audio)
             menu.addAction(download_device_action)
+            
         delete_option = self.check_current_story_downloaded()
         if delete_option:
             menu.addAction(delete_option)
+
         addNewBookmarkAction = qt1.QAction("إضافة علامة مرجعية", self)
         menu.addAction(addNewBookmarkAction)
         addNewBookmarkAction.triggered.connect(self.onAddNewBookmark)

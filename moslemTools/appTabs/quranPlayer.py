@@ -1,6 +1,7 @@
 import guiTools, requests, json, os, winsound, gui, functions, subprocess, shutil
 from guiTools import TextViewer
 from guiTools import speak
+from guiTools.QCustomListDialog import QCustomListDialog
 from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -130,6 +131,7 @@ class QuranPlayer(qt.QWidget):
         self.successfully_downloaded_in_batch = []
         self.full_batch_cancellation_requested = False
         self.excluded_surahs_in_batch = []
+        self.first_merge_selection_index = None
         self.reciters_data = self.load_reciters()
         self.recitersLabel = qt.QLabel("إختيار قارئ")
         self.recitersLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -386,23 +388,20 @@ class QuranPlayer(qt.QWidget):
             "url": self.reciters_data[reciter][surah]
         }
         self.merge_list.append(surah_info)
-        winsound.Beep(440, 100)
         self.update_merge_ui()
         self.update_download_batch_ui()
     def remove_from_merge_list(self):
         if not self.merge_list:
             return
         num_items = len(self.merge_list)
-        number, ok = guiTools.QInputDialog.getSingleInt(
-            self,
-            "إزالة سورة",
-            f"أدخل رقم السورة لإزالتها (من 1 إلى {num_items})",
-            1
-        )
-        if ok:
-            if 1 <= number <= num_items:
-                del self.merge_list[number - 1]
-                winsound.Beep(600, 150)
+        item_names = [f"{i+1}: {item['surah']}" for i, item in enumerate(self.merge_list)]
+        
+        selected_item_str, ok = QCustomListDialog.getItem(self, "إزالة سورة", "اختر السورة لإزالتها:", item_names)
+        
+        if ok and selected_item_str:
+            index_to_remove = int(selected_item_str.split(':')[0]) - 1
+            if 0 <= index_to_remove < num_items:
+                del self.merge_list[index_to_remove]
                 self.update_merge_ui()
                 self.update_download_batch_ui()
             else:
@@ -424,6 +423,51 @@ class QuranPlayer(qt.QWidget):
         self.merge_list.clear()
         self.update_merge_ui()
         self.update_download_batch_ui()
+
+    def set_as_merge_start(self):
+        self.first_merge_selection_index = self.surahListWidget.currentRow()
+        speak(f"تم تحديد {self.surahListWidget.currentItem().text()} كبداية للدمج")
+
+    def cancel_merge_start(self):
+        self.first_merge_selection_index = None
+        speak("تم إلغاء تحديد بداية الدمج")
+
+    def merge_from_start_to_here(self):
+        if self.first_merge_selection_index is None:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء تحديد بداية الدمج أولاً.")
+            return
+
+        end_index = self.surahListWidget.currentRow()
+        start_index = self.first_merge_selection_index
+
+        # Ensure start_index is the smaller one
+        if start_index > end_index:
+            start_index, end_index = end_index, start_index
+
+        self.merge_list.clear()
+        reciter = self.recitersListWidget.currentItem().text()
+        
+        for i in range(start_index, end_index + 1):
+            surah_item = self.surahListWidget.item(i)
+            if surah_item:
+                surah = surah_item.text()
+                surah_info = {
+                    "reciter": reciter,
+                    "surah": surah,
+                    "url": self.reciters_data[reciter][surah]
+                }
+                self.merge_list.append(surah_info)
+        
+        # Reset for next operation
+        self.first_merge_selection_index = None
+
+        if len(self.merge_list) < 1:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم تحديد أي سور للدمج.")
+            return
+
+        speak(f"سيتم دمج {len(self.merge_list)} سورة")
+        self.prepare_merge(is_all=True) # Use is_all=True to bypass the "at least 2" check if needed for single item ranges and to have consistent UI flow.
+
     def prepare_merge_all_from_start(self):
         if not self.recitersListWidget.currentItem():
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء اختيار قارئ أولاً.")
@@ -634,23 +678,20 @@ class QuranPlayer(qt.QWidget):
             guiTools.qMessageBox.MessageBox.view(self, "ملاحظة", "تم إضافة هذه السورة إلى القائمة بالفعل.")
             return
         self.download_batch_list.append(surah_info)
-        winsound.Beep(440, 100)
         self.update_download_batch_ui()
         self.update_merge_ui()
     def remove_from_download_batch(self):
         if not self.download_batch_list:
             return
         num_items = len(self.download_batch_list)
-        number, ok = guiTools.QInputDialog.getSingleInt(
-            self,
-            "إزالة سورة",
-            f"أدخل رقم السورة لإزالتها من قائمة التحميل (من 1 إلى {num_items})",
-            1
-        )
-        if ok:
-            if 1 <= number <= num_items:
-                del self.download_batch_list[number - 1]
-                winsound.Beep(600, 150)
+        item_names = [f"{i+1}: {item['surah']}" for i, item in enumerate(self.download_batch_list)]
+
+        selected_item_str, ok = QCustomListDialog.getItem(self, "إزالة سورة", "اختر السورة لإزالتها من قائمة التحميل:", item_names)
+
+        if ok and selected_item_str:
+            index_to_remove = int(selected_item_str.split(':')[0]) - 1
+            if 0 <= index_to_remove < num_items:
+                del self.download_batch_list[index_to_remove]
                 self.update_download_batch_ui()
                 self.update_merge_ui()
             else:
@@ -1294,25 +1335,53 @@ class QuranPlayer(qt.QWidget):
         boldFont=menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
-        if not self.download_batch_list:
+
+        is_merging_active = self.merge_list or self.first_merge_selection_index is not None
+        is_batch_download_active = bool(self.download_batch_list)
+
+        if not is_batch_download_active:
             merge_menu = menu.addMenu("دمج السور")
+            if self.first_merge_selection_index is None:
+                if not self.merge_list:
+                    start_merge_action = qt1.QAction("بدء الدمج من هذه السورة", self)
+                    start_merge_action.triggered.connect(self.add_to_merge_list)
+                    merge_menu.addAction(start_merge_action)
+                else:
+                    add_next_action = qt1.QAction(f"إضافة السورة رقم {len(self.merge_list) + 1}", self)
+                    add_next_action.triggered.connect(self.add_to_merge_list)
+                    merge_menu.addAction(add_next_action)
+                    undo_action = qt1.QAction("التراجع عن تحديد سورة", self)
+                    undo_action.triggered.connect(self.remove_from_merge_list)
+                    merge_menu.addAction(undo_action)
+                    cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
+                    cancel_merge_action.triggered.connect(self.cancel_merge)
+                    merge_menu.addAction(cancel_merge_action)
+            
+            merge_menu.addSeparator()
+
             if not self.merge_list:
-                start_merge_action = qt1.QAction("بدء الدمج من هذه السورة", self)
-                start_merge_action.triggered.connect(self.add_to_merge_list)
-                merge_menu.addAction(start_merge_action)
-            else:
-                add_next_action = qt1.QAction(f"إضافة السورة رقم {len(self.merge_list) + 1}", self)
-                add_next_action.triggered.connect(self.add_to_merge_list)
-                merge_menu.addAction(add_next_action)
-                undo_action = qt1.QAction("التراجع عن تحديد سورة", self)
-                undo_action.triggered.connect(self.remove_from_merge_list)
-                merge_menu.addAction(undo_action)
-                cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
-                cancel_merge_action.triggered.connect(self.cancel_merge)
-                merge_menu.addAction(cancel_merge_action)
+                if self.first_merge_selection_index is None:
+                    set_start_action = qt1.QAction("تحديد كبداية للدمج", self)
+                    set_start_action.triggered.connect(self.set_as_merge_start)
+                    merge_menu.addAction(set_start_action)
+                else:
+                    current_index = self.surahListWidget.currentRow()
+                    start_item_text = self.surahListWidget.item(self.first_merge_selection_index).text()
+                    merge_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
+                    
+                    if current_index != self.first_merge_selection_index:
+                        merge_range_action = qt1.QAction("الدمج من البداية المحددة إلى هنا", self)
+                        merge_range_action.triggered.connect(self.merge_from_start_to_here)
+                        merge_menu.addAction(merge_range_action)
+                    
+                    cancel_start_action = qt1.QAction("إلغاء تحديد بداية الدمج", self)
+                    cancel_start_action.triggered.connect(self.cancel_merge_start)
+                    merge_menu.addAction(cancel_start_action)
+
             menu.addSeparator()
-        if not self.merge_list:
-            batch_download_menu = menu.addMenu("تحميل مخصص (تحديد سور)")
+
+        if not is_merging_active:
+            batch_download_menu = menu.addMenu("تحميل مخصص")
             if not self.download_batch_list:
                 start_batch_dl_action = qt1.QAction("بدء التحميل المخصص من هذه السورة", self)
                 start_batch_dl_action.triggered.connect(self.add_to_download_batch)
@@ -1328,6 +1397,7 @@ class QuranPlayer(qt.QWidget):
                 cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
                 batch_download_menu.addAction(cancel_batch_dl_action)
             menu.addSeparator()
+
         if self.mp.duration() > 0:
             repeateFromPositionTopositionMenue = menu.addMenu("التكرار من موضع إلى موضع")
             setStartingPositionAction = qt1.QAction("تحديد موضع البداية", self)
@@ -1344,6 +1414,7 @@ class QuranPlayer(qt.QWidget):
             resetAndStopRepeatingAction.triggered.connect(self.removePosition)
             repeateFromPositionTopositionMenue.addAction(resetAndStopRepeatingAction)
             repeateFromPositionTopositionMenue.setFont(boldFont)
+
         play_action = qt1.QAction("تشغيل السورة المحددة", self)
         play_action.triggered.connect(self.play_selected_audio)
         menu.addAction(play_action)
@@ -1362,9 +1433,11 @@ class QuranPlayer(qt.QWidget):
             download_device_action = qt1.QAction("تحميل السورة المحددة في الجهاز", self)
             download_device_action.triggered.connect(self.download_selected_audio)
             menu.addAction(download_device_action)
+
         delete_option = self.check_current_surah_downloaded()
         if delete_option:
             menu.addAction(delete_option)
+            
         addNewBookmarkAction = qt1.QAction("إضافة علامة مرجعية", self)
         menu.addAction(addNewBookmarkAction)
         addNewBookmarkAction.triggered.connect(self.onAddNewBookmark)

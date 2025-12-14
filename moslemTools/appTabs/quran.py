@@ -53,17 +53,7 @@ class MergeThread(qt2.QThread):
                 for file_path in self.input_files:
                     safe_path = file_path.replace("\\", "/")
                     f.write(f"file '{safe_path}'\n")
-            command = [
-                self.ffmpeg_path,
-                "-y",
-                "-f", "concat",
-                "-safe", "0",
-                "-i", list_filepath,
-                "-ar", "44100",
-                "-ac", "2",
-                "-b:a", "192k",
-                self.output_file
-            ]
+            command = [self.ffmpeg_path, "-y", "-f", "concat", "-safe", "0", "-i", list_filepath, "-ar", "44100", "-ac", "2", "-b:a", "192k", self.output_file]
             startupinfo = None
             if os.name == 'nt':
                 startupinfo = subprocess.STARTUPINFO()
@@ -112,11 +102,7 @@ class PreMergeCheckThread(qt2.QThread):
                 ayah_filename = self._create_ayah_filename(ayah_text)
                 if not ayah_filename: continue
                 local_path = os.path.join(reciter_local_path_base, ayah_filename)
-                ayah_info = {
-                    "filename": ayah_filename,
-                    "url": reciter_url_base + ayah_filename,
-                    "local_path": local_path
-                }
+                ayah_info = {"filename": ayah_filename, "url": reciter_url_base + ayah_filename, "local_path": local_path}
                 merge_list.append(ayah_info)
                 if not os.path.exists(local_path):
                     ayahs_to_download.append(ayah_info)
@@ -144,74 +130,7 @@ class Quran(qt.QWidget):
         layout = qt.QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
         layout.setSpacing(15)
-        self.setStyleSheet("""
-            QWidget {
-                /* background-color: #000000; */
-                color: #f0f0f0;
-                font: bold 12px;
-            }
-            QLineEdit {
-                background-color: #3e3e3e;
-                border: 1px solid #5a5a5a;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QComboBox, QLabel {
-                border: 1px solid #5a5a5a;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QLineEdit:focus {
-                border: 1px solid #0078d7;
-            }
-            QComboBox QAbstractItemView::item:selected {
-                background-color: blue;
-                color: white;
-            }
-            QPushButton {
-                background-color: #0056b3;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QPushButton:hover {
-                background-color: #003d80;
-            }
-            QPushButton#customButton {
-                background-color: #008000;
-                color: white;
-                border: none;
-            }
-            QPushButton#customButton:hover {
-                background-color: #006600;
-            }
-            /* Style for the merge cancel button */
-            QPushButton#cancelMergeButton {
-                background-color: #dc3545; /* Red color */
-                color: white;
-                font-weight: bold;
-            }
-            QPushButton#cancelMergeButton:hover {
-                background-color: #c82333; /* Darker red on hover */
-            }
-            QListWidget {
-                background-color: #000000;
-                border: 1px solid #5a5a5a;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            QListWidget::item:selected {
-                background-color: red;
-            }
-            QMenu {
-                background-color: #3e3e3e;
-                color: #f0f0f0;
-            }
-            QMenu::item:selected {
-                background-color: #0078d7;
-            }
-        """)
+        self.setStyleSheet("QWidget{color:#f0f0f0;font:bold 12px;}QLineEdit{background-color:#3e3e3e;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#dc3545;color:white;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#c82333;}QListWidget{background-color:#000000;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QListWidget::item:selected{background-color:red;}QMenu{background-color:#3e3e3e;color:#f0f0f0;}QMenu::item:selected{background-color:#0078d7;}")
         browse_layout = qt.QHBoxLayout()
         browse_layout.setSpacing(10)
         layout1=qt.QVBoxLayout()
@@ -276,27 +195,7 @@ class Quran(qt.QWidget):
         self.info_of_quran.setShortcut("ctrl+shift+q")
         self.info_of_quran.setAccessibleDescription("control plus shift plus Q")
         self.info_of_quran.setFixedSize(150, 40)
-        self.info_of_quran.clicked.connect(lambda: guiTools.TextViewer(
-            self,
-            "معلومات عن المصحف",
-            (
-                "معلومات عامة عن مصحف المدينة برواية حفص عن عاصم:\n"
-                "عدد السور: 114 سورة (86 مكية + 28 مدنية).\n"
-                "عدد الآيات: 6236 آية (بحسب رواية حفص، دون احتساب البسملة في السور ما عدا سورة الفاتحة).\n"
-                "عدد الأجزاء: 30 جزءًا.\n"
-                "عدد الأحزاب: 60 حزبًا.\n"
-                "عدد الأرباع: 240 ربعًا (4 أرباع في الحزب، 8 أرباع في الجزء).\n"
-                "عدد السجدات التلاوية: 15 سجدة.\n"
-                "عدد الصفحات (في مصحف المدينة العادي): حوالي 604 صفحة.\n"
-                "\n"
-                "ملاحظات:\n"
-                "عدد الكلمات تقريبي، حوالي 77430 كلمة حسب طرق العد الطباعية.\n"
-                "عدد الحروف تقريبي، يتراوح بين 320000 و324000 حرف حسب احتساب النقاط والحركات.\n"
-                "عدد الركوعات تقريبي (558 ركوعاً)، وهو رقم متداول حسب تقسيم السور في الطبعات.\n"
-                "\n"
-                "كل الأرقام المدونة تمثل الطبعة الرسمية لمصحف المدينة برواية حفص عن عاصم، الصادرة عن مجمع الملك فهد لطباعة المصحف الشريف."
-            )
-        ).exec())
+        self.info_of_quran.clicked.connect(lambda: guiTools.TextViewer(self, "معلومات عن المصحف", ("معلومات عامة عن مصحف المدينة برواية حفص عن عاصم:\nعدد السور: 114 سورة (86 مكية + 28 مدنية).\nعدد الآيات: 6236 آية (بحسب رواية حفص، دون احتساب البسملة في السور ما عدا سورة الفاتحة).\nعدد الأجزاء: 30 جزءًا.\nعدد الأحزاب: 60 حزبًا.\nعدد الأرباع: 240 ربعًا (4 أرباع في الحزب، 8 أرباع في الجزء).\nعدد السجدات التلاوية: 15 سجدة.\nعدد الصفحات (في مصحف المدينة العادي): حوالي 604 صفحة.\n\nملاحظات:\nعدد الكلمات تقريبي، حوالي 77430 كلمة حسب طرق العد الطباعية.\nعدد الحروف تقريبي، يتراوح بين 320000 و324000 حرف حسب احتساب النقاط والحركات.\nعدد الركوعات تقريبي (558 ركوعاً)، وهو رقم متداول حسب تقسيم السور في الطبعات.\n\nكل الأرقام المدونة تمثل الطبعة الرسمية لمصحف المدينة برواية حفص عن عاصم، الصادرة عن مجمع الملك فهد لطباعة المصحف الشريف.")).exec())
         self.info1 = qt.QLabel()
         self.info1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info1.setText("لخيارات عنصر الفئة, نستخدم مفتاح التطبيقات أو click الأيمن")
@@ -306,7 +205,7 @@ class Quran(qt.QWidget):
         layout.addLayout(guide_layout)
         self.onTypeChanged(0)
     def search(self, pattern, text_list):
-        tashkeel_pattern = re.compile(r'[^\u0621-\u063A\u0641-\u064A\s]+')
+        tashkeel_pattern = re.compile(r'[\u064B-\u065F\u0670]')
         normalized_pattern = tashkeel_pattern.sub('', pattern)
         matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text)]
         return matches
@@ -327,11 +226,15 @@ class Quran(qt.QWidget):
             result = functions.quranJsonControl.getHezb()
         elif index == 4:
             result = functions.quranJsonControl.getHizb()
-        gui.QuranViewer(self, result[self.info.currentItem().text()][1], index,
-                            self.info.currentItem().text(),
-                            enableNextPreviouseButtons=True,
-                            typeResult=result,
-                            CurrentIndex=self.info.currentRow()).exec()
+        
+        selected_item_text = self.info.currentItem().text()
+        
+        try:
+            correct_index = list(result.keys()).index(selected_item_text)
+        except ValueError:
+            correct_index = self.info.currentRow()
+
+        gui.QuranViewer(self, result[selected_item_text][1], index, selected_item_text, enableNextPreviouseButtons=True, typeResult=result, CurrentIndex=correct_index).exec()
     def onTypeChanged(self, index: int):
         self.info.clear()
         self.infoData = []
@@ -394,8 +297,7 @@ class Quran(qt.QWidget):
         if not self.info.currentItem():
             return
         result = self.getResult()
-        gui.QuranPlayer(self, result, 0, self.type.currentIndex(),
-                            self.info.currentItem().text()).exec()
+        gui.QuranPlayer(self, result, 0, self.type.currentIndex(), self.info.currentItem().text()).exec()
     def onTafseerActionTriggered(self):
         if not self.info.currentItem():
             return
@@ -460,8 +362,7 @@ class Quran(qt.QWidget):
                 self.pre_merge_thread.terminate()
             self.on_merge_finished(False, "تم إلغاء عملية التحضير من قبل المستخدم.")
     def confirm_and_cancel_merge(self):
-        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء",
-            "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
         if reply == 0:
             self.cancellation_requested = True
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
@@ -483,10 +384,7 @@ class Quran(qt.QWidget):
         self.merge_action_button.show()
         self.merge_phase = 'preparing'
         self.cancellation_requested = False
-        self.pre_merge_thread = PreMergeCheckThread(
-            all_ayahs_text, self.currentReciter, reciters,
-            self.info.currentItem().text(), self.type.currentIndex()
-        )
+        self.pre_merge_thread = PreMergeCheckThread(all_ayahs_text, self.currentReciter, reciters, self.info.currentItem().text(), self.type.currentIndex())
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
         self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
         self.pre_merge_thread.start()
@@ -495,18 +393,9 @@ class Quran(qt.QWidget):
         self.merge_list = merge_list
         num_files_to_download = len(ayahs_to_download)
         if num_files_to_download > 0:
-            confirm_message = (
-                f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\n"
-                "سيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية**.\n"
-                "بعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\n"
-                "هل أنت متأكد أنك تريد المتابعة؟"
-            )
+            confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\nسيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية**.\nبعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\nهل أنت متأكد أنك تريد المتابعة؟")
         else:
-            confirm_message = (
-                "جميع الآيات المحددة جاهزة للدمج.\n"
-                "ستبدأ عملية الدمج الآن. يمكنك إلغاء عملية الدمج ولكن لا يمكنك التفاعل مع الواجهة حتى انتهاء العملية.\n\n"
-                "هل تريد المتابعة؟"
-            )
+            confirm_message = ("جميع الآيات المحددة جاهزة للدمج.\nستبدأ عملية الدمج الآن. يمكنك إلغاء عملية الدمج ولكن لا يمكنك التفاعل مع الواجهة حتى انتهاء العملية.\n\nهل تريد المتابعة؟")
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
         if reply != 0:
             self.set_ui_for_merge(False)
@@ -598,8 +487,7 @@ class Quran(qt.QWidget):
         else:
             guiTools.qMessageBox.MessageBox.error(self, "فشل", message)
         if self.files_to_delete_after_merge:
-            reply = guiTools.QQuestionMessageBox.view(self, "تنظيف",
-                "هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
+            reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", "هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
             if reply == 0:
                 for f_path in self.files_to_delete_after_merge:
                     if os.path.exists(f_path):
