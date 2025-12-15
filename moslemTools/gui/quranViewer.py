@@ -60,17 +60,7 @@ class MergeThread(qt2.QThread):
                 for file_path in self.input_files:
                     safe_path = file_path.replace("\\", "/")
                     f.write(f"file '{safe_path}'\n")
-            command = [
-                self.ffmpeg_path,
-                "-y",
-                "-f", "concat",
-                "-safe", "0",
-                "-i", list_filepath,
-                "-ar", "44100",
-                "-ac", "2",
-                "-b:a", "192k",
-                self.output_file
-            ]
+            command = [self.ffmpeg_path, "-y", "-f", "concat", "-safe", "0", "-i", list_filepath, "-ar", "44100", "-ac", "2", "-b:a", "192k", self.output_file]
             startupinfo = None
             if os.name == 'nt':
                 startupinfo = subprocess.STARTUPINFO()
@@ -125,11 +115,7 @@ class PreMergeCheckThread(qt2.QThread):
                 ayah_filename = self._create_ayah_filename(ayah_text)
                 if not ayah_filename: continue
                 local_path = os.path.join(reciter_local_path_base, ayah_filename)
-                ayah_info = {
-                    "index": i, "filename": ayah_filename,
-                    "url": reciter_url_base + ayah_filename,
-                    "local_path": local_path
-                }
+                ayah_info = {"index": i, "filename": ayah_filename, "url": reciter_url_base + ayah_filename, "local_path": local_path}
                 merge_list.append(ayah_info)
                 if not os.path.exists(local_path):
                     ayahs_to_download.append(ayah_info)
@@ -191,11 +177,7 @@ class SearchModeDialog(qt.QDialog):
     def _set_ignore_symbols(self, state):
         self.ignore_symbols = bool(state)
     def get_settings(self):
-        return {
-            "ignore_tashkeel": self.ignore_tashkeel,
-            "ignore_hamza": self.ignore_hamza,
-            "ignore_symbols": self.ignore_symbols
-        }
+        return {"ignore_tashkeel": self.ignore_tashkeel, "ignore_hamza": self.ignore_hamza, "ignore_symbols": self.ignore_symbols}
 class QuranViewer(qt.QDialog):
     def __init__(self,p,text:str,type:int,category,index=0,enableNextPreviouseButtons=False,typeResult=[],CurrentIndex=0,enableBookmarks=True):
         super().__init__(p)
@@ -317,11 +299,15 @@ class QuranViewer(qt.QDialog):
         self.search_mode_button.setStyleSheet("background-color: #28a745; color: white; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; min-height: 30px;")
         self.search_mode_button.clicked.connect(self.show_search_mode_dialog)
         self.search_mode_button.setAccessibleDescription("control plus q")
+        self.search_mode_button.setAutoDefault(False)
+        self.search_mode_button.setShortcut("ctrl+q")
         self.clear_results_button = guiTools.QPushButton("حذف المحتوى والعودة الى العرض الأصلي")
         self.clear_results_button.setObjectName("clearResultsButton")
         self.clear_results_button.setStyleSheet("background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; min-height: 30px;")
         self.clear_results_button.clicked.connect(self.clear_search_results)
         self.clear_results_button.setAccessibleDescription("control plus delete")
+        self.clear_results_button.setAutoDefault(False)
+        self.clear_results_button.setShortcut("ctrl+delete")
         search_layout.addWidget(self.clear_results_button)
         search_layout.addWidget(self.search_input)
         search_layout.addWidget(self.search_button)
@@ -570,8 +556,7 @@ class QuranViewer(qt.QDialog):
                 self.pre_merge_thread.terminate()
             self.on_merge_finished(False, "تم إلغاء عملية التحضير من قبل المستخدم.")
     def confirm_and_cancel_merge(self):
-        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء",
-            "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
         if reply == 0:
             self.cancellation_requested = True
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
@@ -605,10 +590,7 @@ class QuranViewer(qt.QDialog):
         self.cancellation_requested = False
         start_index = start_ayah - 1
         end_index = end_ayah
-        self.pre_merge_thread = PreMergeCheckThread(
-            start_index, end_index, self.quranText, self.category, self.type,
-            self.currentReciter, reciters
-        )
+        self.pre_merge_thread = PreMergeCheckThread(start_index, end_index, self.quranText, self.category, self.type, self.currentReciter, reciters)
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
         self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
         self.pre_merge_thread.start()
@@ -617,18 +599,9 @@ class QuranViewer(qt.QDialog):
         self.merge_list = merge_list
         num_files_to_download = len(ayahs_to_download)
         if num_files_to_download > 0:
-            confirm_message = (
-                f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\n"
-                "سيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\n"
-                "بعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\n"
-                "هل أنت متأكد أنك تريد المتابعة؟"
-            )
+            confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\n" "سيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\n" "بعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\n" "هل أنت متأكد أنك تريد المتابعة؟")
         else:
-            confirm_message = (
-                "جميع الآيات المحددة جاهزة للدمج.\n"
-                "ستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق البرنامج حتى انتهاء العملية.\n\n"
-                "هل تريد المتابعة؟"
-            )
+            confirm_message = ("جميع الآيات المحددة جاهزة للدمج.\n" "ستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق البرنامج حتى انتهاء العملية.\n\n" "هل تريد المتابعة؟")
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
         if reply != 0:
             self.set_ui_for_merge(False)
@@ -722,8 +695,7 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.qMessageBox.MessageBox.error(self, "فشل", message)
         if self.files_to_delete_after_merge:
-            reply = guiTools.QQuestionMessageBox.view(self, "تنظيف",
-                "هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
+            reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", "هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
             if reply == 0:
                 for f_path in self.files_to_delete_after_merge:
                     if os.path.exists(f_path):
@@ -737,10 +709,7 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()
     def set_ui_for_merge(self, is_active):
         self.is_merging = is_active
-        widgets_to_disable = [
-            self.text, self.search_widget, self.next, self.previous,
-            self.changeCategory, self.changeCurrentReciterButton, self.toggle_search_button
-        ]
+        widgets_to_disable = [self.text, self.search_widget, self.next, self.previous, self.changeCategory, self.changeCurrentReciterButton, self.toggle_search_button]
         for widget in widgets_to_disable:
             widget.setEnabled(not is_active)
         self.merge_widget.setVisible(is_active)
@@ -757,6 +726,7 @@ class QuranViewer(qt.QDialog):
             self.search_widget.hide()
             self.toggle_search_button.setText("البحث في المحتوى المعروض")
             guiTools.speak("تم إخفاء شريط البحث")
+            self.text.setFocus()
         else:
             self.search_widget.show()
             self.toggle_search_button.setText("إخفاء شريط البحث")
@@ -793,7 +763,11 @@ class QuranViewer(qt.QDialog):
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "يرجى كتابة محتوى للبحث")
             return
         source_text_list = self.original_quran_text.split('\n')
-        results = self.search(search_term, source_text_list)
+        try:
+            results = self.search(search_term, source_text_list)
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ في البحث", f"حدث خطأ غير متوقع أثناء البحث: {e}")
+            return
         if results:
             self.is_search_view = True
             self.numbering_button.setVisible(False)
@@ -803,7 +777,7 @@ class QuranViewer(qt.QDialog):
             display_text = [header, ""] + results
             self.quranText = "\n".join(results)
             self.text.setText("\n".join(display_text))
-            self.update_font_size()
+            self.update_font_size() 
             self.clear_results_button.show()
             if self.media.isPlaying():
                 self.media.stop()
@@ -874,9 +848,7 @@ class QuranViewer(qt.QDialog):
                 cursor.setPosition(self.saved_cursor_position)
                 self.text.setTextCursor(cursor)
     def eventFilter(self, obj, event):
-        if obj == self.text.viewport() and \
-            event.type() == qt2.QEvent.Type.MouseButtonPress and \
-            event.button() == qt2.Qt.MouseButton.LeftButton:
+        if obj == self.text.viewport() and event.type() == qt2.QEvent.Type.MouseButtonPress and event.button() == qt2.Qt.MouseButton.LeftButton:
             cursor = self.text.cursorForPosition(event.position().toPoint())
             self.text.setTextCursor(cursor)
             self.on_play()
@@ -959,11 +931,7 @@ class QuranViewer(qt.QDialog):
                 addNewBookMark.setShortcut("ctrl+b")
                 ayahOptions.addAction(addNewBookMark)
                 addNewBookMark.triggered.connect(lambda: QTimer.singleShot(501, self.onAddBookMark))
-            ayah_position = {
-                "ayah_text": self.quranText.split("\n")[self.saved_ayah_index],
-                "ayah_number": self.saved_ayah_index,
-                "surah": self.category
-            }
+            ayah_position = {"ayah_text": self.quranText.split("\n")[self.saved_ayah_index], "ayah_number": self.saved_ayah_index, "surah": self.category}
             note_exists = notesManager.getNotesForPosition("quran", ayah_position)
             if note_exists:
                 note_action = qt1.QAction("عرض ملاحظة الآية الحالية", self)
@@ -1151,13 +1119,7 @@ class QuranViewer(qt.QDialog):
         self.pause_for_action()
         note = notesManager.getNoteByName("quran", note_name)
         if note:
-            dialog = note_dialog.NoteDialog(
-                self,
-                title=note["name"],
-                content=note["content"],
-                mode="edit",
-                old_name=note["name"]
-            )
+            dialog = note_dialog.NoteDialog(self, title=note["name"], content=note["content"], mode="edit", old_name=note["name"])
             dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
             dialog.exec()
         self.resume_after_action()
@@ -1166,11 +1128,7 @@ class QuranViewer(qt.QDialog):
         if existing_note is not None:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
             return
-        notesManager.addNewNote("quran", {
-            "name": name,
-            "content": content,
-            "position_data": position_data
-        })
+        notesManager.addNewNote("quran", {"name": name, "content": content, "position_data": position_data})
         guiTools.speak("تمت إضافة الملاحظة")
     def updateNote(self, position_data, old_name, new_name, new_content):
         if old_name != new_name:
@@ -1178,11 +1136,7 @@ class QuranViewer(qt.QDialog):
             if existing_note is not None:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
                 return
-        update_data = {
-            "name": new_name,
-            "content": new_content,
-            "position_data": position_data
-        }
+        update_data = {"name": new_name, "content": new_content, "position_data": position_data}
         success = notesManager.updateNote("quran", old_name, update_data)
         if success:
             guiTools.speak("تم تحديث الملاحظة بنجاح")
@@ -1198,11 +1152,7 @@ class QuranViewer(qt.QDialog):
             guiTools.speak("لا يمكن إدارة الملاحظات في وضع البحث أو التصفح المخصص")
             self.resume_after_action()
             return
-        ayah_position = {
-            "ayah_text": self.getcurrentAyahText(),
-            "ayah_number": self.getCurrentAyah(),
-            "surah": self.category
-        }
+        ayah_position = {"ayah_text": self.getcurrentAyahText(), "ayah_number": self.getCurrentAyah(), "surah": self.category}
         note_exists = notesManager.getNotesForPosition("quran", ayah_position)
         if note_exists:
             self.onEditNote(ayah_position, note_exists["name"])
@@ -1219,11 +1169,7 @@ class QuranViewer(qt.QDialog):
             guiTools.speak("لا يمكن عرض الملاحظات في وضع البحث أو التصفح المخصص")
             self.resume_after_action()
             return
-        ayah_position = {
-            "ayah_text": self.getcurrentAyahText(),
-            "ayah_number": self.getCurrentAyah(),
-            "surah": self.category
-        }
+        ayah_position = {"ayah_text": self.getcurrentAyahText(), "ayah_number": self.getCurrentAyah(), "surah": self.category}
         note_exists = notesManager.getNotesForPosition("quran", ayah_position)
         if note_exists:
             self.onNoteAction(ayah_position)
@@ -1234,13 +1180,7 @@ class QuranViewer(qt.QDialog):
         self.pause_for_action()
         note = notesManager.getNotesForPosition("quran", position_data)
         if note:
-            dialog = note_dialog.NoteDialog(
-                self,
-                title=note["name"],
-                content=note["content"],
-                mode="view",
-                old_name=note["name"]
-            )
+            dialog = note_dialog.NoteDialog(self, title=note["name"], content=note["content"], mode="view", old_name=note["name"])
             dialog.edit_requested.connect(lambda note_name: self.onEditNote(position_data, note_name))
             dialog.exec()
         self.resume_after_action()
@@ -1248,11 +1188,7 @@ class QuranViewer(qt.QDialog):
         self.pause_for_action()
         note = notesManager.getNotesForPosition("quran", position_data)
         if note:
-            confirm = guiTools.QQuestionMessageBox.view(
-                self, "تأكيد الحذف",
-                f"هل أنت متأكد أنك تريد حذف الملاحظة '{note['name']}'؟",
-                "نعم", "لا"
-            )
+            confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل أنت متأكد أنك تريد حذف الملاحظة '{note['name']}'؟", "نعم", "لا")
             if confirm == 0:
                 notesManager.removeNote("quran", note["name"])
                 guiTools.speak("تم حذف الملاحظة")
@@ -1742,11 +1678,7 @@ class QuranViewer(qt.QDialog):
     def onRemoveBookmark(self):
         self.pause_for_action()
         try:
-            confirm = guiTools.QQuestionMessageBox.view(
-                self, "تأكيد الحذف",
-                f"هل أنت متأكد أنك تريد حذف العلامة المرجعية '{self.nameOfBookmark}'؟",
-                "نعم", "لا"
-            )
+            confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل أنت متأكد أنك تريد حذف العلامة المرجعية '{self.nameOfBookmark}'؟", "نعم", "لا")
             if confirm == 0:
                 functions.bookMarksManager.removeQuranBookMark(self.nameOfBookmark)
                 guiTools.speak("تم حذف العلامة المرجعية")
@@ -1823,11 +1755,7 @@ class QuranViewer(qt.QDialog):
             self.resume_after_action()
             return
         current_ayah = self.getCurrentAyah()
-        ayah_position = {
-            "ayah_text": self.getcurrentAyahText(),
-            "ayah_number": current_ayah,
-            "surah": self.category
-        }
+        ayah_position = {"ayah_text": self.getcurrentAyahText(), "ayah_number": current_ayah, "surah": self.category}
         note_exists = notesManager.getNotesForPosition("quran", ayah_position)
         if note_exists:
             self.onDeleteNote(ayah_position)
@@ -1836,14 +1764,7 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()
     def set_font_size_dialog(self):
         try:
-            size, ok = guiTools.QInputDialog.getInt(
-                self,
-                "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 100):",
-                value=self.font_size,
-                min=1,
-                max=100
-            )
+            size, ok = guiTools.QInputDialog.getInt(self, "تغيير حجم الخط", "أدخل حجم الخط (من 1 الى 100):", value=self.font_size, min=1, max=100)
             if ok:
                 self.font_size = size
                 self.show_font.setText(str(self.font_size))
