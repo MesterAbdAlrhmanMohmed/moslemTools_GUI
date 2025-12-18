@@ -114,11 +114,9 @@ class StoryPlayer(qt.QWidget):
         self.volume_timer.timeout.connect(self.restore_duration_text)        
         self.merge_list = []
         self.download_batch_list = []
-        self.download_device_batch_list = []
         self.files_to_delete_after_merge = []
         self.is_merging = False
         self.is_downloading_batch = False
-        self.is_device_batch_execution = False
         self.cancellation_requested = False
         self.completed_merge_downloads = set()
         self.current_download_url = None        
@@ -127,7 +125,6 @@ class StoryPlayer(qt.QWidget):
         self.excluded_surahs_in_batch = []
         self.first_merge_selection_index = None
         self.first_download_selection_index = None
-        self.first_download_device_selection_index = None
         self.categories_data = self.load_categories()
         self.categoriesLabel = qt.QLabel("إختيار فئة")
         self.categoriesLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
@@ -346,9 +343,7 @@ class StoryPlayer(qt.QWidget):
         selected_category_item = self.categoriesListWidget.currentItem()
         selected_story_item = self.storyListWidget.currentItem()
         if not selected_category_item or not selected_story_item:
-            return
-        self.cancel_download_batch()
-        self.cancel_download_device_batch()        
+            return        
         category = selected_category_item.text()
         story = selected_story_item.text()        
         story_info = {
@@ -392,8 +387,6 @@ class StoryPlayer(qt.QWidget):
     def set_as_merge_start(self):
         self.cancel_download_batch()
         self.cancel_download_start()
-        self.cancel_download_device_batch()
-        self.cancel_download_device_start()
         self.first_merge_selection_index = self.storyListWidget.currentRow()
         speak(f"تم تحديد {self.storyListWidget.currentItem().text()} كبداية للدمج")
     def cancel_merge_start(self):
@@ -428,10 +421,8 @@ class StoryPlayer(qt.QWidget):
     def set_as_download_start(self):
         self.cancel_merge()
         self.cancel_merge_start()
-        self.cancel_download_device_batch()
-        self.cancel_download_device_start()
         self.first_download_selection_index = self.storyListWidget.currentRow()
-        speak(f"تم تحديد {self.storyListWidget.currentItem().text()} كبداية للتحميل في التطبيق")
+        speak(f"تم تحديد {self.storyListWidget.currentItem().text()} كبداية للتحميل")
     def cancel_download_start(self):
         self.first_download_selection_index = None
         speak("تم إلغاء تحديد بداية التحميل")
@@ -634,13 +625,8 @@ class StoryPlayer(qt.QWidget):
             self.full_batch_cancellation_requested = True
             self.cancel_current_download()
         else:
-            if self.download_batch_list:
-                self.prepare_batch_download()
-            elif self.download_device_batch_list:
-                self.prepare_device_batch_download()
+            self.prepare_batch_download()
     def add_to_download_batch(self):
-        self.cancel_merge()
-        self.cancel_download_device_batch()
         selected_category_item = self.categoriesListWidget.currentItem()
         selected_story_item = self.storyListWidget.currentItem()
         if not selected_category_item or not selected_story_item:
@@ -665,29 +651,6 @@ class StoryPlayer(qt.QWidget):
         self.download_batch_list.append(story_info)
         self.update_download_batch_ui()
         self.update_merge_ui()
-    def add_to_download_device_batch(self):
-        self.cancel_merge()
-        self.cancel_download_batch()
-        selected_category_item = self.categoriesListWidget.currentItem()
-        selected_story_item = self.storyListWidget.currentItem()
-        if not selected_category_item or not selected_story_item:
-            return
-        category = selected_category_item.text()
-        story = selected_story_item.text()
-        if self.download_device_batch_list and self.download_device_batch_list[0]["category"] != category:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يمكنك إضافة قصص من فئات مختلفة في دفعة واحدة. سيتم إلغاء الدفعة السابقة.")
-            self.cancel_download_device_batch()
-        story_info = {
-            "category": category,
-            "story": story,
-            "url": self.categories_data[category][story]
-        }
-        if story_info in self.download_device_batch_list:
-            guiTools.qMessageBox.MessageBox.view(self, "ملاحظة", "تم إضافة هذه القصة إلى القائمة بالفعل.")
-            return
-        self.download_device_batch_list.append(story_info)
-        self.update_download_batch_ui()
-        self.update_merge_ui()
     def remove_from_download_batch(self):
         if not self.download_batch_list:
             return
@@ -702,20 +665,6 @@ class StoryPlayer(qt.QWidget):
                 self.update_merge_ui()
             else:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
-    def remove_from_download_device_batch(self):
-        if not self.download_device_batch_list:
-            return
-        num_items = len(self.download_device_batch_list)
-        item_names = [f"{i+1}: {item['story']}" for i, item in enumerate(self.download_device_batch_list)]
-        selected_item_str, ok = QCustomListDialog.getItem(self, "إزالة قصة", "اختر القصة لإزالتها من قائمة التحميل:", item_names)
-        if ok and selected_item_str:
-            index_to_remove = int(selected_item_str.split(':')[0]) - 1
-            if 0 <= index_to_remove < num_items:
-                del self.download_device_batch_list[index_to_remove]
-                self.update_download_batch_ui()
-                self.update_merge_ui()
-            else:
-                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرقم المدخل خارج النطاق الصحيح.")
     def format_surah_count(self, count):
         if count == 1:
             return "قصة واحدة"
@@ -726,15 +675,10 @@ class StoryPlayer(qt.QWidget):
         else:
             return f"{count} قصة"
     def update_download_batch_ui(self):
-        app_count = len(self.download_batch_list)
-        device_count = len(self.download_device_batch_list)
-        count = app_count if app_count > 0 else device_count
+        count = len(self.download_batch_list)
         excluded_count = len(self.excluded_surahs_in_batch)
         if count > 0:
-            if app_count > 0:
-                message = f"تم تحديد {self.format_surah_count(count)} للتحميل في التطبيق."
-            else:
-                message = f"تم تحديد {self.format_surah_count(count)} للتحميل في الجهاز."
+            message = f"تم تحديد {self.format_surah_count(count)} للتحميل."
             if excluded_count > 0:
                 message += f" وتم استثناء {self.format_surah_count(excluded_count)}."
             self.batch_download_feedback_label.setText(message)
@@ -746,10 +690,7 @@ class StoryPlayer(qt.QWidget):
             self.batch_download_action_button.setText("إلغاء تحميل الدفعة")
             self.batch_download_action_button.setStyleSheet("background-color: #8B0000; color: white;")
         else:
-            if app_count > 0:
-                self.batch_download_action_button.setText("بدء تحميل القصص في التطبيق")
-            elif device_count > 0:
-                self.batch_download_action_button.setText("بدء تحميل القصص في الجهاز")
+            self.batch_download_action_button.setText("بدء تحميل القصص المحددة")
             self.batch_download_action_button.setStyleSheet("")
             self.excluded_surahs_in_batch.clear()
         is_batching = count > 0
@@ -760,17 +701,6 @@ class StoryPlayer(qt.QWidget):
         if self.is_downloading_batch:
             return
         self.download_batch_list.clear()
-        self.excluded_surahs_in_batch.clear()
-        self.batch_download_feedback_label.setVisible(False)
-        self.batch_download_action_button.setVisible(False)
-        self.progressBar.setVisible(False)
-        self.cancel_download_button.setVisible(False)
-        self.update_download_batch_ui()
-        self.update_merge_ui()
-    def cancel_download_device_batch(self):
-        if self.is_downloading_batch:
-            return
-        self.download_device_batch_list.clear()
         self.excluded_surahs_in_batch.clear()
         self.batch_download_feedback_label.setVisible(False)
         self.batch_download_action_button.setVisible(False)
@@ -811,7 +741,6 @@ class StoryPlayer(qt.QWidget):
         os.makedirs(app_folder, exist_ok=True)
         self.save_folder = app_folder
         self.is_downloading_batch = True
-        self.is_device_batch_execution = False
         self.set_ui_for_batch_download(False)
         self.merge_action_button.setVisible(False)
         self.merge_all_button.setVisible(False)
@@ -822,86 +751,12 @@ class StoryPlayer(qt.QWidget):
         self.info_menu.setEnabled(False)
         self.duration.setEnabled(False)
         self.download_next_audio_to_app()
-    def prepare_device_batch_download(self):
-        if not self.download_device_batch_list:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لم يتم تحديد أي قصص للتحميل.")
-            return
-        count = len(self.download_device_batch_list)
-        surah_names = "\n".join([item["story"] for item in self.download_device_batch_list])
-        if count == 1:
-            intro_text = "سيتم تحميل قصة واحدة وهي:"
-        elif count == 2:
-            intro_text = "سيتم تحميل قصتين وهما:"
-        else:
-            intro_text = f"سيتم تحميل {self.format_surah_count(count)} وهم:"
-        confirm_message = (
-            f"{intro_text}\n"
-            f"{surah_names}\n\n"
-            "يمكنك إلغاء أي قصة أثناء التحميل وسيكمل تحميل الباقي."
-        )
-        response = guiTools.QQuestionMessageBox.view(
-            self,
-            "تأكيد التحميل",
-            confirm_message,"نعم","لا")
-        if response != 0:
-            return
-        save_folder = qt.QFileDialog.getExistingDirectory(self, "اختيار مجلد لحفظ القصص")
-        if not save_folder:
-            return
-        self.successfully_downloaded_in_batch.clear()
-        category = self.download_device_batch_list[0]["category"]
-        self.files_to_download = []
-        for item in self.download_device_batch_list:
-            self.files_to_download.append( (item["story"], item["url"]) )
-        self.current_file_index = 0
-        self.save_folder = save_folder
-        self.is_downloading_batch = True
-        self.is_device_batch_execution = True
-        self.set_ui_for_batch_download(False)
-        self.merge_action_button.setVisible(False)
-        self.merge_all_button.setVisible(False)
-        self.merge_feedback_label.setVisible(False)
         self.update_download_batch_ui()
         self.cancel_download_button.setVisible(True)
         self.current_download_category = category
         self.info_menu.setEnabled(False)
         self.duration.setEnabled(False)
         self.download_next_audio_to_app()
-    def set_as_download_device_start(self):
-        self.cancel_merge()
-        self.cancel_merge_start()
-        self.cancel_download_batch()
-        self.cancel_download_start()
-        self.first_download_device_selection_index = self.storyListWidget.currentRow()
-        speak(f"تم تحديد {self.storyListWidget.currentItem().text()} كبداية للتحميل في الجهاز")
-    def cancel_download_device_start(self):
-        self.first_download_device_selection_index = None
-        speak("تم إلغاء تحديد بداية التحميل في الجهاز")
-    def download_device_from_start_to_here(self):
-        if self.first_download_device_selection_index is None:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "الرجاء تحديد بداية التحميل أولاً.")
-            return
-        end_index = self.storyListWidget.currentRow()
-        start_index = self.first_download_device_selection_index
-        if start_index > end_index:
-            start_index, end_index = end_index, start_index
-        self.download_device_batch_list.clear()
-        category = self.categoriesListWidget.currentItem().text()
-        for i in range(start_index, end_index + 1):
-            story_item = self.storyListWidget.item(i)
-            if story_item:
-                story = story_item.text()
-                story_info = {
-                    "category": category,
-                    "story": story,
-                    "url": self.categories_data[category][story]
-                }
-                self.download_device_batch_list.append(story_info)
-        self.first_download_device_selection_index = None
-        if not self.download_device_batch_list:
-             guiTools.qMessageBox.MessageBox.view(self, "ملاحظة", "لم يتم تحديد أي قصص.")
-             return
-        self.prepare_device_batch_download()
     def set_ui_for_batch_download(self, enabled):
         widgets_to_toggle = [
             self.categoriesListWidget, self.storyListWidget,
@@ -1203,11 +1058,7 @@ class StoryPlayer(qt.QWidget):
             if self.is_downloading_batch:
                 self.is_downloading_batch = False
                 self.set_ui_for_batch_download(True)
-                if self.is_device_batch_execution:
-                    self.cancel_download_device_batch()
-                else:
-                    self.cancel_download_batch()
-                self.is_device_batch_execution = False
+                self.cancel_download_batch()
             self.update_merge_ui()
     def download_audio_complete(self):
         self.progressBar.setValue(100)
@@ -1302,7 +1153,7 @@ class StoryPlayer(qt.QWidget):
             if files_to_delete and hasattr(self, 'current_download_category'):
                 category = self.current_download_category
                 for file_name in files_to_delete:
-                    self.mark_for_deletion(file_name, category, app_internal=not self.is_device_batch_execution)
+                    self.mark_for_deletion(file_name, category, app_internal=True)
                 guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", f"تم إلغاء تحميل الدفعة وحذف {self.format_surah_count(len(files_to_delete))} ملفات.")
             else:
                 guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل الدفعة.")
@@ -1313,17 +1164,12 @@ class StoryPlayer(qt.QWidget):
             if self.is_downloading_batch:
                 self.is_downloading_batch = False
                 self.set_ui_for_batch_download(True)
-                if self.is_device_batch_execution:
-                    self.cancel_download_device_batch()
-                else:
-                    self.cancel_download_batch()
-                self.is_device_batch_execution = False
-            self.update_merge_ui()
+                self.cancel_download_batch()
         else:
             self.progressBar.setVisible(False)
             self.cancel_download_button.setVisible(True)
             current_story_name = self.current_download_filename
-            self.mark_for_deletion(self.current_download_filename, self.current_download_category, app_internal=not self.is_device_batch_execution)
+            self.mark_for_deletion(self.current_download_filename, self.current_download_category, app_internal=True)
             self.excluded_surahs_in_batch.append(current_story_name)
             self.update_download_batch_ui()
             del self.current_download_filename
@@ -1362,7 +1208,6 @@ class StoryPlayer(qt.QWidget):
         self.storyListWidget.clear()
         self.cancel_merge()
         self.cancel_download_batch()
-        self.cancel_download_device_batch()
         self.repeat_story_button.setEnabled(False)
         selected_category_item = self.categoriesListWidget.currentItem()
         if selected_category_item:
@@ -1448,13 +1293,9 @@ class StoryPlayer(qt.QWidget):
         boldFont=menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
-        is_merging_active = bool(self.merge_list) or self.first_merge_selection_index is not None
-        is_app_batch_active = bool(self.download_batch_list) or self.first_download_selection_index is not None
-        is_device_batch_active = bool(self.download_device_batch_list) or self.first_download_device_selection_index is not None
-        show_merge = not (is_app_batch_active or is_device_batch_active)
-        show_app_dl = not (is_merging_active or is_device_batch_active)
-        show_device_dl = not (is_merging_active or is_app_batch_active)
-        if show_merge:
+        is_merging_active = self.merge_list or self.first_merge_selection_index is not None
+        is_batch_download_active = bool(self.download_batch_list) or self.first_download_selection_index is not None
+        if not is_batch_download_active:
             merge_menu = menu.addMenu("دمج القصص")
             if self.first_merge_selection_index is None:
                 if not self.merge_list:
@@ -1489,8 +1330,8 @@ class StoryPlayer(qt.QWidget):
                     cancel_start_action.triggered.connect(self.cancel_merge_start)
                     merge_menu.addAction(cancel_start_action)
             menu.addSeparator()
-        if show_app_dl:
-            batch_download_menu = menu.addMenu("تحميل مخصص في التطبيق")
+        if not is_merging_active:
+            batch_download_menu = menu.addMenu("تحميل مخصص")
             if self.first_download_selection_index is None:
                 if not self.download_batch_list:
                     start_batch_dl_action = qt1.QAction("بدء التحميل المخصص من هذه القصة", self)
@@ -1523,41 +1364,6 @@ class StoryPlayer(qt.QWidget):
                     cancel_start_dl_action = qt1.QAction("إلغاء تحديد بداية التحميل", self)
                     cancel_start_dl_action.triggered.connect(self.cancel_download_start)
                     batch_download_menu.addAction(cancel_start_dl_action)
-            menu.addSeparator()
-        if show_device_dl:
-            device_batch_download_menu = menu.addMenu("تحميل مخصص في الجهاز")
-            if self.first_download_device_selection_index is None:
-                if not self.download_device_batch_list:
-                    start_device_dl_action = qt1.QAction("بدء التحميل المخصص من هذه القصة", self)
-                    start_device_dl_action.triggered.connect(self.add_to_download_device_batch)
-                    device_batch_download_menu.addAction(start_device_dl_action)
-                else:
-                    add_next_device_dl_action = qt1.QAction(f"إضافة القصة رقم {len(self.download_device_batch_list) + 1} للتحميل", self)
-                    add_next_device_dl_action.triggered.connect(self.add_to_download_device_batch)
-                    device_batch_download_menu.addAction(add_next_device_dl_action)
-                    remove_device_dl_action = qt1.QAction("إزالة قصة من قائمة التحميل", self)
-                    remove_device_dl_action.triggered.connect(self.remove_from_download_device_batch)
-                    device_batch_download_menu.addAction(remove_device_dl_action)
-                    cancel_device_dl_action = qt1.QAction("إلغاء التحميل المخصص", self)
-                    cancel_device_dl_action.triggered.connect(self.cancel_download_device_batch)
-                    device_batch_download_menu.addAction(cancel_device_dl_action)
-            device_batch_download_menu.addSeparator()
-            if not self.download_device_batch_list:
-                if self.first_download_device_selection_index is None:
-                    set_start_device_dl_action = qt1.QAction("تحديد كبداية للتحميل", self)
-                    set_start_device_dl_action.triggered.connect(self.set_as_download_device_start)
-                    device_batch_download_menu.addAction(set_start_device_dl_action)
-                else:
-                    current_index = self.storyListWidget.currentRow()
-                    start_item_text = self.storyListWidget.item(self.first_download_device_selection_index).text()
-                    device_batch_download_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
-                    if current_index != self.first_download_device_selection_index:
-                        download_device_range_action = qt1.QAction("التحميل من البداية المحددة إلى هنا", self)
-                        download_device_range_action.triggered.connect(self.download_device_from_start_to_here)
-                        device_batch_download_menu.addAction(download_device_range_action)
-                    cancel_start_device_dl_action = qt1.QAction("إلغاء تحديد بداية التحميل", self)
-                    cancel_start_device_dl_action.triggered.connect(self.cancel_download_device_start)
-                    device_batch_download_menu.addAction(cancel_start_device_dl_action)
             menu.addSeparator()
         play_action = qt1.QAction("تشغيل القصة المحددة", self)
         play_action.triggered.connect(self.play_selected_audio)
