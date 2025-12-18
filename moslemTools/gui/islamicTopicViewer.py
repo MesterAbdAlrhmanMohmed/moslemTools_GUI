@@ -54,7 +54,7 @@ class IslamicTopicViewer(qt.QDialog):
         self.previous.setStyleSheet("background-color: #0000AA; color: white;")
         self.previous.setAutoDefault(False)        
         self.next = guiTools.QPushButton("الموضوع التالي")
-        self.next.setAccessibleDescription("alt زائد السمه الأيمن")
+        self.next.setAccessibleDescription("alt زائد السهم الأيمن")
         self.next.clicked.connect(self.onNext)
         self.next.setShortcut("alt+right")
         self.next.setStyleSheet("background-color: #0000AA; color: white;")
