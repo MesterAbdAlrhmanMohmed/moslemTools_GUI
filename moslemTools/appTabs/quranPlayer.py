@@ -7,7 +7,6 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
-
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
@@ -39,7 +38,6 @@ class DownloadThread(qt2.QThread):
             self.cancelled.emit()
     def cancel(self):
         self.is_cancelled = True
-
 class MergeThread(qt2.QThread):
     finished = qt2.pyqtSignal(bool, str)
     def __init__(self, parent, ffmpeg_path, input_files, output_file):
@@ -55,17 +53,7 @@ class MergeThread(qt2.QThread):
                 for file_path in self.input_files:
                     safe_path = file_path.replace("\\", "/")
                     f.write(f"file '{safe_path}'\n")
-            command = [
-                self.ffmpeg_path,
-                "-y",
-                "-f", "concat",
-                "-safe", "0",
-                "-i", list_filepath,
-                "-ar", "44100",
-                "-ac", "2",
-                "-b:a", "192k",
-                self.output_file
-            ]
+            command = [self.ffmpeg_path, "-y", "-f", "concat", "-safe", "0", "-i", list_filepath, "-ar", "44100", "-ac", "2", "-b:a", "192k", self.output_file]
             startupinfo = None
             if os.name == 'nt':
                 startupinfo = subprocess.STARTUPINFO()
@@ -84,7 +72,6 @@ class MergeThread(qt2.QThread):
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
-
 class QuranPlayer(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -301,7 +288,11 @@ class QuranPlayer(qt.QWidget):
         self.surahListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.surahListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
-        self.update_repeat_button_state()
+    def check_media_loaded(self):
+        if self.mp.duration() <= 0:
+            speak("لا توجد سورة مُشَغَّلَة حالياً")
+            return False
+        return True
     def check_if_busy(self):
         if hasattr(self, 'download_thread') and self.download_thread is not None and self.download_thread.isRunning():
             guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "هناك عملية تحميل جارية بالفعل. الرجاء الانتظار حتى تنتهي أو قم بإلغائها.")
@@ -890,6 +881,9 @@ class QuranPlayer(qt.QWidget):
     def handle_repeat_toggled(self, checked):
         self.mp.stop()
         if checked:
+            if not self.check_media_loaded():
+                self.repeat_surah_button.setChecked(False)
+                return
             self.play_all_to_end.setEnabled(False)
             self.play_all_to_start.setEnabled(False)
         else:
@@ -1303,7 +1297,7 @@ class QuranPlayer(qt.QWidget):
                     url = self.reciters_data[reciter][selected_item.text()]
                     self.mp.setSource(qt2.QUrl(url))
                     self.mp.play()
-                self.update_repeat_button_state()
+                self.repeat_surah_button.setEnabled(True)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء تشغيل المقطع:" + str(e))
     def download_selected_audio(self):
@@ -1670,8 +1664,3 @@ class QuranPlayer(qt.QWidget):
             guiTools.qMessageBox.MessageBox.view(self,"تم","تم الحذف")
         except:
             guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر حذف العلامة المرجعية")
-    def update_repeat_button_state(self):
-        if self.mp.duration() == 0:
-            self.repeat_surah_button.setEnabled(False)
-        else:
-            self.repeat_surah_button.setEnabled(True)

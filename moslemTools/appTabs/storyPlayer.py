@@ -273,7 +273,7 @@ class StoryPlayer(qt.QWidget):
         self.cleanup_pending_deletions()
     def check_media_loaded(self):
         if self.mp.duration() <= 0:
-            speak("لا يوجد مقطع مشغل حاليا")
+            speak("لا توجد قصة مُشَغَّلَة حالياً")
             return False
         return True
     def check_if_busy(self):
@@ -811,10 +811,6 @@ class StoryPlayer(qt.QWidget):
         self.mp.stop()
         if checked:
             if not self.check_media_loaded():
-                self.repeat_story_button.setChecked(False)
-                return
-            reply = guiTools.QQuestionMessageBox.view(self, "تفعيل التكرار", "هل تريد تفعيل وضع تكرار القصة؟", "نعم", "لا")
-            if reply != 0:
                 self.repeat_story_button.setChecked(False)
                 return
             self.play_all_to_end.setEnabled(False)
