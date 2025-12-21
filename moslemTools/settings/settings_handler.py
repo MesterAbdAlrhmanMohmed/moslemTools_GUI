@@ -63,7 +63,8 @@ settingsConfig={
     "location":{
         "autoDetect":"True",
         "LT1":"33",
-        "LT2":"33"
+        "LT2":"33",
+        "calculationMethod":"5"
     },
     "update":{
         "autoCheck":"True",
