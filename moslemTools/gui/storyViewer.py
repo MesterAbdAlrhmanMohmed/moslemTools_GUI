@@ -75,7 +75,6 @@ class StoryViewer(qt.QDialog):
         self.update_font_size()
     def OnContextMenu(self):        
         current_line = self.getCurrentLine()
-
         cursor = self.text.textCursor()
         self.saved_selection_start = cursor.selectionStart()
         self.saved_selection_end = cursor.selectionEnd()

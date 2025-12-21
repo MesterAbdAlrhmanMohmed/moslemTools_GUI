@@ -60,7 +60,6 @@ class book_marcks(qt.QDialog):
             self.tabWidget.addTab(tab, category)
             self.tabs.append(tab)
             self.results_lists.append(results)        
-        
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.tabWidget)                
         self.dl = guiTools.QPushButton("حذف العلامة المرجعية المحددة")

@@ -1,8 +1,12 @@
 import json
+_iarab_data = None
 def getIarab(From:int,to:int):
+    global _iarab_data
     try:
-        with open("data/json/i raab.json","r",encoding="utf-8") as file:
-            data=json.load(file)
+        if _iarab_data is None:
+            with open("data/json/i raab.json","r",encoding="utf-8") as file:
+                _iarab_data=json.load(file)
+        data = _iarab_data
         result=[]
         for ayah in data:
             index=data.index(ayah)+1

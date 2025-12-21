@@ -158,10 +158,10 @@ class DownloadThread(qt2.QThread):
 								else:
 									self.progress.emit(int(downloaded_size / 1024) % 100)
 					try:
-						functions.tafseer.setTafaseer()
-						functions.translater.settranslation()
-						functions.ahadeeth.setahadeeth()
-						functions.islamicBooks.setBooks()
+						functions.tafseer.reload_tafaseers()
+						functions.translater.reload_translations()
+						functions.ahadeeth.reload_ahadeeths()
+						functions.islamicBooks.reload_books()
 					except Exception as e:
 						log_error("DownloadThread.run (post-processing)", e)
 					self.finished.emit(True)

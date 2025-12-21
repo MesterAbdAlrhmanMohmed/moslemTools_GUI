@@ -3,6 +3,18 @@ from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+import threading
+class AhadeethLoader(qt2.QThread):
+    data_loaded = qt2.pyqtSignal(list)
+    def __init__(self):
+        super().__init__()
+    def run(self):
+        try:
+            book_list = list(functions.ahadeeth.ahadeeths.keys())
+            self.data_loaded.emit(book_list)
+        except Exception as e:
+            print(f"Error loading ahadeeth: {e}")
+            self.data_loaded.emit([])
 class hadeeth(qt.QWidget):
     def __init__(self):
         super().__init__()                
@@ -12,7 +24,6 @@ class hadeeth(qt.QWidget):
         qt1.QShortcut("f5",self).activated.connect(self.refresh)
         self.list_of_ahadeeth=guiTools.QListWidget()
         self.list_of_ahadeeth.setFont(font)
-        self.list_of_ahadeeth.addItems(functions.ahadeeth.ahadeeths.keys())
         self.list_of_ahadeeth.itemClicked.connect(self.open)
         layout=qt.QVBoxLayout(self)
         serch=qt.QLabel("البحث عن كتاب حديث")
@@ -43,6 +54,23 @@ class hadeeth(qt.QWidget):
         self.list_of_ahadeeth.setSpacing(3)
         self.list_of_ahadeeth.customContextMenuRequested.connect(self.onDelete)
         qt1.QShortcut("delete",self).activated.connect(self.onDelete)
+        self.is_loaded = False
+        self.loader_thread = None
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self.is_loaded:
+            self.list_of_ahadeeth.clear()
+            self.list_of_ahadeeth.addItem("جاري تحميل قائمة الكتب...")
+            if self.loader_thread is None:
+                self.loader_thread = AhadeethLoader()
+                self.loader_thread.data_loaded.connect(self.on_data_loaded)
+                self.loader_thread.finished.connect(self.loader_thread.deleteLater)
+                self.loader_thread.finished.connect(lambda: setattr(self, 'loader_thread', None))
+                self.loader_thread.start()
+    def on_data_loaded(self, book_list):
+        self.list_of_ahadeeth.clear()
+        self.list_of_ahadeeth.addItems(book_list)
+        self.is_loaded = True
     def onDelete(self):
         selectedItem=self.list_of_ahadeeth.currentItem()
         if selectedItem:
@@ -54,14 +82,14 @@ class hadeeth(qt.QWidget):
                 if question==0:
                     name=functions.ahadeeth.ahadeeths[itemText]
                     os.remove(os.path.join(os.getenv('appdata'),app.appName,"ahadeeth",name))
-                    functions.ahadeeth.setahadeeth()
+                    functions.ahadeeth.reload_ahadeeths()
                     self.list_of_ahadeeth.clear()
                     self.list_of_ahadeeth.addItems(functions.ahadeeth.ahadeeths.keys())
                     guiTools.speak("تم الحذف")
     def open(self):
         gui.hadeeth_viewer(self,functions.ahadeeth.ahadeeths[self.list_of_ahadeeth.currentItem().text()]).exec()
     def refresh(self):
-        functions.ahadeeth.setahadeeth()
+        functions.ahadeeth.reload_ahadeeths()
         self.list_of_ahadeeth.clear()
         self.list_of_ahadeeth.addItems(functions.ahadeeth.ahadeeths.keys())
     def search(self,pattern,text_list):    

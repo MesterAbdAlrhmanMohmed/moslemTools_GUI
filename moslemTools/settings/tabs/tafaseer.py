@@ -79,7 +79,7 @@ class TafaseerSettings(qt.QWidget):
                 if question == 0:
                     name = translater.translations[itemText]
                     os.remove(os.path.join(os.getenv('appdata'), app.appName, "Quran Translations", name))
-                    translater.settranslation()                                        
+                    translater.reload_translations()                                        
                     self.selecttranslation.blockSignals(True)
                     self.selecttranslation.clear()
                     self.selecttranslation.addItems(translater.translations.keys())
@@ -97,7 +97,7 @@ class TafaseerSettings(qt.QWidget):
                 if question == 0:
                     name = tafseer.tafaseers[itemText]
                     os.remove(os.path.join(os.getenv('appdata'), app.appName, "tafaseer", name))
-                    tafseer.setTafaseer()                                        
+                    tafseer.reload_tafaseers()                                        
                     self.selectTafaseer.blockSignals(True)
                     self.selectTafaseer.clear()
                     self.selectTafaseer.addItems(tafseer.tafaseers.keys())

@@ -49,7 +49,8 @@ settingsConfig={
     "athkar":{
         "voice":"0",
         "voiceVolume":"100",
-        "text":"0"
+        "text":"0",
+        "playAtStartup":"False"
     },
     "prayerTimes":{
         "adaanReminder":"True",

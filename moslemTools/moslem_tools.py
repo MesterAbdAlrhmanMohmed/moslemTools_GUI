@@ -1,7 +1,7 @@
 from custome_errors import *
 import sys
 sys.excepthook = my_excepthook
-import update,guiTools,json,random,os,shutil,datetime,webbrowser,requests,keyboard,pyperclip,winsound,ctypes    
+import update,guiTools,json,random,os,shutil,datetime,webbrowser,requests,keyboard,pyperclip,winsound,ctypes,threading
 from hijridate import Gregorian
 from settings import *
 import PyQt6.QtWidgets as qt
@@ -9,15 +9,25 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 from appTabs import *
-import threading
-username = os.getlogin()
-guiTools.speak(f"مرحبا يا {username} في moslem tools، جاري تشغيل البرنامج، الرجاء الانتظار.")
 try:
     updatePath = os.path.join(os.getenv('appdata'), settings_handler.appName, "update")
     if os.path.exists(updatePath):
         shutil.rmtree(updatePath)
 except:
     pass
+class UpdateCheckWorker(qt2.QObject):
+    finished = qt2.pyqtSignal()
+    def __init__(self, parent_window):
+        super().__init__()
+        self.parent_window = parent_window
+    def run(self):
+        try:
+            if settings_handler.get("update", "autoCheck") == "True":
+                update.check(self.parent_window, message=False)
+        except Exception as e:
+            print(f"Error checking for updates: {e}")
+        finally:
+            self.finished.emit()
 class MessageCheckWorker(qt2.QObject):
     finished = qt2.pyqtSignal()
     def __init__(self, parent_window):
@@ -199,8 +209,16 @@ class main(qt.QMainWindow):
         self.tray_menu.setFont(font)
         self.a=qt2.QTimer.singleShot(0, self._restore)                
         self.start_message_check_thread()
-        if settings_handler.get("update", "autoCheck") == "True":
-            update.check(self, message=False)
+        self.start_update_check_thread()
+        if settings_handler.get("athkar", "playAtStartup") == "True":
+            self.random_audio_theker()
+    def start_update_check_thread(self):
+        self.update_worker = UpdateCheckWorker(self)
+        self.update_worker.finished.connect(self.update_worker.deleteLater)
+        self.update_worker.finished.connect(lambda: setattr(self, 'update_worker', None))
+        thread = threading.Thread(target=self.update_worker.run)
+        thread.daemon = True
+        thread.start()
     def start_message_check_thread(self):
         self.message_worker = MessageCheckWorker(self)
         self.message_worker.finished.connect(self.message_worker.deleteLater)

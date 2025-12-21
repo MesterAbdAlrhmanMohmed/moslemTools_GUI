@@ -43,7 +43,6 @@ class ExitApp(qt.QDialog):
         elif ec == 2:
             subprocess.Popen([sys.executable] + sys.argv)
             sys.exit()
-
     def fcan(self):
         self.cancel1=True
         self.close()

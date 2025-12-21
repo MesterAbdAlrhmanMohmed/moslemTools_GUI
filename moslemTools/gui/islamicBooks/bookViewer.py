@@ -190,7 +190,6 @@ class book_viewer(qt.QDialog):
         if start_page > end_page:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "صفحة البداية لا يمكن أن تكون أكبر من صفحة النهاية")
             return None, None
-            
         return start_page, end_page
     def copy_page_range(self):        
         start, end = self.get_page_range()

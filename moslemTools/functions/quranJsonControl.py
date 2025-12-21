@@ -1,17 +1,28 @@
 import json,re
-with open("data/json/quran.json","r",encoding="utf-8-sig") as file:
-    data=json.load(file)
+_data = None
+def _load_data():
+    global _data
+    if _data is None:
+        with open("data/json/quran.json","r",encoding="utf-8-sig") as file:
+            _data=json.load(file)
+def __getattr__(name):
+    if name == "data":
+        _load_data()
+        return _data
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 def getSurahs():
+    _load_data()
     surahs={}
-    for key,value in data.items():
+    for key,value in _data.items():
         ayahs={}
         for ayah in value["ayahs"]:
             ayahs["{} ({})".format(ayah["text"],str(ayah["numberInSurah"]))]=ayah["numberInSurah"]
         surahs[str(value["number"])+value["name"]]=[key,"\n".join(ayahs),key]
     return surahs
 def getJuz():
+    _load_data()
     juz={}
-    for key,value in data.items():
+    for key,value in _data.items():
         for ayah in value["ayahs"]:
             juzNumber=ayah["juz"]
             if str(juzNumber) in juz:
@@ -25,8 +36,9 @@ def getJuz():
         juz[j]=[j,"\n".join(content)]
     return juz
 def getPage():
+    _load_data()
     juz={}
-    for key,value in data.items():
+    for key,value in _data.items():
         for ayah in value["ayahs"]:
             juzNumber=ayah["page"]
             if str(juzNumber) in juz:
@@ -40,8 +52,9 @@ def getPage():
         juz[j]=[j,"\n".join(content)]
     return juz
 def getHezb():
+    _load_data()
     juz={}
-    for key,value in data.items():
+    for key,value in _data.items():
         for ayah in value["ayahs"]:
             juzNumber=ayah["hizbQuarter"]
             if str(juzNumber) in juz:
@@ -55,11 +68,12 @@ def getHezb():
         juz[j]=[j,"\n".join(content)]
     return juz
 def getHizb():
+    _load_data()
     juz={}
     times=1
     juzNumber=1
     Q=1
-    for key,value in data.items():
+    for key,value in _data.items():
         for ayah in value["ayahs"]:
             qNumber=ayah["hizbQuarter"]
             if Q!=qNumber:
@@ -79,34 +93,37 @@ def getHizb():
         juz[j]=[j,"\n".join(content)]
     return juz
 def getAyah(text, category=None, type=None):
+    _load_data()
     if type == 0 and category:
         match = re.match(r"(\d+)", category)
         if match:
             surah_key = match.group(1)                        
             special_surahs = ["3", "28", "29", "30", "31", "32", "41", "43", "44", "45", "46"]
             if surah_key in special_surahs:
-                if surah_key in data:
-                    for ayah in data[surah_key]["ayahs"]:
+                if surah_key in _data:
+                    for ayah in _data[surah_key]["ayahs"]:
                         t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))
                         if t == text:
-                            return ayah["numberInSurah"], surah_key, [ayah["juz"], data[surah_key]["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]    
-    for key, value in data.items():
+                            return ayah["numberInSurah"], surah_key, [ayah["juz"], _data[surah_key]["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]    
+    for key, value in _data.items():
         for ayah in value["ayahs"]:
             t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))
             if t == text:
                 return ayah["numberInSurah"], key, [ayah["juz"], value["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]
     return 1, "1", ["1", "", "", False], "1", 1
 def getQuran():
+    _load_data()
     result=[]
-    for Surah,value in data.items():
+    for Surah,value in _data.items():
             for Ayah in value["ayahs"]:
                 result.append(str(Surah) + value["name"] + " " + Ayah["text"] + "(" + str(Ayah["numberInSurah"]) + ")")
     return result
 def getFromToSurahs(from_surah, from_ayah, to_surah, to_ayah):
+    _load_data()
     result=[]
-    for surah_key in sorted(data.keys(), key=lambda x: int(x)):
+    for surah_key in sorted(_data.keys(), key=lambda x: int(x)):
         surah_num=int(surah_key)
-        ayahs=data[surah_key]["ayahs"]        
+        ayahs=_data[surah_key]["ayahs"]        
         if from_surah < surah_num < to_surah:
             for ayah in ayahs:
                 result.append(f"{ayah['text']} ({ayah['numberInSurah']})")

@@ -42,7 +42,6 @@ class SelectAthkar(qt.QDialog):
         self.reciters.clear()
         result=self.search(search_text,list(self.reciterData1))
         self.reciters.addItems(result)
-
 class downloadObjects(qt2.QObject):
     progress=qt2.pyqtSignal(int)
     downloaded=qt2.pyqtSignal(int)

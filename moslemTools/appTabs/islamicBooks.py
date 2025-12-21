@@ -11,7 +11,7 @@ class Worker(qt2.QObject):
         super().__init__()
     def refresh_books(self):
         try:
-            functions.islamicBooks.setbook()
+            functions.islamicBooks.reload_books()
             book_list = list(functions.islamicBooks.books.keys())
             self.data_ready.emit(book_list)
         except Exception as e:
@@ -28,13 +28,24 @@ class DeleteWorker(qt2.QObject):
         try:
             name=functions.islamicBooks.books[self.itemText]
             os.remove(os.path.join(os.getenv('appdata'),app.appName,"islamicBooks",name))
-            functions.islamicBooks.setbook()
+            functions.islamicBooks.reload_books()
             self.deletion_complete.emit(True)
         except Exception as e:
             print(f"Error during deletion: {e}")
             self.deletion_complete.emit(False)
         finally:
             self.finished.emit()
+class LoaderThread(qt2.QThread):
+    data_loaded = qt2.pyqtSignal(list)
+    def __init__(self):
+        super().__init__()
+    def run(self):
+        try:
+            book_list = list(functions.islamicBooks.books.keys())
+            self.data_loaded.emit(book_list)
+        except Exception as e:
+            print(f"Error loading books: {e}")
+            self.data_loaded.emit([])
 class IslamicBooks(qt.QWidget):
     def __init__(self):
         super().__init__()                
@@ -44,6 +55,7 @@ class IslamicBooks(qt.QWidget):
         layout=qt.QVBoxLayout(self)                
         self.worker = None        
         self.delete_worker = None
+        self.loader_thread = None
         qt1.QShortcut("f5",self).activated.connect(self.start_threaded_refresh)        
         serch=qt.QLabel("البحث عن كتاب")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -55,7 +67,6 @@ class IslamicBooks(qt.QWidget):
         layout.addWidget(self.search_bar)        
         self.list_of_abook=guiTools.QListWidget()
         self.list_of_abook.setSpacing(3)
-        self.list_of_abook.addItems(functions.islamicBooks.books.keys())
         self.list_of_abook.itemClicked.connect(self.open)
         layout.addWidget(self.list_of_abook)        
         self.info=qt.QLabel()
@@ -80,7 +91,23 @@ class IslamicBooks(qt.QWidget):
         layout.addWidget(self.info3)
         self.list_of_abook.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.list_of_abook.customContextMenuRequested.connect(self.onDelete)
-        qt1.QShortcut("delete",self).activated.connect(self.onDelete)    
+        qt1.QShortcut("delete",self).activated.connect(self.onDelete)
+        self.is_loaded = False
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self.is_loaded:
+            self.list_of_abook.clear()
+            self.list_of_abook.addItem("جاري تحميل قائمة الكتب...")
+            if self.loader_thread is None:
+                self.loader_thread = LoaderThread()
+                self.loader_thread.data_loaded.connect(self.on_data_loaded)
+                self.loader_thread.finished.connect(self.loader_thread.deleteLater)
+                self.loader_thread.finished.connect(lambda: setattr(self, 'loader_thread', None))
+                self.loader_thread.start()
+    def on_data_loaded(self, book_list):
+        self.list_of_abook.clear()
+        self.list_of_abook.addItems(book_list)
+        self.is_loaded = True
     def start_threaded_refresh(self):
         if self.worker is None:
             self.worker = Worker()

@@ -94,7 +94,6 @@ class AthkerDialog (qt.QDialog):
             self.media_progress.blockSignals(True)
             position = self.media.position()
             duration = self.media.duration()
-            
             if duration > 0:                
                 progress_value = int((position / duration) * 100)
                 self.media_progress.setValue(progress_value)                                

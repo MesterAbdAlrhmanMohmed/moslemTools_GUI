@@ -325,7 +325,6 @@ class NotesDialog(qt.QDialog):
             notesManager.removeAllNotes()
             for i in range(5): self.load_notes(i)
             guiTools.speak("تم حذف جميع الملاحظات")
-
     def search_notes(self, pattern, note_list):
         tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
         normalized_pattern = tashkeel_pattern.sub('', pattern).lower()

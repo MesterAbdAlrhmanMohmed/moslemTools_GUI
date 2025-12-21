@@ -86,6 +86,7 @@ class settings(qt.QDialog):
             pass
         settings_handler.set("athkar", "voice", str(self.athkar.voiceSelection.currentIndex()))
         settings_handler.set("athkar", "text", str(self.athkar.textSelection.currentIndex()))
+        settings_handler.set("athkar", "playAtStartup", str(self.athkar.playAtStartup.isChecked()))
         settings_handler.set("quranPlayer", "times", str(self.quranPlayerTimes.times.value()))
         settings_handler.set("quranPlayer", "duration", self.quranPlayerTimes.duration.text())
         settings_handler.set("prayerTimes", "adaanReminder", str(self.prayerTimesSettings.adaanReminder.isChecked()))

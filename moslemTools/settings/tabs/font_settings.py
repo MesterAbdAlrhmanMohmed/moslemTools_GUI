@@ -22,17 +22,13 @@ class FontSettings(qt.QWidget):
             }
         """)
         main_layout = qt.QVBoxLayout(self)
-        
-        # --- التعديل: إضافة فراغ مرن هنا لوضع المحتوى في المنتصف عمودياً ---
         main_layout.addStretch()
-        
         self.bold_checkbox = qt.QCheckBox("خط عريض (Bold)")
         self.bold_checkbox.setChecked(settings_handler.get("font", "bold") == "True")
         self.bold_checkbox.stateChanged.connect(self.update_checkbox_font)
         self.update_checkbox_font()
         main_layout.addWidget(self.bold_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         main_layout.addSpacing(10)        
-        
         font_size_layout = qt.QHBoxLayout()
         font_size_label = qt.QLabel("حجم الخط")
         self.font_size_spinbox = qt.QSpinBox()
@@ -40,7 +36,6 @@ class FontSettings(qt.QWidget):
         self.font_size_spinbox.setValue(int(settings_handler.get("font", "size")))
         self.font_size_spinbox.setFixedWidth(80)
         self.font_size_spinbox.setAccessibleName("حجم الخط")
-        
         font_size_layout.addStretch()
         font_size_layout.addWidget(self.font_size_spinbox)
         font_size_layout.addWidget(font_size_label)

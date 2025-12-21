@@ -109,6 +109,17 @@ class PreMergeCheckThread(qt2.QThread):
             self.finished.emit(merge_list, ayahs_to_download, reciter_name, reciter_local_path_base)
         except Exception as e:
             self.error.emit(f"حدث خطأ أثناء التحضير للدمج: {str(e)}")
+class QuranLoader(qt2.QThread):
+    data_loaded = qt2.pyqtSignal()
+    def __init__(self):
+        super().__init__()
+    def run(self):
+        try:
+            functions.quranJsonControl.getSurahs()
+            self.data_loaded.emit()
+        except Exception as e:
+            print(f"Error loading Quran data: {e}")
+            self.data_loaded.emit()
 class Quran(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -203,7 +214,21 @@ class Quran(qt.QWidget):
         guide_layout.addWidget(self.info1)
         guide_layout.addWidget(self.info_of_quran)
         layout.addLayout(guide_layout)
-        self.onTypeChanged(0)
+        self.loader_thread = None
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self.info.count() == 0:
+            self.info.clear()
+            self.info.addItem("جاري تحميل البيانات...")
+            if self.loader_thread is None:
+                self.loader_thread = QuranLoader()
+                self.loader_thread.data_loaded.connect(self.on_data_loaded)
+                self.loader_thread.finished.connect(self.loader_thread.deleteLater)
+                self.loader_thread.finished.connect(lambda: setattr(self, 'loader_thread', None))
+                self.loader_thread.start()
+    def on_data_loaded(self):
+        self.info.clear()
+        self.onTypeChanged(self.type.currentIndex())
     def search(self, pattern, text_list):
         tashkeel_pattern = re.compile(r'[\u064B-\u065F\u0670]')
         normalized_pattern = tashkeel_pattern.sub('', pattern)
@@ -226,14 +251,11 @@ class Quran(qt.QWidget):
             result = functions.quranJsonControl.getHezb()
         elif index == 4:
             result = functions.quranJsonControl.getHizb()
-        
         selected_item_text = self.info.currentItem().text()
-        
         try:
             correct_index = list(result.keys()).index(selected_item_text)
         except ValueError:
             correct_index = self.info.currentRow()
-
         gui.QuranViewer(self, result[selected_item_text][1], index, selected_item_text, enableNextPreviouseButtons=True, typeResult=result, CurrentIndex=correct_index).exec()
     def onTypeChanged(self, index: int):
         self.info.clear()

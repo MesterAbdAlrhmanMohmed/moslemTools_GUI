@@ -12,8 +12,6 @@ class QuranPlayerSettings(qt.QWidget):
                 font-size: 13px;
             }
         """)
-        
-        # Main vertical layout
         main_layout = qt.QVBoxLayout(self)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(10)
