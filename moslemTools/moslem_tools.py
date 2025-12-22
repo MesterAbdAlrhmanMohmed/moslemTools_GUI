@@ -212,6 +212,19 @@ class main(qt.QMainWindow):
         self.start_update_check_thread()
         if settings_handler.get("athkar", "playAtStartup") == "True":
             self.random_audio_theker()
+        elif settings_handler.get("athkar", "playBasmalaAtStartup") == "True":
+            self.play_random_basmala()
+    def play_random_basmala(self):
+        if self.media_player.playbackState()==QMediaPlayer.PlaybackState.PlayingState:
+            self.media_player.stop()
+        folder_path=os.path.join(os.getcwd(),"data","sounds","basmala")
+        if not os.path.exists(folder_path):return
+        sound_files=[f for f in os.listdir(folder_path) if f.lower().endswith(('.ogg','.mp3','.wav'))]
+        if sound_files:
+            chosen_file=random.choice(sound_files)
+            file_path=os.path.join(folder_path,chosen_file)
+            self.media_player.setSource(qt2.QUrl.fromLocalFile(file_path))
+            self.media_player.play()
     def start_update_check_thread(self):
         self.update_worker = UpdateCheckWorker(self)
         self.update_worker.finished.connect(self.update_worker.deleteLater)

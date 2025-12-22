@@ -125,7 +125,8 @@ class QuranPlayer(qt.QWidget):
         self.first_download_selection_index = None
         self.batch_download_target = 'app'
         self.download_thread = None
-        self.reciters_data = self.load_reciters()
+        self.is_loaded = False
+        self.reciters_data = {}
         self.recitersLabel = qt.QLabel("إختيار قارئ")
         self.recitersLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.reciterSearchLabel = qt.QLabel("ابحث عن قارئ")
@@ -150,9 +151,6 @@ class QuranPlayer(qt.QWidget):
         self.surahListWidget = guiTools.QListWidget()
         self.surahListWidget.setSpacing(3)
         self.surahListWidget.clicked.connect(self.play_selected_audio)
-        self.recitersList = list(self.reciters_data.keys())
-        self.recitersList.sort()
-        self.recitersListWidget.addItems(self.recitersList)
         self.progressBar = qt.QProgressBar()
         self.progressBar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.progressBar.setVisible(False)
@@ -282,12 +280,22 @@ class QuranPlayer(qt.QWidget):
         layout1.addWidget(self.openBookmarks)
         layout.addLayout(layout1)
         self.setLayout(layout)
-        if self.recitersListWidget.count() > 0:
-            self.recitersListWidget.setCurrentRow(0)
-            self.on_reciter_selected()
         self.surahListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.surahListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
+    def showEvent(self, event):
+        if not self.is_loaded:
+            self.load_data()
+            self.is_loaded = True
+        super().showEvent(event)
+    def load_data(self):
+        self.reciters_data = self.load_reciters()
+        self.recitersList = list(self.reciters_data.keys())
+        self.recitersList.sort()
+        self.recitersListWidget.addItems(self.recitersList)
+        if self.recitersListWidget.count() > 0:
+            self.recitersListWidget.setCurrentRow(0)
+            self.on_reciter_selected()
     def check_media_loaded(self):
         if self.mp.duration() <= 0:
             speak("لا توجد سورة مُشَغَّلَة حالياً")

@@ -178,6 +178,45 @@ class SearchModeDialog(qt.QDialog):
         self.ignore_symbols = bool(state)
     def get_settings(self):
         return {"ignore_tashkeel": self.ignore_tashkeel, "ignore_hamza": self.ignore_hamza, "ignore_symbols": self.ignore_symbols}
+class GoToCategoryDialog(qt.QDialog):
+    def __init__(self,parent,title:str,label:str,items:list,selected_index:int):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.resize(250,120)
+        self.selected_item=None
+        layout=qt.QVBoxLayout(self)
+        self.label=qt.QLabel(label)
+        self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.label)
+        self.list_widget=qt.QComboBox()
+        self.list_widget.addItems(items)
+        self.list_widget.setCurrentIndex(selected_index)
+        self.list_widget.setAccessibleName(label)
+        self.list_widget.setFixedHeight(40)
+        layout.addWidget(self.list_widget)
+        self.ok_button=guiTools.QPushButton("موافق")
+        self.ok_button.setStyleSheet("background-color:#006400;color:white;padding:5px;")
+        self.ok_button.clicked.connect(self.on_ok)
+        self.ok_button.setFixedHeight(40)
+        self.cancel_button=guiTools.QPushButton("إلغاء")
+        self.cancel_button.setStyleSheet("background-color:#8B0000;color:white;padding:5px;")
+        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setFixedHeight(40)
+        buttons_layout=qt.QHBoxLayout()
+        buttons_layout.addWidget(self.ok_button)
+        buttons_layout.addWidget(self.cancel_button)
+        layout.addLayout(buttons_layout)
+    def on_ok(self):
+        if self.list_widget.currentText():
+            self.selected_item=self.list_widget.currentText()
+            self.accept()
+    @staticmethod
+    def getItem(parent,title:str,label:str,items:list,selected_index:int):
+        dialog=GoToCategoryDialog(parent,title,label,items,selected_index)
+        result=dialog.exec()
+        if result==qt.QDialog.DialogCode.Accepted:
+            return dialog.selected_item,True
+        return "",False
 class QuranViewer(qt.QDialog):
     def __init__(self,p,text:str,type:int,category,index=0,enableNextPreviouseButtons=False,typeResult=[],CurrentIndex=0,enableBookmarks=True):
         super().__init__(p)
@@ -1623,7 +1662,7 @@ class QuranViewer(qt.QDialog):
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        category,OK=qt.QInputDialog.getItem(self,"الذهاب إلى محتوى فئة","اختر عنصر",list(self.typeResult.keys()),self.CurrentIndex,False)
+        category,OK=GoToCategoryDialog.getItem(self,"الذهاب إلى محتوى فئة","اختر عنصر",list(self.typeResult.keys()), self.CurrentIndex)
         if OK:
             self.CurrentIndex=list(self.typeResult.keys()).index(category)
             indexs=list(self.typeResult.keys())[self.CurrentIndex]

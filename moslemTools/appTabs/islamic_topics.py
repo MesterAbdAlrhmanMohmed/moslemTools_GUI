@@ -8,7 +8,12 @@ class IslamicTopicsTab(qt.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.DATA_PATH = os.path.join("data", "json", "IslamicTopics")
-        self.initUI()
+        self.is_loaded = False
+    def showEvent(self, event):
+        if not self.is_loaded:
+            self.initUI()
+            self.is_loaded = True
+        super().showEvent(event)
     def search(self, pattern, text_list):
         tashkeel_pattern = re.compile(r'[^\u0621-\u063A\u0641-\u064A\s]+')
         normalized_pattern = tashkeel_pattern.sub('', pattern)

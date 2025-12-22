@@ -117,7 +117,8 @@ class StoryPlayer(qt.QWidget):
         self.first_download_selection_index = None
         self.batch_download_target = 'app'
         self.download_thread = None
-        self.categories_data = self.load_categories()
+        self.is_loaded = False
+        self.categories_data = {}
         self.categoriesLabel = qt.QLabel("إختيار فئة")
         self.categoriesLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.categorySearchLabel = qt.QLabel("ابحث عن فئة")
@@ -143,9 +144,6 @@ class StoryPlayer(qt.QWidget):
         self.storyListWidget.setSpacing(3)
         self.storyListWidget.clicked.connect(self.play_selected_audio)
         self.storySearchEdit.textChanged.connect(self.story_onsearch)
-        self.categoriesList = list(self.categories_data.keys())
-        self.categoriesList.sort()
-        self.categoriesListWidget.addItems(self.categoriesList)
         self.progressBar = qt.QProgressBar()
         self.progressBar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.progressBar.setVisible(False)
@@ -265,12 +263,22 @@ class StoryPlayer(qt.QWidget):
         layout1.addWidget(self.openBookmarks)
         layout.addLayout(layout1)
         self.setLayout(layout)
-        if self.categoriesListWidget.count() > 0:
-            self.categoriesListWidget.setCurrentRow(0)
-            self.on_category_selected()
         self.storyListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.storyListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
+    def showEvent(self, event):
+        if not self.is_loaded:
+            self.load_data()
+            self.is_loaded = True
+        super().showEvent(event)
+    def load_data(self):
+        self.categories_data = self.load_categories()
+        self.categoriesList = list(self.categories_data.keys())
+        self.categoriesList.sort()
+        self.categoriesListWidget.addItems(self.categoriesList)
+        if self.categoriesListWidget.count() > 0:
+            self.categoriesListWidget.setCurrentRow(0)
+            self.on_category_selected()
     def check_media_loaded(self):
         if self.mp.duration() <= 0:
             speak("لا توجد قصة مُشَغَّلَة حالياً")
