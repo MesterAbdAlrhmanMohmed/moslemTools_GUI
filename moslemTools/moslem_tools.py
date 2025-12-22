@@ -15,19 +15,6 @@ try:
         shutil.rmtree(updatePath)
 except:
     pass
-class UpdateCheckWorker(qt2.QObject):
-    finished = qt2.pyqtSignal()
-    def __init__(self, parent_window):
-        super().__init__()
-        self.parent_window = parent_window
-    def run(self):
-        try:
-            if settings_handler.get("update", "autoCheck") == "True":
-                update.check(self.parent_window, message=False)
-        except Exception as e:
-            print(f"Error checking for updates: {e}")
-        finally:
-            self.finished.emit()
 class MessageCheckWorker(qt2.QObject):
     finished = qt2.pyqtSignal()
     def __init__(self, parent_window):
@@ -208,8 +195,6 @@ class main(qt.QMainWindow):
         self.notification_random_thecker()
         self.tray_menu.setFont(font)
         self.a=qt2.QTimer.singleShot(0, self._restore)                
-        self.start_message_check_thread()
-        self.start_update_check_thread()
         if settings_handler.get("athkar", "playAtStartup") == "True":
             self.random_audio_theker()
         elif settings_handler.get("athkar", "playBasmalaAtStartup") == "True":
@@ -225,13 +210,6 @@ class main(qt.QMainWindow):
             file_path=os.path.join(folder_path,chosen_file)
             self.media_player.setSource(qt2.QUrl.fromLocalFile(file_path))
             self.media_player.play()
-    def start_update_check_thread(self):
-        self.update_worker = UpdateCheckWorker(self)
-        self.update_worker.finished.connect(self.update_worker.deleteLater)
-        self.update_worker.finished.connect(lambda: setattr(self, 'update_worker', None))
-        thread = threading.Thread(target=self.update_worker.run)
-        thread.daemon = True
-        thread.start()
     def start_message_check_thread(self):
         self.message_worker = MessageCheckWorker(self)
         self.message_worker.finished.connect(self.message_worker.deleteLater)
@@ -432,35 +410,49 @@ class main(qt.QMainWindow):
                 )
         else:
             return
-App = qt.QApplication([])
-default_font = qt1.QFont()
-default_font.setBold(True)
-App.setFont(default_font)
-App.setApplicationDisplayName(app.name)
-App.setApplicationName(app.name)
-App.setApplicationVersion(str(app.version))
-App.setOrganizationName(app.creater)
-App.setWindowIcon(qt1.QIcon("data/icons/app_icon.ico"))
-App.setStyle('Fusion')
-dark_palette = qt1.QPalette()
-dark_palette.setColor(qt1.QPalette.ColorRole.Window, qt1.QColor("121212"))
-dark_palette.setColor(qt1.QPalette.ColorRole.WindowText, qt1.QColor("#E0E0E0"))
-dark_palette.setColor(qt1.QPalette.ColorRole.Base, qt1.QColor("#1E1E1E"))
-dark_palette.setColor(qt1.QPalette.ColorRole.AlternateBase, qt1.QColor("#2C2C2C"))
-dark_palette.setColor(qt1.QPalette.ColorRole.ToolTipBase, qt1.QColor("#2C2C2C"))
-dark_palette.setColor(qt1.QPalette.ColorRole.ToolTipText, qt1.QColor("#E0E0E0"))
-dark_palette.setColor(qt1.QPalette.ColorRole.Text, qt1.QColor("#E0E0E0"))
-dark_palette.setColor(qt1.QPalette.ColorRole.Button, qt1.QColor("#2C2C2C"))
-dark_palette.setColor(qt1.QPalette.ColorRole.ButtonText, qt1.QColor("#E0E0E0"))
-dark_palette.setColor(qt1.QPalette.ColorRole.BrightText, qt1.QColor("#FF0000"))
-dark_palette.setColor(qt1.QPalette.ColorRole.Highlight, qt1.QColor("#3A9FF5"))
-dark_palette.setColor(qt1.QPalette.ColorRole.HighlightedText, qt1.QColor("#000000"))
-App.setPalette(dark_palette)
-shared=qt2.QSharedMemory("com.MTC.moslemTools")
-window = main()
-if shared.attach() or not shared.create(1):
-    guiTools.qMessageBox.MessageBox.error(window,"تنبيه","البرنامج يعمل بالفعل")
-    sys.exit(0)
-App.aboutToQuit.connect(lambda: shared.detach())
-window.show()
-App.exec()
+def run_startup_checks():
+    if settings_handler.get("update", "autoCheck") == "True":
+        try:
+            update.check(None, message=False)
+        except:
+            pass
+    try:
+        guiTools.messageHandler.check(None)
+    except:
+        pass
+if __name__ == "__main__":
+    App = qt.QApplication([])
+    default_font = qt1.QFont()
+    default_font.setBold(True)
+    App.setFont(default_font)
+    App.setApplicationDisplayName(app.name)
+    App.setApplicationName(app.name)
+    App.setApplicationVersion(str(app.version))
+    App.setOrganizationName(app.creater)
+    App.setWindowIcon(qt1.QIcon("data/icons/app_icon.ico"))
+    App.setStyle('Fusion')
+    dark_palette = qt1.QPalette()
+    dark_palette.setColor(qt1.QPalette.ColorRole.Window, qt1.QColor("121212"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.WindowText, qt1.QColor("#E0E0E0"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.Base, qt1.QColor("#1E1E1E"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.AlternateBase, qt1.QColor("#2C2C2C"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.ToolTipBase, qt1.QColor("#2C2C2C"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.ToolTipText, qt1.QColor("#E0E0E0"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.Text, qt1.QColor("#E0E0E0"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.Button, qt1.QColor("#2C2C2C"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.ButtonText, qt1.QColor("#E0E0E0"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.BrightText, qt1.QColor("#FF0000"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.Highlight, qt1.QColor("#3A9FF5"))
+    dark_palette.setColor(qt1.QPalette.ColorRole.HighlightedText, qt1.QColor("#000000"))
+    App.setPalette(dark_palette)
+
+    run_startup_checks()
+
+    shared=qt2.QSharedMemory("com.MTC.moslemTools")
+    window = main()
+    if shared.attach() or not shared.create(1):
+        guiTools.qMessageBox.MessageBox.error(window,"تنبيه","البرنامج يعمل بالفعل")
+        sys.exit(0)
+    App.aboutToQuit.connect(lambda: shared.detach())
+    window.show()
+    App.exec()
