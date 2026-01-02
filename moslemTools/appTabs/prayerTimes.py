@@ -59,7 +59,8 @@ class PrayerTimesWorker(qt2.QObject):
                 response = requests.get('http://api.aladhan.com/v1/timings', params={'latitude': latitude, 'longitude': longitude, 'method': int(method)})
                 if response.status_code == 200:
                     data = response.json()['data']['timings']
-                    prayers_ar = {'Fajr': 'الفجر', 'Sunrise': 'الشروق', 'Dhuhr': 'الظهر', 'Asr': 'العصر', 'Maghrib': 'المغرب', 'Isha': 'العشاء'}
+                    dhuhr_name = 'صلاة الجمعة' if day == 4 else 'الظهر'
+                    prayers_ar = {'Fajr': 'الفجر', 'Sunrise': 'الشروق', 'Dhuhr': dhuhr_name, 'Asr': 'العصر', 'Maghrib': 'المغرب', 'Isha': 'العشاء'}
                     prayers = list(prayers_ar.values())
                     times = []
                     for prayer_en, prayer_ar in prayers_ar.items():
@@ -140,28 +141,23 @@ class prayer_times(qt.QWidget):
         layout.addWidget(self.worning)
         self.setLayout(layout)
         if self.TEST_MODE:
-            print("---!!! تم تشغيل وضع الاختبار السريع (10 ثواني) !!!---")
             self.information.addItem("وضع الاختبار يعمل...")
             self.information.addItem("سيتم رفع أذان الظهر بعد 10 ثوانٍ.")            
             qt2.QTimer.singleShot(10000, self.trigger_test_adhan)
         else:
             self.display_prayer_times()
     def trigger_test_adhan(self):
-        print("--> حان وقت أذان الاختبار، جاري التشغيل...")
         test_index = 2
-        test_prayer_name = "الظهر (اختبار)"
+        test_prayer_name = "صلاة الجمعة" if self.day == 4 else "الظهر"
         prayer_key = self.get_prayer_key(test_prayer_name)
         if prayer_key:
             sound_file = settings_handler.get("adhanSounds", prayer_key)
             sound_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", sound_file)
             self.information.addItem(f"تم تشغيل أذان {test_prayer_name}")
             gui.AdaanDialog(self, test_index, test_prayer_name, sound_path).exec()
-            print("--> انتهى اختبار الأذان.")
-            print(f"--> جدولة اختبار الإقامة (based on key: {prayer_key})...")
             self.schedule_iqama_timer(prayer_key)
             self.information.addItem("انتهى الاختبار بنجاح (وجاري انتظار الإقامة إذا تم ضبطها).")
         else:
-            print("--> خطأ: لم يتم العثور على مفتاح الصلاة للاختبار.")
             self.information.addItem("خطأ في تشغيل الاختبار.")
     def format_arabic_time_unit(self, number, units):
         if number == 0:
@@ -234,6 +230,8 @@ class prayer_times(qt.QWidget):
                 if time_str:
                     if next_prayer_name == 'الشروق':
                         display_text = f"متبقي على شروق الشمس {time_str}"
+                    elif next_prayer_name == 'صلاة الجمعة':
+                        display_text = f"متبقي على {next_prayer_name} {time_str}"
                     else:
                         display_text = f"متبقي على صلاة {next_prayer_name} {time_str}"
                     self.next_prayer_item.setText(display_text)
@@ -313,7 +311,7 @@ class prayer_times(qt.QWidget):
                             self.p.media_player.setSource(qt2.QUrl.fromLocalFile(before_azan_sound))
                             self.p.media_player.play()
     def get_prayer_key(self, prayer_name_ar):
-        if "الظهر" in prayer_name_ar:
+        if "الظهر" in prayer_name_ar or "الجمعة" in prayer_name_ar:
             return "dhuhr"
         prayer_map = {"الفجر": "fajr", "العصر": "asr", "المغرب": "maghrib", "العشاء": "isha"}
         return prayer_map.get(prayer_name_ar, None)
@@ -323,7 +321,6 @@ class prayer_times(qt.QWidget):
         sound_file = settings_handler.get("adhanSounds", "iqama")
         sound_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", sound_file)
         if not os.path.exists(sound_path):
-            print(f"Iqama sound file not found: {sound_path}")
             return
         try:
             self.iqama_media_player = QMediaPlayer()
@@ -334,7 +331,7 @@ class prayer_times(qt.QWidget):
             self.iqama_media_player.mediaStatusChanged.connect(self.on_iqama_finished)
             self.iqama_media_player.play()
         except Exception as e:
-            print(f"Error playing iqama sound: {e}")
+            pass
     def on_iqama_finished(self, status):
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
             if hasattr(self, 'iqama_media_player'):
