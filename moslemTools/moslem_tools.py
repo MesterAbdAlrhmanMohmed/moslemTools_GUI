@@ -2,6 +2,7 @@ from custome_errors import *
 import sys
 sys.excepthook = my_excepthook
 import update,guiTools,json,random,os,shutil,datetime,webbrowser,requests,keyboard,pyperclip,winsound,ctypes,threading
+from pynput import keyboard as p_key
 from hijridate import Gregorian
 from settings import *
 import PyQt6.QtWidgets as qt
@@ -28,18 +29,19 @@ class MessageCheckWorker(qt2.QObject):
         finally:
             self.finished.emit()
 class main(qt.QMainWindow):
+    audio_sig = qt2.pyqtSignal()
+    text_sig = qt2.pyqtSignal()
+    toggle_sig = qt2.pyqtSignal()
     def __init__(self):
         super().__init__()
         self.setWindowTitle(app.name + "الإصدار:" + str(app.version))
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
-        self.setWindowFlags(
-            qt2.Qt.WindowType.Window |
-            qt2.Qt.WindowType.WindowCloseButtonHint |
-            qt2.Qt.WindowType.CustomizeWindowHint
-        )
-        keyboard.add_hotkey("alt+windows+p", self.random_audio_theker)
-        keyboard.add_hotkey("alt+windows+l", self.show_random_theker)
-        keyboard.add_hotkey("ctrl+alt+h", self.toggle_visibility)        
+        self.setWindowFlags(qt2.Qt.WindowType.Window | qt2.Qt.WindowType.WindowCloseButtonHint | qt2.Qt.WindowType.CustomizeWindowHint)
+        self.audio_sig.connect(self.random_audio_theker)
+        self.text_sig.connect(self.show_random_theker)
+        self.toggle_sig.connect(self.toggle_visibility)
+        self.hk_listener = p_key.GlobalHotKeys({'<alt>+<cmd>+p': self.audio_sig.emit, '<alt>+<cmd>+l': self.text_sig.emit, '<ctrl>+<alt>+h': self.toggle_sig.emit})
+        self.hk_listener.start()
         self.info_update_timer = qt2.QTimer(self)
         self.info_update_timer.timeout.connect(self.viewInfoTextEdit)
         self.info_update_timer.start(90000)
@@ -56,7 +58,7 @@ class main(qt.QMainWindow):
         self.info.setFont(font1)
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout1=qt.QHBoxLayout()        
+        layout1=qt.QHBoxLayout()
         layout2=qt.QVBoxLayout()
         layout.addLayout(layout1)
         layout1.addLayout(layout2)
@@ -68,22 +70,7 @@ class main(qt.QMainWindow):
         self.quranPlayer = QuranPlayer()
         self.storiesPlayer = StoryPlayer()
         self.researcher = Albaheth()
-        tabs = [    
-            (prayer_times(self), "مواقيت الصلاة والتاريخ"),
-            (Quran(), "القرآن الكريم مكتوب"),
-            (self.quranPlayer, "القرآن الكريم صوتي"),            
-            (Athker(), "الأذكار والأدعية"),
-            (sibha(), "السبحة الإلكترونية"),    
-            (hadeeth(), "الأحاديث النبوية والقدسية"),
-            (NamesOfAllah(), "أسماء الله الحُسْنى"),
-            (IslamicBooks(), "الكتب الإسلامية"),
-            (ProphetStories(), "القصص الإسلامية المكتوبة"),
-            (self.storiesPlayer, "القصص الإسلامية الصوتية للأطفال"),
-            (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),    
-            (self.researcher, "الباحث في القرآن والأحاديث"),
-            (protcasts(), "إذاعات الراديو الإسلامية"),
-            (DateConverter(), "محول التاريخ"),
-        ]
+        tabs = [(prayer_times(self), "مواقيت الصلاة والتاريخ"),(Quran(), "القرآن الكريم مكتوب"),(self.quranPlayer, "القرآن الكريم صوتي"),(Athker(), "الأذكار والأدعية"),(sibha(), "السبحة الإلكترونية"),(hadeeth(), "الأحاديث النبوية والقدسية"),(NamesOfAllah(), "أسماء الله الحُسْنى"),(IslamicBooks(), "الكتب الإسلامية"),(ProphetStories(), "القصص الإسلامية المكتوبة"),(self.storiesPlayer, "القصص الإسلامية الصوتية للأطفال"),(IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),(self.researcher, "الباحث في القرآن والأحاديث"),(protcasts(), "إذاعات الراديو الإسلامية"),(DateConverter(), "محول التاريخ"),]
         for widget_class, label in tabs:
             self.list_widget.add(label, widget_class)
         for i in range(self.list_widget.count()):
@@ -102,27 +89,27 @@ class main(qt.QMainWindow):
         self.list_widget.setFixedWidth(max_width)
         content_layout.addWidget(self.list_widget)
         content_layout.addWidget(self.list_widget.w, 1)
-        layout.addLayout(content_layout)        
+        layout.addLayout(content_layout)
         self.more_options_button = qt.QPushButton("المزيد من الخيارات")
         self.more_options_button.setShortcut("ctrl+o")
         self.more_options_button.setAccessibleDescription("control plus o")
         self.more_options_button.setDefault(True)
-        self.more_options_button.setStyleSheet("background-color: black; color: white;")        
-        self.more_options_button.setFixedSize(150,40)                        
+        self.more_options_button.setStyleSheet("background-color: black; color: white;")
+        self.more_options_button.setFixedSize(150,40)
         font = qt1.QFont()
         font.setBold(True)
-        self.more_options_button.setFont(font)        
+        self.more_options_button.setFont(font)
         self.moreOptionsMenu = qt.QMenu(self)
         self.moreOptionsMenu.setFont(font)
         self.moreOptionsMenu.setAccessibleName("المزيد من الخيارات")
         action_settings = qt1.QAction("الإعدادات", self)
         action_settings.setShortcut("f1")
         action_settings.triggered.connect(lambda: settings(self).exec())
-        self.moreOptionsMenu.addAction(action_settings)        
+        self.moreOptionsMenu.addAction(action_settings)
         action_bookMark = qt1.QAction("العلامات المرجعية", self)
         action_bookMark.setShortcut("ctrl+b")
         action_bookMark.triggered.connect(lambda: book_marcks(self).exec())
-        self.moreOptionsMenu.addAction(action_bookMark)                                        
+        self.moreOptionsMenu.addAction(action_bookMark)
         action_notes = qt1.QAction("الملاحظات", self)
         action_notes.setShortcut("ctrl+n")
         action_notes.triggered.connect(lambda: notes.NotesDialog(self).exec())
@@ -131,13 +118,13 @@ class main(qt.QMainWindow):
         action_whats_new.setShortcut("ctrl+w")
         action_whats_new.triggered.connect(self.whats_new_funktion)
         self.moreOptionsMenu.addAction(action_whats_new)
-        action_sheck_message=qt1.QAction("التحقق من وجود رسالة من المطور", self)        
+        action_sheck_message=qt1.QAction("التحقق من وجود رسالة من المطور", self)
         action_sheck_message.triggered.connect(self.start_message_check_thread)
         self.moreOptionsMenu.addAction(action_sheck_message)
         action_viewLastMessage = qt1.QAction("إظهار آخر رسالة من المطور", self)
         action_viewLastMessage.setShortcut("ctrl+m")
         action_viewLastMessage.triggered.connect(self.onViewLastMessageButtonClicked)
-        self.moreOptionsMenu.addAction(action_viewLastMessage)        
+        self.moreOptionsMenu.addAction(action_viewLastMessage)
         action_about_devs = qt1.QAction("عن المطور", self)
         action_about_devs.setShortcut("f2")
         action_about_devs.triggered.connect(self.open_developers_window)
@@ -157,12 +144,12 @@ class main(qt.QMainWindow):
         donateAction=qt1.QAction("تبرع",self)
         self.moreOptionsMenu.addAction(donateAction)
         donateAction.triggered.connect(self.OnDonation)
-        donateAction.setShortcut("ctrl+shift+d")        
+        donateAction.setShortcut("ctrl+shift+d")
         action_delete_program_data = qt1.QAction("حذف بيانات البرنامج لإلغاء تثبيته", self)
         action_delete_program_data .setShortcut("ctrl+shift+delete")
         action_delete_program_data.triggered.connect(self.delete_program_data_with_confirmation)
-        self.moreOptionsMenu.addAction(action_delete_program_data)                        
-        self.more_options_button.setMenu(self.moreOptionsMenu)        
+        self.moreOptionsMenu.addAction(action_delete_program_data)
+        self.more_options_button.setMenu(self.moreOptionsMenu)
         layout1.addWidget(self.more_options_button)
         layout1.addWidget(self.info)
         w = qt.QWidget()
@@ -179,7 +166,7 @@ class main(qt.QMainWindow):
         self.random_thecker_audio.triggered.connect(self.random_audio_theker)
         self.random_thecker_text = qt1.QAction("عرض ذكر عشوائي")
         self.random_thecker_text.triggered.connect(self.show_random_theker)
-        self.show_action = qt1.QAction("إخفاء البرنامج")        
+        self.show_action = qt1.QAction("إخفاء البرنامج")
         self.show_action.triggered.connect(self.toggle_visibility)
         self.close_action = qt1.QAction("إغلاق البرنامج")
         self.close_action.triggered.connect(lambda: qt.QApplication.quit())
@@ -190,11 +177,11 @@ class main(qt.QMainWindow):
         self.tray_icon.setContextMenu(self.tray_menu)
         self.tray_icon.show()
         self.TIMER1 = qt2.QTimer(self)
-        self.TIMER1.timeout.connect(self.show_random_theker)        
+        self.TIMER1.timeout.connect(self.show_random_theker)
         self.runAudioThkarTimer()
         self.notification_random_thecker()
         self.tray_menu.setFont(font)
-        self.a=qt2.QTimer.singleShot(0, self._restore)                
+        self.a=qt2.QTimer.singleShot(0, self._restore)
         if settings_handler.get("athkar", "playAtStartup") == "True":
             self.random_audio_theker()
         elif settings_handler.get("athkar", "playBasmalaAtStartup") == "True":
@@ -218,7 +205,7 @@ class main(qt.QMainWindow):
         thread.daemon = True
         thread.start()
     def showEvent(self, event):
-        super().showEvent(event)        
+        super().showEvent(event)
         MF_BYCOMMAND = 0x00000000
         SC_SIZE = 0xF000
         SC_MOVE = 0xF010
@@ -231,17 +218,16 @@ class main(qt.QMainWindow):
         user32 = ctypes.windll.user32
         GetWindowLong = user32.GetWindowLongW
         SetWindowLong = user32.SetWindowLongW
-        hwnd = self.winId().__int__()    
+        hwnd = self.winId().__int__()
         hMenu = user32.GetSystemMenu(hwnd, False)
         if hMenu:
             for cmd in (SC_SIZE, SC_MOVE, SC_MINIMIZE, SC_MAXIMIZE, SC_RESTORE):
                 user32.RemoveMenu(hMenu, cmd, MF_BYCOMMAND)
-            user32.DrawMenuBar(hwnd)    
+            user32.DrawMenuBar(hwnd)
         style = GetWindowLong(hwnd, GWL_STYLE)
         new_style = WS_CAPTION | WS_SYSMENU
-        SetWindowLong(hwnd, GWL_STYLE, new_style)    
-        user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0,
-                            0x0002 | 0x0001 | 0x0020)
+        SetWindowLong(hwnd, GWL_STYLE, new_style)
+        user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0002 | 0x0001 | 0x0020)
     def _restore(self):
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
     def toggle_visibility(self):
@@ -250,7 +236,9 @@ class main(qt.QMainWindow):
             self.show_action.setText("إظهار البرنامج")
         else:
             self.show()
-            self.show_action.setText("إخفاء البرنامج")                
+            self.activateWindow()
+            self.raise_()
+            self.show_action.setText("إخفاء البرنامج")
     def show_random_theker(self):
         with open("data/json/text_athkar.json", "r", encoding="utf_8") as f:
             data = json.load(f)
@@ -348,7 +336,7 @@ class main(qt.QMainWindow):
     def onToolChanged(self, current, previous):
         self.quranPlayer.mp.pause()
         self.storiesPlayer.mp.pause()
-        self.researcher.media_player.pause()                
+        self.researcher.media_player.pause()
     def OnDonation(self):
         guiTools.MessageBox.view(self,"تنبيه","في حالة التبرع الرجاء إرسال صورة للتحويل على حساب Telegram الخاص بي، حتى لا تختلط التحويلات الخاطئة بالتحويلات المقصودة")
         menu=qt.QMenu("اختر طريقة",self)
@@ -366,48 +354,26 @@ class main(qt.QMainWindow):
         menu.exec(qt1.QCursor.pos())
     def instaPay(self):
         pyperclip.copy("https://ipn.eg/S/av369852/instapay/23Mu5Z")
-        winsound.Beep(1000, 100)            
+        winsound.Beep(1000, 100)
     def VFC(self):
         pyperclip.copy("+201022701463")
         guiTools.MessageBox.view(self,"تنبيه","تم نسخ رقم vodafone cash لكن هذا الرقم للتبرع فقط، يمنع الإتصال بهذا الرقم أو مراسلته بأي شكل")
-    def delete_program_data_with_confirmation(self):    
-        confirm = guiTools.QQuestionMessageBox.view(
-            self,
-            "تأكيد الحذف النهائي لبيانات البرنامج",
-            "تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nالأفضل عمل نسخة احتياطية لجميع إعداداتك وملفاتك أولا قبل هذه العملية الخطيرة\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟",
-            "نعم، احذف البرنامج",
-            "لا، إلغاء"
-        )
+    def delete_program_data_with_confirmation(self):
+        confirm = guiTools.QQuestionMessageBox.view(self,"تأكيد الحذف النهائي لبيانات البرنامج","تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nالأفضل عمل نسخة احتياطية لجميع إعداداتك وملفاتك أولا قبل هذه العملية الخطيرة\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟","نعم، احذف البرنامج","لا، إلغاء")
         if confirm == 0:
             try:
                 roaming_path = os.path.join(os.getenv('appdata'))
                 target_folder_path = os.path.join(roaming_path, 'moslemTools_GUI')
                 if os.path.exists(target_folder_path) and os.path.isdir(target_folder_path):
                     shutil.rmtree(target_folder_path)
-                    guiTools.MessageBox.view(
-                        self,
-                        "تم الحذف بنجاح",
-                        "تم حذف مجلد moslemTools_GUI وجميع بيانات البرنامج بنجاح\nالآن يمكنك إلغاء تثبيت البرنامج"
-                    )
+                    guiTools.MessageBox.view(self,"تم الحذف بنجاح","تم حذف مجلد moslemTools_GUI وجميع بيانات البرنامج بنجاح\nالآن يمكنك إلغاء تثبيت البرنامج")
                     qt.QApplication.quit()
                 else:
-                    guiTools.MessageBox.view(
-                        self,
-                        "المجلد غير موجود",
-                        f"المجلد '{target_folder_path}' غير موجود أو ليس مجلدًا. لا توجد بيانات لحذفها."
-                    )
+                    guiTools.MessageBox.view(self,"المجلد غير موجود",f"المجلد '{target_folder_path}' غير موجود أو ليس مجلدًا. لا توجد بيانات لحذفها.")
             except OSError as e:
-                guiTools.MessageBox.error(
-                    self,
-                    "خطأ في الحذف",
-                    f"حدث خطأ أثناء محاولة حذف المجلد: {e}\n\nيرجى التأكد من أن البرنامج ليس قيد التشغيل في الخلفية أو أن لديك الأذونات اللازمة."
-                )
+                guiTools.MessageBox.error(self,"خطأ في الحذف",f"حدث خطأ أثناء محاولة حذف المجلد: {e}\n\nيرجى التأكد من أن البرنامج ليس قيد التشغيل في الخلفية أو أن لديك الأذونات اللازمة.")
             except Exception as e:
-                guiTools.MessageBox.error(
-                    self,
-                    "خطأ غير متوقع",
-                    f"حدث خطأ غير متوقع: {e}"
-                )
+                guiTools.MessageBox.error(self,"خطأ غير متوقع",f"حدث خطأ غير متوقع: {e}")
         else:
             return
 def run_startup_checks():
@@ -445,9 +411,7 @@ if __name__ == "__main__":
     dark_palette.setColor(qt1.QPalette.ColorRole.Highlight, qt1.QColor("#3A9FF5"))
     dark_palette.setColor(qt1.QPalette.ColorRole.HighlightedText, qt1.QColor("#000000"))
     App.setPalette(dark_palette)
-
     run_startup_checks()
-
     shared=qt2.QSharedMemory("com.MTC.moslemTools")
     window = main()
     if shared.attach() or not shared.create(1):

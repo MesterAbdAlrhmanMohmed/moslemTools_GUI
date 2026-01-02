@@ -36,7 +36,6 @@ class hadeeth_viewer(qt.QDialog):
         qt1.QShortcut("ctrl+b", self).activated.connect(self.onAddOrRemoveBookmark)
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         qt1.QShortcut("ctrl+alt+c", self).activated.connect(self.copy_page_range)
         qt1.QShortcut("ctrl+alt+s", self).activated.connect(self.save_page_range_as_txt)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.save_page_range_as_docx)
@@ -47,10 +46,13 @@ class hadeeth_viewer(qt.QDialog):
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font = qt.QLabel(str(self.font_size))
+        self.show_font = qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAccessibleDescription("حجم النص")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.show_font.valueChanged.connect(self.font_size_changed)
         self.N_hadeeth = guiTools.QPushButton("الحديث التالي")
         self.N_hadeeth.setStyleSheet("background-color: #0000AA; color: white;")
         self.N_hadeeth.setAccessibleDescription("alt زائد السهم الأيمن")
@@ -131,17 +133,10 @@ class hadeeth_viewer(qt.QDialog):
         decrease_font_action = qt1.QAction("تصغير الخط", self)
         decrease_font_action.setShortcut("ctrl+-")
         decrease_font_action.triggered.connect(self.decrease_font_size)
-        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
-        set_font_size.setShortcut("ctrl+1")
-        set_font_size.triggered.connect(self.set_font_size_dialog)
         font_menu.addAction(increase_font_action)
         font_menu.addAction(decrease_font_action)
-        font_menu.addAction(set_font_size)
         menu.addMenu(font_menu)
-        hadeeth_position = {
-            "bookName": self.bookName,
-            "hadeethNumber": self.index
-        }
+        hadeeth_position = {"bookName": self.bookName,"hadeethNumber": self.index}
         note_exists = notesManager.getNotesForPosition("ahadeeth", hadeeth_position)
         if note_exists:
             note_action = qt1.QAction("عرض ملاحظة الحديث الحالي", self)
@@ -178,17 +173,10 @@ class hadeeth_viewer(qt.QDialog):
             hadeeth_menu.addAction(add_bookmark_action)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
     def get_page_range(self):
-        start_page, ok1 = guiTools.QInputDialog.getInt(
-            self, "بداية النطاق", "أدخل رقم حديث البداية:",
-            value=self.index + 1, min=1, max=len(self.data)
-        )
+        start_page, ok1 = guiTools.QInputDialog.getInt(self, "بداية النطاق", "أدخل رقم حديث البداية:", value=self.index + 1, min=1, max=len(self.data))
         if not ok1:
             return None, None
-        end_page, ok2 = guiTools.QInputDialog.getInt(
-            self, "نهاية النطاق", f"أدخل رقم حديث النهاية (1-{len(self.data)}):",
-            value=len(self.data),
-            min=1, max=len(self.data)
-        )
+        end_page, ok2 = guiTools.QInputDialog.getInt(self, "نهاية النطاق", f"أدخل رقم حديث النهاية (1-{len(self.data)}):", value=len(self.data), min=1, max=len(self.data))
         if not ok2:
             return None, None
         if start_page > end_page:
@@ -253,13 +241,7 @@ class hadeeth_viewer(qt.QDialog):
     def onEditNote(self, position_data, note_name):
         note = notesManager.getNoteByName("ahadeeth", note_name)
         if note:
-            dialog = note_dialog.NoteDialog(
-                self,
-                title=note["name"],
-                content=note["content"],
-                mode="edit",
-                old_name=note["name"]
-            )
+            dialog = note_dialog.NoteDialog(self, title=note["name"], content=note["content"], mode="edit", old_name=note["name"])
             dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
             dialog.exec()
     def saveNote(self, position_data, name, content):
@@ -267,11 +249,7 @@ class hadeeth_viewer(qt.QDialog):
         if existing_note is not None:
             guiTools.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
             return
-        notesManager.addNewNote("ahadeeth", {
-            "name": name,
-            "content": content,
-            "position_data": position_data
-        })
+        notesManager.addNewNote("ahadeeth", {"name": name, "content": content, "position_data": position_data})
         guiTools.speak("تمت إضافة الملاحظة")
     def updateNote(self, position_data, old_name, new_name, new_content):
         if old_name != new_name:
@@ -279,31 +257,21 @@ class hadeeth_viewer(qt.QDialog):
             if existing_note is not None:
                 guiTools.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
                 return
-        update_data = {
-            "name": new_name,
-            "content": new_content,
-            "position_data": position_data
-        }
+        update_data = {"name": new_name, "content": new_content, "position_data": position_data}
         success = notesManager.updateNote("ahadeeth", old_name, update_data)
         if success:
             guiTools.speak("تم تحديث الملاحظة بنجاح")
         else:
             guiTools.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")
     def onAddOrRemoveNote(self):
-        position_data = {
-            "bookName": self.bookName,
-            "hadeethNumber": self.index
-        }
+        position_data = {"bookName": self.bookName,"hadeethNumber": self.index}
         note_exists = notesManager.getNotesForPosition("ahadeeth", position_data)
         if note_exists:
             self.onEditNote(position_data, note_exists["name"])
         else:
             self.onAddNote(position_data)
     def onViewNote(self):
-        position_data = {
-            "bookName": self.bookName,
-            "hadeethNumber": self.index
-        }
+        position_data = {"bookName": self.bookName,"hadeethNumber": self.index}
         note_exists = notesManager.getNotesForPosition("ahadeeth", position_data)
         if note_exists:
             self.onNoteAction(position_data)
@@ -312,23 +280,13 @@ class hadeeth_viewer(qt.QDialog):
     def onNoteAction(self, position_data):
         note = notesManager.getNotesForPosition("ahadeeth", position_data)
         if note:
-            dialog = note_dialog.NoteDialog(
-                self,
-                title=note["name"],
-                content=note["content"],
-                mode="view",
-                old_name=note["name"]
-            )
+            dialog = note_dialog.NoteDialog(self, title=note["name"], content=note["content"], mode="view", old_name=note["name"])
             dialog.edit_requested.connect(lambda note_name: self.onEditNote(position_data, note_name))
             dialog.exec()
     def onDeleteNote(self, position_data):
         note = notesManager.getNotesForPosition("ahadeeth", position_data)
         if note:
-            confirm = guiTools.QQuestionMessageBox.view(
-                self, "تأكيد الحذف",
-                f"هل أنت متأكد أنك تريد حذف الملاحظة '{note['name']}'؟",
-                "نعم", "لا"
-            )
+            confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل أنت متأكد أنك تريد حذف الملاحظة '{note['name']}'؟", "نعم", "لا")
             if confirm == 0:
                 notesManager.removeNote("ahadeeth", note["name"])
                 guiTools.speak("تم حذف الملاحظة")
@@ -379,18 +337,16 @@ class hadeeth_viewer(qt.QDialog):
                     file.write(self.text.toPlainText())
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+    def font_size_changed(self, value):
+        self.font_size = value
+        self.update_font_size()
+        guiTools.speak(str(self.font_size))
     def increase_font_size(self):
-        if self.font_size < 100:
-            self.font_size += 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
     def decrease_font_size(self):
-        if self.font_size > 1:
-            self.font_size -= 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -426,11 +382,7 @@ class hadeeth_viewer(qt.QDialog):
             guiTools.speak("تمت إضافة العلامة المرجعية")
     def onRemoveBookmark(self):
         try:
-            confirm = guiTools.QQuestionMessageBox.view(
-                self, "تأكيد الحذف",
-                f"هل أنت متأكد أنك تريد حذف العلامة المرجعية '{self.nameOfBookmark}'؟",
-                "نعم", "لا"
-            )
+            confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل أنت متأكد أنك تريد حذف العلامة المرجعية '{self.nameOfBookmark}'؟", "نعم", "لا")
             if confirm == 0:
                 functions.bookMarksManager.removeAhadeethBookMark(self.nameOfBookmark)
                 guiTools.speak("تم حذف العلامة المرجعية")
@@ -443,29 +395,9 @@ class hadeeth_viewer(qt.QDialog):
         else:
             self.onAddBookMark()
     def onDeleteNoteShortcut(self):
-        position_data = {
-            "bookName": self.bookName,
-            "hadeethNumber": self.index
-        }
+        position_data = {"bookName": self.bookName,"hadeethNumber": self.index}
         note_exists = notesManager.getNotesForPosition("ahadeeth", position_data)
         if note_exists:
             self.onDeleteNote(position_data)
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
-    def set_font_size_dialog(self):
-        try:
-            size, ok = guiTools.QInputDialog.getInt(
-                self,
-                "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 100):",
-                value=self.font_size,
-                min=1,
-                max=100
-            )
-            if ok:
-                self.font_size = size
-                self.show_font.setText(str(self.font_size))
-                self.update_font_size()
-                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
-        except Exception as error:
-            guiTools.MessageBox.error(self, "حدث خطأ", str(error))

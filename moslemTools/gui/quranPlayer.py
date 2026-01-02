@@ -37,7 +37,6 @@ class DownloadThread(qt2.QThread):
                             self.progress.emit(progress_percent)
             self.finished.emit()
         except Exception as e:
-            print(f"Error during download or file writing: {e}")
             self.cancelled.emit()
     def cancel(self):
         self.is_cancelled = True
@@ -56,17 +55,7 @@ class MergeThread(qt2.QThread):
                 for file_path in self.input_files:
                     safe_path = file_path.replace("\\", "/")
                     f.write(f"file '{safe_path}'\n")
-            command = [
-                self.ffmpeg_path,
-                "-y",
-                "-f", "concat",
-                "-safe", "0",
-                "-i", list_filepath,
-                "-ar", "44100",
-                "-ac", "2",
-                "-b:a", "192k",
-                self.output_file
-            ]
+            command = [self.ffmpeg_path,"-y","-f", "concat","-safe", "0","-i", list_filepath,"-ar", "44100","-ac", "2","-b:a", "192k",self.output_file]
             startupinfo = None
             if os.name == 'nt':
                 startupinfo = subprocess.STARTUPINFO()
@@ -116,7 +105,7 @@ class QuranPlayer(qt.QDialog):
         self.media.setAudioOutput(self.audioOutput)
         self.media.mediaStatusChanged.connect(self.on_state)
         self.index=index
-        self.quranText=text.split("\n")                
+        self.quranText=text.split("\n")
         self.show_diacritics = True
         self.original_ayah_text = self.quranText[self.index]
         self.text=guiTools.QReadOnlyTextEdit()
@@ -125,8 +114,8 @@ class QuranPlayer(qt.QDialog):
         option = self.text.document().defaultTextOption()
         option.setAlignment(qt2.Qt.AlignmentFlag.AlignRight)
         option.setTextDirection(qt2.Qt.LayoutDirection.RightToLeft)
-        self.text.document().setDefaultTextOption(option)                        
-        self.update_display_text()        
+        self.text.document().setDefaultTextOption(option)
+        self.update_display_text()
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
         self.text.setFocus()
@@ -134,8 +123,8 @@ class QuranPlayer(qt.QDialog):
         self.media_progress.setRange(0,100)
         self.media_progress.valueChanged.connect(self.set_position_from_slider)
         self.media.durationChanged.connect(self.update_slider)
-        self.media.positionChanged.connect(self.update_slider)
-        self.media_progress.setAccessibleName("التحكم في تقدم الآية")
+        self.media.positionChanged.connect(self.update_slider)        
+        self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.time_label = qt.QLabel()
         self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         progress_time_layout = qt.QHBoxLayout()
@@ -143,11 +132,13 @@ class QuranPlayer(qt.QDialog):
         progress_time_layout.addWidget(self.time_label)
         self.font_laybol=qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font=qt.QLabel()
+        self.show_font = qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAccessibleDescription("حجم النص")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font.setText(str(self.font_size))
+        self.show_font.valueChanged.connect(self.font_size_changed)
         self.N_aya=guiTools.QPushButton("الآيا التالية")
         self.N_aya.setAutoDefault(False)
         self.N_aya.setStyleSheet("background-color: #0000AA; color: white;")
@@ -206,6 +197,15 @@ class QuranPlayer(qt.QDialog):
         qt1.QShortcut("alt+right",self).activated.connect(self.onNextAyah)
         qt1.QShortcut("alt+left",self).activated.connect(self.onPreviousAyah)
         qt1.QShortcut("escape",self).activated.connect(self.safeClose)
+        qt1.QShortcut("ctrl+1", self).activated.connect(self.t10)
+        qt1.QShortcut("ctrl+2", self).activated.connect(self.t20)
+        qt1.QShortcut("ctrl+3", self).activated.connect(self.t30)
+        qt1.QShortcut("ctrl+4", self).activated.connect(self.t40)
+        qt1.QShortcut("ctrl+5", self).activated.connect(self.t50)
+        qt1.QShortcut("ctrl+6", self).activated.connect(self.t60)
+        qt1.QShortcut("ctrl+7", self).activated.connect(self.t70)
+        qt1.QShortcut("ctrl+8", self).activated.connect(self.t80)
+        qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("shift+up",self).activated.connect(self.volume_up)
@@ -215,11 +215,64 @@ class QuranPlayer(qt.QDialog):
         qt1.QShortcut("ctrl+t", self).activated.connect(self.getCurentAyahTafseer)
         qt1.QShortcut("ctrl+l", self).activated.connect(self.getCurentAyahTranslation)
         qt1.QShortcut("ctrl+f", self).activated.connect(self.getAyahInfo)
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.mergeAyahs)
         self.update_font_size()
-        self.on_play()    
-    def _remove_diacritics(self, text):        
+        qt2.QTimer.singleShot(0, self.on_play)
+    def t10(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.1))
+    def t20(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.2))
+    def t30(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.3))
+    def t40(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.4))
+    def t50(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.5))
+    def t60(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.6))
+    def t70(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.7))
+    def t80(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.8))
+    def t90(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.9))
+    def _remove_diacritics(self, text):
         return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
     def update_display_text(self):
         text_to_display = self.original_ayah_text
@@ -231,7 +284,7 @@ class QuranPlayer(qt.QDialog):
         self.show_diacritics = not self.show_diacritics
         if hasattr(self, 'toggleDiacriticsAction'):
             self.toggleDiacriticsAction.setChecked(not self.show_diacritics)
-        self.update_display_text()    
+        self.update_display_text()
     def pause_for_action(self):
         if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.was_playing_before_action = True
@@ -245,8 +298,7 @@ class QuranPlayer(qt.QDialog):
         if self.is_merging and self.merge_phase == 'merging':
             self.confirm_and_cancel_merge()
     def confirm_and_cancel_merge(self):
-        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء",
-            "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء","هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
         if reply == 0:
             self.cancellation_requested = True
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
@@ -254,18 +306,12 @@ class QuranPlayer(qt.QDialog):
     def _on_set_for_merge(self, index):
         ayah_text = self.quranText[index]
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(ayah_text, self.category, self.type)
-        if int(surah)<10:
-            surah="00" + surah
-        elif int(surah)<100:
-            surah="0" + surah
-        else:
-            surah=str(surah)
-        if Ayah<10:
-            Ayah="00" + str(Ayah)
-        elif Ayah<100:
-            Ayah="0" + str(Ayah)
-        else:
-            Ayah=str(Ayah)
+        if int(surah)<10: surah="00" + surah
+        elif int(surah)<100: surah="0" + surah
+        else: surah=str(surah)
+        if Ayah<10: Ayah="00" + str(Ayah)
+        elif Ayah<100: Ayah="0" + str(Ayah)
+        else: Ayah=str(Ayah)
         return surah+Ayah+".mp3"
     def mergeAyahs(self):
         self.pause_for_action()
@@ -282,28 +328,14 @@ class QuranPlayer(qt.QDialog):
             ayah_filename = self._on_set_for_merge(i)
             if not ayah_filename: continue
             local_path = os.path.join(reciter_local_path_base, ayah_filename)
-            ayah_info = {
-                "index": i, "filename": ayah_filename,
-                "url": reciter_url_base + ayah_filename,
-                "local_path": local_path
-            }
+            ayah_info = {"index": i, "filename": ayah_filename,"url": reciter_url_base + ayah_filename,"local_path": local_path}
             self.merge_list.append(ayah_info)
-            if not os.path.exists(local_path):
-                ayahs_to_download.append(ayah_info)
+            if not os.path.exists(local_path): ayahs_to_download.append(ayah_info)
         num_files_to_download = len(ayahs_to_download)
         if num_files_to_download > 0:
-            confirm_message = (
-                f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\n"
-                "سيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\n"
-                "بعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\n"
-                "هل أنت متأكد أنك تريد المتابعة؟"
-            )
+            confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\nسيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\nهل أنت متأكد أنك تريد المتابعة؟")
         else:
-            confirm_message = (
-                "جميع الآيات المحددة جاهزة للدمج.\n"
-                "ستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق البرنامج حتى انتهاء العملية.\n\n"
-                "هل تريد المتابعة؟"
-            )
+            confirm_message = ("جميع الآيات المحددة جاهزة للدمج.\nستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق البرنامج حتى انتهاء العملية.\n\nهل تريد المتابعة؟")
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
         if reply != 0:
             self.resume_after_action()
@@ -366,8 +398,7 @@ class QuranPlayer(qt.QDialog):
                 temp_path = os.path.join(output_dir, f"temp_{safe_filename}")
                 if os.path.exists(temp_path):
                     files_for_ffmpeg.append(temp_path)
-                    if temp_path not in self.files_to_delete_after_merge:
-                        self.files_to_delete_after_merge.append(temp_path)
+                    if temp_path not in self.files_to_delete_after_merge: self.files_to_delete_after_merge.append(temp_path)
                 else:
                     self.on_merge_finished(False, f"خطأ: الملف المؤقت للآية لم يتم العثور عليه: {item['filename']}")
                     return
@@ -391,13 +422,10 @@ class QuranPlayer(qt.QDialog):
             if hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
                 try: os.remove(self.current_merge_output_path)
                 except: pass
-        elif success:
-            guiTools.MessageBox.view(self, "نجاح", "تم دمج الآيات بنجاح.")
-        else:
-            guiTools.MessageBox.error(self, "فشل", message)
+        elif success: guiTools.MessageBox.view(self, "نجاح", "تم دمج الآيات بنجاح.")
+        else: guiTools.MessageBox.error(self, "فشل", message)
         if self.files_to_delete_after_merge:
-            reply = guiTools.QQuestionMessageBox.view(self, "تنظيف",
-                "هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
+            reply = guiTools.QQuestionMessageBox.view(self, "تنظيف","هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
             if reply == 0:
                 for f_path in self.files_to_delete_after_merge:
                     if os.path.exists(f_path):
@@ -412,8 +440,7 @@ class QuranPlayer(qt.QDialog):
     def set_ui_for_merge(self, is_active):
         self.is_merging = is_active
         widgets_to_disable = [self.text, self.N_aya, self.P_aya, self.PPS, self.changeCurrentReciterButton, self.mergeButton]
-        for widget in widgets_to_disable:
-            widget.setEnabled(not is_active)
+        for widget in widgets_to_disable: widget.setEnabled(not is_active)
         self.merge_widget.setVisible(is_active)
         if is_active:
             self.merge_feedback_label.setText("جاري التحضير لعملية الدمج...")
@@ -421,8 +448,7 @@ class QuranPlayer(qt.QDialog):
             self.merge_action_button.setStyleSheet("background-color: #8B0000; color: white;")
             self.merge_progress_bar.hide()
             self.merge_progress_bar.setValue(0)
-        else:
-            self.merge_action_button.setStyleSheet("")
+        else: self.merge_action_button.setStyleSheet("")
     def OnContextMenu(self):
         self.was_playing = self.media.isPlaying()
         if self.was_playing:
@@ -463,13 +489,13 @@ class QuranPlayer(qt.QDialog):
         next_aya=qt1.QAction("الآية التالية",self)
         next_aya.setShortcut("alt+right")
         aya.addAction(next_aya)
-        next_aya.triggered.connect(self.onNextAyah)                
+        next_aya.triggered.connect(self.onNextAyah)
         aya.addSeparator()
         self.toggleDiacriticsAction = qt1.QAction("إخفاء التشكيل", self)
         self.toggleDiacriticsAction.setCheckable(True)
         self.toggleDiacriticsAction.setChecked(not self.show_diacritics)
         self.toggleDiacriticsAction.triggered.connect(self.on_toggle_diacritics)
-        aya.addAction(self.toggleDiacriticsAction)        
+        aya.addAction(self.toggleDiacriticsAction)
         menu.setFocus()
         fontMenu=qt.QMenu("حجم الخط",self)
         incressFontAction=qt1.QAction("تكبير الخط",self)
@@ -481,30 +507,24 @@ class QuranPlayer(qt.QDialog):
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
-        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
-        set_font_size.setShortcut("ctrl+1")
-        set_font_size.triggered.connect(self.set_font_size_dialog)
-        fontMenu.addAction(set_font_size)
         menu.addMenu(aya)
         menu.addMenu(fontMenu)
         menu.aboutToHide.connect(self.resume_playback)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
-    def resume_playback(self):        
+    def resume_playback(self):
         if hasattr(self, 'was_playing') and self.was_playing and not self.media.isPlaying() and not self.is_merging:
             self.media.play()
             self.PPS.setText("إيقاف مؤقت")
+    def font_size_changed(self, value):
+        self.font_size = value
+        self.update_font_size()
+        guiTools.speak(str(value))
     def increase_font_size(self):
-        if self.font_size < 100:
-            self.font_size += 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
     def decrease_font_size(self):
-        if self.font_size > 1:
-            self.font_size -= 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
     def update_font_size(self):
         cursor=self.text.textCursor()
         self.text.selectAll()
@@ -515,27 +535,19 @@ class QuranPlayer(qt.QDialog):
         self.text.setTextCursor(cursor)
     def on_set(self):
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
-        if int(surah)<10:
-            surah="00" + surah
-        elif int(surah)<100:
-            surah="0" + surah
-        else:
-            surah=str(surah)
-        if Ayah<10:
-            Ayah="00" + str(Ayah)
-        elif Ayah<100:
-            Ayah="0" + str(Ayah)
-        else:
-            Ayah=str(Ayah)
+        if int(surah)<10: surah="00" + surah
+        elif int(surah)<100: surah="0" + surah
+        else: surah=str(surah)
+        if Ayah<10: Ayah="00" + str(Ayah)
+        elif Ayah<100: Ayah="0" + str(Ayah)
+        else: Ayah=str(Ayah)
         return surah+Ayah+".mp3"
     def on_play(self):
         if not self.media.isPlaying():
             if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],self.on_set())):
                 path=qt2.QUrl.fromLocalFile(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],self.on_set()))
-            else:
-                path=qt2.QUrl(reciters[self.getCurrentReciter()] + self.on_set())
-            if not self.media.source()==path:
-                self.media.setSource(path)
+            else: path=qt2.QUrl(reciters[self.getCurrentReciter()] + self.on_set())
+            if not self.media.source()==path: self.media.setSource(path)
             self.media.play()
             self.PPS.setText("إيقاف مؤقت")
         else:
@@ -546,55 +558,46 @@ class QuranPlayer(qt.QDialog):
         number,ok=guiTools.QInputDialog.getInt(self,"الذهاب إلى آية","أكتب رقم الآية",self.index+1,1,len(self.quranText))
         if ok:
             self.currentTime=1
-            self.index=number-1            
+            self.index=number-1
             self.original_ayah_text = self.quranText[self.index]
             self.update_display_text()
             self.media.stop()
             self.on_play()
-        else:
-            self.resume_after_action()
+        else: self.resume_after_action()
     def onNextAyah(self):
         self.currentTime=1
-        if self.index+1==len(self.quranText):
-            self.index=0
-        else:
-            self.index+=1        
+        if self.index+1==len(self.quranText): self.index=0
+        else: self.index+=1
         self.original_ayah_text = self.quranText[self.index]
         self.update_display_text()
         self.media.stop()
         self.on_play()
     def onPreviousAyah(self):
         self.currentTime=1
-        if self.index==0:
-            self.index=len(self.quranText)-1
-        else:
-            self.index-=1        
+        if self.index==0: self.index=len(self.quranText)-1
+        else: self.index-=1
         self.original_ayah_text = self.quranText[self.index]
         self.update_display_text()
         self.media.stop()
         self.on_play()
-    def getcurrentAyahText(self):        
+    def getcurrentAyahText(self):
         return self.original_ayah_text
     def on_state(self,state):
         if state==QMediaPlayer.MediaStatus.EndOfMedia:
             if self.times==self.currentTime:
                 if settings.settings_handler.get("quranPlayer","replay")=="False":
-                    if not self.index+1==len(self.quranText):
-                        qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
+                    if not self.index+1==len(self.quranText): qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
                     else:
                         self.PPS.setText("تشغيل")
-                        self.index=0                        
+                        self.index=0
                         self.original_ayah_text = self.quranText[self.index]
                         self.update_display_text()
-                else:
-                    qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
+                else: qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
             else:
                 self.currentTime+=1
                 qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.media.play)
     def getCurrentReciter(self):
-        index=self.currentReciter
-        name=list(reciters.keys())[index]
-        return name
+        return list(reciters.keys())[self.currentReciter]
     def getCurentAyahTafseer(self):
         self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
@@ -604,8 +607,7 @@ class QuranPlayer(qt.QDialog):
         if self.media.isPlaying():
             self.media.stop()
             qt2.QTimer.singleShot(100,self.close)
-        else:
-            self.close()
+        else: self.close()
     def closeEvent(self, event):
         if self.is_merging:
             if self.merge_phase == 'downloading':
@@ -615,13 +617,10 @@ class QuranPlayer(qt.QDialog):
                 reply = guiTools.QQuestionMessageBox.view(self, "تأكيد", "عملية الدمج قيد التشغيل. هل تريد إلغاءها والخروج؟", "نعم", "لا")
                 if reply == 0:
                     self.cancellation_requested = True
-                    if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
-                        self.merge_thread.stop()
+                    if hasattr(self, 'merge_thread') and self.merge_thread.isRunning(): self.merge_thread.stop()
                     event.accept()
-                else:
-                    event.ignore()
-            else:
-                event.ignore()
+                else: event.ignore()
+            else: event.ignore()
         else:
             self.media.stop()
             super().closeEvent(event)
@@ -635,17 +634,13 @@ class QuranPlayer(qt.QDialog):
         self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         result=functions.tanzil.gettanzil(AyahNumber)
-        if result:
-            guiTools.TextViewer(self,"اسباب النزول",result).exec()
-        else:
-            guiTools.MessageBox.view(self,"تنبيه","لا توجد أسباب نزول متاحة لهذه الآية")
+        if result: guiTools.TextViewer(self,"اسباب النزول",result).exec()
+        else: guiTools.MessageBox.view(self,"تنبيه","لا توجد أسباب نزول متاحة لهذه الآية")
         self.resume_after_action()
     def getAyahInfo(self):
         self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
-        sajda=""
-        if juz[3]:
-            sajda="الآية تحتوي على سجدة"
+        sajda="الآية تحتوي على سجدة" if juz[3] else ""
         guiTools.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nالجزء {} \nالربع {} \nالصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
         self.resume_after_action()
     def getCurentAyahTranslation(self):
@@ -655,61 +650,31 @@ class QuranPlayer(qt.QDialog):
         self.resume_after_action()
     def volume_up(self):
         volume = self.audioOutput.volume()
-        if volume < 1.0:
-            self.audioOutput.setVolume(min(1.0, volume + 0.10))
+        if volume < 1.0: self.audioOutput.setVolume(min(1.0, volume + 0.10))
     def volume_down(self):
         volume = self.audioOutput.volume()
-        if volume > 0.0:
-            self.audioOutput.setVolume(max(0.0, volume - 0.10))
+        if volume > 0.0: self.audioOutput.setVolume(max(0.0, volume - 0.10))
     def set_position_from_slider(self, value):
         duration = self.media.duration()
         new_position = int((value / 100) * duration)
         self.media.setPosition(new_position)
+        guiTools.speak(f"{value}%")
     def update_slider(self):
         try:
             self.media_progress.blockSignals(True)
-            position = self.media.position()
-            duration = self.media.duration()
+            position, duration = self.media.position(), self.media.duration()
             if duration > 0:
-                progress_value = int((position / duration) * 100)
-                self.media_progress.setValue(progress_value)
+                self.media_progress.setValue(int((position / duration) * 100))
                 self.update_time_label(position, duration)
             self.media_progress.blockSignals(False)
-        except:
-            pass
+        except: pass
     def update_time_label(self, position, duration):
-        position_sec = position // 1000
-        duration_sec = duration // 1000
-        remaining_sec = duration_sec - position_sec
-        position_str = f"{position_sec // 60}:{position_sec % 60:02d}"
-        duration_str = f"{duration_sec // 60}:{duration_sec % 60:02d}"
-        remaining_str = f"{remaining_sec // 60}:{remaining_sec % 60:02d}"
-        self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
+        p_sec, d_sec = position // 1000, duration // 1000
+        r_sec = d_sec - p_sec
+        self.time_label.setText(f"الوقت المنقضي: {p_sec // 60}:{p_sec % 60:02d} | الوقت المتبقي: {r_sec // 60}:{r_sec % 60:02d} | مدة الآية: {d_sec // 60}:{d_sec % 60:02d}")
     def onChangeRecitersContextMenuRequested(self):
         self.pause_for_action()
         RL=list(reciters.keys())
         dlg=ChangeReciter(self,RL,self.currentReciter)
-        code=dlg.exec()
-        if code==dlg.DialogCode.Accepted:
-            self.currentReciter=list(reciters.keys()).index(dlg.recitersListWidget.currentItem().text())
+        if dlg.exec()==dlg.DialogCode.Accepted: self.currentReciter=list(reciters.keys()).index(dlg.recitersListWidget.currentItem().text())
         self.resume_after_action()
-    def set_font_size_dialog(self):
-        self.pause_for_action()
-        try:
-            size, ok = guiTools.QInputDialog.getInt(
-                self,
-                "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 100):",
-                value=self.font_size,
-                min=1,
-                max=100
-            )
-            if ok:
-                self.font_size = size
-                self.show_font.setText(str(self.font_size))
-                self.update_font_size()
-                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
-        except Exception as error:
-            guiTools.MessageBox.error(self, "حدث خطأ", str(error))
-        finally:
-            self.resume_after_action()

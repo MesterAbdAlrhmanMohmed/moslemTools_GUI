@@ -8,7 +8,7 @@ from PyQt6 import QtCore as qt2
 class IslamicTopicViewer(qt.QDialog):
     def __init__(self, p, file_path: str, title: str, content: str, all_topics: dict, index: int = 0):
         super().__init__(p)
-        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)                
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
@@ -19,50 +19,52 @@ class IslamicTopicViewer(qt.QDialog):
         qt1.QShortcut("ctrl+b", self).activated.connect(self.onAddOrRemoveBookmark)
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
-        qt1.QShortcut("ctrl+1", self).activated.connect(self.set_font_size_dialog)                
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings.settings_handler.get("font", "size"))
         self.file_path = file_path
         self.all_topics = all_topics
-        self.current_title = title                
+        self.current_title = title
         self.topic_titles = list(self.all_topics.keys())
         self.currentIndex = self.topic_titles.index(self.current_title)
-        self.resize(1200, 600)                
+        self.resize(1200, 600)
         self.text = guiTools.QReadOnlyTextEdit()
         self.text.setText(content)
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.text.customContextMenuRequested.connect(self.OnContextMenu)                        
-        self.font_laybol = qt.QLabel("حجم الخط")        
+        self.text.customContextMenuRequested.connect(self.OnContextMenu)
+        self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font = qt.QLabel(str(self.font_size))
-        self.show_font.setAccessibleDescription("حجم النص")
+        self.show_font = qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
+        self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.show_font.setAccessibleDescription("حجم النص")
+        self.show_font.valueChanged.connect(self.font_size_changed)
         self.info = qt.QLabel(self.current_title)
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)                
+        self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.text)
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
-        layout.addWidget(self.info)                
+        layout.addWidget(self.info)
         buttonsLayout = qt.QHBoxLayout()
         self.previous = guiTools.QPushButton("الموضوع السابق")
         self.previous.setAccessibleDescription("alt زائد السهم الأيسر")
         self.previous.clicked.connect(self.onPrevious)
         self.previous.setShortcut("alt+left")
         self.previous.setStyleSheet("background-color: #0000AA; color: white;")
-        self.previous.setAutoDefault(False)        
+        self.previous.setAutoDefault(False)
         self.next = guiTools.QPushButton("الموضوع التالي")
         self.next.setAccessibleDescription("alt زائد السهم الأيمن")
         self.next.clicked.connect(self.onNext)
         self.next.setShortcut("alt+right")
         self.next.setStyleSheet("background-color: #0000AA; color: white;")
-        self.next.setAutoDefault(False)        
+        self.next.setAutoDefault(False)
         buttonsLayout.addWidget(self.previous)
         buttonsLayout.addWidget(self.next)
-        layout.addLayout(buttonsLayout)        
-        self.update_font_size()    
+        layout.addLayout(buttonsLayout)
+        self.update_font_size()
         if index > 0:
             cursor = self.text.textCursor()
             cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
@@ -73,7 +75,7 @@ class IslamicTopicViewer(qt.QDialog):
         menu = qt.QMenu("الخيارات", self)
         boldFont = menu.font()
         boldFont.setBold(True)
-        menu.setFont(boldFont)        
+        menu.setFont(boldFont)
         text_options = menu.addMenu("خيارات النص")
         text_options.setFont(boldFont)
         save_action = text_options.addAction("حفظ كملف نصي")
@@ -87,7 +89,7 @@ class IslamicTopicViewer(qt.QDialog):
         copy_all_action.triggered.connect(self.copy_text)
         copy_selected_action = text_options.addAction("نسخ النص المحدد")
         copy_selected_action.setShortcut("ctrl+c")
-        copy_selected_action.triggered.connect(self.copy_current_selection)        
+        copy_selected_action.triggered.connect(self.copy_current_selection)
         topic_options = menu.addMenu("خيارات الموضوع")
         topic_options.setFont(boldFont)
         next_action = topic_options.addAction("الموضوع التالي")
@@ -95,14 +97,14 @@ class IslamicTopicViewer(qt.QDialog):
         next_action.triggered.connect(self.onNext)
         prev_action = topic_options.addAction("الموضوع السابق")
         prev_action.setShortcut("alt+left")
-        prev_action.triggered.connect(self.onPrevious)        
-        position_data = self.get_position_data()                
+        prev_action.triggered.connect(self.onPrevious)
+        position_data = self.get_position_data()
         note_exists = notesManager.getNotesForPosition("islamicTopics", position_data)
         if note_exists:
             view_note_action = topic_options.addAction("عرض ملاحظة السطر الحالي")
             view_note_action.setShortcut("ctrl+o")
-            view_note_action.triggered.connect(self.onViewNote)            
-            delete_note_widget_action = qt.QWidgetAction(self)                        
+            view_note_action.triggered.connect(self.onViewNote)
+            delete_note_widget_action = qt.QWidgetAction(self)
             delete_note_button = guiTools.QPushButton("حذف ملاحظة السطر الحالي (ctrl+shift+n)")
             delete_note_button.setStyleSheet("background-color: #8B0000; color: white;")
             delete_note_button.setShortcut("ctrl+shift+n")
@@ -113,9 +115,9 @@ class IslamicTopicViewer(qt.QDialog):
         else:
             add_note_action = topic_options.addAction("إضافة ملاحظة للسطر الحالي")
             add_note_action.setShortcut("ctrl+n")
-            add_note_action.triggered.connect(lambda: self.onAddNote(position_data))                    
+            add_note_action.triggered.connect(lambda: self.onAddNote(position_data))
         state, bookmark_name = functions.bookMarksManager.getIslamicTopicBookmarkName(self.file_path, self.current_title, self.getCurrentLine())
-        if state:            
+        if state:
             remove_bookmark_widget_action = qt.QWidgetAction(self)
             remove_bookmark_button = guiTools.QPushButton("حذف العلامة المرجعية الحالية (ctrl+b)")
             remove_bookmark_button.setStyleSheet("background-color: #8B0000; color: white;")
@@ -127,7 +129,7 @@ class IslamicTopicViewer(qt.QDialog):
         else:
             add_bookmark_action = topic_options.addAction("إضافة علامة مرجعية للسطر الحالي")
             add_bookmark_action.setShortcut("ctrl+b")
-            add_bookmark_action.triggered.connect(self.onAddBookMark)        
+            add_bookmark_action.triggered.connect(self.onAddBookMark)
         fontMenu = menu.addMenu("حجم الخط")
         fontMenu.setFont(boldFont)
         increase_font_action = fontMenu.addAction("تكبير الخط")
@@ -135,15 +137,12 @@ class IslamicTopicViewer(qt.QDialog):
         increase_font_action.triggered.connect(self.increase_font_size)
         decrease_font_action = fontMenu.addAction("تصغير الخط")
         decrease_font_action.setShortcut("ctrl+-")
-        decrease_font_action.triggered.connect(self.decrease_font_size)        
-        set_font_action = fontMenu.addAction("تعيين حجم مخصص للنص")
-        set_font_action.setShortcut("ctrl+1")
-        set_font_action.triggered.connect(self.set_font_size_dialog)
+        decrease_font_action.triggered.connect(self.decrease_font_size)
         menu.exec(qt1.QCursor.pos())
     def getCurrentLine(self):
         return self.text.textCursor().blockNumber()
     def get_position_data(self):
-        return {"file": self.file_path, "title": self.current_title, "line": self.getCurrentLine()}    
+        return {"file": self.file_path, "title": self.current_title, "line": self.getCurrentLine()}
     def onAddNote(self, position_data):
         dialog = note_dialog.NoteDialog(self, mode="add")
         dialog.saved.connect(lambda old, new, content: self.saveNote(position_data, new, content))
@@ -168,21 +167,21 @@ class IslamicTopicViewer(qt.QDialog):
         if notesManager.updateNote("islamicTopics", old_name, update_data):
             guiTools.speak("تم تحديث الملاحظة")
         else:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل تحديث الملاحظة.")    
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل تحديث الملاحظة.")
     def onAddOrRemoveNote(self):
         position_data = self.get_position_data()
         note = notesManager.getNotesForPosition("islamicTopics", position_data)
         if note:
             self.onEditNote(position_data, note["name"])
         else:
-            self.onAddNote(position_data)            
+            self.onAddNote(position_data)
     def onViewNote(self):
         position_data = self.get_position_data()
         note = notesManager.getNotesForPosition("islamicTopics", position_data)
         if note:
             self.onNoteAction(position_data)
         else:
-            guiTools.speak("لا توجد ملاحظة لهذا الموضوع")            
+            guiTools.speak("لا توجد ملاحظة لهذا الموضوع")
     def onNoteAction(self, position_data):
         note = notesManager.getNotesForPosition("islamicTopics", position_data)
         if note:
@@ -195,7 +194,7 @@ class IslamicTopicViewer(qt.QDialog):
             confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل تريد حذف الملاحظة '{note['name']}'؟", "نعم", "لا")
             if confirm == 0:
                 notesManager.removeNote("islamicTopics", note["name"])
-                guiTools.speak("تم حذف الملاحظة")    
+                guiTools.speak("تم حذف الملاحظة")
     def onDeleteNoteShortcut(self):
         position_data = self.get_position_data()
         if notesManager.getNotesForPosition("islamicTopics", position_data):
@@ -235,6 +234,10 @@ class IslamicTopicViewer(qt.QDialog):
         self.info.setText(self.current_title)
         winsound.PlaySound("data/sounds/next_page.wav", winsound.SND_ASYNC)
         guiTools.speak(self.current_title)
+    def font_size_changed(self, value):
+        self.font_size = value
+        self.update_font_size()
+        guiTools.speak(str(value))
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -243,23 +246,16 @@ class IslamicTopicViewer(qt.QDialog):
         font.setBold(self.font_is_bold)
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
-        self.show_font.setText(str(self.font_size))
+        if self.show_font.value() != self.font_size:
+            self.show_font.blockSignals(True)
+            self.show_font.setValue(self.font_size)
+            self.show_font.blockSignals(False)
     def increase_font_size(self):
-        if self.font_size < 100:
-            self.font_size += 1
-            guiTools.speak(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
     def decrease_font_size(self):
-        if self.font_size > 1:
-            self.font_size -= 1
-            guiTools.speak(str(self.font_size))
-            self.update_font_size()
-    def set_font_size_dialog(self):
-        size, ok = guiTools.QInputDialog.getInt(self, "تغيير حجم الخط", "أدخل حجم الخط (1-100):", self.font_size, 1, 100)
-        if ok:
-            self.font_size = size
-            self.update_font_size()
-            guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
     def copy_text(self):
         pyperclip.copy(self.text.toPlainText())
         winsound.Beep(1000, 100)

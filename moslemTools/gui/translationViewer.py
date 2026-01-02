@@ -14,7 +14,6 @@ class translationViewer(qt.QDialog):
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_astxt)
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)        
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings.settings_handler.get("font", "size"))
         self.index = settings.settings_handler.get("translation", "translation")
@@ -46,11 +45,13 @@ class translationViewer(qt.QDialog):
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         fontLayout.addWidget(self.font_laybol)
-        self.show_font = qt.QLabel()
+        self.show_font = qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAccessibleDescription("حجم النص")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font.setText(str(self.font_size))
+        self.show_font.valueChanged.connect(self.font_size_changed)
         fontLayout.addWidget(self.show_font)
         bottomLayout.addLayout(fontLayout)
         self.warning_label = qt.QLabel("تنبيه: إذا غيرت الترجمة ولم يظهر النص، اختر نفس الترجمة مرة أخرى.")
@@ -93,10 +94,6 @@ class translationViewer(qt.QDialog):
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
         decreaseFontSizeAction.triggered.connect(lambda: QTimer.singleShot(501, self.decrease_font_size))
-        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
-        set_font_size.setShortcut("ctrl+1")
-        set_font_size.triggered.connect(lambda: QTimer.singleShot(501, self.set_font_size_dialog))
-        fontMenu.addAction(set_font_size)
         menu.addMenu(fontMenu)
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(qt1.QCursor.pos())    
@@ -171,18 +168,16 @@ class translationViewer(qt.QDialog):
                     file.write(self.text.toPlainText())
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+    def font_size_changed(self, value):
+        self.font_size = value
+        self.update_font_size()
+        guiTools.speak(str(value))
     def increase_font_size(self):
-        if self.font_size < 100:
-            self.font_size += 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
     def decrease_font_size(self):
-        if self.font_size > 1:
-            self.font_size -= 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -191,6 +186,10 @@ class translationViewer(qt.QDialog):
         font.setBold(self.font_is_bold)
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
+        if self.show_font.value() != self.font_size:
+            self.show_font.blockSignals(True)
+            self.show_font.setValue(self.font_size)
+            self.show_font.blockSignals(False)
     def copy_line(self):
         try:
             if self.saved_selection_start != -1 and self.saved_selection_end != -1 and self.saved_selection_start < self.saved_selection_end:
@@ -198,6 +197,9 @@ class translationViewer(qt.QDialog):
                 pyperclip.copy(selected_text)
                 winsound.Beep(1000, 100)
                 guiTools.speak("تم نسخ النص المحدد بنجاح")
+            elif self.saved_text:
+                pyperclip.copy(self.saved_text)
+                winsound.Beep(1000, 100)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
@@ -218,10 +220,7 @@ class translationViewer(qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def getResult(self):
-        self.full_content = functions.translater.gettranslation(
-            functions.translater.gettranslationByIndex(self.index),
-            self.From, self.to
-        )
+        self.full_content = functions.translater.gettranslation(functions.translater.gettranslationByIndex(self.index),self.From, self.to)
         lines = self.full_content.split('\n')
         self.text.setText('\n'.join(lines[:40]))
         self.update_font_size()
@@ -235,20 +234,3 @@ class translationViewer(qt.QDialog):
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
                 self.text.setTextCursor(cursor)
-    def set_font_size_dialog(self):
-        try:
-            size, ok = guiTools.QInputDialog.getInt(
-                self,
-                "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 100):",
-                value=self.font_size,
-                min=1,
-                max=100
-            )
-            if ok:
-                self.font_size = size
-                self.show_font.setText(str(self.font_size))
-                self.update_font_size()
-                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
-        except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

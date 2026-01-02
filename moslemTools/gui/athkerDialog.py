@@ -42,11 +42,13 @@ class AthkerDialog (qt.QDialog):
         progress_time_layout.addWidget(self.time_label)        
         self.font_laybol=qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font=qt.QLabel()
+        self.show_font=qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAccessibleDescription("حجم النص")        
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font.setText(str(self.font_size))
+        self.show_font.valueChanged.connect(self.font_size_changed)
         self.N_theker=guiTools.QPushButton("التالي")
         self.N_theker.setAutoDefault(False)
         self.N_theker.setStyleSheet("background-color: #0000AA; color: white;")
@@ -83,8 +85,11 @@ class AthkerDialog (qt.QDialog):
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)                
         qt1.QShortcut("shift+up",self).activated.connect(self.volume_up)
-        qt1.QShortcut("shift+down",self).activated.connect(self.volume_down)            
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
+        qt1.QShortcut("shift+down",self).activated.connect(self.volume_down)
+    def font_size_changed(self, value):
+        self.font_size = value
+        self.update_font_size()
+        guiTools.speak(str(self.font_size))
     def set_position_from_slider(self, value):
         duration = self.media.duration()
         new_position = int((value / 100) * duration)
@@ -213,10 +218,6 @@ class AthkerDialog (qt.QDialog):
         decrease_action.setShortcut("ctrl+-")
         decrease_action.triggered.connect(self.decrease_font_size)
         font_menu.addAction(decrease_action)                
-        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
-        set_font_size.setShortcut("ctrl+1")
-        set_font_size.triggered.connect(self.set_font_size_dialog)
-        font_menu.addAction(set_font_size)
         menu.addMenu(text_menu)
         menu.addMenu(font_menu)                
         menu.aboutToHide.connect(self.resume_playback)        
@@ -247,17 +248,11 @@ class AthkerDialog (qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))            
     def increase_font_size(self):
-        if self.font_size < 100:
-            self.font_size += 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()            
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
     def decrease_font_size(self):
-        if self.font_size > 1:
-            self.font_size -= 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()            
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
     def update_font_size(self):
         cursor=self.athkerViewer.textCursor()
         self.athkerViewer.selectAll()
@@ -288,20 +283,3 @@ class AthkerDialog (qt.QDialog):
         self.audioOutput.setVolume(self.audioOutput.volume()+0.10)        
     def volume_down(self):
         self.audioOutput.setVolume(self.audioOutput.volume()-0.10)
-    def set_font_size_dialog(self):
-        try:
-            size, ok = guiTools.QInputDialog.getInt(
-                self,
-                "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 100):",
-                value=self.font_size,
-                min=1,
-                max=100
-            )
-            if ok:
-                self.font_size = size
-                self.show_font.setText(str(self.font_size))
-                self.update_font_size()
-                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
-        except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

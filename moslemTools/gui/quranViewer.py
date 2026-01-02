@@ -293,8 +293,8 @@ class QuranViewer(qt.QDialog):
         self.media_progress=qt.QSlider(qt2.Qt.Orientation.Horizontal)
         self.media_progress.setVisible(False)
         self.media_progress.setRange(0,100)
-        self.media_progress.valueChanged.connect(self.set_position_from_slider)
-        self.media_progress.setAccessibleName("التحكم في تقدم الآية")
+        self.media_progress.valueChanged.connect(self.set_position_from_slider)        
+        self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.time_label = qt.QLabel()
         self.time_label.setVisible(False)
         self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -305,11 +305,13 @@ class QuranViewer(qt.QDialog):
         self.media.positionChanged.connect(self.update_slider)
         self.font_laybol=qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font=qt.QLabel()
+        self.show_font = qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
+        self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAccessibleDescription("حجم النص")
-        self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font.setText(str(self.font_size))
+        self.show_font.valueChanged.connect(self.font_size_changed)
         self.info=qt.QLabel()
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -430,11 +432,23 @@ class QuranViewer(qt.QDialog):
             qt1.QShortcut("ctrl+shift+g",self).activated.connect(self.goToCategory)
             qt1.QShortcut("escape",self).activated.connect(self.close_window)
         qt1.QShortcut("ctrl+shift+q", self).activated.connect(self.toggle_search_bar)
+        qt1.QShortcut("ctrl+shift+s", self).activated.connect(self._show_numbering_options)
+        qt1.QShortcut("ctrl+shift+x", self).activated.connect(self.toggleTashkeelView)
         qt1.QShortcut("space",self).activated.connect(self.on_play)
         qt1.QShortcut("ctrl+g",self).activated.connect(self.goToAyah)
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_selection)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
+        qt1.QShortcut("ctrl+0", self).activated.connect(self.t10)
+        qt1.QShortcut("ctrl+1", self).activated.connect(self.t10)
+        qt1.QShortcut("ctrl+2", self).activated.connect(self.t20)
+        qt1.QShortcut("ctrl+3", self).activated.connect(self.t30)
+        qt1.QShortcut("ctrl+4", self).activated.connect(self.t40)
+        qt1.QShortcut("ctrl+5", self).activated.connect(self.t50)
+        qt1.QShortcut("ctrl+6", self).activated.connect(self.t60)
+        qt1.QShortcut("ctrl+7", self).activated.connect(self.t70)
+        qt1.QShortcut("ctrl+8", self).activated.connect(self.t80)
+        qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
@@ -458,10 +472,61 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         qt1.QShortcut("ctrl+x", self).activated.connect(self.removeTashkeelForAyah)
-        qt1.QShortcut("ctrl+shift+x", self).activated.connect(self.toggleTashkeelView)
-        qt1.QShortcut("ctrl+shift+s", self).activated.connect(self._show_numbering_options)
+    def t10(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.1))
+    def t20(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.2))
+    def t30(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.3))
+    def t40(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.4))
+    def t50(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.5))
+    def t60(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.6))
+    def t70(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.7))
+    def t80(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.8))
+    def t90(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.9))
     def close_window(self):
         if self.media.isPlaying():
             self.media.stop()
@@ -488,9 +553,6 @@ class QuranViewer(qt.QDialog):
         self.saved_cursor_position = self.text.textCursor().position()
         self.saved_ayah_index = self.getCurrentAyah()
         self.saved_text = self.text.toPlainText()
-        self.text.setUpdatesEnabled(False)
-        self.text.clear()
-        self.context_menu_active = True
         self.pause_for_action()
         menu = qt.QMenu(self)
         action_group = qt1.QActionGroup(self)
@@ -520,7 +582,7 @@ class QuranViewer(qt.QDialog):
         self.remove_tashkeel_action.setChecked(self.remove_tashkeel)
         self.remove_tashkeel_action.triggered.connect(self._toggle_tashkeel)
         menu.addAction(self.remove_tashkeel_action)
-        menu.aboutToHide.connect(self.restore_after_menu)
+        menu.aboutToHide.connect(self.resume_after_action)
         menu.exec(qt1.QCursor.pos())
     def _set_numbering_mode(self, mode):
         if self.verse_numbering_mode == mode:
@@ -638,9 +700,9 @@ class QuranViewer(qt.QDialog):
         self.merge_list = merge_list
         num_files_to_download = len(ayahs_to_download)
         if num_files_to_download > 0:
-            confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\n" "سيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\n" "بعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\n" "هل أنت متأكد أنك تريد المتابعة؟")
+            confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\nسيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\nهل أنت متأكد أنك تريد المتابعة؟")
         else:
-            confirm_message = ("جميع الآيات المحددة جاهزة للدمج.\n" "ستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق البرنامج حتى انتهاء العملية.\n\n" "هل تريد المتابعة؟")
+            confirm_message = ("جميع الآيات المحددة جاهزة للدمج.\nستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق البرنامج حتى انتهاء العملية.\n\nهل تريد المتابعة؟")
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
         if reply != 0:
             self.set_ui_for_merge(False)
@@ -865,27 +927,6 @@ class QuranViewer(qt.QDialog):
         if not hasattr(self, 'context_menu_active') or not self.context_menu_active:
             self.text.setText(self.saved_text)
             self.update_font_size()
-    def restore_after_menu(self):
-        self.context_menu_active = False
-        lines = self.saved_text.split('\n')
-        self.text.setText('\n'.join(lines[:40]))
-        self.update_font_size()
-        self.text.setUpdatesEnabled(True)
-        if len(lines) > 40:
-            QTimer.singleShot(500, self.restore_full_content)
-        if self.saved_cursor_position is not None:
-            cursor = self.text.textCursor()
-            cursor.setPosition(self.saved_cursor_position)
-            self.text.setTextCursor(cursor)
-        self.resume_after_action()
-    def restore_full_content(self):
-        if not self.context_menu_active:
-            self.text.setText(self.saved_text)
-            self.update_font_size()
-            if self.saved_cursor_position is not None:
-                cursor = self.text.textCursor()
-                cursor.setPosition(self.saved_cursor_position)
-                self.text.setTextCursor(cursor)
     def eventFilter(self, obj, event):
         if obj == self.text.viewport() and event.type() == qt2.QEvent.Type.MouseButtonPress and event.button() == qt2.Qt.MouseButton.LeftButton:
             cursor = self.text.cursorForPosition(event.position().toPoint())
@@ -906,8 +947,6 @@ class QuranViewer(qt.QDialog):
             ayah_tashkeel_text = "إظهار التشكيل للآية الحالية"
         else:
             ayah_tashkeel_text = "إزالة التشكيل من الآية الحالية"
-        self.text.setUpdatesEnabled(False)
-        self.text.clear()
         self.context_menu_active = True
         self.pause_for_action()
         menu = qt.QMenu("الخيارات ", self)
@@ -922,38 +961,38 @@ class QuranViewer(qt.QDialog):
             goToAyah = qt1.QAction("الذهاب إلى آية", self)
             goToAyah.setShortcut("ctrl+g")
             ayahOptions.addAction(goToAyah)
-            goToAyah.triggered.connect(lambda: QTimer.singleShot(501, self.goToAyah))
+            goToAyah.triggered.connect(self.goToAyah)
         playCurrentAyahAction = qt1.QAction("تشغيل الآية الحالية", self)
         playCurrentAyahAction.setShortcut("space")
         ayahOptions.addAction(playCurrentAyahAction)
-        playCurrentAyahAction.triggered.connect(lambda: QTimer.singleShot(501, self.on_play))
+        playCurrentAyahAction.triggered.connect(self.on_play)
         tafaserCurrentAyahAction = qt1.QAction("تفسير الآية الحالية", self)
         tafaserCurrentAyahAction.setShortcut("ctrl+t")
         ayahOptions.addAction(tafaserCurrentAyahAction)
-        tafaserCurrentAyahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getCurentAyahTafseer))
+        tafaserCurrentAyahAction.triggered.connect(self.getCurentAyahTafseer)
         IArabCurrentAyah = qt1.QAction("إعراب الآية الحالية", self)
         IArabCurrentAyah.setShortcut("ctrl+i")
         ayahOptions.addAction(IArabCurrentAyah)
-        IArabCurrentAyah.triggered.connect(lambda: QTimer.singleShot(501, self.getCurentAyahIArab))
+        IArabCurrentAyah.triggered.connect(self.getCurentAyahIArab)
         tanzelCurrentAyahAction = qt1.QAction("أسباب نزول الآية الحالية", self)
         tanzelCurrentAyahAction.setShortcut("ctrl+r")
         ayahOptions.addAction(tanzelCurrentAyahAction)
-        tanzelCurrentAyahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getCurrentAyahTanzel))
+        tanzelCurrentAyahAction.triggered.connect(self.getCurrentAyahTanzel)
         translationCurrentAyahAction = qt1.QAction("ترجمة الآية الحالية", self)
         translationCurrentAyahAction.setShortcut("ctrl+l")
         ayahOptions.addAction(translationCurrentAyahAction)
-        translationCurrentAyahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getCurentAyahTranslation))
+        translationCurrentAyahAction.triggered.connect(self.getCurentAyahTranslation)
         ayahInfo = qt1.QAction("معلومات الآية الحالية", self)
         ayahInfo.setShortcut("ctrl+f")
         ayahOptions.addAction(ayahInfo)
-        ayahInfo.triggered.connect(lambda: QTimer.singleShot(501, self.getAyahInfo))
+        ayahInfo.triggered.connect(self.getAyahInfo)
         copy_aya = qt1.QAction("نسخ الآية الحالية", self)
         ayahOptions.addAction(copy_aya)
-        copy_aya.triggered.connect(lambda: QTimer.singleShot(501, self.copyAya))
+        copy_aya.triggered.connect(self.copyAya)
         removeTashkeelAyahAction = qt1.QAction(ayah_tashkeel_text, self)
         removeTashkeelAyahAction.setShortcut("ctrl+x")
         ayahOptions.addAction(removeTashkeelAyahAction)
-        removeTashkeelAyahAction.triggered.connect(lambda: QTimer.singleShot(501, lambda: self.removeTashkeelForAyah(cursor_pos=self.saved_cursor_position)))
+        removeTashkeelAyahAction.triggered.connect(lambda: self.removeTashkeelForAyah(cursor_pos=self.saved_cursor_position))
         if self.enableBookmarks:
             state, self.nameOfBookmark = functions.bookMarksManager.getQuranBookmarkName(self.type, self.category, self.saved_ayah_index, isPlayer=False)
             if state:
@@ -962,32 +1001,32 @@ class QuranViewer(qt.QDialog):
                 delete_button.setDefault(True)
                 delete_button.setShortcut("ctrl+b")
                 delete_button.setStyleSheet("background-color: #8B0000; color: white;")
-                delete_button.clicked.connect(lambda: QTimer.singleShot(501, self.onRemoveBookmark))
+                delete_button.clicked.connect(self.onRemoveBookmark)
                 removeBookmarkAction.setDefaultWidget(delete_button)
                 ayahOptions.addAction(removeBookmarkAction)
             else:
                 addNewBookMark = qt1.QAction("إضافة علامة مرجعية للآياة الحالية", self)
                 addNewBookMark.setShortcut("ctrl+b")
                 ayahOptions.addAction(addNewBookMark)
-                addNewBookMark.triggered.connect(lambda: QTimer.singleShot(501, self.onAddBookMark))
+                addNewBookMark.triggered.connect(self.onAddBookMark)
             ayah_position = {"ayah_text": self.quranText.split("\n")[self.saved_ayah_index], "ayah_number": self.saved_ayah_index, "surah": self.category}
             note_exists = notesManager.getNotesForPosition("quran", ayah_position)
             if note_exists:
                 note_action = qt1.QAction("عرض ملاحظة الآية الحالية", self)
                 note_action.setShortcut("ctrl+o")
-                note_action.triggered.connect(lambda: QTimer.singleShot(501, lambda: self.onNoteAction(ayah_position)))
+                note_action.triggered.connect(lambda: self.onNoteAction(ayah_position))
                 ayahOptions.addAction(note_action)
                 delete_note_action = qt.QWidgetAction(self)
                 delete_button = qt.QPushButton("حذف ملاحظة الآية الحالية: CTRL+SHIFT+N")
                 delete_button.setDefault(True)
                 delete_button.setStyleSheet("background-color: #8B0000; color: white;")
-                delete_button.clicked.connect(lambda: QTimer.singleShot(501, lambda: self.onDeleteNote(ayah_position)))
+                delete_button.clicked.connect(lambda: self.onDeleteNote(ayah_position))
                 delete_note_action.setDefaultWidget(delete_button)
                 ayahOptions.addAction(delete_note_action)
             else:
                 note_action = qt1.QAction("إضافة ملاحظة للآية الحالية", self)
                 note_action.setShortcut("ctrl+n")
-                note_action.triggered.connect(lambda: QTimer.singleShot(501, lambda: self.onAddNote(ayah_position)))
+                note_action.triggered.connect(lambda: self.onAddNote(ayah_position))
                 ayahOptions.addAction(note_action)
         menu.addMenu(ayahOptions)
         surahOption = qt.QMenu("خيارات الفئة", self)
@@ -995,61 +1034,61 @@ class QuranViewer(qt.QDialog):
         copySurahAction = qt1.QAction("نسخ الفئة", self)
         copySurahAction.setShortcut("ctrl+a")
         surahOption.addAction(copySurahAction)
-        copySurahAction.triggered.connect(lambda: QTimer.singleShot(501, self.copy_text))
+        copySurahAction.triggered.connect(self.copy_text)
         saveSurahAction = qt1.QAction("حفظ الفئة كملف نصي", self)
         saveSurahAction.setShortcut("ctrl+s")
         surahOption.addAction(saveSurahAction)
-        saveSurahAction.triggered.connect(lambda: QTimer.singleShot(501, self.save_text_as_txt))
+        saveSurahAction.triggered.connect(self.save_text_as_txt)
         printSurah = qt1.QAction("طباعة الفئة", self)
         printSurah.setShortcut("ctrl+p")
         surahOption.addAction(printSurah)
-        printSurah.triggered.connect(lambda: QTimer.singleShot(501, self.print_text))
+        printSurah.triggered.connect(self.print_text)
         SurahInfoAction = qt1.QAction("معلومات السورة", self)
         SurahInfoAction.setShortcut("ctrl+shift+f")
         surahOption.addAction(SurahInfoAction)
-        SurahInfoAction.triggered.connect(lambda: QTimer.singleShot(501, self.onSurahInfo))
+        SurahInfoAction.triggered.connect(self.onSurahInfo)
         playToEndActionText = "التشغيل إلى نهاية نتائج البحث" if self.is_search_view else "التشغيل إلى نهاية الفئة"
         playSurahToEnd = qt1.QAction(playToEndActionText, self)
         playSurahToEnd.setShortcut("ctrl+shift+p")
         surahOption.addAction(playSurahToEnd)
-        playSurahToEnd.triggered.connect(lambda: QTimer.singleShot(501, self.onPlayToEnd))
+        playSurahToEnd.triggered.connect(self.onPlayToEnd)
         if not self.is_search_view:
             tafaseerSurahAction = qt1.QAction("تفسير الفئة", self)
             tafaseerSurahAction.setShortcut("ctrl+shift+t")
             surahOption.addAction(tafaseerSurahAction)
-            tafaseerSurahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getTafaseerForSurah))
+            tafaseerSurahAction.triggered.connect(self.getTafaseerForSurah)
             IArabSurah = qt1.QAction("إعراب الفئة", self)
             IArabSurah.setShortcut("ctrl+shift+i")
             surahOption.addAction(IArabSurah)
-            IArabSurah.triggered.connect(lambda: QTimer.singleShot(501, self.getIArabForSurah))
+            IArabSurah.triggered.connect(self.getIArabForSurah)
             translationSurahAction = qt1.QAction("ترجمة  الفئة", self)
             translationSurahAction.setShortcut("ctrl+shift+l")
             surahOption.addAction(translationSurahAction)
-            translationSurahAction.triggered.connect(lambda: QTimer.singleShot(501, self.getTranslationForSurah))
+            translationSurahAction.triggered.connect(self.getTranslationForSurah)
             tafseerFromVersToVersAction = qt1.QAction("التفسير من آية إلى آية")
             tafseerFromVersToVersAction.setShortcut("ctrl+alt+t")
             surahOption.addAction(tafseerFromVersToVersAction)
-            tafseerFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.TafseerFromVersToVers))
+            tafseerFromVersToVersAction.triggered.connect(self.TafseerFromVersToVers)
             translateFromVersToVersAction = qt1.QAction("الترجمة من آية إلى آية")
             translateFromVersToVersAction.setShortcut("ctrl+alt+l")
             surahOption.addAction(translateFromVersToVersAction)
-            translateFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.translateFromVersToVers))
+            translateFromVersToVersAction.triggered.connect(self.translateFromVersToVers)
             IArabFromVersToVersAction = qt1.QAction("الإعراب من آية إلى آية", self)
             IArabFromVersToVersAction.setShortcut("ctrl+alt+i")
             surahOption.addAction(IArabFromVersToVersAction)
-            IArabFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.IArabFromVersToVers))
+            IArabFromVersToVersAction.triggered.connect(self.IArabFromVersToVers)
             copyFromVersToVersAction = qt1.QAction("نسخ من آية إلى آية", self)
             copyFromVersToVersAction.setShortcut("ctrl+shift+c")
             surahOption.addAction(copyFromVersToVersAction)
-            copyFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.copyFromVersToVers))
+            copyFromVersToVersAction.triggered.connect(self.copyFromVersToVers)
             playFromVersToVersAction = qt1.QAction("التشغيل من آية إلى آية", self)
             playFromVersToVersAction.setShortcut("ctrl+alt+p")
             surahOption.addAction(playFromVersToVersAction)
-            playFromVersToVersAction.triggered.connect(lambda: QTimer.singleShot(501, self.playFromVersToVers))
+            playFromVersToVersAction.triggered.connect(self.playFromVersToVers)
             mergeAyahsAction = qt1.QAction("دمج الآيات", self)
             mergeAyahsAction.setShortcut("ctrl+alt+d")
             surahOption.addAction(mergeAyahsAction)
-            mergeAyahsAction.triggered.connect(lambda: QTimer.singleShot(501, self.mergeAyahs))
+            mergeAyahsAction.triggered.connect(self.mergeAyahs)
             if self.remove_tashkeel:
                 category_tashkeel_text = "إظهار التشكيل للفئة"
             else:
@@ -1057,11 +1096,11 @@ class QuranViewer(qt.QDialog):
             removeTashkeelCategoryAction = qt1.QAction(category_tashkeel_text, self)
             removeTashkeelCategoryAction.setShortcut("ctrl+shift+x")
             surahOption.addAction(removeTashkeelCategoryAction)
-            removeTashkeelCategoryAction.triggered.connect(lambda: QTimer.singleShot(501, self.toggleTashkeelView))
+            removeTashkeelCategoryAction.triggered.connect(self.toggleTashkeelView)
             if self.enableNextPreviouseButtons:
                 goToCategoryAction = qt1.QAction("الذهاب إلى محتوى فئة", self)
                 goToCategoryAction.setShortcut("ctrl+shift+g")
-                goToCategoryAction.triggered.connect(lambda: QTimer.singleShot(501, self.goToCategory))
+                goToCategoryAction.triggered.connect(self.goToCategory)
                 surahOption.addAction(goToCategoryAction)
         menu.addMenu(surahOption)
         fontMenu = qt.QMenu("حجم الخط", self)
@@ -1069,17 +1108,17 @@ class QuranViewer(qt.QDialog):
         incressFontAction = qt1.QAction("تكبير الخط", self)
         incressFontAction.setShortcut("ctrl+=")
         fontMenu.addAction(incressFontAction)
-        incressFontAction.triggered.connect(lambda: QTimer.singleShot(501, self.increase_font_size))
+        incressFontAction.triggered.connect(self.increase_font_size)
         decreaseFontSizeAction = qt1.QAction("تصغير الخط", self)
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
-        decreaseFontSizeAction.triggered.connect(lambda: QTimer.singleShot(501, self.decrease_font_size))
+        decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
         set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
-        set_font_size.setShortcut("ctrl+1")
-        set_font_size.triggered.connect(lambda: QTimer.singleShot(501, self.set_font_size_dialog))
+        set_font_size.triggered.connect(self.set_font_size_dialog)
         fontMenu.addAction(set_font_size)
         menu.addMenu(fontMenu)
-        menu.aboutToHide.connect(self.restore_after_menu)
+        menu.aboutToHide.connect(lambda: self.__setattr__('context_menu_active', False))
+        menu.aboutToHide.connect(self.resume_after_action)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
     def removeTashkeelForAyah(self, cursor_pos=None):
         if self._is_invalid_search_line():
@@ -1345,17 +1384,15 @@ class QuranViewer(qt.QDialog):
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def increase_font_size(self):
-        if self.font_size < 100:
-            self.font_size += 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
     def decrease_font_size(self):
-        if self.font_size > 1:
-            self.font_size -= 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
+    def font_size_changed(self, value):
+        self.font_size = value
+        self.update_font_size()
+        guiTools.speak(str(value))
     def update_font_size(self):
         cursor=self.text.textCursor()
         self.text.selectAll()
@@ -1745,6 +1782,7 @@ class QuranViewer(qt.QDialog):
         duration = self.media.duration()
         new_position = int((value / 100) * duration)
         self.media.setPosition(new_position)
+        guiTools.speak(f"{value}%")
     def update_slider(self):
         try:
             self.media_progress.blockSignals(True)
@@ -1805,9 +1843,7 @@ class QuranViewer(qt.QDialog):
         try:
             size, ok = guiTools.QInputDialog.getInt(self, "تغيير حجم الخط", "أدخل حجم الخط (من 1 الى 100):", value=self.font_size, min=1, max=100)
             if ok:
-                self.font_size = size
-                self.show_font.setText(str(self.font_size))
-                self.update_font_size()
+                self.show_font.setValue(size)
                 guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

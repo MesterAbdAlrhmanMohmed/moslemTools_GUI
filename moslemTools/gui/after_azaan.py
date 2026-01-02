@@ -15,6 +15,7 @@ class AfterAdaan(qt.QDialog):
         self.audio_output=QAudioOutput()
         self.media_player.setAudioOutput(self.audio_output)
         self.media_player.setSource(qt2.QUrl.fromLocalFile("data/sounds/prayAfterAdaan.m4a"))
+        self.media_player.mediaStatusChanged.connect(self.on_media_status_changed)
         self.media_player.play()        
         self.suplication = guiTools.QReadOnlyTextEdit()
         self.suplication.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -24,10 +25,13 @@ class AfterAdaan(qt.QDialog):
         self.suplication.setText("اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ\nيُستحب إضافة: إِنَّكَ لَا تُخْلِفُ المِيعَادَ.\n\nثواب الدعاء بعد الأذان\nقال رسول الله صل الله عليه وسلم: مَنْ قَالَ حِينَ يَسْمَعُ النِّدَاءَ: اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ؛ حَلَّتْ لَهُ شَفَاعَتِي يَوْمُ القِيَامَةِ\nرواه البخاري في صحيحه.")                        
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font = qt.QLabel(str(self.font_size))
+        self.show_font = qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAccessibleDescription("حجم النص")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.show_font.valueChanged.connect(self.font_size_changed)
         layout=qt.QVBoxLayout(self)
         layout.addWidget(self.suplication)
         layout.addWidget(self.font_laybol)
@@ -37,8 +41,10 @@ class AfterAdaan(qt.QDialog):
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
         self.update_font_size()
+    def on_media_status_changed(self, status):
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            self.closewindow()
     def onContextMenu(self, pos):
         menu = qt.QMenu("الخيارات", self)
         font=qt1.QFont()
@@ -58,25 +64,19 @@ class AfterAdaan(qt.QDialog):
         decreaseFontSizeAction = qt1.QAction("تصغير الخط (Ctrl+-)", self)
         fontMenu.addAction(decreaseFontSizeAction)
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)        
-        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
-        set_font_size.setShortcut("ctrl+1")
-        set_font_size.triggered.connect(self.set_font_size_dialog)
-        fontMenu.addAction(set_font_size)
         menu.addMenu(text_options)
         menu.addMenu(fontMenu)
         menu.exec(self.suplication.mapToGlobal(pos))
+    def font_size_changed(self, value):
+        self.font_size = value
+        self.update_font_size()
+        guiTools.speak(str(self.font_size))
     def increase_font_size(self):
-        if self.font_size < 100:
-            self.font_size += 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
     def decrease_font_size(self):
-        if self.font_size > 1:
-            self.font_size -= 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
     def update_font_size(self):        
         cursor = self.suplication.textCursor()
         self.suplication.selectAll()
@@ -102,25 +102,8 @@ class AfterAdaan(qt.QDialog):
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", str(e))
     def closewindow(self):
-        if self.media_player.isPlaying():
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
             qt2.QTimer.singleShot(100,self.accept)
         else:
             self.accept()
-    def set_font_size_dialog(self):
-        try:
-            size, ok = guiTools.QInputDialog.getInt(
-                self,
-                "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 100):",
-                value=self.font_size,
-                min=1,
-                max=100
-            )
-            if ok:
-                self.font_size = size
-                self.show_font.setText(str(self.font_size))
-                self.update_font_size()
-                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
-        except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))

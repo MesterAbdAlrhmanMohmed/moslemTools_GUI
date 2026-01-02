@@ -31,29 +31,13 @@ class LimitInputDialog(qt.QDialog):
         self.OKBTN = guiTools.QPushButton("موافق")
         self.OKBTN.setDisabled(True)
         self.OKBTN.clicked.connect(self.accept)
-        self.OKBTN.setStyleSheet("""
-            QPushButton {
-                background-color: black;
-                color: white;
-                border-radius: 4px;
-                padding: 8px 20px;
-                font-size: 14px;
-            }
-        """)
+        self.OKBTN.setStyleSheet("QPushButton {background-color: black; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
         self.cancelBTN = guiTools.QPushButton("إلغاء")
         self.cancelBTN.clicked.connect(self.reject)
-        self.cancelBTN.setStyleSheet("""
-            QPushButton {
-                background-color: #8B0000;
-                color: white;
-                border-radius: 4px;
-                padding: 8px 20px;
-                font-size: 14px;
-            }
-        """)
+        self.cancelBTN.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
         buttonsLayout = qt.QHBoxLayout()
         buttonsLayout.addWidget(self.OKBTN)
-        buttonsLayout.addWidget(self.cancelBTN)        
+        buttonsLayout.addWidget(self.cancelBTN)
         wrapper = qt.QHBoxLayout()
         wrapper.addLayout(buttonsLayout)
         wrapper.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -66,25 +50,9 @@ class LimitInputDialog(qt.QDialog):
         is_valid = name_valid and value_valid
         self.OKBTN.setDisabled(not is_valid)
         if is_valid:
-            self.OKBTN.setStyleSheet("""
-                QPushButton {
-                    background-color: #008000;
-                    color: white;
-                    border-radius: 4px;
-                    padding: 8px 20px;
-                    font-size: 14px;
-                }
-            """)
+            self.OKBTN.setStyleSheet("QPushButton {background-color: #008000; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
         else:
-            self.OKBTN.setStyleSheet("""
-                QPushButton {
-                    background-color: black;
-                    color: white;
-                    border-radius: 4px;
-                    padding: 8px 20px;
-                    font-size: 14px;
-                }
-            """)
+            self.OKBTN.setStyleSheet("QPushButton {background-color: black; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
     def closeEvent(self, event):
         self.reject()
         event.accept()
@@ -108,59 +76,60 @@ class sibha(qt.QWidget):
     def __init__(self):
         super().__init__()
         qt1.QShortcut("ctrl+s", self).activated.connect(self.speak_number)
-        qt1.QShortcut("ctrl+c", self).activated.connect(self.speak_current_thecre)            
+        qt1.QShortcut("ctrl+c", self).activated.connect(self.speak_current_thecre)
         with open(path, "r", encoding="utf-8") as file:
-            self.externalAthkar = json.load(file)                
+            self.externalAthkar = json.load(file)
         with open(limits_path, "r", encoding="utf-8") as file:
-            self.limits_data = json.load(file)    
+            self.limits_data = json.load(file)
         self.athkar_laybol = qt.QLabel("قم بتحديد الذكر")
-        self.athkar_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
+        self.athkar_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.athkar = qt.QComboBox()
         self.athkar.setAccessibleName("قم بتحديد الذكر")
-        self.athkar.setAccessibleDescription("control plus c لنقط الذكر المحدد في أي مكان")
+        self.athkar.setAccessibleDescription("control plus c لنطق الذكر المحدد في أي مكان")
         self.athkar.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.athkar.customContextMenuRequested.connect(self.onDelete)
+        self.athkar.customContextMenuRequested.connect(self.show_athkar_context_menu)
         qt1.QShortcut("delete", self).activated.connect(self.onDelete)
+        qt1.QShortcut("shift+delete", self).activated.connect(self.onDeleteAllCustom)
         self.athkar.addItems([
-            "سبحان الله", "الحمد لله ", "لا إلاه إلا الله", "الله أكبر", "ربي اغفر لي",
-            "أستغفر الله", "لا حول ولا قوة إلا بالله", "اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ العَفْوَ فَاعْفُ عَنِّي",
-            "اللهم صل وسلم وبارك على سيدنا محمد", "سبحان الله وبحمده سبحان الله العظيم",
-            "اللَّهُمَّ ٱغْفِرْ لِي ذَنْبِي كُلَّهُ، دِقَّهُ وَجِلَّهُ، عَلَانِيَتَهُ وَسِرَّهُ، وَأَوَّلَهُ وَآخِرَهُ",
-            "الله أكبر كبيرا والحمد لله كثيرا وسبحان الله بُكرةً وأصيلا",
-            "سبحان الله والحمد لله ولا إلاه إلا الله والله أكبر",
-            "أستغفر الله الذي لا إلاه إلا هو الحي القيوم وأتوب إليه",
-            "لا إلاه إلا أنت سبحانك إني كنت من الظالمين",
-            "سبحان الله وبحمده عدد خلقه ورضى نفسه وزنة عرشه ومداد كلماته",
-            "لا إلاه إلا الله وحده لا شريك لهُ ، لهُ الملك ، ولهُ الحمدُ ، وهو على كل شيء قدير"
+            "سُبْحَانَ اللَّهِ", "الْحَمْدُ لِلَّهِ", "لَا إِلَهَ إِلَّا لَّهُ", "اللَّهُ أَكْبَرُ", "رَبِّ اغْفِرْ لِي",
+            "أَسْتَغْفِرُ اللَّهَ", "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", "اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي",
+            "اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلَى سَيِّدِنَا مُحَمَّدٍ", "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ سُبْحَانَ اللَّهِ الْعَظِيمِ",
+            "اللَّهُمَّ اغْفِرْ لِي ذَنْبِي كُلَّهُ، دِقَّهُ وَجِلَّهُ، عَلَانِيَتَهُ وَسِرَّهُ، وَأَوَّلَهُ وَآخِرَهُ",
+            "اللَّهُ أَكْبَرُ كَبِيرًا وَالْحَمْدُ لِلَّهِ كَثِيرًا وَسُبْحَانَ اللَّهِ بُكْرَةً وَأَصِيلًا",
+            "سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ",
+            "أَسْتَغْفِرُ اللَّهَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ",
+            "لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ",
+            "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ",
+            "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ"
         ])
-        self.athkar.addItems(self.externalAthkar)        
+        self.athkar.addItems(self.externalAthkar)
         self.numbers = qt.QLabel("0")
-        self.numbers.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
+        self.numbers.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.numbers.setAccessibleDescription("عدد التسبيحات. لنطق عدد التسبيحات في أي مكان نستخدم الاختصار control plus s")
         self.numbers.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.numbers.setStyleSheet("font-size:300px;")    
+        self.numbers.setStyleSheet("font-size:300px;")
         self.reset = guiTools.QPushButton("إعادة تعين")
-        self.reset.setAccessibleDescription("control plus r")        
+        self.reset.setAccessibleDescription("control plus r")
         self.reset.setShortcut("ctrl+r")
         self.reset.clicked.connect(self.reset_count)
-        self.reset.setObjectName("resetButton")        
+        self.reset.setObjectName("resetButton")
         self.add = guiTools.QPushButton("التسبيح")
         self.add.setAccessibleDescription("control plus equals")
-        self.add.setShortcut("ctrl+=")        
+        self.add.setShortcut("ctrl+=")
         self.add.clicked.connect(self.increment_count)
-        self.add.setObjectName("addButton")        
+        self.add.setObjectName("addButton")
         self.minus = guiTools.QPushButton("إنقاص")
         self.minus.setAccessibleDescription("control plus minus")
-        self.minus.setShortcut("ctrl+-")        
+        self.minus.setShortcut("ctrl+-")
         self.minus.clicked.connect(self.decrement_count)
-        self.minus.setObjectName("minusButton")        
-        self.add_thecr = guiTools.QPushButton("إضافة ذكر")        
+        self.minus.setObjectName("minusButton")
+        self.add_thecr = guiTools.QPushButton("إضافة ذكر")
         self.add_thecr.setAccessibleDescription("control plus a")
         self.add_thecr.setShortcut("ctrl+a")
         self.add_thecr.setMaximumHeight(30)
         self.add_thecr.setMaximumWidth(160)
         self.add_thecr.clicked.connect(self.onAddThakar)
-        self.add_thecr.setStyleSheet("background-color: #008000; color: white;")        
+        self.add_thecr.setStyleSheet("background-color: #008000; color: white;")
         self.limit_button = guiTools.QPushButton("تعيين حد أقصى لعدد التسبيحات")
         self.limit_button.setMaximumHeight(30)
         self.limit_button.setMaximumWidth(200)
@@ -173,33 +142,33 @@ class sibha(qt.QWidget):
         self.line_of_thecr.setAccessibleName("أكتب الذكر")
         self.line_of_thecr.textChanged.connect(self.onLineTextChanged)
         self.line_of_thecr.setPlaceholderText("أكتب الذكر")
-        self.line_of_thecr.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)                
-        self.line_of_thecr.returnPressed.connect(self.onAddThkarCompeleted)                
-        self.done_thecr = guiTools.QPushButton("إضافة الذكر")        
+        self.line_of_thecr.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.line_of_thecr.returnPressed.connect(self.onAddThkarCompeleted)
+        self.done_thecr = guiTools.QPushButton("إضافة الذكر")
         self.done_thecr.clicked.connect(self.onAddThkarCompeleted)
-        self.done_thecr.setStyleSheet("background-color: #008000; color: white;")        
-        self.cancel_add = guiTools.QPushButton("إلغاء")        
+        self.done_thecr.setStyleSheet("background-color: #008000; color: white;")
+        self.cancel_add = guiTools.QPushButton("إلغاء")
         self.cancel_add.setShortcut("shift+c")
         self.cancel_add.setAccessibleDescription("shift plus c")
         self.cancel_add.clicked.connect(self.cansel_add_thecr)
-        self.cancel_add.setStyleSheet("background-color: #8B0000; color: white;")        
+        self.cancel_add.setStyleSheet("background-color: #8B0000; color: white;")
         self.line_of_thecr.setVisible(False)
         self.done_thecr.setVisible(False)
-        self.cancel_add.setVisible(False)        
+        self.cancel_add.setVisible(False)
         main_layout = qt.QVBoxLayout()
         main_layout.setSpacing(10)
-        main_layout.setContentsMargins(20, 20, 20, 20)        
+        main_layout.setContentsMargins(20, 20, 20, 20)
         layout1 = qt.QVBoxLayout()
         layout1.addWidget(self.athkar_laybol)
-        layout1.addWidget(self.athkar)        
+        layout1.addWidget(self.athkar)
         layout0 = qt.QHBoxLayout()
         layout0.addLayout(layout1)
         layout0.addWidget(self.add_thecr)
-        layout0.addWidget(self.limit_button)        
+        layout0.addWidget(self.limit_button)
         layout2 = qt.QHBoxLayout()
         layout2.addWidget(self.cancel_add)
         layout2.addWidget(self.line_of_thecr)
-        layout2.addWidget(self.done_thecr)        
+        layout2.addWidget(self.done_thecr)
         btn_layout = qt.QHBoxLayout()
         btn_layout.setSpacing(20)
         btn_layout.addWidget(self.reset)
@@ -209,35 +178,21 @@ class sibha(qt.QWidget):
         main_layout.addLayout(layout1)
         main_layout.addLayout(layout2)
         main_layout.addWidget(self.numbers)
-        main_layout.addLayout(btn_layout)        
+        main_layout.addLayout(btn_layout)
         self.setLayout(main_layout)
-        self.setStyleSheet("""
-            QPushButton#resetButton {
-                background-color: #8B0000;
-                color: white;
-                min-height: 40px;
-                font-size: 16px;
-            }
-            QPushButton#addButton {
-                background-color: #008000;
-                color: white;
-                min-height: 40px;
-                font-size: 16px;
-            }
-            QPushButton#minusButton {
-                background-color: #0000AA;
-                color: white;
-                min-height: 40px;
-                font-size: 16px;
-            }
-            QComboBox, QLineEdit, QSpinBox {
-                min-height: 40px;
-                font-size: 16px;
-            }
-            QLabel {
-                font-size: 16px;
-            }
-        """)
+        self.setStyleSheet("QPushButton#resetButton {background-color: #8B0000; color: white; min-height: 40px; font-size: 16px;} QPushButton#addButton {background-color: #008000; color: white; min-height: 40px; font-size: 16px;} QPushButton#minusButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;} QComboBox, QLineEdit, QSpinBox {min-height: 40px; font-size: 16px;} QLabel {font-size: 16px;}")
+    def show_athkar_context_menu(self, pos):
+        menu = qt.QMenu(self)
+        font = qt1.QFont()
+        font.setBold(True)
+        menu.setFont(font)
+        delete_action = menu.addAction("حذف الذكر المحدد")
+        delete_action.setShortcut("Delete")
+        delete_action.triggered.connect(self.onDelete)
+        delete_all_action = menu.addAction("حذف جميع الأذكار المضافة")
+        delete_all_action.setShortcut("Shift+Delete")
+        delete_all_action.triggered.connect(self.onDeleteAllCustom)
+        menu.exec(qt1.QCursor.pos())
     def update_limit_button_text(self):
         if not self.limits_data["limits"]:
             self.limit_button.setText("تعيين حد أقصى لعدد التسبيحات")
@@ -345,10 +300,10 @@ class sibha(qt.QWidget):
         self.cancel_add.setVisible(True)
         self.done_thecr.setDisabled(True)
         self.line_of_thecr.setFocus()
-    def onAddThkarCompeleted(self):        
+    def onAddThkarCompeleted(self):
         thkar = self.line_of_thecr.text().strip()
         if not thkar:
-            return                
+            return
         self.line_of_thecr.setText("")
         self.externalAthkar.append(thkar)
         self.athkar.addItem(thkar)
@@ -373,3 +328,17 @@ class sibha(qt.QWidget):
                 with open(path, "w", encoding="utf-8") as file:
                     json.dump(self.externalAthkar, file, ensure_ascii=False, indent=4)
                 guiTools.speak("تم الحذف")
+    def onDeleteAllCustom(self):
+        if not self.externalAthkar:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا توجد أذكار مضافة لحذفها")
+            return
+        question = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف الكلي", "هل تريد حذف كل الأذكار التي قمت بإضافتها؟", "نعم", "لا")
+        if question == 0:
+            for text in self.externalAthkar:
+                index = self.athkar.findText(text)
+                if index != -1:
+                    self.athkar.removeItem(index)
+            self.externalAthkar = []
+            with open(path, "w", encoding="utf-8") as file:
+                json.dump(self.externalAthkar, file, ensure_ascii=False, indent=4)
+            guiTools.speak("تم حذف جميع الأذكار المضافة")

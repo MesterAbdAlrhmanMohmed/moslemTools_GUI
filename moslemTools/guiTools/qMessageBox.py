@@ -8,7 +8,7 @@ import winsound
 class MessageBox(qt.QDialog):
     def __init__(self, parent, title: str, label: str):
         super().__init__(parent)
-        self.resize(900, 200)
+        self.resize(900, 310)
         self.setWindowTitle(title)        
         self.center()
         layout = qt.QVBoxLayout(self)

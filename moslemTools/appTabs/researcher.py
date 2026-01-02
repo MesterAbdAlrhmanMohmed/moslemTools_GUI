@@ -62,11 +62,7 @@ class SearchModeDialog(qt.QDialog):
     def _set_ignore_symbols(self, state):
         self.ignore_symbols = bool(state)
     def get_settings(self):
-        return {
-            "ignore_tashkeel": self.ignore_tashkeel,
-            "ignore_hamza": self.ignore_hamza,
-            "ignore_symbols": self.ignore_symbols
-        }
+        return {"ignore_tashkeel": self.ignore_tashkeel,"ignore_hamza": self.ignore_hamza,"ignore_symbols": self.ignore_symbols}
 class SearchThread(qt2.QThread):
     searchFinished = qt2.pyqtSignal(list, dict, int)
     def __init__(self, parent, search_type, search_text, surah_index, ahadeeth_text, ignore_tashkeel, ignore_hamza, ignore_symbols):
@@ -174,8 +170,79 @@ class Albaheth(qt.QWidget):
         qt1.QShortcut("Ctrl+Shift+R", self).activated.connect(self.on_change_reciter_requested)
         qt1.QShortcut("Ctrl+C", self).activated.connect(self.copy_line)
         qt1.QShortcut("Ctrl+A", self).activated.connect(self.copy_text)
-        qt1.QShortcut("ctrl+1",self).activated.connect(self.set_font_size_dialog)
+        qt1.QShortcut("ctrl+1", self).activated.connect(self.t10)
+        qt1.QShortcut("ctrl+2", self).activated.connect(self.t20)
+        qt1.QShortcut("ctrl+3", self).activated.connect(self.t30)
+        qt1.QShortcut("ctrl+4", self).activated.connect(self.t40)
+        qt1.QShortcut("ctrl+5", self).activated.connect(self.t50)
+        qt1.QShortcut("ctrl+6", self).activated.connect(self.t60)
+        qt1.QShortcut("ctrl+7", self).activated.connect(self.t70)
+        qt1.QShortcut("ctrl+8", self).activated.connect(self.t80)
+        qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
+
+    def t10(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.1))
+
+    def t20(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.2))
+
+    def t30(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.3))
+
+    def t40(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.4))
+
+    def t50(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.5))
+
+    def t60(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.6))
+
+    def t70(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.7))
+
+    def t80(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.8))
+
+    def t90(self):
+        if self.media_player.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media_player.duration()
+        self.media_player.setPosition(int(total_duration * 0.9))
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
     def on_shortcut_activated(self, action_func):
         cursor = self.results.textCursor()
@@ -255,8 +322,8 @@ class Albaheth(qt.QWidget):
         self.player_widget = qt.QWidget()
         player_layout = qt.QHBoxLayout(self.player_widget)
         player_layout.setContentsMargins(0, 5, 0, 5)
-        self.media_progress = qt.QSlider(qt2.Qt.Orientation.Horizontal)
-        self.media_progress.setAccessibleName("التحكم في تقدم الآية")
+        self.media_progress = qt.QSlider(qt2.Qt.Orientation.Horizontal)        
+        self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.media_progress.setRange(0, 100)
         self.media_progress.valueChanged.connect(self.set_media_position)
         self.time_label = qt.QLabel("00:00 / 00:00")
@@ -266,10 +333,13 @@ class Albaheth(qt.QWidget):
         self.player_widget.setVisible(False)
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font = qt.QLabel(str(self.font_size))
+        self.show_font = qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAccessibleDescription("حجم الخط")
+        self.show_font.valueChanged.connect(self.font_size_changed)
         self.clear_results_button = guiTools.QPushButton("حذف النتائج")
         self.clear_results_button.setShortcut("ctrl+del")
         self.clear_results_button.setAccessibleDescription("control plus delete")
@@ -400,12 +470,7 @@ class Albaheth(qt.QWidget):
             try:
                 ayah_data = self.quran_data[str(surah_number)]['ayahs'][ayah_number_in_surah - 1]
                 overall_ayah_number = ayah_data['number']
-                return {
-                    "surah_number": surah_number,
-                    "surah_name": surah_name,
-                    "ayah_number_in_surah": ayah_number_in_surah,
-                    "overall_ayah_number": overall_ayah_number
-                }
+                return {"surah_number": surah_number,"surah_name": surah_name,"ayah_number_in_surah": ayah_number_in_surah,"overall_ayah_number": overall_ayah_number}
             except (KeyError, IndexError):
                 return None
         return None
@@ -496,12 +561,8 @@ class Albaheth(qt.QWidget):
         dec_font = qt1.QAction("تصغير الخط", self)
         dec_font.setShortcut("Ctrl+-")
         dec_font.triggered.connect(self.decrease_font_size)
-        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
-        set_font_size.setShortcut("ctrl+1")
-        set_font_size.triggered.connect(self.set_font_size_dialog)
         font_menu.addAction(inc_font)
         font_menu.addAction(dec_font)
-        font_menu.addAction(set_font_size)
         menu.addMenu(font_menu)
         menu.exec(qt1.QCursor.pos())
         self.resume_after_action()
@@ -513,13 +574,7 @@ class Albaheth(qt.QWidget):
         surah_num_str = str(metadata["surah_number"]).zfill(3)
         ayah_num_str = str(metadata["ayah_number_in_surah"]).zfill(3)
         filename = f"{surah_num_str}{ayah_num_str}.mp3"
-        local_path = os.path.join(
-            os.getenv('appdata'),
-            settings.app.appName,
-            "reciters",
-            reciter_folder,
-            filename
-        )
+        local_path = os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciter_folder,filename)
         if os.path.exists(local_path):
             path = qt2.QUrl.fromLocalFile(local_path)
         else:
@@ -550,6 +605,7 @@ class Albaheth(qt.QWidget):
         if duration > 0:
             new_position = int((value / 100) * duration)
             self.media_player.setPosition(new_position)
+            guiTools.speak(f"{value}%")
     def go_to_surah(self, metadata):
         self.pause_for_action()
         surah_name_key = f"{metadata['surah_number']}{metadata['surah_name']}"
@@ -599,18 +655,16 @@ class Albaheth(qt.QWidget):
         else:
             guiTools.MessageBox.view(self, "تنبيه", "لا توجد أسباب نزول متاحة لهذه الآية")
         self.resume_after_action()
+    def font_size_changed(self, value):
+        self.font_size = value
+        self.update_font_size()
+        guiTools.speak(str(self.font_size))
     def increase_font_size(self):
-        if self.font_size < 100:
-            self.font_size += 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
     def decrease_font_size(self):
-        if self.font_size > 1:
-            self.font_size -= 1
-            guiTools.speak(str(self.font_size))
-            self.show_font.setText(str(self.font_size))
-            self.update_font_size()
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
     def update_font_size(self):
         cursor = self.results.textCursor()
         self.results.selectAll()
@@ -647,23 +701,3 @@ class Albaheth(qt.QWidget):
         if dlg.exec() == qt.QDialog.DialogCode.Accepted:
             self.currentReciter = dlg.recitersListWidget.currentRow()
         self.resume_after_action()
-    def set_font_size_dialog(self):
-        self.pause_for_action()
-        try:
-            size, ok = guiTools.QInputDialog.getInt(
-                self,
-                "تغيير حجم الخط",
-                "أدخل حجم الخط (من 1 الى 100):",
-                value=self.font_size,
-                min=1,
-                max=100
-            )
-            if ok:
-                self.font_size = size
-                self.show_font.setText(str(self.font_size))
-                self.update_font_size()
-                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
-        except Exception as error:
-            guiTools.MessageBox.error(self, "حدث خطأ", str(error))
-        finally:
-            self.resume_after_action()

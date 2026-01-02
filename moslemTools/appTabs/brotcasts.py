@@ -611,7 +611,7 @@ class quran_brotcast(qt.QWidget):
         self.list_of_quran_brotcasts.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من نابلِس")
         self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من القاهرة")
-        self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من السعودية")        
+        self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من السعودية")
         self.list_of_quran_brotcasts.addItem("إذاعة دُبَيْ للقرآن الكريم")
         self.list_of_quran_brotcasts.addItem("تلاوات خاشعة")
         self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من أستراليا")
@@ -633,7 +633,7 @@ class quran_brotcast(qt.QWidget):
         url_to_play = None
         if station_name == "إذاعة القرآن الكريم من نابلِس": url_to_play = qt2.QUrl("http://www.quran-radio.org:8002/;stream.mp3")
         elif station_name == "إذاعة القرآن الكريم من القاهرة": url_to_play = qt2.QUrl("http://n0e.radiojar.com/8s5u5tpdtwzuv?rj-ttl=5&rj-tok=AAABeel-l8gApvlPoJcG2WWz8A")
-        elif station_name == "إذاعة القرآن الكريم من السعودية": url_to_play = qt2.QUrl("https://stream.radiojar.com/4wqre23fytzuv")        
+        elif station_name == "إذاعة القرآن الكريم من السعودية": url_to_play = qt2.QUrl("https://stream.radiojar.com/4wqre23fytzuv")
         elif station_name == "إذاعة دُبَيْ للقرآن الكريم": url_to_play = qt2.QUrl("http://uk5.internet-radio.com:8079/stream")
         elif station_name == "تلاوات خاشعة": url_to_play = qt2.QUrl("http://live.mp3quran.net:9992")
         elif station_name == "إذاعة القرآن الكريم من أستراليا": url_to_play = qt2.QUrl("http://listen.qkradio.com.au:8382/listen.mp3")
@@ -797,7 +797,8 @@ class protcasts(qt.QWidget):
         if self.recorder._running:
              guiTools.qMessageBox.MessageBox.error(self, "خطأ", "التسجيل يعمل بالفعل.")
              return
-        guiTools.qMessageBox.MessageBox.view(self, "تنبيه هام", "سيتم تسجيل جميع الأصوات الصادرة من النظام (الكمبيوتر) فقط، ولن يتم تسجيل أي صوت خارجي (الميكروفون).")
+        result = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء التسجيل", "تنبيه هام: سيتم تسجيل جميع الأصوات الصادرة من النظام (الكمبيوتر) فقط، ولن يتم تسجيل أي صوت خارجي (الميكروفون).\n\nهل تريد البدء بالتسجيل الآن؟", "نعم", "لا")
+        if result != 0: return
         self.is_scheduled_recording = False
         self.recorder.start()
         self.startBtn.setEnabled(False)
@@ -996,6 +997,7 @@ class protcasts(qt.QWidget):
     @qt2.pyqtSlot(str)
     def recordingError(self, error_msg):
         self.restore_aud_text()
+        self.recorder.stop(cleanup_only=True)
         if not self.startBtn.isEnabled() or self.countdown_timer.isActive():
             guiTools.qMessageBox.MessageBox.error(self, "خطأ في التسجيل", "يبدو أن جهاز تسجيل صوت الكمبيوتر stereo mix لا يعمل، لتشغيله اتبع الخطوات التالية\n\n1 فتح قائمة Run عن طريق الاختصار Windows + R ثم اكتب هذا الأمر:\nrundll32.exe shell32.dll,Control_RunDLL mmsys.cpl,,1\n2 اذهب إلى تبويبة التسجيل Recording واختر منها Stereo Mix ثم اضغط عليه بزر الفأرة الأيمن أو زر التطبيقات واختر Enable ثم اضغط OK.\nلمن واجه أي مشكلة يمكنه التواصل معي على حسابي في تليجرام من قسم (عن المطور) في قائمة المزيد من الخيارات.")
         self.resetRecorderState()
