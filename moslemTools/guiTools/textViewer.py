@@ -26,7 +26,6 @@ class TextViewer(qt.QDialog):
         self.text = guiTools.QReadOnlyTextEdit()
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
-        self._set_text_with_delay(text)
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font = qt.QSpinBox()
@@ -45,6 +44,7 @@ class TextViewer(qt.QDialog):
         layout.addWidget(self.text)
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
+        self._set_text_with_delay(text)
     def _set_full_text_and_update_font(self, full_text):
         self.text.setText(full_text)
         self.update_font_size()
@@ -145,16 +145,11 @@ class TextViewer(qt.QDialog):
             self.show_font.setValue(self.show_font.value() - 1)
     def update_font_size(self):
         cursor = self.text.textCursor()
-        selected_text_start = cursor.selectionStart()
-        selected_text_end = cursor.selectionEnd()
-        fmt = qt1.QTextCharFormat()
-        fmt.setFontPointSize(self.font_size)
-        fmt.setFontWeight(qt1.QFont.Weight.Bold if self.font_is_bold else qt1.QFont.Weight.Normal)
-        cursor.select(qt1.QTextCursor.SelectionType.Document)
-        cursor.mergeCharFormat(fmt)
-        cursor.setPosition(selected_text_start)
-        if selected_text_start != selected_text_end:
-            cursor.setPosition(selected_text_end, qt1.QTextCursor.MoveMode.KeepAnchor)
+        self.text.selectAll()
+        font = qt1.QFont()
+        font.setPointSize(self.font_size)
+        font.setBold(self.font_is_bold)
+        self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
         if self.show_font.value() != self.font_size:
             self.show_font.blockSignals(True)
@@ -167,6 +162,9 @@ class TextViewer(qt.QDialog):
                 pyperclip.copy(selected_text)
                 winsound.Beep(1000, 100)
                 guiTools.speak("تم نسخ النص المحدد بنجاح")
+            elif self.saved_text:
+                pyperclip.copy(self.saved_text)
+                winsound.Beep(1000, 100)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):

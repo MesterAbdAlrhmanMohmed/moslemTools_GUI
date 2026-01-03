@@ -54,14 +54,14 @@ class Genral(qt.QWidget):
         main_layout.addStretch(1)
         main_layout.addLayout(reciter_section_layout)
         main_layout.addStretch(1)        
-        self.tray_note = qt.QLabel("لإظهار البرنامج بعد إخفائه، اضغط على زر التطبيقات أو انقر بالزر الأيمن على أيقونة البرنامج في شريط المهام.")
+        self.tray_note = qt.QLabel("تنبيه هام، يمكنكم إظهار أو إخفاء البرنامج عبر استخدام الاختصار windows+alt+h أو من قائمة علبة النظام system tray")
         self.tray_note.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.tray_note.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         main_layout.addWidget(self.tray_note)        
         self.run_note = qt.QLabel("تنبيه هام، يمكنكم تشغيل البرنامج من قائمة run بكتابة الأمر (mt)")
         self.run_note.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.run_note.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        main_layout.addWidget(self.run_note)
+        self.run_note.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
+        main_layout.addWidget(self.run_note)        
     def add_to_startup(self):
         try:
             shell = win32com.client.Dispatch("WScript.Shell")

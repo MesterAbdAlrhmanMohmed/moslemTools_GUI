@@ -8,7 +8,7 @@ class QQuestionMessageBox(qt.QDialog):
     def __init__(self, parent, title: str, label: str, yesLabel: str, noLabel: str):
         super().__init__(parent)
         self.result = 1
-        self.resize(900, 310)
+        self.resize(900, 320)
         self.setWindowTitle(title)                
         self.center()
         self.setWindowIcon(self.style().standardIcon(qt.QStyle.StandardPixmap.SP_MessageBoxQuestion))

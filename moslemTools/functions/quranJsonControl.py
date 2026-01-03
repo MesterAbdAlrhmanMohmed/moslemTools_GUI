@@ -174,3 +174,11 @@ def getFromTo(from_surah, from_ayah, to_surah, to_ayah,index):
     elif index==4:
         result=getHizb()
     return getFromToTypes(result,from_surah,from_ayah,to_surah,to_ayah)
+def getAyahTextByNumber(number):
+    _load_data()
+    number = int(number)
+    for value in _data.values():
+        for ayah in value["ayahs"]:
+            if ayah["number"] == number:
+                return "{} ({})".format(ayah["text"], ayah["numberInSurah"])
+    return ""

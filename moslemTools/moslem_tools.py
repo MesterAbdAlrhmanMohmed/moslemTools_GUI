@@ -1,7 +1,7 @@
 from custome_errors import *
 import sys
 sys.excepthook = my_excepthook
-import update,guiTools,json,random,os,shutil,datetime,webbrowser,requests,keyboard,pyperclip,winsound,ctypes,threading
+import update,guiTools,json,random,os,shutil,datetime,webbrowser,requests,pyperclip,winsound,ctypes,threading
 from pynput import keyboard as p_key
 from hijridate import Gregorian
 from settings import *
@@ -40,7 +40,7 @@ class main(qt.QMainWindow):
         self.audio_sig.connect(self.random_audio_theker)
         self.text_sig.connect(self.show_random_theker)
         self.toggle_sig.connect(self.toggle_visibility)
-        self.hk_listener = p_key.GlobalHotKeys({'<alt>+<cmd>+p': self.audio_sig.emit, '<alt>+<cmd>+l': self.text_sig.emit, '<ctrl>+<alt>+h': self.toggle_sig.emit})
+        self.hk_listener = p_key.GlobalHotKeys({'<alt>+<cmd>+p': self.audio_sig.emit, '<alt>+<cmd>+l': self.text_sig.emit, '<cmd>+<alt>+h': self.toggle_sig.emit})
         self.hk_listener.start()
         self.info_update_timer = qt2.QTimer(self)
         self.info_update_timer.timeout.connect(self.viewInfoTextEdit)
@@ -162,11 +162,11 @@ class main(qt.QMainWindow):
         font = qt1.QFont()
         font.setBold(True)
         self.tray_menu.setAccessibleName("تم فتح قائمة moslem tools")
-        self.random_thecker_audio = qt1.QAction("تشغيل ذكر عشوائي")
+        self.random_thecker_audio = qt1.QAction("تشغيل ذكر عشوائي")        
         self.random_thecker_audio.triggered.connect(self.random_audio_theker)
-        self.random_thecker_text = qt1.QAction("عرض ذكر عشوائي")
+        self.random_thecker_text = qt1.QAction("عرض ذكر عشوائي")        
         self.random_thecker_text.triggered.connect(self.show_random_theker)
-        self.show_action = qt1.QAction("إخفاء البرنامج")
+        self.show_action = qt1.QAction("إخفاء البرنامج")        
         self.show_action.triggered.connect(self.toggle_visibility)
         self.close_action = qt1.QAction("إغلاق البرنامج")
         self.close_action.triggered.connect(lambda: qt.QApplication.quit())

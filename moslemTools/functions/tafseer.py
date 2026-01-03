@@ -29,14 +29,15 @@ def getTafaseerByIndex(index:str):
         return ""
 def getTafaseer(tafaseerName:str,From:int,to:int):
     load_tafaseers()
+    import functions.quranJsonControl
     try:
         with open(os.path.join(os.getenv('appdata'),settings.app.appName,"tafaseer",_tafaseers[tafaseerName]),"r",encoding="utf-8") as file:
             data=json.load(file)
         result=[]
-        for ayah in data:
-            index=data.index(ayah)+1
+        for index, ayah in enumerate(data, 1):
             if index>=From and index<=to:
-                result.append(ayah)
+                ayahText=functions.quranJsonControl.getAyahTextByNumber(index)
+                result.append(ayahText + "\n" + ayah)
         return "\n".join(result)
     except:
         return ("لم يتم العثور على تفاسير متاحة , الرجاء تحميل تفسير واحد على الأقل")

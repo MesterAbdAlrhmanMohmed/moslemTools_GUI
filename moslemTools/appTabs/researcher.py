@@ -65,12 +65,12 @@ class SearchModeDialog(qt.QDialog):
         return {"ignore_tashkeel": self.ignore_tashkeel,"ignore_hamza": self.ignore_hamza,"ignore_symbols": self.ignore_symbols}
 class SearchThread(qt2.QThread):
     searchFinished = qt2.pyqtSignal(list, dict, int)
-    def __init__(self, parent, search_type, search_text, surah_index, ahadeeth_text, ignore_tashkeel, ignore_hamza, ignore_symbols):
+    def __init__(self, parent, search_type, search_text, search_scope, ahadeeth_text, ignore_tashkeel, ignore_hamza, ignore_symbols):
         super().__init__(parent)
         self.parent_widget = parent
         self.search_type = search_type
         self.search_text = search_text
-        self.surah_index = surah_index
+        self.search_scope = search_scope
         self.ahadeeth_text = ahadeeth_text
         self.ignore_tashkeel = ignore_tashkeel
         self.ignore_hamza = ignore_hamza
@@ -94,10 +94,24 @@ class SearchThread(qt2.QThread):
         search_metadata = {}
         total_results_count = 0
         if self.search_type == 0:
-            listOfWords = functions.quranJsonControl.getQuran()
-            if self.surah_index != 0:
-                surah_key_part = list(self.parent_widget.surahsList.keys())[self.surah_index - 1].split(' ')[0]
-                listOfWords = [line for line in listOfWords if line.startswith(surah_key_part)]
+            if self.search_scope is None:
+                listOfWords = functions.quranJsonControl.getQuran()
+            elif self.search_scope[0] == 'surah':
+                surah_key_part = self.search_scope[1].split(' ')[0]
+                listOfWords = [line for line in functions.quranJsonControl.getQuran() if line.startswith(surah_key_part)]
+            else:
+                listOfWords = []
+                data = functions.quranJsonControl.data
+                stype, sval = self.search_scope
+                for sn, sv in data.items():
+                    sname = sv["name"]
+                    for a in sv["ayahs"]:
+                        match = False
+                        if stype == 'page' and a['page'] == sval: match = True
+                        elif stype == 'juz' and a['juz'] == sval: match = True
+                        elif stype == 'quarter' and a['hizbQuarter'] == sval: match = True
+                        elif stype == 'hizb' and (a['hizbQuarter']-1)//4+1 == sval: match = True
+                        if match: listOfWords.append(f"{sn}{sname} {a['text']}({a['numberInSurah']})")
             result = self._search(self.search_text, listOfWords)
             if result:
                 header = "عدد نتائج البحث " + str(len(result))
@@ -294,10 +308,20 @@ class Albaheth(qt.QWidget):
         self.surahs_laybol = qt.QLabel("ابحث في")
         self.surahs_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.surahs = qt.QComboBox()
-        self.surahs.addItems(["كل القرآن"] + list(self.surahsList.keys()))
+        self.surahs.addItems(["كل القرآن", "سور", "صفحات", "أجزاء", "أرباع", "أحزاب"])
         self.surahs.setFont(font_combo)
         self.surahs.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
         self.surahs.setAccessibleName("ابحث في")
+        self.surahs.activated.connect(self.on_scope_changed)
+        self.specific_scope_label = qt.QLabel("اختر")
+        self.specific_scope_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.specific_scope_combo = qt.QComboBox()
+        self.specific_scope_combo.setFont(font_combo)
+        self.specific_scope_combo.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
+        self.specific_scope_combo.setAccessibleName("اختر القيمة")
+        self.specific_scope_label.setVisible(False)
+        self.specific_scope_combo.setVisible(False)
+        self.current_scope = None
         self.serch.currentIndexChanged.connect(self.toggle_ahadeeth_visibility)
         self.serch_laibol_content = qt.QLabel("أكتب محتوى البحث")
         self.serch_laibol_content.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -354,8 +378,16 @@ class Albaheth(qt.QWidget):
         ahadeeth_layout_top = qt.QVBoxLayout()
         ahadeeth_layout_top.addWidget(self.ahadeeth_laibol)
         ahadeeth_layout_top.addWidget(self.ahadeeth)
-        ahadeeth_layout_top.addWidget(self.surahs_laybol)
-        ahadeeth_layout_top.addWidget(self.surahs)
+        quran_scope_layout = qt.QHBoxLayout()
+        surahs_vbox = qt.QVBoxLayout()
+        surahs_vbox.addWidget(self.surahs_laybol)
+        surahs_vbox.addWidget(self.surahs)
+        specific_vbox = qt.QVBoxLayout()
+        specific_vbox.addWidget(self.specific_scope_label)
+        specific_vbox.addWidget(self.specific_scope_combo)
+        quran_scope_layout.addLayout(surahs_vbox)
+        quran_scope_layout.addLayout(specific_vbox)
+        ahadeeth_layout_top.addLayout(quran_scope_layout)
         top_combo_layout.addLayout(search_layout_top)
         top_combo_layout.addLayout(ahadeeth_layout_top)
         main_layout.addLayout(top_combo_layout)
@@ -428,6 +460,35 @@ class Albaheth(qt.QWidget):
             guiTools.MessageBox.error(self, "خطأ في البيانات", error_msg.split(': ', 1)[1])
         elif "خطأ غير متوقع" in error_msg:
             guiTools.MessageBox.error(self, "خطأ غير متوقع", error_msg.split(': ', 1)[1])
+    def on_scope_changed(self, index):
+        self.specific_scope_combo.clear()
+        if index == 0:
+            self.specific_scope_label.setVisible(False)
+            self.specific_scope_combo.setVisible(False)
+            self.current_scope = None
+        else:
+            self.specific_scope_label.setVisible(True)
+            self.specific_scope_combo.setVisible(True)
+            items = []
+            label = ""
+            if index == 1:
+                items = list(self.surahsList.keys())
+                label = "اختر السورة"
+            elif index == 2:
+                items = [str(i) for i in range(1, 605)]
+                label = "اختر الصفحة"
+            elif index == 3:
+                items = [str(i) for i in range(1, 31)]
+                label = "اختر الجزء"
+            elif index == 4:
+                items = [str(i) for i in range(1, 241)]
+                label = "اختر الربع"
+            elif index == 5:
+                items = [str(i) for i in range(1, 61)]
+                label = "اختر الحزب"
+            self.specific_scope_label.setText(label)
+            self.specific_scope_combo.setAccessibleName(label)
+            self.specific_scope_combo.addItems(items)
     def onSearchClicked(self):
         if not self.serch_input.text():
             guiTools.MessageBox.error(self, "تنبيه", "يرجى كتابة محتوى للبحث")
@@ -443,9 +504,18 @@ class Albaheth(qt.QWidget):
         self.start.setText("جاري البحث...")
         search_type = self.serch.currentIndex()
         search_text = self.serch_input.text()
-        surah_index = self.surahs.currentIndex()
         ahadeeth_text = self.ahadeeth.currentText()
-        self.current_search_thread = SearchThread(self, search_type, search_text, surah_index, ahadeeth_text, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
+        scope_index = self.surahs.currentIndex()
+        if scope_index == 0:
+            self.current_scope = None
+        else:
+            item = self.specific_scope_combo.currentText()
+            if scope_index == 1:
+                self.current_scope = ('surah', item)
+            else:
+                stype = ['page', 'juz', 'quarter', 'hizb'][scope_index-2]
+                self.current_scope = (stype, int(item))
+        self.current_search_thread = SearchThread(self, search_type, search_text, self.current_scope, ahadeeth_text, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
         self.current_search_thread.searchFinished.connect(self.onSearchFinished)
         self.current_search_thread.start()
     @qt2.pyqtSlot(list, dict, int)
