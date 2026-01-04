@@ -220,6 +220,8 @@ class sibha(qt.QWidget):
         menu.addSeparator()
         add_action = menu.addAction("إضافة حد")
         add_action.triggered.connect(self.add_new_limit)
+        delete_all_limits_action = menu.addAction("حذف كل الحدود")
+        delete_all_limits_action.triggered.connect(self.onDeleteAllLimits)
         menu.setFont(font)
         menu.exec(qt1.QCursor.pos())
     def on_limit_selected(self, name):
@@ -253,6 +255,17 @@ class sibha(qt.QWidget):
             self.save_limits()
             self.update_limit_button_text()
             guiTools.speak(f"تم حذف الحد الأقصى {name}")
+    def onDeleteAllLimits(self):
+        if not self.limits_data["limits"]:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا توجد حدود مضافة لحذفها")
+            return
+        question = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف الكلي", "هل تريد حذف جميع الحدود المضافة؟", "نعم", "لا")
+        if question == 0:
+            self.limits_data["limits"] = {}
+            self.limits_data["active"] = None
+            self.save_limits()
+            self.update_limit_button_text()
+            guiTools.speak("تم حذف جميع الحدود المضافة")
     def save_limits(self):
         with open(limits_path, "w", encoding="utf-8") as file:
             json.dump(self.limits_data, file, ensure_ascii=False, indent=4)
