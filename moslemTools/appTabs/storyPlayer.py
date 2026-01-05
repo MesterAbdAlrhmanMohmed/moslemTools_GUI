@@ -803,7 +803,6 @@ class StoryPlayer(qt.QWidget):
         else:
             button.setStyleSheet("")
     def handle_play_all_toggled(self, checked):
-        self.mp.stop()
         if checked:
             self.repeat_story_button.setEnabled(False)
             if self.storyListWidget.currentRow() == -1 and self.storyListWidget.count() > 0:
@@ -1193,7 +1192,7 @@ class StoryPlayer(qt.QWidget):
             story_list = []
         result = self.search(search_text, story_list)
         self.storyListWidget.addItems(result)
-    def play_selected_audio(self):
+    def play_selected_audio(self, *args):
         try:
             selected_category_item = self.categoriesListWidget.currentItem()
             if not selected_category_item:
