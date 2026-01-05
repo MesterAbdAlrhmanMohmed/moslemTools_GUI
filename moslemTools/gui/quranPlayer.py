@@ -79,14 +79,14 @@ class QuranPlayer(qt.QDialog):
         super().__init__(p)
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
-        self.font_size = int(settings.settings_handler.get("font", "size"))
-        self.currentReciter=int(settings.settings_handler.get("g","reciter"))
+        self.font_size = int(settings.settings_handler.get("font", "size") or 12)
+        self.currentReciter=int(settings.settings_handler.get("g","reciter") or 0)
         self.resize(1200,600)
         font = qt1.QFont()
         font.setBold(True)
         self.setFont(font)
         self.type=type
-        self.times=int(settings.settings_handler.get("quranPlayer","times"))
+        self.times=int(settings.settings_handler.get("quranPlayer","times") or 1)
         self.currentTime=1
         self.category=category
         self.was_playing_before_action = False
@@ -123,7 +123,7 @@ class QuranPlayer(qt.QDialog):
         self.media_progress.setRange(0,100)
         self.media_progress.valueChanged.connect(self.set_position_from_slider)
         self.media.durationChanged.connect(self.update_slider)
-        self.media.positionChanged.connect(self.update_slider)        
+        self.media.positionChanged.connect(self.update_slider)
         self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.time_label = qt.QLabel()
         self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -584,18 +584,20 @@ class QuranPlayer(qt.QDialog):
         return self.original_ayah_text
     def on_state(self,state):
         if state==QMediaPlayer.MediaStatus.EndOfMedia:
+            dur_val = settings.settings_handler.get("quranPlayer","duration")
+            duration_ms = int(dur_val if (dur_val and str(dur_val).isdigit()) else 0) * 1000
             if self.times==self.currentTime:
                 if settings.settings_handler.get("quranPlayer","replay")=="False":
-                    if not self.index+1==len(self.quranText): qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
+                    if not self.index+1==len(self.quranText): qt2.QTimer.singleShot(duration_ms,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
                     else:
                         self.PPS.setText("تشغيل")
                         self.index=0
                         self.original_ayah_text = self.quranText[self.index]
                         self.update_display_text()
-                else: qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
+                else: qt2.QTimer.singleShot(duration_ms,qt2.Qt.TimerType.PreciseTimer,self.onNextAyah)
             else:
                 self.currentTime+=1
-                qt2.QTimer.singleShot(int(settings.settings_handler.get("quranPlayer","duration"))*1000,qt2.Qt.TimerType.PreciseTimer,self.media.play)
+                qt2.QTimer.singleShot(duration_ms,qt2.Qt.TimerType.PreciseTimer,self.media.play)
     def getCurrentReciter(self):
         return list(reciters.keys())[self.currentReciter]
     def getCurentAyahTafseer(self):
