@@ -805,18 +805,14 @@ class StoryPlayer(qt.QWidget):
     def handle_play_all_toggled(self, checked):
         self.mp.stop()
         if checked:
-            reply = guiTools.QQuestionMessageBox.view(self, "تفعيل التشغيل المتتابع", "هل تريد تفعيل وضع التشغيل المتتابع؟", "نعم", "لا")
-            if reply != 0:
-                self.play_all_to_end.setChecked(False)
-                return
             self.repeat_story_button.setEnabled(False)
             if self.storyListWidget.currentRow() == -1 and self.storyListWidget.count() > 0:
                 self.storyListWidget.setCurrentRow(0)
-            self.play_selected_audio()
+            if self.mp.playbackState() == QMediaPlayer.PlaybackState.StoppedState:
+                self.play_selected_audio()
         else:
             self.repeat_story_button.setEnabled(True)
     def handle_repeat_toggled(self, checked):
-        self.mp.stop()
         if checked:
             if not self.check_media_loaded():
                 self.repeat_story_button.setChecked(False)

@@ -88,20 +88,34 @@ class SearchThread(qt2.QThread):
                 normalized_text = normalize_hamza(normalized_text)
             return normalized_text
         normalized_pattern = normalize(pattern)
-        return [text for text in text_list if normalized_pattern in normalize(text)]
+        results = []
+        for display_text, search_text in text_list:
+            if normalized_pattern in normalize(search_text):
+                results.append(display_text)
+        return results
     def run(self):
         display_text = []
         search_metadata = {}
         total_results_count = 0
         if self.search_type == 0:
+            listOfWords = []
+            data = functions.quranJsonControl.data
+            def get_display(sn, sname, a):
+                return f"{sn}{sname} {a['text']}({a['numberInSurah']})"
             if self.search_scope is None:
-                listOfWords = functions.quranJsonControl.getQuran()
+                for sn, sv in data.items():
+                    sname = sv["name"]
+                    for a in sv["ayahs"]:
+                        listOfWords.append((get_display(sn, sname, a), a['text']))
             elif self.search_scope[0] == 'surah':
                 surah_key_part = self.search_scope[1].split(' ')[0]
-                listOfWords = [line for line in functions.quranJsonControl.getQuran() if line.startswith(surah_key_part)]
+                for sn, sv in data.items():
+                    sname = sv["name"]
+                    if f"{sn}{sname}" == surah_key_part:
+                        for a in sv["ayahs"]:
+                            listOfWords.append((get_display(sn, sname, a), a['text']))
+                        break
             else:
-                listOfWords = []
-                data = functions.quranJsonControl.data
                 stype, sval = self.search_scope
                 for sn, sv in data.items():
                     sname = sv["name"]
@@ -111,7 +125,7 @@ class SearchThread(qt2.QThread):
                         elif stype == 'juz' and a['juz'] == sval: match = True
                         elif stype == 'quarter' and a['hizbQuarter'] == sval: match = True
                         elif stype == 'hizb' and (a['hizbQuarter']-1)//4+1 == sval: match = True
-                        if match: listOfWords.append(f"{sn}{sname} {a['text']}({a['numberInSurah']})")
+                        if match: listOfWords.append((get_display(sn, sname, a), a['text']))
             result = self._search(self.search_text, listOfWords)
             if result:
                 header = "عدد نتائج البحث " + str(len(result))
@@ -136,7 +150,7 @@ class SearchThread(qt2.QThread):
                     with open(full_path, "r", encoding="utf-8") as f:
                         ahadeeth_data = json.load(f)
                     if isinstance(ahadeeth_data, list):
-                        listOfWords = [str(i + 1) + ". " + item for i, item in enumerate(ahadeeth_data)]
+                        listOfWords = [(str(i + 1) + ". " + item, item) for i, item in enumerate(ahadeeth_data)]
                         result = self._search(self.search_text, listOfWords)
                         if result:
                             display_text.append(f"عدد النتائج في كتاب {book_name_ar}, {len(result)} نتيجة")
@@ -194,63 +208,54 @@ class Albaheth(qt.QWidget):
         qt1.QShortcut("ctrl+8", self).activated.connect(self.t80)
         qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
-
     def t10(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.1))
-
     def t20(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.2))
-
     def t30(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.3))
-
     def t40(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.4))
-
     def t50(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.5))
-
     def t60(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.6))
-
     def t70(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.7))
-
     def t80(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.8))
-
     def t90(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")

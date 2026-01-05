@@ -865,29 +865,28 @@ class QuranPlayer(qt.QWidget):
         else:
             button.setStyleSheet("")
     def handle_play_all_toggled(self, checked):
-        self.mp.stop()
         if checked:
             self.play_all_to_start.setEnabled(False)
             self.repeat_surah_button.setEnabled(False)
             if self.surahListWidget.currentRow() == -1 and self.surahListWidget.count() > 0:
                 self.surahListWidget.setCurrentRow(0)
-            self.play_selected_audio()
+            if self.mp.playbackState() == QMediaPlayer.PlaybackState.StoppedState:
+                self.play_selected_audio()
         else:
             self.play_all_to_start.setEnabled(True)
             self.repeat_surah_button.setEnabled(True)
     def handle_play_all_start_toggled(self, checked):
-        self.mp.stop()
         if checked:
             self.play_all_to_end.setEnabled(False)
             self.repeat_surah_button.setEnabled(False)
             if self.surahListWidget.currentRow() == -1 and self.surahListWidget.count() > 0:
                 self.surahListWidget.setCurrentRow(self.surahListWidget.count() - 1)
-            self.play_selected_audio()
+            if self.mp.playbackState() == QMediaPlayer.PlaybackState.StoppedState:
+                self.play_selected_audio()
         else:
             self.play_all_to_end.setEnabled(True)
             self.repeat_surah_button.setEnabled(True)
     def handle_repeat_toggled(self, checked):
-        self.mp.stop()
         if checked:
             if not self.check_media_loaded():
                 self.repeat_surah_button.setChecked(False)

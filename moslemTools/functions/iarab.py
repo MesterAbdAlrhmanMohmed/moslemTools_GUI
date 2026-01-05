@@ -1,4 +1,5 @@
 import json
+import functions.quranJsonControl
 _iarab_data = None
 def getIarab(From:int,to:int):
     global _iarab_data
@@ -8,10 +9,10 @@ def getIarab(From:int,to:int):
                 _iarab_data=json.load(file)
         data = _iarab_data
         result=[]
-        for ayah in data:
-            index=data.index(ayah)+1
+        for index, ayah in enumerate(data, 1):
             if index>=From and index<=to:
-                result.append(ayah)
+                ayahText = functions.quranJsonControl.getAyahTextByNumber(index)
+                result.append(ayahText + "\n" + ayah)
         return "\n".join(result)
     except:
         return ("لم يتم العثور على ملفات الإعراب, الرجاء إعادة تثبيت البرنامج مرة أخرى")
