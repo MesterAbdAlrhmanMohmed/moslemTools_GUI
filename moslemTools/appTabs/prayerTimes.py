@@ -8,6 +8,7 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
+from functions import audio_manager
 class PrayerTimesWorker(qt2.QObject):
     finished = qt2.pyqtSignal(object, object, object, object, object, object, object, object, object, object, object)
     error = qt2.pyqtSignal(str)
@@ -306,6 +307,7 @@ class prayer_times(qt.QWidget):
                         self.reminded=True
                         if self.p.media_player.isPlaying():
                             self.p.media_player.stop()
+                        self.p.audio_output.setDevice(audio_manager.get_audio_device("adhan"))
                         if index in medias:
                             before_azan_sound = os.path.join("data", "sounds", "before_azan", medias[index])
                             self.p.media_player.setSource(qt2.QUrl.fromLocalFile(before_azan_sound))
@@ -325,6 +327,7 @@ class prayer_times(qt.QWidget):
         try:
             self.iqama_media_player = QMediaPlayer()
             self.iqama_audio_output = QAudioOutput()
+            self.iqama_audio_output.setDevice(audio_manager.get_audio_device("adhan"))
             self.iqama_audio_output.setVolume(int(settings_handler.get("prayerTimes", "iqamaVolume")) / 100)
             self.iqama_media_player.setAudioOutput(self.iqama_audio_output)
             self.iqama_media_player.setSource(qt2.QUrl.fromLocalFile(sound_path))

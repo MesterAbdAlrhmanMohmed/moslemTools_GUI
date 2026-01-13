@@ -12,6 +12,7 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6.QtCore import QTimer
 import guiTools, settings, functions
+from functions import audio_manager
 with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
     reciters = json.load(file)
 class DownloadThread(qt2.QThread):
@@ -260,6 +261,7 @@ class QuranViewer(qt.QDialog):
         self.text_cache = {"by_surah": self.original_quran_text}
         self.media=QMediaPlayer(self)
         self.audioOutput=QAudioOutput(self)
+        self.audioOutput.setDevice(audio_manager.get_audio_device("quran_text"))
         self.media.setAudioOutput(self.audioOutput)
         self.media.setSource(qt2.QUrl.fromLocalFile("data/sounds/001001.mp3"))
         self.media.play()

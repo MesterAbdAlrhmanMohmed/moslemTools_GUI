@@ -86,6 +86,16 @@ settingsConfig={
     "font":{
         "bold":"False",
         "size":"12"
+    },
+    "audio": {
+        "global": "الافتراضي",
+        "quran_text": "الافتراضي",
+        "quran_audio": "الافتراضي",
+        "stories": "الافتراضي",
+        "broadcasts": "الافتراضي",
+        "adhan": "الافتراضي",
+        "athkar": "الافتراضي",
+        "random_athkar": "الافتراضي"
     }
 }
 if not os.path.exists(cpath):
@@ -99,7 +109,7 @@ if not os.path.exists(cpath):
 def get(section,key):
     try:
         config = ConfigParser()
-        config.read(cpath)
+        config.read(cpath, encoding="utf-8")
         value = config[section][key]
         return value
     except:        
@@ -109,7 +119,7 @@ def get(section,key):
             return ""
 def set(section,key, value):
         config = ConfigParser()
-        config.read(cpath)
+        config.read(cpath, encoding="utf-8")
         try:
             config[section][key] = value
         except KeyError:            

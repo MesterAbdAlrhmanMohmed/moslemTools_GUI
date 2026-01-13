@@ -3,6 +3,7 @@ from PyQt6 import QtWidgets as qt
 from PyQt6 import QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 import guiTools, pyperclip, winsound, settings
+from functions import audio_manager
 class AfterAdaan(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
@@ -13,6 +14,7 @@ class AfterAdaan(qt.QDialog):
         self.setWindowTitle("دعاء بعد الأذان")        
         self.media_player=QMediaPlayer()
         self.audio_output=QAudioOutput()
+        self.audio_output.setDevice(audio_manager.get_audio_device("adhan"))
         self.media_player.setAudioOutput(self.audio_output)
         self.media_player.setSource(qt2.QUrl.fromLocalFile("data/sounds/prayAfterAdaan.m4a"))
         self.media_player.mediaStatusChanged.connect(self.on_media_status_changed)

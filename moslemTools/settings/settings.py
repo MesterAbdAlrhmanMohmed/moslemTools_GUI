@@ -1,5 +1,6 @@
 import guiTools,functions,gui,subprocess,os,sys
 from . import settings_handler, app, tabs
+from .tabs import audioSettings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from PyQt6.QtCore import Qt
@@ -49,6 +50,8 @@ class settings(qt.QDialog):
         self.sectian.add("إعدادات التحديثات", self.update)
         self.athkar = tabs.AthkarSettings()
         self.sectian.add("إعدادات الأذكار العشوائية", self.athkar)
+        self.audioSettings = audioSettings.AudioSettings(self)
+        self.sectian.add("إعدادات تحديد كرت الصوت", self.audioSettings)
         self.sectian.add("تحميل موارد", tabs.Download())
         restoar = tabs.Restoar(self)
         self.sectian.add("النسخ الاحتياطي والاستعادة", restoar)
@@ -66,6 +69,17 @@ class settings(qt.QDialog):
         restart_required = 0
         original_font_bold = settings_handler.get("font", "bold")
         original_font_size = settings_handler.get("font", "size")
+        
+        # Save Audio Settings
+        settings_handler.set("audio", "global", self.audioSettings.global_combo.currentText())
+        settings_handler.set("audio", "quran_text", self.audioSettings.features["quran_text"].currentText())
+        settings_handler.set("audio", "quran_audio", self.audioSettings.features["quran_audio"].currentText())
+        settings_handler.set("audio", "stories", self.audioSettings.features["stories"].currentText())
+        settings_handler.set("audio", "broadcasts", self.audioSettings.features["broadcasts"].currentText())
+        settings_handler.set("audio", "adhan", self.audioSettings.features["adhan"].currentText())
+        settings_handler.set("audio", "athkar", self.audioSettings.features["athkar"].currentText())
+        settings_handler.set("audio", "random_athkar", self.audioSettings.features["random_athkar"].currentText())
+
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
         if self.layout1.reciter.count() > 0:
              settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
@@ -101,6 +115,17 @@ class settings(qt.QDialog):
         new_font_size = str(self.fontSettings.font_size_spinbox.value())
         settings_handler.set("font", "bold", new_font_bold)
         settings_handler.set("font", "size", new_font_size)
+        
+        # Save Audio Settings
+        settings_handler.set("audio", "global", self.audioSettings.global_combo.currentText())
+        settings_handler.set("audio", "quran_text", self.audioSettings.features["quran_text"].currentText())
+        settings_handler.set("audio", "quran_audio", self.audioSettings.features["quran_audio"].currentText())
+        settings_handler.set("audio", "stories", self.audioSettings.features["stories"].currentText())
+        settings_handler.set("audio", "broadcasts", self.audioSettings.features["broadcasts"].currentText())
+        settings_handler.set("audio", "adhan", self.audioSettings.features["adhan"].currentText())
+        settings_handler.set("audio", "athkar", self.audioSettings.features["athkar"].currentText())
+        settings_handler.set("audio", "random_athkar", self.audioSettings.features["random_athkar"].currentText())
+
         if original_font_bold != new_font_bold or original_font_size != new_font_size:
             restart_required = 1
         self.p.runAudioThkarTimer()

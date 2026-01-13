@@ -10,6 +10,7 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 from appTabs import *
+from functions import audio_manager
 try:
     updatePath = os.path.join(os.getenv('appdata'), settings_handler.appName, "update")
     if os.path.exists(updatePath):
@@ -189,6 +190,7 @@ class main(qt.QMainWindow):
     def play_random_basmala(self):
         if self.media_player.playbackState()==QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
+        self.audio_output.setDevice(audio_manager.get_audio_device("random_athkar"))
         folder_path=os.path.join(os.getcwd(),"data","sounds","basmala")
         if not os.path.exists(folder_path):return
         sound_files=[f for f in os.listdir(folder_path) if f.lower().endswith(('.ogg','.mp3','.wav'))]
@@ -267,6 +269,7 @@ class main(qt.QMainWindow):
         if self.media_player.isPlaying():
             self.media_player.stop()
             return
+        self.audio_output.setDevice(audio_manager.get_audio_device("random_athkar"))
         folder_path = r"data\sounds\athkar"
         sound_files = [f for f in os.listdir(folder_path) if f.endswith(('.ogg'))]
         if sound_files:

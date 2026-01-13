@@ -5,6 +5,7 @@ import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 from PyQt6.QtPrintSupport import QPrinter,QPrintDialog
 import guiTools
+from functions import audio_manager
 class AthkerDialog (qt.QDialog):
     def __init__(self,p,title:str,athkerList:list):
         super().__init__(p)        
@@ -15,6 +16,7 @@ class AthkerDialog (qt.QDialog):
         self.font_size = int(settings.settings_handler.get("font", "size"))
         self.media=QMediaPlayer(self)
         self.audioOutput=QAudioOutput(self)
+        self.audioOutput.setDevice(audio_manager.get_audio_device("athkar"))
         self.media.setAudioOutput(self.audioOutput)
         self.media.setSource(qt2.QUrl.fromLocalFile("data/sounds/001001.mp3"))
         self.media.play()

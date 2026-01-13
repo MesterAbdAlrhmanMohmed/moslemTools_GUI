@@ -7,6 +7,7 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
+from functions import audio_manager
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
@@ -162,6 +163,7 @@ class QuranPlayer(qt.QWidget):
         self.cancel_download_button.setStyleSheet("QPushButton {background-color: #8B0000;color: white;border: none;padding: 5px 10px;border-radius: 5px;}QPushButton:hover {background-color: #A52A2A;}")
         self.mp = QMediaPlayer()
         self.au = QAudioOutput()
+        self.au.setDevice(audio_manager.get_audio_device("quran_audio"))
         self.mp.setAudioOutput(self.au)
         self.openBookmarks = guiTools.QPushButton("العلامات المرجعية")
         self.openBookmarks.clicked.connect(self.onBookmarkOpened)

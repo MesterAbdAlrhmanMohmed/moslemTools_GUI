@@ -4,6 +4,7 @@ import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from .after_azaan import AfterAdaan
 import settings
+from functions import audio_manager
 class AdaanDialog(qt.QDialog):
     def __init__(self, p, index: int, title: str, sound_path: str):
         super().__init__(p)
@@ -15,6 +16,7 @@ class AdaanDialog(qt.QDialog):
         self.media_player = QMediaPlayer()
         self.media_player.mediaStatusChanged.connect(self.onStateChanged)
         self.audio_output = QAudioOutput()
+        self.audio_output.setDevice(audio_manager.get_audio_device("adhan"))
         self.audio_output.setVolume(int(settings.settings_handler.get("prayerTimes", "volume")) / 100)
         self.media_player.setAudioOutput(self.audio_output)                
         self.media_player.setSource(qt2.QUrl.fromLocalFile(sound_path))

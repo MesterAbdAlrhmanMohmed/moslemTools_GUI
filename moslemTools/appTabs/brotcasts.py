@@ -5,6 +5,7 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from guiTools import speak
 import guiTools, os, tempfile, shutil, subprocess, threading, time, uuid
 from pathlib import Path
+from functions import audio_manager
 try:
     import sounddevice as sd
     import soundfile as sf
@@ -674,6 +675,7 @@ class protcasts(qt.QWidget):
         global global_player, global_audio_output, global_current_url
         global_player = QMediaPlayer()
         global_audio_output = QAudioOutput()
+        global_audio_output.setDevice(audio_manager.get_audio_device("broadcasts"))
         global_player.setAudioOutput(global_audio_output)
         global_audio_output.setVolume(1.0)
         global_current_url = None
