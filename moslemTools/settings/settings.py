@@ -80,25 +80,30 @@ class settings(qt.QDialog):
         original_audio_athkar = settings_handler.get("audio", "athkar")
         original_audio_random_athkar = settings_handler.get("audio", "random_athkar")
 
-        if (original_audio_global != self.audioSettings.global_combo.currentText() or
-            original_audio_quran_text != self.audioSettings.features["quran_text"].currentText() or
-            original_audio_quran_audio != self.audioSettings.features["quran_audio"].currentText() or
-            original_audio_stories != self.audioSettings.features["stories"].currentText() or
-            original_audio_broadcasts != self.audioSettings.features["broadcasts"].currentText() or
-            original_audio_adhan != self.audioSettings.features["adhan"].currentText() or
-            original_audio_athkar != self.audioSettings.features["athkar"].currentText() or
-            original_audio_random_athkar != self.audioSettings.features["random_athkar"].currentText()):
+        def get_audio_val(text):
+            if text == "افتراضي": return "Default"
+            if text == "مخصص": return "Custom"
+            return text
+
+        if (original_audio_global != get_audio_val(self.audioSettings.global_combo.currentText()) or
+            original_audio_quran_text != get_audio_val(self.audioSettings.features["quran_text"].currentText()) or
+            original_audio_quran_audio != get_audio_val(self.audioSettings.features["quran_audio"].currentText()) or
+            original_audio_stories != get_audio_val(self.audioSettings.features["stories"].currentText()) or
+            original_audio_broadcasts != get_audio_val(self.audioSettings.features["broadcasts"].currentText()) or
+            original_audio_adhan != get_audio_val(self.audioSettings.features["adhan"].currentText()) or
+            original_audio_athkar != get_audio_val(self.audioSettings.features["athkar"].currentText()) or
+            original_audio_random_athkar != get_audio_val(self.audioSettings.features["random_athkar"].currentText())):
             restart_required = 1
         
         # Save Audio Settings
-        settings_handler.set("audio", "global", self.audioSettings.global_combo.currentText())
-        settings_handler.set("audio", "quran_text", self.audioSettings.features["quran_text"].currentText())
-        settings_handler.set("audio", "quran_audio", self.audioSettings.features["quran_audio"].currentText())
-        settings_handler.set("audio", "stories", self.audioSettings.features["stories"].currentText())
-        settings_handler.set("audio", "broadcasts", self.audioSettings.features["broadcasts"].currentText())
-        settings_handler.set("audio", "adhan", self.audioSettings.features["adhan"].currentText())
-        settings_handler.set("audio", "athkar", self.audioSettings.features["athkar"].currentText())
-        settings_handler.set("audio", "random_athkar", self.audioSettings.features["random_athkar"].currentText())
+        settings_handler.set("audio", "global", get_audio_val(self.audioSettings.global_combo.currentText()))
+        settings_handler.set("audio", "quran_text", get_audio_val(self.audioSettings.features["quran_text"].currentText()))
+        settings_handler.set("audio", "quran_audio", get_audio_val(self.audioSettings.features["quran_audio"].currentText()))
+        settings_handler.set("audio", "stories", get_audio_val(self.audioSettings.features["stories"].currentText()))
+        settings_handler.set("audio", "broadcasts", get_audio_val(self.audioSettings.features["broadcasts"].currentText()))
+        settings_handler.set("audio", "adhan", get_audio_val(self.audioSettings.features["adhan"].currentText()))
+        settings_handler.set("audio", "athkar", get_audio_val(self.audioSettings.features["athkar"].currentText()))
+        settings_handler.set("audio", "random_athkar", get_audio_val(self.audioSettings.features["random_athkar"].currentText()))
 
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
         if self.layout1.reciter.count() > 0:

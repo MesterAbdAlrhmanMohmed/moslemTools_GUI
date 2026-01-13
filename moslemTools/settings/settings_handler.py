@@ -88,14 +88,14 @@ settingsConfig={
         "size":"12"
     },
     "audio": {
-        "global": "الافتراضي",
-        "quran_text": "الافتراضي",
-        "quran_audio": "الافتراضي",
-        "stories": "الافتراضي",
-        "broadcasts": "الافتراضي",
-        "adhan": "الافتراضي",
-        "athkar": "الافتراضي",
-        "random_athkar": "الافتراضي"
+        "global": "Default",
+        "quran_text": "Default",
+        "quran_audio": "Default",
+        "stories": "Default",
+        "broadcasts": "Default",
+        "adhan": "Default",
+        "athkar": "Default",
+        "random_athkar": "Default"
     }
 }
 if not os.path.exists(cpath):

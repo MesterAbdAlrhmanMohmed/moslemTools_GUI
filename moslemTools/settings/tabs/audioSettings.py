@@ -7,10 +7,14 @@ class AudioSettings(qt.QWidget):
         super().__init__(parent)        
         self.layout = qt.QVBoxLayout()
         self.setLayout(self.layout)        
-        self.devices_list = ["الافتراضي"] + [d.description() for d in QMediaDevices.audioOutputs()]
-        self.global_options = self.devices_list + ["مخصص"]                
+        self.devices_list = ["افتراضي"] + [d.description() for d in QMediaDevices.audioOutputs()]
+        self.global_options = self.devices_list + ["مخصص"]
+        self.feature_widgets = []
+        self.features = {}
         def create_row(label_text, combo_name, is_global=False):
-            row_layout = qt.QHBoxLayout()
+            container = qt.QWidget()
+            row_layout = qt.QHBoxLayout(container)
+            row_layout.setContentsMargins(0, 0, 0, 0)
             label = qt.QLabel(label_text)
             combo = qt.QComboBox()
             combo.addItems(self.global_options if is_global else self.devices_list)
@@ -18,11 +22,12 @@ class AudioSettings(qt.QWidget):
             row_layout.addWidget(combo)
             row_layout.addWidget(label)
             row_layout.addStretch()
-            self.layout.addLayout(row_layout)
+            self.layout.addWidget(container)
+            if not is_global:
+                self.feature_widgets.append(container)
             return combo        
         self.global_combo = create_row("تحديد كارت الصوت لكل البرنامج", "global", is_global=True)
         self.global_combo.currentIndexChanged.connect(self.on_global_change)        
-        self.features = {}                
         feature_map = [
             ("تحديد كارت الصوت لتشغيل الآيات في تبويبة القرآن الكريم مكتوب", "quran_text"),
             ("تحديد كارت الصوت لتشغيل السور في تبويبة القرآن الكريم صوتي", "quran_audio"),
@@ -44,7 +49,8 @@ class AudioSettings(qt.QWidget):
     def load_settings(self):                
         from settings import settings_handler                
         global_val = settings_handler.get("audio", "global")
-        if not global_val: global_val = "الافتراضي"        
+        if not global_val or global_val == "Default" or global_val == "الافتراضي": global_val = "افتراضي"
+        if global_val == "Custom": global_val = "مخصص"
         index = self.global_combo.findText(global_val)
         if index >= 0:
             self.global_combo.setCurrentIndex(index)
@@ -52,7 +58,7 @@ class AudioSettings(qt.QWidget):
             self.global_combo.setCurrentIndex(0)        
         for key, combo in self.features.items():
             val = settings_handler.get("audio", key)
-            if not val: val = "الافتراضي"
+            if not val or val == "Default" or val == "الافتراضي": val = "افتراضي"
             index = combo.findText(val)
             if index >= 0:
                 combo.setCurrentIndex(index)
@@ -63,7 +69,5 @@ class AudioSettings(qt.QWidget):
         selected_text = self.global_combo.currentText()
         is_custom = selected_text == "مخصص" or selected_text == "Custom"        
         self.note_label.setVisible(not is_custom)        
-        for combo in self.features.values():
-            combo.setEnabled(is_custom)
-            if not is_custom:                                                                
-                pass
+        for widget in self.feature_widgets:
+            widget.setVisible(is_custom)
