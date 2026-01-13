@@ -68,9 +68,7 @@ class settings(qt.QDialog):
     def fok(self):
         restart_required = 0
         original_font_bold = settings_handler.get("font", "bold")
-        original_font_size = settings_handler.get("font", "size")
-
-        # Check Audio Settings Changes
+        original_font_size = settings_handler.get("font", "size")        
         original_audio_global = settings_handler.get("audio", "global")
         original_audio_quran_text = settings_handler.get("audio", "quran_text")
         original_audio_quran_audio = settings_handler.get("audio", "quran_audio")
@@ -93,9 +91,7 @@ class settings(qt.QDialog):
             original_audio_adhan != get_audio_val(self.audioSettings.features["adhan"].currentText()) or
             original_audio_athkar != get_audio_val(self.audioSettings.features["athkar"].currentText()) or
             original_audio_random_athkar != get_audio_val(self.audioSettings.features["random_athkar"].currentText())):
-            restart_required = 1
-        
-        # Save Audio Settings
+            restart_required = 1                
         settings_handler.set("audio", "global", get_audio_val(self.audioSettings.global_combo.currentText()))
         settings_handler.set("audio", "quran_text", get_audio_val(self.audioSettings.features["quran_text"].currentText()))
         settings_handler.set("audio", "quran_audio", get_audio_val(self.audioSettings.features["quran_audio"].currentText()))
@@ -104,7 +100,6 @@ class settings(qt.QDialog):
         settings_handler.set("audio", "adhan", get_audio_val(self.audioSettings.features["adhan"].currentText()))
         settings_handler.set("audio", "athkar", get_audio_val(self.audioSettings.features["athkar"].currentText()))
         settings_handler.set("audio", "random_athkar", get_audio_val(self.audioSettings.features["random_athkar"].currentText()))
-
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
         if self.layout1.reciter.count() > 0:
              settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
