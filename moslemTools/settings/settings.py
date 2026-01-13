@@ -69,6 +69,26 @@ class settings(qt.QDialog):
         restart_required = 0
         original_font_bold = settings_handler.get("font", "bold")
         original_font_size = settings_handler.get("font", "size")
+
+        # Check Audio Settings Changes
+        original_audio_global = settings_handler.get("audio", "global")
+        original_audio_quran_text = settings_handler.get("audio", "quran_text")
+        original_audio_quran_audio = settings_handler.get("audio", "quran_audio")
+        original_audio_stories = settings_handler.get("audio", "stories")
+        original_audio_broadcasts = settings_handler.get("audio", "broadcasts")
+        original_audio_adhan = settings_handler.get("audio", "adhan")
+        original_audio_athkar = settings_handler.get("audio", "athkar")
+        original_audio_random_athkar = settings_handler.get("audio", "random_athkar")
+
+        if (original_audio_global != self.audioSettings.global_combo.currentText() or
+            original_audio_quran_text != self.audioSettings.features["quran_text"].currentText() or
+            original_audio_quran_audio != self.audioSettings.features["quran_audio"].currentText() or
+            original_audio_stories != self.audioSettings.features["stories"].currentText() or
+            original_audio_broadcasts != self.audioSettings.features["broadcasts"].currentText() or
+            original_audio_adhan != self.audioSettings.features["adhan"].currentText() or
+            original_audio_athkar != self.audioSettings.features["athkar"].currentText() or
+            original_audio_random_athkar != self.audioSettings.features["random_athkar"].currentText()):
+            restart_required = 1
         
         # Save Audio Settings
         settings_handler.set("audio", "global", self.audioSettings.global_combo.currentText())
@@ -116,16 +136,6 @@ class settings(qt.QDialog):
         settings_handler.set("font", "bold", new_font_bold)
         settings_handler.set("font", "size", new_font_size)
         
-        # Save Audio Settings
-        settings_handler.set("audio", "global", self.audioSettings.global_combo.currentText())
-        settings_handler.set("audio", "quran_text", self.audioSettings.features["quran_text"].currentText())
-        settings_handler.set("audio", "quran_audio", self.audioSettings.features["quran_audio"].currentText())
-        settings_handler.set("audio", "stories", self.audioSettings.features["stories"].currentText())
-        settings_handler.set("audio", "broadcasts", self.audioSettings.features["broadcasts"].currentText())
-        settings_handler.set("audio", "adhan", self.audioSettings.features["adhan"].currentText())
-        settings_handler.set("audio", "athkar", self.audioSettings.features["athkar"].currentText())
-        settings_handler.set("audio", "random_athkar", self.audioSettings.features["random_athkar"].currentText())
-
         if original_font_bold != new_font_bold or original_font_size != new_font_size:
             restart_required = 1
         self.p.runAudioThkarTimer()
