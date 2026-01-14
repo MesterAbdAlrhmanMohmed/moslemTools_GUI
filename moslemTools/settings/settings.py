@@ -72,20 +72,20 @@ class settings(qt.QDialog):
         original_audio_global = settings_handler.get("audio", "global")
         original_audio_quran_text = settings_handler.get("audio", "quran_text")
         original_audio_quran_audio = settings_handler.get("audio", "quran_audio")
+        original_audio_researcher = settings_handler.get("audio", "researcher")
         original_audio_stories = settings_handler.get("audio", "stories")
         original_audio_broadcasts = settings_handler.get("audio", "broadcasts")
         original_audio_adhan = settings_handler.get("audio", "adhan")
         original_audio_athkar = settings_handler.get("audio", "athkar")
         original_audio_random_athkar = settings_handler.get("audio", "random_athkar")
-
         def get_audio_val(text):
             if text == "افتراضي": return "Default"
             if text == "مخصص": return "Custom"
             return text
-
         if (original_audio_global != get_audio_val(self.audioSettings.global_combo.currentText()) or
             original_audio_quran_text != get_audio_val(self.audioSettings.features["quran_text"].currentText()) or
             original_audio_quran_audio != get_audio_val(self.audioSettings.features["quran_audio"].currentText()) or
+            original_audio_researcher != get_audio_val(self.audioSettings.features["researcher"].currentText()) or
             original_audio_stories != get_audio_val(self.audioSettings.features["stories"].currentText()) or
             original_audio_broadcasts != get_audio_val(self.audioSettings.features["broadcasts"].currentText()) or
             original_audio_adhan != get_audio_val(self.audioSettings.features["adhan"].currentText()) or
@@ -95,6 +95,7 @@ class settings(qt.QDialog):
         settings_handler.set("audio", "global", get_audio_val(self.audioSettings.global_combo.currentText()))
         settings_handler.set("audio", "quran_text", get_audio_val(self.audioSettings.features["quran_text"].currentText()))
         settings_handler.set("audio", "quran_audio", get_audio_val(self.audioSettings.features["quran_audio"].currentText()))
+        settings_handler.set("audio", "researcher", get_audio_val(self.audioSettings.features["researcher"].currentText()))
         settings_handler.set("audio", "stories", get_audio_val(self.audioSettings.features["stories"].currentText()))
         settings_handler.set("audio", "broadcasts", get_audio_val(self.audioSettings.features["broadcasts"].currentText()))
         settings_handler.set("audio", "adhan", get_audio_val(self.audioSettings.features["adhan"].currentText()))

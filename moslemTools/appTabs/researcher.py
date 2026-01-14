@@ -178,6 +178,7 @@ class Albaheth(qt.QWidget):
         self.currentReciter = int(settings.settings_handler.get("g", "reciter"))
         self.media_player = QMediaPlayer(self)
         self.audio_output = QAudioOutput(self)
+        self.audio_output.setDevice(functions.audio_manager.get_audio_device("researcher"))
         self.media_player.setAudioOutput(self.audio_output)
         self.was_playing_before_action = False
         self.current_search_thread = None

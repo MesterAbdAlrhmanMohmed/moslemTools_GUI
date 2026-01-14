@@ -95,7 +95,8 @@ settingsConfig={
         "broadcasts": "Default",
         "adhan": "Default",
         "athkar": "Default",
-        "random_athkar": "Default"
+        "random_athkar": "Default",
+        "researcher": "Default"
     }
 }
 if not os.path.exists(cpath):
