@@ -107,7 +107,7 @@ class sibha(qt.QWidget):
         self.numbers.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.numbers.setAccessibleDescription("عدد التسبيحات. لنطق عدد التسبيحات في أي مكان نستخدم الاختصار control plus s")
         self.numbers.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.numbers.setStyleSheet("font-size:300px;")
+        self.numbers.setStyleSheet("font-size:200px;")
         self.reset = guiTools.QPushButton("إعادة تعين")
         self.reset.setAccessibleDescription("control plus r")
         self.reset.setShortcut("ctrl+r")

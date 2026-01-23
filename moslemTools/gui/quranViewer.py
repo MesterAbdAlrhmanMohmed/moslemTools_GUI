@@ -959,7 +959,12 @@ class QuranViewer(qt.QDialog):
         menu.setFocus()
         ayahOptions = qt.QMenu("خيارات الآية الحالية", self)
         ayahOptions.setFont(font)
-        if not self.is_search_view:
+        if self.is_search_view:
+            goToAyahAction = qt1.QAction("الذهاب الى موضع الآية والخروج من وضع البحث", self)
+            goToAyahAction.setShortcut("ctrl+g")
+            ayahOptions.addAction(goToAyahAction)
+            goToAyahAction.triggered.connect(self.goToAyahAndExitSearch)
+        else:
             goToAyah = qt1.QAction("الذهاب إلى آية", self)
             goToAyah.setShortcut("ctrl+g")
             ayahOptions.addAction(goToAyah)
@@ -999,7 +1004,7 @@ class QuranViewer(qt.QDialog):
             state, self.nameOfBookmark = functions.bookMarksManager.getQuranBookmarkName(self.type, self.category, self.saved_ayah_index, isPlayer=False)
             if state:
                 removeBookmarkAction = qt.QWidgetAction(self)
-                delete_button = qt.QPushButton("حذف العلامة المرجعية للآياة الحالية: CTRL+B")
+                delete_button = qt.QPushButton("حذف العلامة المرجعية للآية الحالية: CTRL+B")
                 delete_button.setDefault(True)
                 delete_button.setShortcut("ctrl+b")
                 delete_button.setStyleSheet("background-color: #8B0000; color: white;")
@@ -1007,7 +1012,7 @@ class QuranViewer(qt.QDialog):
                 removeBookmarkAction.setDefaultWidget(delete_button)
                 ayahOptions.addAction(removeBookmarkAction)
             else:
-                addNewBookMark = qt1.QAction("إضافة علامة مرجعية للآياة الحالية", self)
+                addNewBookMark = qt1.QAction("إضافة علامة مرجعية للآية الحالية", self)
                 addNewBookMark.setShortcut("ctrl+b")
                 ayahOptions.addAction(addNewBookMark)
                 addNewBookMark.triggered.connect(self.onAddBookMark)
@@ -1282,9 +1287,31 @@ class QuranViewer(qt.QDialog):
             pyperclip.copy(a)
             winsound.Beep(1000,100)
             guiTools.speak("تم نسخ الآية المحددة بنجاح")
+    def _go_to_specific_ayah(self, ayah_index):
+        cursor = self.text.textCursor()
+        cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
+        for _ in range(ayah_index):
+            cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
+        self.text.setTextCursor(cursor)
+        self.text.setFocus()
+    def goToAyahAndExitSearch(self):
+        if not self.is_search_view:
+            return
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
+        selected_verse_text = self.text.textCursor().block().text()
+        try:
+            original_lines = self.original_quran_text.split('\n')
+            target_ayah_index = original_lines.index(selected_verse_text)
+        except ValueError:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على الآية المحددة في النص الأصلي.")
+            return
+        self.clear_search_results()
+        qt2.QTimer.singleShot(100, lambda: self._go_to_specific_ayah(target_ayah_index))
     def goToAyah(self):
         if self.is_search_view:
-            self._handle_search_view_restriction()
+            self.goToAyahAndExitSearch()
             return
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1292,11 +1319,7 @@ class QuranViewer(qt.QDialog):
         self.pause_for_action()
         ayah,OK=guiTools.QInputDialog.getInt(self,"الذهاب إلى آية","أكتب رقم الآية ",self.getCurrentAyah()+1,1,len(self.quranText.split("\n")))
         if OK:
-            cerser=self.text.textCursor()
-            cerser.movePosition(cerser.MoveOperation.Start)
-            for i in range(ayah-1):
-                cerser.movePosition(cerser.MoveOperation.Down)
-            self.text.setTextCursor(cerser)
+            self._go_to_specific_ayah(ayah - 1)
         self.resume_after_action()
     def getCurrentAyah(self):
         if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):

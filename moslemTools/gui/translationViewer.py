@@ -60,94 +60,60 @@ class translationViewer(qt.QDialog):
         layout.addLayout(bottomLayout)
         self.getResult()
     def OnContextMenu(self):
-        cursor = self.text.textCursor()
-        self.saved_selection_start = cursor.selectionStart()
-        self.saved_selection_end = cursor.selectionEnd()
-        self.saved_cursor_position = self.text.textCursor().position()
-        self.saved_text = self.text.toPlainText()
-        self.text.setUpdatesEnabled(False)
-        self.text.clear()
-        self.context_menu_active = True
         menu = qt.QMenu("الخيارات", self)
         menu.setAccessibleName("الخيارات")
-        menu.setFocus()
         save = menu.addAction("حفظ كملف نصي")
         save.setShortcut("ctrl+s")
-        save.triggered.connect(lambda: QTimer.singleShot(501, self.save_text_astxt))
-        menu.setDefaultAction(save)
+        save.triggered.connect(self.save_text_astxt)
         printerAction = menu.addAction("طباعة")
         printerAction.setShortcut("ctrl+p")
-        printerAction.triggered.connect(lambda: QTimer.singleShot(501, self.print_text))
+        printerAction.triggered.connect(self.print_text)
         copy_all = menu.addAction("نسخ النص كاملا")
         copy_all.setShortcut("ctrl+a")
-        copy_all.triggered.connect(lambda: QTimer.singleShot(501, self.copy_text))
+        copy_all.triggered.connect(self.copy_text)
         copy_selected_text = menu.addAction("نسخ النص المحدد")
         copy_selected_text .setShortcut("ctrl+c")
-        copy_selected_text.triggered.connect(lambda: QTimer.singleShot(501, self.copy_line))
+        copy_selected_text.triggered.connect(self.copy_current_selection)
         fontMenu = qt.QMenu("حجم الخط", self)
         incressFontAction = qt1.QAction("تكبير الخط", self)
         incressFontAction.setShortcut("ctrl+=")
         fontMenu.addAction(incressFontAction)
-        fontMenu.setDefaultAction(incressFontAction)
-        incressFontAction.triggered.connect(lambda: QTimer.singleShot(501, self.increase_font_size))
+        incressFontAction.triggered.connect(self.increase_font_size)
         decreaseFontSizeAction = qt1.QAction("تصغير الخط", self)
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
-        decreaseFontSizeAction.triggered.connect(lambda: QTimer.singleShot(501, self.decrease_font_size))
+        decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
         menu.addMenu(fontMenu)
-        menu.aboutToHide.connect(self.restore_after_menu)
-        menu.exec(qt1.QCursor.pos())    
-    def restore_after_menu(self):
-        self.context_menu_active = False
-        lines = self.saved_text.split('\n')
-        self.text.setText('\n'.join(lines[:40]))
-        self.update_font_size()
-        self.text.setUpdatesEnabled(True)
-        if self.saved_cursor_position is not None:
-            cursor = self.text.textCursor()
-            cursor.setPosition(self.saved_cursor_position)
-            self.text.setTextCursor(cursor)
-        if len(lines) > 40:
-            QTimer.singleShot(500, self.restore_full_content)    
-    def restore_full_content(self):    
-        if not self.context_menu_active:
-            self.text.setText(self.saved_text)
-            self.update_font_size()
-            if self.saved_cursor_position is not None:
-                cursor = self.text.textCursor()
-                cursor.setPosition(self.saved_cursor_position)
-                self.text.setTextCursor(cursor)    
+        menu.exec(qt1.QCursor.pos())
+
     def on_change_translation(self):
-        self.saved_cursor_position = self.text.textCursor().position()
-        self.saved_text = self.text.toPlainText()
-        self.text.setUpdatesEnabled(False)
-        self.text.clear()
-        self.context_menu_active = True
         menu = qt.QMenu("اختر ترجمة", self)
         menu.setAccessibleName("اختر ترجمة")
-        translations = list(functions.translater.translations.keys())
-        current_translation = functions.translater.gettranslationByIndex(self.index)
-        translations.remove(current_translation)
-        currentAction = qt1.QAction(current_translation, self)
-        menu.addAction(currentAction)
-        currentAction.setCheckable(True)
-        currentAction.setChecked(True)
-        currentAction.triggered.connect(lambda: self.on_translation_changed(current_translation))
-        menu.setDefaultAction(currentAction)
-        for t in translations:
-            tAction = qt1.QAction(t, self)
-            tAction.triggered.connect(lambda checked, name=t: self.on_translation_changed(name))
-            menu.addAction(tAction)
-        menu.aboutToHide.connect(self.restore_after_menu)
+        action_group = qt1.QActionGroup(self)
+        action_group.setExclusive(True)
+
+        current_translation_name = functions.translater.gettranslationByIndex(self.index)                
+        all_translations = list(functions.translater.translations.keys())
+        if current_translation_name in all_translations:
+            all_translations.remove(current_translation_name)
+            all_translations.insert(0, current_translation_name)
+
+        for name in all_translations:
+            action = qt1.QAction(name, self)
+            action.setCheckable(True)
+            if name == current_translation_name:
+                action.setChecked(True)            
+            action.triggered.connect(lambda checked, n=name: self.on_translation_changed(n) if checked else None)
+            menu.addAction(action)
+            action_group.addAction(action)
+
         menu.exec(qt1.QCursor.pos())
+
     def on_translation_changed(self, name: str):
-        self.index = functions.translater.translations[name]        
-        self.saved_text = ""
-        self.saved_cursor_position = None
-        self.saved_selection_start = -1
-        self.saved_selection_end = -1
-        self.context_menu_active = False
-        self.getResult()
+        new_index = functions.translater.translations.get(name)
+        if new_index is not None and self.index != new_index:
+            self.index = new_index
+            self.getResult()
     def print_text(self):
         try:
             printer = QPrinter()
@@ -190,18 +156,6 @@ class translationViewer(qt.QDialog):
             self.show_font.blockSignals(True)
             self.show_font.setValue(self.font_size)
             self.show_font.blockSignals(False)
-    def copy_line(self):
-        try:
-            if self.saved_selection_start != -1 and self.saved_selection_end != -1 and self.saved_selection_start < self.saved_selection_end:
-                selected_text = self.saved_text[self.saved_selection_start:self.saved_selection_end]
-                pyperclip.copy(selected_text)
-                winsound.Beep(1000, 100)
-                guiTools.speak("تم نسخ النص المحدد بنجاح")
-            elif self.saved_text:
-                pyperclip.copy(self.saved_text)
-                winsound.Beep(1000, 100)
-        except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
         try:            
             pyperclip.copy(self.text.toPlainText())

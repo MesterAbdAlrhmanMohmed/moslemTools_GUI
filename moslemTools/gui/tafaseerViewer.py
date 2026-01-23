@@ -60,96 +60,61 @@ class TafaseerViewer(qt.QDialog):
         layout.addLayout(bottomLayout)
         self.getResult()
     def OnContextMenu(self):
-        cursor = self.text.textCursor()
-        self.saved_selection_start = cursor.selectionStart()
-        self.saved_selection_end = cursor.selectionEnd()
-        self.saved_cursor_position = self.text.textCursor().position()
-        self.saved_text = self.text.toPlainText()
-        self.text.setUpdatesEnabled(False)
-        self.text.clear()
-        self.context_menu_active = True
         menu = qt.QMenu("الخيارات", self)
         menu.setAccessibleName("الخيارات")
-        menu.setFocus()
         save = menu.addAction("حفظ كملف نصي")
         save.setShortcut("ctrl+s")
-        save.triggered.connect(lambda: QTimer.singleShot(501, self.save_text_as_txt))
-        menu.setDefaultAction(save)
+        save.triggered.connect(self.save_text_as_txt)
         printerAction = menu.addAction("طباعة")
         printerAction.setShortcut("ctrl+p")
-        printerAction.triggered.connect(lambda: QTimer.singleShot(501, self.print_text))
+        printerAction.triggered.connect(self.print_text)
         copy_all = menu.addAction("نسخ النص كاملا")
         copy_all.setShortcut("ctrl+a")
-        copy_all.triggered.connect(lambda: QTimer.singleShot(501, self.copy_text))
+        copy_all.triggered.connect(self.copy_text)
         copy_selected_text = menu.addAction("نسخ النص المحدد")
         copy_selected_text .setShortcut("ctrl+c")
-        copy_selected_text.triggered.connect(lambda: QTimer.singleShot(501, self.copy_line))
+        copy_selected_text.triggered.connect(self.copy_current_selection)
         fontMenu = qt.QMenu("حجم الخط", self)
         incressFontAction = qt1.QAction("تكبير الخط", self)
         incressFontAction.setShortcut("ctrl+=")
         fontMenu.addAction(incressFontAction)
-        fontMenu.setDefaultAction(incressFontAction)
-        incressFontAction.triggered.connect(lambda: QTimer.singleShot(501, self.increase_font_size))
+        incressFontAction.triggered.connect(self.increase_font_size)
         decreaseFontSizeAction = qt1.QAction("تصغير الخط", self)
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
-        decreaseFontSizeAction.triggered.connect(lambda: QTimer.singleShot(501, self.decrease_font_size))
-        menu.addMenu(fontMenu)        
-        menu.setFocus()
-        menu.aboutToHide.connect(self.restore_after_menu)
-        menu.exec(qt1.QCursor.pos())    
-    def restore_after_menu(self):
-        self.context_menu_active = False
-        lines = self.saved_text.split('\n')
-        self.text.setText('\n'.join(lines[:40]))
-        self.update_font_size()
-        self.text.setUpdatesEnabled(True)
-        if self.saved_cursor_position is not None:
-            cursor = self.text.textCursor()
-            cursor.setPosition(self.saved_cursor_position)
-            self.text.setTextCursor(cursor)
-        if len(lines) > 40:
-            QTimer.singleShot(500, self.restore_full_content)    
-    def restore_full_content(self):    
-        if not self.context_menu_active:
-            self.text.setText(self.saved_text)
-            self.update_font_size()
-            if self.saved_cursor_position is not None:
-                cursor = self.text.textCursor()
-                cursor.setPosition(self.saved_cursor_position)
-                self.text.setTextCursor(cursor)    
+        decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
+        menu.addMenu(fontMenu)
+        menu.exec(qt1.QCursor.pos())
+
     def on_change_tafaseer(self):
-        self.saved_cursor_position = self.text.textCursor().position()
-        self.saved_text = self.text.toPlainText()
-        self.text.setUpdatesEnabled(False)
-        self.text.clear()
-        self.context_menu_active = True
         menu = qt.QMenu("اختر تفسير", self)
         menu.setAccessibleName("اختر تفسير")
-        tafaseer = list(functions.tafseer.tafaseers.keys())
-        tafaseer.remove(functions.tafseer.getTafaseerByIndex(self.index))
-        selectedTafaseer = qt1.QAction(functions.tafseer.getTafaseerByIndex(self.index), self)
-        menu.addAction(selectedTafaseer)
-        menu.setDefaultAction(selectedTafaseer)
-        selectedTafaseer.setCheckable(True)
-        selectedTafaseer.setChecked(True)
-        selectedTafaseer.triggered.connect(lambda: self.onTafaseerChanged(functions.tafseer.getTafaseerByIndex(self.index)))
-        for t in tafaseer:
-            tAction = qt1.QAction(t, self)
-            tAction.triggered.connect(lambda _, t=t: self.onTafaseerChanged(t))
-            menu.addAction(tAction)
-        menu.setAccessibleName("اختر تفسير")
-        menu.setFocus()
-        menu.aboutToHide.connect(self.restore_after_menu)
+        action_group = qt1.QActionGroup(self)
+        action_group.setExclusive(True)
+
+        current_tafaseer_name = functions.tafseer.getTafaseerByIndex(self.index)                
+        all_tafseers = list(functions.tafseer.tafaseers.keys())
+        if current_tafaseer_name in all_tafseers:
+            all_tafseers.remove(current_tafaseer_name)
+            all_tafseers.insert(0, current_tafaseer_name)
+
+        for name in all_tafseers:
+            action = qt1.QAction(name, self)
+            action.setCheckable(True)
+            if name == current_tafaseer_name:
+                action.setChecked(True)            
+            action.triggered.connect(lambda checked, n=name: self.onTafaseerChanged(n) if checked else None)
+            menu.addAction(action)
+            action_group.addAction(action)
+
         menu.exec(qt1.QCursor.pos())
+
     def onTafaseerChanged(self, name: str):
-        self.index = functions.tafseer.tafaseers[self.sender().text()]        
-        self.saved_text = ""
-        self.saved_cursor_position = None
-        self.saved_selection_start = -1
-        self.saved_selection_end = -1
-        self.context_menu_active = False
-        self.getResult()
+        new_index = functions.tafseer.tafaseers.get(name)
+        if new_index is not None and self.index != new_index:
+            self.index = new_index
+            self.getResult()
+
     def print_text(self):
         try:
             printer = QPrinter()
@@ -193,15 +158,6 @@ class TafaseerViewer(qt.QDialog):
             self.show_font.blockSignals(True)
             self.show_font.setValue(self.font_size)
             self.show_font.blockSignals(False)
-    def copy_line(self):
-        try:
-            if self.saved_selection_start != -1 and self.saved_selection_end != -1 and self.saved_selection_start < self.saved_selection_end:
-                selected_text = self.saved_text[self.saved_selection_start:self.saved_selection_end]
-                pyperclip.copy(selected_text)
-                winsound.Beep(1000, 100)
-                guiTools.speak("تم نسخ النص المحدد بنجاح")        
-        except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def copy_text(self):
         try:
             pyperclip.copy(self.text.toPlainText())

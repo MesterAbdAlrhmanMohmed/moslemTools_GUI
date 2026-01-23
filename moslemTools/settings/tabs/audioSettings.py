@@ -26,22 +26,22 @@ class AudioSettings(qt.QWidget):
             if not is_global:
                 self.feature_widgets.append(container)
             return combo        
-        self.global_combo = create_row("تحديد كارت الصوت لكل البرنامج", "global", is_global=True)
+        self.global_combo = create_row("تحديد كرت الصوت لكل البرنامج", "global", is_global=True)
         self.global_combo.currentIndexChanged.connect(self.on_global_change)        
         feature_map = [
-            ("تحديد كارت الصوت لتشغيل الآيات في تبويبة القرآن الكريم مكتوب", "quran_text"),
-            ("تحديد كارت الصوت لتشغيل السور في تبويبة القرآن الكريم صوتي", "quran_audio"),
-            ("تحديد كارت الصوت لتشغيل الآيات في الباحث", "researcher"),
-            ("تحديد كارت الصوت لتشغيل القصص", "stories"),
-            ("تحديد كارت الصوت لتشغيل الإذاعات الإسلامية", "broadcasts"),
-            ("تحديد كارت الصوت لتشغيل الأذان وما يتعلق به", "adhan"),
-            ("تحديد كارت الصوت لتشغيل الأذكار والأدعية", "athkar"),
-            ("تحديد كارت الصوت لتشغيل الأذكار العشوائية والبسملة", "random_athkar"),
+            ("تحديد كرت الصوت لتشغيل الآيات في تبويبة القرآن الكريم مكتوب", "quran_text"),
+            ("تحديد كرت الصوت لتشغيل السور في تبويبة القرآن الكريم صوتي", "quran_audio"),
+            ("تحديد كرت الصوت لتشغيل الآيات في الباحث", "researcher"),
+            ("تحديد كرت الصوت لتشغيل القصص", "stories"),
+            ("تحديد كرت الصوت لتشغيل الإذاعات الإسلامية", "broadcasts"),
+            ("تحديد كرت الصوت لتشغيل الأذان وما يتعلق به", "adhan"),
+            ("تحديد كرت الصوت لتشغيل الأذكار والأدعية", "athkar"),
+            ("تحديد كرت الصوت لتشغيل الأذكار العشوائية والبسملة", "random_athkar"),
         ]
         for label, key in feature_map:
             combo = create_row(label, key)
             self.features[key] = combo                    
-        self.note_label = qt.QLabel("لتغيير كارت الصوت لباقي العناصر، يرجى اختيار 'مخصص' من قائمة 'تحديد كارت الصوت لكل البرنامج'")
+        self.note_label = qt.QLabel("لتغيير كرت الصوت لباقي العناصر، يرجى اختيار 'مخصص' من قائمة 'تحديد كرت الصوت لكل البرنامج'")
         self.note_label.setStyleSheet("color: gray; font-style: italic;")
         self.note_label.setVisible(False)
         self.layout.addWidget(self.note_label)        
