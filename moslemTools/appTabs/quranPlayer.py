@@ -174,14 +174,14 @@ class QuranPlayer(qt.QWidget):
         self.User_guide.setFixedSize(150, 40)
         self.User_guide.setShortcut("ctrl+f1")
         self.User_guide.setAccessibleDescription("control plus f1")
-        self.User_guide.clicked.connect(lambda:TextViewer(self,"دليل الاختصارات","ctrl+s: إيقاف\nspace: التشغيل والإيقاف المؤقت\nalt زائد السهم الأيمن: التقديم السريع لمدة 5 ثواني\nalt زائد السهم الأيسر: الترجيع السريع لمدة 5 ثواني\nalt زائد السهم الأعلى: التقديم السريع لمدة 10 ثواني\nalt زائد السهم الأسفل: الترجيع السريع لمدة 10 ثواني\nctrl زائد السهم الأيمن: التقديم السريع لمدة 30 ثانية\nctrl زائد السهم الأيسر: الترجيع السريع لمدة 30 ثانية\nctrl زائد السهم الأعلى: التقديم السريع لمدة دقيقة\nctrl زائد السهم الأسفل: الترجيع  السريع لمدة دقيقة\nctrl زائد رقم: الانتقال الى موضع محدد من المقطع, مثلا ctrl+10 الانتقال الى 10% من المقطع\nshift زائد السهم الأعلى: رفع الصوت\nshift زائد السهم الأسفل: خفض الصوت\nالضغط على زر التطبيقات أو click الأيمن على شريط مدة المقطع يسمح بإضافة علامة مرجعية للموضع الحالي").exec())
-        self.play_all_to_end = guiTools.QPushButton("تشغيل كل السور من السورة المحددة الى النهاية")
+        self.User_guide.clicked.connect(lambda:TextViewer(self,"دليل الاختصارات","ctrl+s: إيقاف\nspace: التشغيل والإيقاف المؤقت\nalt زائد السهم الأيمن: التقديم السريع لمدة 5 ثواني\nalt زائد السهم الأيسر: الترجيع السريع لمدة 5 ثواني\nalt زائد السهم الأعلى: التقديم السريع لمدة 10 ثواني\nalt زائد السهم الأسفل: الترجيع السريع لمدة 10 ثواني\nctrl زائد السهم الأيمن: التقديم السريع لمدة 30 ثانية\nctrl زائد السهم الأيسر: الترجيع السريع لمدة 30 ثانية\nctrl زائد السهم الأعلى: التقديم السريع لمدة دقيقة\nctrl زائد السهم الأسفل: الترجيع  السريع لمدة دقيقة\nctrl زائد رقم: الانتقال إلى موضع محدد من المقطع, مثلا ctrl+10 الانتقال إلى 10% من المقطع\nshift زائد السهم الأعلى: رفع الصوت\nshift زائد السهم الأسفل: خفض الصوت\nالضغط على زر التطبيقات أو click الأيمن على شريط مدة المقطع يسمح بإضافة علامة مرجعية للموضع الحالي").exec())
+        self.play_all_to_end = guiTools.QPushButton("تشغيل كل السور من السورة المحددة إلى النهاية")
         self.play_all_to_end.setAccessibleDescription("control plus A")
         self.play_all_to_end.setCheckable(True)
         self.play_all_to_end.setShortcut("ctrl+a")
         self.play_all_to_end.toggled.connect(lambda checked: self.update_button_style(self.play_all_to_end, checked))
         self.play_all_to_end.toggled.connect(self.handle_play_all_toggled)
-        self.play_all_to_start = guiTools.QPushButton("تشغيل كل السور من السورة المحددة الى البداية")
+        self.play_all_to_start = guiTools.QPushButton("تشغيل كل السور من السورة المحددة إلى البداية")
         self.play_all_to_start.setAccessibleDescription("control plus shift plus A")
         self.play_all_to_start.setCheckable(True)
         self.play_all_to_start.setShortcut("ctrl+shift+a")
@@ -231,10 +231,10 @@ class QuranPlayer(qt.QWidget):
         self.batch_download_action_button = guiTools.QPushButton("بدء تحميل السور المحددة")
         self.batch_download_action_button.clicked.connect(self.handle_batch_download_action)
         self.batch_download_action_button.setVisible(False)
-        self.merge_all_from_start_button = guiTools.QPushButton("دمج كل السور من البداية الى النهاية")
+        self.merge_all_from_start_button = guiTools.QPushButton("دمج كل السور من البداية إلى النهاية")
         self.merge_all_from_start_button.clicked.connect(self.prepare_merge_all_from_start)
         self.merge_all_from_start_button.setVisible(True)
-        self.merge_all_from_end_button = guiTools.QPushButton("دمج كل السور من النهاية الى البداية")
+        self.merge_all_from_end_button = guiTools.QPushButton("دمج كل السور من النهاية إلى البداية")
         self.merge_all_from_end_button.clicked.connect(self.prepare_merge_all_from_end)
         self.merge_all_from_end_button.setVisible(True)
         recitersLayout = qt.QVBoxLayout()
@@ -868,6 +868,14 @@ class QuranPlayer(qt.QWidget):
             button.setStyleSheet("")
     def handle_play_all_toggled(self, checked):
         if checked:
+            self.play_all_to_start.blockSignals(True)
+            self.play_all_to_start.setChecked(False)
+            self.play_all_to_start.blockSignals(False)
+            self.update_button_style(self.play_all_to_start, False)
+            self.repeat_surah_button.blockSignals(True)
+            self.repeat_surah_button.setChecked(False)
+            self.repeat_surah_button.blockSignals(False)
+            self.update_button_style(self.repeat_surah_button, False)
             self.play_all_to_start.setEnabled(False)
             self.repeat_surah_button.setEnabled(False)
             if self.surahListWidget.currentRow() == -1 and self.surahListWidget.count() > 0:
@@ -879,6 +887,14 @@ class QuranPlayer(qt.QWidget):
             self.repeat_surah_button.setEnabled(True)
     def handle_play_all_start_toggled(self, checked):
         if checked:
+            self.play_all_to_end.blockSignals(True)
+            self.play_all_to_end.setChecked(False)
+            self.play_all_to_end.blockSignals(False)
+            self.update_button_style(self.play_all_to_end, False)
+            self.repeat_surah_button.blockSignals(True)
+            self.repeat_surah_button.setChecked(False)
+            self.repeat_surah_button.blockSignals(False)
+            self.update_button_style(self.repeat_surah_button, False)
             self.play_all_to_end.setEnabled(False)
             self.repeat_surah_button.setEnabled(False)
             if self.surahListWidget.currentRow() == -1 and self.surahListWidget.count() > 0:
@@ -891,8 +907,19 @@ class QuranPlayer(qt.QWidget):
     def handle_repeat_toggled(self, checked):
         if checked:
             if not self.check_media_loaded():
+                self.repeat_surah_button.blockSignals(True)
                 self.repeat_surah_button.setChecked(False)
+                self.repeat_surah_button.blockSignals(False)
+                self.update_button_style(self.repeat_surah_button, False)
                 return
+            self.play_all_to_end.blockSignals(True)
+            self.play_all_to_end.setChecked(False)
+            self.play_all_to_end.blockSignals(False)
+            self.update_button_style(self.play_all_to_end, False)
+            self.play_all_to_start.blockSignals(True)
+            self.play_all_to_start.setChecked(False)
+            self.play_all_to_start.blockSignals(False)
+            self.update_button_style(self.play_all_to_start, False)
             self.play_all_to_end.setEnabled(False)
             self.play_all_to_start.setEnabled(False)
         else:
@@ -1043,7 +1070,7 @@ class QuranPlayer(qt.QWidget):
                 app_folder = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter)
                 os.makedirs(app_folder, exist_ok=True)
                 self.save_folder = app_folder
-                self.set_ui_for_batch_download(False) # lock
+                self.set_ui_for_batch_download(False)
                 self.cancel_download_button.setVisible(True)
                 self.current_download_reciter = reciter
                 self.info_menu.setEnabled(False)
@@ -1053,7 +1080,7 @@ class QuranPlayer(qt.QWidget):
                 return
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء بدء التحميل: " + str(e))
-            self.set_ui_for_batch_download(True) # unlock
+            self.set_ui_for_batch_download(True)
             self.cancel_download_button.setVisible(False)
     def is_audio_downloaded(self, filepath):
         return os.path.exists(filepath)
@@ -1127,7 +1154,7 @@ class QuranPlayer(qt.QWidget):
         response = guiTools.QQuestionMessageBox.view(self, "تأكيد التحميل", "هل أنت متأكد من تحميل جميع السور؟", "نعم", "لا")
         if response == 0:
             self.save_folder = save_folder
-            self.set_ui_enabled(False) # LOCK UI
+            self.set_ui_enabled(False)
             self.progressBar.setVisible(True)
             self.cancel_download_button.setVisible(True)
             self.download_next_sora()
@@ -1148,7 +1175,7 @@ class QuranPlayer(qt.QWidget):
         else:
             self.progressBar.setVisible(False)
             self.cancel_download_button.setVisible(False)
-            self.set_ui_enabled(True) # UNLOCK UI
+            self.set_ui_enabled(True)
             guiTools.qMessageBox.MessageBox.view(self, "تم التحميل", "تم تحميل جميع السور.")
     def update_progress(self, progress_percent):
         self.progressBar.setValue(progress_percent)
@@ -1159,7 +1186,7 @@ class QuranPlayer(qt.QWidget):
         self.progressBar.setValue(100)
         self.progressBar.setVisible(False)
         self.cancel_download_button.setVisible(False)
-        self.set_ui_enabled(True) # UNLOCK UI
+        self.set_ui_enabled(True)
         guiTools.qMessageBox.MessageBox.view(self, "تم", "تم تحميل السورة")
         if hasattr(self, 'current_download_filename'):
             del self.current_download_filename
@@ -1180,7 +1207,7 @@ class QuranPlayer(qt.QWidget):
     def on_download_cancelled(self):
         self.progressBar.setVisible(False)
         self.cancel_download_button.setVisible(False)
-        self.set_ui_enabled(True) # UNLOCK UI
+        self.set_ui_enabled(True)
         if hasattr(self, 'current_download_filename') and hasattr(self, 'current_download_reciter'):
             self.mark_for_deletion(self.current_download_filename, self.current_download_reciter, app_internal=True)
             del self.current_download_filename
@@ -1228,7 +1255,7 @@ class QuranPlayer(qt.QWidget):
     def on_download_cancelled_batch_external(self):
         self.progressBar.setVisible(False)
         self.cancel_download_button.setVisible(False)
-        self.set_ui_enabled(True) # UNLOCK UI
+        self.set_ui_enabled(True)
         if hasattr(self, 'current_download_filename'):
             filepath = os.path.join(self.save_folder, f"{self.current_download_filename}.mp3")
             try:
@@ -1306,7 +1333,8 @@ class QuranPlayer(qt.QWidget):
                     url = self.reciters_data[reciter][selected_item.text()]
                     self.mp.setSource(qt2.QUrl(url))
                     self.mp.play()
-                self.repeat_surah_button.setEnabled(True)
+                is_manual_playback = not self.play_all_to_end.isChecked() and not self.play_all_to_start.isChecked()
+                self.repeat_surah_button.setEnabled(is_manual_playback)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء تشغيل المقطع:" + str(e))
     def download_selected_audio(self):
@@ -1338,7 +1366,7 @@ class QuranPlayer(qt.QWidget):
     def on_download_cancelled_external_single(self):
         self.progressBar.setVisible(False)
         self.cancel_download_button.setVisible(False)
-        self.set_ui_enabled(True) # UNLOCK UI
+        self.set_ui_enabled(True)
         if hasattr(self, 'current_download_filename') and hasattr(self, 'save_folder'):
             filepath = os.path.join(self.save_folder, f"{self.current_download_filename}.mp3")
             try:
@@ -1458,6 +1486,7 @@ class QuranPlayer(qt.QWidget):
                             batch_download_device_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
                             if current_index != self.first_download_selection_index:
                                 download_range_action = qt1.QAction("التحميل من البداية المحددة إلى هنا", self)
+                                download_range_action.triggered.connect(lambda: self.download_from_start_to_here('device'))
                                 download_range_action.triggered.connect(lambda: self.download_from_start_to_here('device'))
                                 batch_download_device_menu.addAction(download_range_action)
                             cancel_start_dl_action = qt1.QAction("إلغاء تحديد بداية التحميل", self)

@@ -39,7 +39,7 @@ class QuranPlayerSettings(qt.QWidget):
         duration_layout.addWidget(self.duration_laybol)                
         duration_layout.addStretch()
         main_layout.addLayout(duration_layout)        
-        self.replay = qt.QCheckBox("إعادة التشغيل بعد الانتهاء: في حالة اختيار التشغيل الى النهاية، أو من آية الى آية")        
+        self.replay = qt.QCheckBox("إعادة التشغيل بعد الانتهاء: في حالة اختيار التشغيل إلى النهاية، أو من آية إلى آية")        
         self.replay.setChecked(p.cbts(settings_handler.get("quranPlayer", "replay")))
         main_layout.addWidget(self.replay)                
         main_layout.addStretch()

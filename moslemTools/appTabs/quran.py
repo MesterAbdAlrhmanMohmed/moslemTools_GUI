@@ -499,7 +499,7 @@ class Quran(qt.QWidget):
         result = functions.iarab.getIarab(AyahNumber1, AyahNumber2)
         guiTools.TextViewer(self, "إعراب", result).exec()
     def onCostumBTNClicked(self):
-        categories=["من سورة الى سورة", "من صفحة الى صفحة", "من جزء الى جزء", "من ربع الى ربع", "من حزب الى حزب"]
+        categories=["من سورة إلى سورة", "من صفحة إلى صفحة", "من جزء إلى جزء", "من ربع إلى ربع", "من حزب إلى حزب"]
         menu=qt.QMenu("اختر فئة",self)
         font=qt1.QFont()
         font.setBold(True)
@@ -513,7 +513,7 @@ class Quran(qt.QWidget):
         menu.exec(qt1.QCursor.pos())
         menu.setFont(font)
     def onCostumBTNRequested(self):
-        categories=["من سورة الى سورة", "من صفحة الى صفحة", "من جزء الى جزء", "من ربع الى ربع", "من حزب الى حزب"]
+        categories=["من سورة إلى سورة", "من صفحة إلى صفحة", "من جزء إلى جزء", "من ربع إلى ربع", "من حزب إلى حزب"]
         index=categories.index(self.sender().text())
         guiTools.FromToSurahWidget(self,index).exec()
     def _get_current_reciter_name(self):

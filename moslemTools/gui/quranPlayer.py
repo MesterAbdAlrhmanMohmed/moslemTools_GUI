@@ -459,7 +459,7 @@ class QuranPlayer(qt.QDialog):
         menu=qt.QMenu("الخيارات",self)
         menu.setAccessibleName("الخيارات")
         aya=qt.QMenu("خيارات الآية",self)
-        GoToAya=qt1.QAction("الذهاب الى آية",self)
+        GoToAya=qt1.QAction("الذهاب إلى آية",self)
         GoToAya.setShortcut("ctrl+g")
         aya.addAction(GoToAya)
         aya.setDefaultAction(GoToAya)

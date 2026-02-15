@@ -344,7 +344,7 @@ class QuranViewer(qt.QDialog):
         self.search_mode_button.setAccessibleDescription("control plus q")
         self.search_mode_button.setAutoDefault(False)
         self.search_mode_button.setShortcut("ctrl+q")
-        self.clear_results_button = guiTools.QPushButton("حذف المحتوى والعودة الى العرض الأصلي")
+        self.clear_results_button = guiTools.QPushButton("حذف المحتوى والعودة إلى العرض الأصلي")
         self.clear_results_button.setObjectName("clearResultsButton")
         self.clear_results_button.setStyleSheet("background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; min-height: 30px;")
         self.clear_results_button.clicked.connect(self.clear_search_results)
@@ -960,7 +960,7 @@ class QuranViewer(qt.QDialog):
         ayahOptions = qt.QMenu("خيارات الآية الحالية", self)
         ayahOptions.setFont(font)
         if self.is_search_view:
-            goToAyahAction = qt1.QAction("الذهاب الى موضع الآية والخروج من وضع البحث", self)
+            goToAyahAction = qt1.QAction("الذهاب إلى موضع الآية والخروج من وضع البحث", self)
             goToAyahAction.setShortcut("ctrl+g")
             ayahOptions.addAction(goToAyahAction)
             goToAyahAction.triggered.connect(self.goToAyahAndExitSearch)
@@ -1036,39 +1036,87 @@ class QuranViewer(qt.QDialog):
                 note_action.triggered.connect(lambda: self.onAddNote(ayah_position))
                 ayahOptions.addAction(note_action)
         menu.addMenu(ayahOptions)
-        surahOption = qt.QMenu("خيارات الفئة", self)
+        category_menu_title = ""
+        go_to_action_text = ""
+        copy_action_text = ""
+        save_action_text = ""
+        print_action_text = ""
+        info_action_text = ""
+        play_to_end_text = ""
+        tafseer_action_text = ""
+        iarab_action_text = ""
+        translation_action_text = ""
+        tashkeel_action_text = ""
+        if self.is_search_view:
+            category_menu_title = "خيارات نتائج البحث"
+            copy_action_text = "نسخ نتائج البحث"
+            save_action_text = "حفظ النتائج كملف نصي"
+            print_action_text = "طباعة النتائج"
+            play_to_end_text = "التشغيل من الآية المحددة إلى نهاية نتائج البحث"
+        elif self.type == 5:
+            category_menu_title = "خيارات العرض المخصص"
+            copy_action_text = "نسخ الآيات"
+            save_action_text = "حفظ الآيات كملف نصي"
+            print_action_text = "طباعة الآيات"
+            play_to_end_text = "التشغيل من الآية المحددة إلى النهاية"
+        else:
+            if self.type == 0:
+                category_name = "السورة"
+            elif self.type == 1:
+                category_name = "الصفحة"
+            elif self.type == 2:
+                category_name = "الجزء"
+            elif self.type == 3:
+                category_name = "الربع"
+            elif self.type == 4:
+                category_name = "الحزب"
+            go_to_action_text = f"الذهاب إلى {category_name}"
+            category_menu_title = f"خيارات {category_name}"
+            copy_action_text = f"نسخ {category_name}"
+            save_action_text = f"حفظ {category_name} كملف نصي"
+            print_action_text = f"طباعة {category_name}"
+            info_action_text = f"معلومات {category_name}"
+            play_to_end_text = f"التشغيل من الآية المحددة إلى نهاية {category_name}"
+            tafseer_action_text = f"تفسير {category_name}"
+            iarab_action_text = f"إعراب {category_name}"
+            translation_action_text = f"ترجمة {category_name}"
+            if self.remove_tashkeel:
+                tashkeel_action_text = f"إظهار التشكيل ل{category_name}"
+            else:
+                tashkeel_action_text = f"إزالة التشكيل من {category_name}"
+        surahOption = qt.QMenu(category_menu_title, self)
         surahOption.setFont(font)
-        copySurahAction = qt1.QAction("نسخ الفئة", self)
+        copySurahAction = qt1.QAction(copy_action_text, self)
         copySurahAction.setShortcut("ctrl+a")
         surahOption.addAction(copySurahAction)
         copySurahAction.triggered.connect(self.copy_text)
-        saveSurahAction = qt1.QAction("حفظ الفئة كملف نصي", self)
+        saveSurahAction = qt1.QAction(save_action_text, self)
         saveSurahAction.setShortcut("ctrl+s")
         surahOption.addAction(saveSurahAction)
         saveSurahAction.triggered.connect(self.save_text_as_txt)
-        printSurah = qt1.QAction("طباعة الفئة", self)
+        printSurah = qt1.QAction(print_action_text, self)
         printSurah.setShortcut("ctrl+p")
         surahOption.addAction(printSurah)
         printSurah.triggered.connect(self.print_text)
-        SurahInfoAction = qt1.QAction("معلومات السورة", self)
-        SurahInfoAction.setShortcut("ctrl+shift+f")
-        surahOption.addAction(SurahInfoAction)
-        SurahInfoAction.triggered.connect(self.onSurahInfo)
-        playToEndActionText = "التشغيل إلى نهاية نتائج البحث" if self.is_search_view else "التشغيل إلى نهاية الفئة"
-        playSurahToEnd = qt1.QAction(playToEndActionText, self)
+        if info_action_text:
+            SurahInfoAction = qt1.QAction(info_action_text, self)
+            SurahInfoAction.setShortcut("ctrl+shift+f")
+            surahOption.addAction(SurahInfoAction)
+            SurahInfoAction.triggered.connect(self.onSurahInfo)
+        playSurahToEnd = qt1.QAction(play_to_end_text, self)
         playSurahToEnd.setShortcut("ctrl+shift+p")
         surahOption.addAction(playSurahToEnd)
         playSurahToEnd.triggered.connect(self.onPlayToEnd)
-        if not self.is_search_view:
-            tafaseerSurahAction = qt1.QAction("تفسير الفئة", self)
+        if not self.is_search_view and self.type != 5:
+            tafaseerSurahAction = qt1.QAction(tafseer_action_text, self)
             tafaseerSurahAction.setShortcut("ctrl+shift+t")
             surahOption.addAction(tafaseerSurahAction)
             tafaseerSurahAction.triggered.connect(self.getTafaseerForSurah)
-            IArabSurah = qt1.QAction("إعراب الفئة", self)
+            IArabSurah = qt1.QAction(iarab_action_text, self)
             IArabSurah.setShortcut("ctrl+shift+i")
             surahOption.addAction(IArabSurah)
             IArabSurah.triggered.connect(self.getIArabForSurah)
-            translationSurahAction = qt1.QAction("ترجمة  الفئة", self)
+            translationSurahAction = qt1.QAction(translation_action_text, self)
             translationSurahAction.setShortcut("ctrl+shift+l")
             surahOption.addAction(translationSurahAction)
             translationSurahAction.triggered.connect(self.getTranslationForSurah)
@@ -1096,16 +1144,13 @@ class QuranViewer(qt.QDialog):
             mergeAyahsAction.setShortcut("ctrl+alt+d")
             surahOption.addAction(mergeAyahsAction)
             mergeAyahsAction.triggered.connect(self.mergeAyahs)
-            if self.remove_tashkeel:
-                category_tashkeel_text = "إظهار التشكيل للفئة"
-            else:
-                category_tashkeel_text = "إزالة التشكيل من الفئة"
-            removeTashkeelCategoryAction = qt1.QAction(category_tashkeel_text, self)
-            removeTashkeelCategoryAction.setShortcut("ctrl+shift+x")
-            surahOption.addAction(removeTashkeelCategoryAction)
-            removeTashkeelCategoryAction.triggered.connect(self.toggleTashkeelView)
-            if self.enableNextPreviouseButtons:
-                goToCategoryAction = qt1.QAction("الذهاب إلى محتوى فئة", self)
+            if tashkeel_action_text:
+                removeTashkeelCategoryAction = qt1.QAction(tashkeel_action_text, self)
+                removeTashkeelCategoryAction.setShortcut("ctrl+shift+x")
+                surahOption.addAction(removeTashkeelCategoryAction)
+                removeTashkeelCategoryAction.triggered.connect(self.toggleTashkeelView)
+            if self.enableNextPreviouseButtons and go_to_action_text:
+                goToCategoryAction = qt1.QAction(go_to_action_text, self)
                 goToCategoryAction.setShortcut("ctrl+shift+g")
                 goToCategoryAction.triggered.connect(self.goToCategory)
                 surahOption.addAction(goToCategoryAction)
@@ -1120,9 +1165,6 @@ class QuranViewer(qt.QDialog):
         decreaseFontSizeAction.setShortcut("ctrl+-")
         fontMenu.addAction(decreaseFontSizeAction)
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
-        set_font_size=qt1.QAction("تعيين حجم مخصص للنص", self)
-        set_font_size.triggered.connect(self.set_font_size_dialog)
-        fontMenu.addAction(set_font_size)
         menu.addMenu(fontMenu)
         menu.aboutToHide.connect(lambda: self.__setattr__('context_menu_active', False))
         menu.aboutToHide.connect(self.resume_after_action)
@@ -1724,7 +1766,22 @@ class QuranViewer(qt.QDialog):
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        category,OK=GoToCategoryDialog.getItem(self,"الذهاب إلى محتوى فئة","اختر عنصر",list(self.typeResult.keys()), self.CurrentIndex)
+        dialog_title = ""
+        dialog_label = ""
+        category_name = ""
+        if self.type == 0:
+            category_name = "سورة"
+        elif self.type == 1:
+            category_name = "صفحة"
+        elif self.type == 2:
+            category_name = "جزء"
+        elif self.type == 3:
+            category_name = "ربع"
+        elif self.type == 4:
+            category_name = "حزب"
+        dialog_title = f"الذهاب إلى {category_name}"
+        dialog_label = f"اختر {category_name}"
+        category,OK=GoToCategoryDialog.getItem(self,dialog_title,dialog_label,list(self.typeResult.keys()), self.CurrentIndex)
         if OK:
             self.CurrentIndex=list(self.typeResult.keys()).index(category)
             indexs=list(self.typeResult.keys())[self.CurrentIndex]
@@ -1864,14 +1921,6 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
         self.resume_after_action()
-    def set_font_size_dialog(self):
-        try:
-            size, ok = guiTools.QInputDialog.getInt(self, "تغيير حجم الخط", "أدخل حجم الخط (من 1 الى 100):", value=self.font_size, min=1, max=100)
-            if ok:
-                self.show_font.setValue(size)
-                guiTools.speak(f"تم تغيير حجم الخط إلى {size}")
-        except Exception as error:
-            guiTools.qMessageBox.MessageBox.error(self, "حدث خطأ", str(error))
     def copy_current_selection(self):
         try:
             cursor = self.text.textCursor()

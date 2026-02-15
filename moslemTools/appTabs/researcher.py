@@ -567,11 +567,16 @@ class Albaheth(qt.QWidget):
             self.ahadeeth.show()
             self.surahs_laybol.hide()
             self.surahs.hide()
+            self.specific_scope_label.hide()
+            self.specific_scope_combo.hide()
         else:
             self.ahadeeth_laibol.hide()
             self.ahadeeth.hide()
             self.surahs_laybol.show()
             self.surahs.show()
+            if self.surahs.currentIndex() != 0:
+                self.specific_scope_label.show()
+                self.specific_scope_combo.show()
     def OnContextMenu(self):
         self.pause_for_action()
         cursor = self.results.textCursor()
@@ -592,7 +597,7 @@ class Albaheth(qt.QWidget):
             change_reciter_action.setShortcut("Ctrl+Shift+R")
             change_reciter_action.triggered.connect(self.on_change_reciter_requested)
             ayah_menu.addAction(change_reciter_action)
-            goto_surah_action = qt1.QAction("الذهاب الى السورة التي تحتوي على هذه الآية", self)
+            goto_surah_action = qt1.QAction("الذهاب إلى السورة التي تحتوي على هذه الآية", self)
             goto_surah_action.setShortcut("Ctrl+G")
             goto_surah_action.triggered.connect(lambda: self.go_to_surah(metadata))
             ayah_menu.addAction(goto_surah_action)

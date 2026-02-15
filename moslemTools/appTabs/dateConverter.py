@@ -72,8 +72,8 @@ class DateConverter(qt.QWidget):
         self.l_Converter.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.Converter_combo = qt.QComboBox()
         self.Converter_combo.setAccessibleName("اختيار نوع التحويل")
-        self.Converter_combo.addItem("التحويل من هجري الى ميلادي")
-        self.Converter_combo.addItem("التحويل من ميلادي الى هجري")
+        self.Converter_combo.addItem("التحويل من هجري إلى ميلادي")
+        self.Converter_combo.addItem("التحويل من ميلادي إلى هجري")
         conv_layout.addWidget(self.Converter_combo)
         conv_layout.addWidget(self.l_Converter)
         conv_layout.addStretch(1)
@@ -111,7 +111,7 @@ class DateConverter(qt.QWidget):
         content_layout.addLayout(day_layout)                
         result_controls_layout = qt.QHBoxLayout()
         result_controls_layout.setSpacing(10)        
-        self.Convert = guiTools.QPushButton("التحويل الى ميلادي")
+        self.Convert = guiTools.QPushButton("التحويل إلى ميلادي")
         self.Convert.setObjectName("convertButton")        
         self.Convert.clicked.connect(self.convert_date)        
         self.l_result = qt.QLabel("النتيجة")
@@ -175,9 +175,9 @@ class DateConverter(qt.QWidget):
             guiTools.speak("تم نسخ النتيجة")            
     def update_button_text(self):
         if self.Converter_combo.currentIndex() == 0:
-            self.Convert.setText("التحويل الى ميلادي")
+            self.Convert.setText("التحويل إلى ميلادي")
         else:
-            self.Convert.setText("التحويل الى هجري")                        
+            self.Convert.setText("التحويل إلى هجري")                        
     def update_month_combo(self):
         self.month_combo.clear()
         if self.Converter_combo.currentIndex() == 0:
