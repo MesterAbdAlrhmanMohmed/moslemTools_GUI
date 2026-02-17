@@ -10,5 +10,5 @@ class QReadOnlyTextEdit(qt.QTextEdit):
         self.document().setDefaultCursorMoveStyle(qt2.Qt.CursorMoveStyle.VisualMoveStyle)
     def setText(self, text):
         if text:
-            text = "\n".join([line if line.strip() else "|" for line in text.split("\n")])
+            text = "\n".join([line if line.strip() else "\u200b" for line in text.split("\n")])
         super().setText(text)
