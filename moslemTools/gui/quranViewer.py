@@ -159,6 +159,7 @@ class SearchModeDialog(qt.QDialog):
         layout.addStretch(1)
         buttons_layout = qt.QHBoxLayout()
         self.apply_button = guiTools.QPushButton("تطبيق التغييرات")
+        self.apply_button.setDefault(True)
         self.apply_button.setObjectName("applySearchModeChangesButton")
         self.apply_button.clicked.connect(self.accept)
         self.apply_button.setAutoDefault(False)
@@ -464,6 +465,7 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+shift+i", self).activated.connect(self.getIArabForSurah)
         qt1.QShortcut("ctrl+shift+l", self).activated.connect(self.getTranslationForSurah)
         qt1.QShortcut("ctrl+shift+f", self).activated.connect(self.onSurahInfo)
+        qt1.QShortcut("ctrl+alt+f", self).activated.connect(self.show_current_surah_info)
         qt1.QShortcut("ctrl+alt+t", self).activated.connect(self.TafseerFromVersToVers)
         qt1.QShortcut("ctrl+alt+l", self).activated.connect(self.translateFromVersToVers)
         qt1.QShortcut("ctrl+alt+i", self).activated.connect(self.IArabFromVersToVers)
@@ -1075,7 +1077,7 @@ class QuranViewer(qt.QDialog):
             copy_action_text = f"نسخ {category_name}"
             save_action_text = f"حفظ {category_name} كملف نصي"
             print_action_text = f"طباعة {category_name}"
-            info_action_text = f"معلومات {category_name}"
+            info_action_text = f"معلومات {category_name}: {self.category}"
             play_to_end_text = f"التشغيل من الآية المحددة إلى نهاية {category_name}"
             tafseer_action_text = f"تفسير {category_name}"
             iarab_action_text = f"إعراب {category_name}"
@@ -1099,10 +1101,21 @@ class QuranViewer(qt.QDialog):
         surahOption.addAction(printSurah)
         printSurah.triggered.connect(self.print_text)
         if info_action_text:
-            SurahInfoAction = qt1.QAction(info_action_text, self)
-            SurahInfoAction.setShortcut("ctrl+shift+f")
-            surahOption.addAction(SurahInfoAction)
-            SurahInfoAction.triggered.connect(self.onSurahInfo)
+            categoryInfoAction = qt1.QAction(info_action_text, self)
+            categoryInfoAction.setShortcut("ctrl+shift+f")
+            surahOption.addAction(categoryInfoAction)
+            categoryInfoAction.triggered.connect(self.onSurahInfo)
+        try:
+            current_line = self._get_line_text_for_action(self.saved_ayah_index)
+            _, _, juz_info, _, _ = functions.quranJsonControl.getAyah(current_line, self.category, self.type)
+            surah_name = juz_info[1]
+        except Exception:
+            surah_name = None
+        if surah_name and (self.type != 0 or self.is_search_view or self.type == 5):
+            currentSurahInfoAction = qt1.QAction(f"معلومات سورة: {surah_name}", self)
+            currentSurahInfoAction.setShortcut("ctrl+alt+f")
+            currentSurahInfoAction.triggered.connect(self.show_current_surah_info)
+            surahOption.addAction(currentSurahInfoAction)
         playSurahToEnd = qt1.QAction(play_to_end_text, self)
         playSurahToEnd.setShortcut("ctrl+shift+p")
         surahOption.addAction(playSurahToEnd)
@@ -1503,26 +1516,154 @@ class QuranViewer(qt.QDialog):
         TafaseerViewer(self,AyahNumber1,AyahNumber2).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+    def show_current_surah_info(self):
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
+        if self.type == 0 and not self.is_search_view:
+            return
+        self.pause_for_action()
+        current_line = self._get_line_text_for_action(self.getCurrentAyah())
+        if not current_line:
+            self.resume_after_action()
+            return
+        try:
+            with open("data/json/quran.json", "r", encoding="utf-8-sig") as f:
+                data = json.load(f)
+            _, s_num_str, juz_info, _, _ = functions.quranJsonControl.getAyah(current_line, self.category, self.type)
+            item_text = juz_info[1]
+            s_num = int(s_num_str)
+            surah = data.get(str(s_num))
+            if surah:
+                medinan_surahs = [2, 3, 4, 5, 8, 9, 13, 22, 24, 33, 47, 48, 49, 55, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 76, 98, 99, 110]
+                s_type = "مدنية" if s_num in medinan_surahs else "مكية"
+                ayahs = surah['ayahs']
+                pages = [a['page'] for a in ayahs]
+                juzs = [a['juz'] for a in ayahs]
+                rubs = [a['hizbQuarter'] for a in ayahs]
+                info_text = (f"رقم السورة: {s_num}.\n"
+                             f"اسم السورة: {item_text}.\n"
+                             f"نوع السورة: {s_type}.\n"
+                             f"عدد الآيات: {surah['numberOfAyahs']}.\n"
+                             f"رقم أول آية بترتيب المصحف: {ayahs[0]['number']}.\n"
+                             f"رقم آخر آية بترتيب المصحف: {ayahs[-1]['number']}.\n"
+                             f"تبدأ في الصفحة: {min(pages)}.\n"
+                             f"تنتهي في الصفحة: {max(pages)}.\n"
+                             f"تقع في الأجزاء: {', '.join(map(str, sorted(list(set(juzs)))))}.\n"
+                             f"تقع في الأحزاب: {', '.join(map(str, sorted(list(set([(r-1)//4+1 for r in rubs])))))}.")
+                guiTools.qMessageBox.MessageBox.view(self, f"معلومات سورة: {item_text}", info_text)
+            else:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على معلومات.")
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ أثناء جلب معلومات السورة: {e}")
+        self.resume_after_action()
     def onSurahInfo(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
             return
-        self.pause_for_action()
-        current_ayah_index = self.getCurrentAyah()
-        current_line = self._get_line_text_for_action(current_ayah_index)
-        if not current_line:
+        if self.is_search_view or self.type == 5:
+            guiTools.speak("هذا الخيار غير متاح لهذا العرض.")
             self.resume_after_action()
             return
-        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
-        with open("data/json/files/all_surahs.json","r",encoding="utf-8") as file:
-            data=json.load(file)
-        surahInfo=data[int(surah)-1]
-        numberOfAyah=surahInfo["n"]
-        if surahInfo["r"]==0:
-            type="مكية"
+        self.pause_for_action()
+        category_index = self.type
+        item_text = self.category
+        try:
+            with open("data/json/quran.json", "r", encoding="utf-8-sig") as f:
+                data = json.load(f)
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"تعذر تحميل بيانات القرآن: {e}")
+            self.resume_after_action()
+            return
+        medinan_surahs = [2, 3, 4, 5, 8, 9, 13, 22, 24, 33, 47, 48, 49, 55, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 76, 98, 99, 110]
+        cat_singular = {0: "سورة", 1: "صفحة", 2: "جزء", 3: "ربع", 4: "حزب"}
+        title = f"معلومات {cat_singular.get(category_index, '')} {item_text}"
+        info_text = ""
+        if category_index == 0:
+            try:
+                all_surahs_dict = functions.quranJsonControl.getSurahs()
+                s_num = list(all_surahs_dict.keys()).index(item_text) + 1
+                surah = data.get(str(s_num))
+                if surah:
+                    s_type = "مدنية" if s_num in medinan_surahs else "مكية"
+                    ayahs = surah['ayahs']
+                    pages = [a['page'] for a in ayahs]
+                    juzs = [a['juz'] for a in ayahs]
+                    rubs = [a['hizbQuarter'] for a in ayahs]
+                    info_text = (f"رقم السورة: {s_num}.\n"
+                                 f"اسم السورة: {item_text}.\n"
+                                 f"نوع السورة: {s_type}.\n"
+                                 f"عدد الآيات: {surah['numberOfAyahs']}.\n"
+                                 f"رقم أول آية بترتيب المصحف: {ayahs[0]['number']}.\n"
+                                 f"رقم آخر آية بترتيب المصحف: {ayahs[-1]['number']}.\n"
+                                 f"تبدأ في الصفحة: {min(pages)}.\n"
+                                 f"تنتهي في الصفحة: {max(pages)}.\n"
+                                 f"تقع في الأجزاء: {', '.join(map(str, sorted(list(set(juzs)))))}.\n"
+                                 f"تقع في الأحزاب: {', '.join(map(str, sorted(list(set([(r-1)//4+1 for r in rubs])))))}.")
+            except (ValueError, KeyError, IndexError):
+                info_text = "لم يتم العثور على معلومات."
+        elif category_index == 1:
+            p_num = int(item_text)
+            matches = [(s_v['name'], a) for s_v in data.values() for a in s_v['ayahs'] if a['page'] == p_num]
+            if matches:
+                surah_names = list(dict.fromkeys(m[0] for m in matches))
+                juz, rub = matches[0][1]['juz'], matches[0][1]['hizbQuarter']
+                info_text = (f"رقم الصفحة: {p_num}.\n"
+                             f"توجد في الجزء: {juz}.\n"
+                             f"توجد في الحزب: {(rub-1)//4+1}.\n"
+                             f"توجد في الربع: {rub}.\n"
+                             f"تبدأ الصفحة بالآية {matches[0][1]['numberInSurah']} من سورة {matches[0][0]}.\n"
+                             f"تنتهي الصفحة بالآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
+                             f"عدد السور في الصفحة: {len(surah_names)}.\n"
+                             f"عدد الآيات في الصفحة: {len(matches)}.\n"
+                             f"السور في الصفحة: {', '.join(surah_names)}.")
+        elif category_index == 2:
+            j_num = int(item_text)
+            matches = [(s_v['name'], a) for s_v in data.values() for a in s_v['ayahs'] if a['juz'] == j_num]
+            if matches:
+                surah_names = list(dict.fromkeys(m[0] for m in matches))
+                pages, rubs = [m[1]['page'] for m in matches], [m[1]['hizbQuarter'] for m in matches]
+                info_text = (f"رقم الجزء: {j_num}.\n"
+                             f"يبدأ الجزء من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
+                             f"ينتهي الجزء في الآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
+                             f"يبدأ من الصفحة {min(pages)} وينتهي في الصفحة {max(pages)}.\n"
+                             f"يبدأ في الربع {min(rubs)} وينتهي في الربع {max(rubs)}.\n"
+                             f"عدد السور في الجزء: {len(surah_names)}.\n"
+                             f"عدد الآيات في الجزء: {len(matches)}.")
+        elif category_index == 3:
+            r_num = int(item_text)
+            matches = [(s_v['name'], a) for s_v in data.values() for a in s_v['ayahs'] if a['hizbQuarter'] == r_num]
+            if matches:
+                surah_names = list(dict.fromkeys(m[0] for m in matches))
+                pages = [m[1]['page'] for m in matches]
+                hizb, juz = (r_num-1)//4+1, matches[0][1]['juz']
+                info_text = (f"رقم الربع: {r_num}.\n"
+                             f"يقع في الجزء: {juz}.\n"
+                             f"يقع في الحزب: {hizb}.\n"
+                             f"يبدأ من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
+                             f"ينتهي في الآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
+                             f"يبدأ من الصفحة {min(pages)} وينتهي في الصفحة {max(pages)}.\n"
+                             f"عدد السور: {len(surah_names)}.\n"
+                             f"عدد الآيات: {len(matches)}.")
+        elif category_index == 4:
+            h_num = int(item_text)
+            matches = [(s_v['name'], a) for s_v in data.values() for a in s_v['ayahs'] if (a['hizbQuarter']-1)//4+1 == h_num]
+            if matches:
+                surah_names = list(dict.fromkeys(m[0] for m in matches))
+                pages, rubs = [m[1]['page'] for m in matches], [m[1]['hizbQuarter'] for m in matches]
+                juz = matches[0][1]['juz']
+                info_text = (f"رقم الحزب: {h_num}.\n"
+                             f"يقع في الجزء: {juz}.\n"
+                             f"يبدأ من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
+                             f"ينتهي في الآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
+                             f"يبدأ من الصفحة {min(pages)} وينتهي في الصفحة {max(pages)}.\n"
+                             f"يحتوي على الأرباع من {min(rubs)} إلى {max(rubs)}.\n"
+                             f"عدد السور: {len(surah_names)}.\n"
+                             f"عدد الآيات: {len(matches)}.")
+        if info_text:
+            guiTools.qMessageBox.MessageBox.view(self, title, info_text)
         else:
-            type="مدنية"
-        guiTools.qMessageBox.MessageBox.view(self,"معلومات {}".format(juz[1]),"رقم السورة {} \n عدد آياتها {} \n نوع السورة {}".format(str(surah),str(numberOfAyah),type))
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على معلومات.")
         self.resume_after_action()
     def closeEvent(self, event):
         if self.is_merging:

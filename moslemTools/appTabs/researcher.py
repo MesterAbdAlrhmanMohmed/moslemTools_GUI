@@ -43,6 +43,7 @@ class SearchModeDialog(qt.QDialog):
         layout.addStretch(1)
         buttons_layout = qt.QHBoxLayout()
         self.apply_button = guiTools.QPushButton("تطبيق التغييرات")
+        self.apply_button.setDefault(True)
         self.apply_button.setObjectName("applySearchModeChangesButton")
         self.apply_button.clicked.connect(self.accept)
         self.apply_button.setAutoDefault(False)
@@ -533,10 +534,11 @@ class Albaheth(qt.QWidget):
             self.results.setText("\n".join(display_text))
             self.update_font_size()
             self.clear_results_button.setDisabled(False)
+            self.results.setFocus()
         else:
             guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
             self.clear_results_button.setDisabled(True)
-        self.results.setFocus()
+            self.serch_input.setFocus()
     def get_metadata_from_result(self, result_text):
         match = re.search(r'^(\d+)(.+?)\s(.+)\((\d+)\)$', result_text)
         if match:
