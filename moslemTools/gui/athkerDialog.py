@@ -125,16 +125,12 @@ class AthkerDialog (qt.QDialog):
         if self.media.isPlaying():
             self.media.pause()
             self.PPS.setText("تشغيل")
-            self.media_progress.setVisible(False)
-            self.time_label.setVisible(False)
         else:            
             if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.windowTitle(),str(self.inex) + ".mp3")):
                 url=qt2.QUrl.fromLocalFile(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.windowTitle(),str(self.inex) + ".mp3"))
             else:
                 url=qt2.QUrl(self.athkerList[self.inex]["audio"])
-            if url == self.media.source():
-                pass
-            else:
+            if url != self.media.source():
                 self.media.setSource(url)
             self.media.play()
             self.media_progress.setVisible(True)
