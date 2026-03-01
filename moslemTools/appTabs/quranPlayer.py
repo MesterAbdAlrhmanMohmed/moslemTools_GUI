@@ -77,6 +77,9 @@ class QuranPlayer(qt.QWidget):
     def __init__(self):
         super().__init__()
         self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
+        self.fav_path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "quran_favorites.json")
+        self.favorites = []
+        self.show_favorites_only = False
         if not os.path.exists(self.ffmpeg_path):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ فادح", "لم يتم العثور على أداة الدمج FFmpeg. خاصية دمج السور لن تعمل.")
         qt1.QShortcut("ctrl+s", self).activated.connect(lambda: self.mp.stop())
@@ -140,6 +143,13 @@ class QuranPlayer(qt.QWidget):
         self.recitersListWidget = guiTools.QListWidget()
         self.recitersListWidget.setSpacing(3)
         self.recitersListWidget.itemSelectionChanged.connect(self.on_reciter_selected)
+        self.recitersListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.recitersListWidget.customContextMenuRequested.connect(self.open_reciter_menu)
+        self.reciter_fav_info_label = qt.QLabel("لإضافة القارئ إلى قائمة المفضلة أو إزالته، نستخدم مفتاح التطبيقات أو click الأيمن")
+        self.reciter_fav_info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.reciter_fav_info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.view_favorites_btn = guiTools.QPushButton("عرض المفضلة")
+        self.view_favorites_btn.clicked.connect(self.toggle_favorites)
         self.surahsLabel = qt.QLabel("السور")
         self.surahsLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.surahSearchLabel = qt.QLabel("ابحث عن سورة")
@@ -242,6 +252,8 @@ class QuranPlayer(qt.QWidget):
         recitersLayout.addWidget(self.reciterSearchLabel)
         recitersLayout.addWidget(self.reciterSearchEdit)
         recitersLayout.addWidget(self.recitersListWidget)
+        recitersLayout.addWidget(self.reciter_fav_info_label)
+        recitersLayout.addWidget(self.view_favorites_btn)
         surahsLayout = qt.QVBoxLayout()
         surahsLayout.addWidget(self.surahsLabel)
         surahsLayout.addWidget(self.surahSearchLabel)
@@ -294,10 +306,56 @@ class QuranPlayer(qt.QWidget):
         self.reciters_data = self.load_reciters()
         self.recitersList = list(self.reciters_data.keys())
         self.recitersList.sort()
-        self.recitersListWidget.addItems(self.recitersList)
+        self.load_favorites_from_disk()
+        self.update_favorites_ui_state()
+        self.reciter_onsearch()
         if self.recitersListWidget.count() > 0:
             self.recitersListWidget.setCurrentRow(0)
             self.on_reciter_selected()
+    def load_favorites_from_disk(self):
+        if os.path.exists(self.fav_path):
+            try:
+                with open(self.fav_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self.favorites = data.get("favorites", [])
+                    self.show_favorites_only = data.get("show_favorites_only", False)
+            except: pass
+    def save_favorites_to_disk(self):
+        os.makedirs(os.path.dirname(self.fav_path), exist_ok=True)
+        with open(self.fav_path, 'w', encoding='utf-8') as f:
+            json.dump({"favorites": self.favorites, "show_favorites_only": self.show_favorites_only}, f, ensure_ascii=False)
+    def toggle_favorites(self):
+        self.show_favorites_only = not self.show_favorites_only
+        self.save_favorites_to_disk()
+        self.update_favorites_ui_state()
+        self.reciter_onsearch()
+    def update_favorites_ui_state(self):
+        if self.show_favorites_only:
+            self.view_favorites_btn.setText("عرض كل القراء")
+            self.reciterSearchLabel.setText("ابحث عن القارئ المفضل")
+            self.reciterSearchEdit.setAccessibleName("ابحث عن القارئ المفضل")
+        else:
+            self.view_favorites_btn.setText("عرض المفضلة")
+            self.reciterSearchLabel.setText("ابحث عن قارئ")
+            self.reciterSearchEdit.setAccessibleName("ابحث عن قارئ")
+    def open_reciter_menu(self, pos):
+        item = self.recitersListWidget.itemAt(pos)
+        if not item: return
+        name = item.text()
+        menu = qt.QMenu(self)
+        if name in self.favorites:
+            act = qt1.QAction("إزالة من المفضلة", self)
+            act.triggered.connect(lambda: self.manage_favorites(name, "remove"))
+        else:
+            act = qt1.QAction("إضافة إلى المفضلة", self)
+            act.triggered.connect(lambda: self.manage_favorites(name, "add"))
+        menu.addAction(act)
+        menu.exec(self.recitersListWidget.viewport().mapToGlobal(pos))
+    def manage_favorites(self, name, op):
+        if op == "add" and name not in self.favorites: self.favorites.append(name)
+        elif op == "remove" and name in self.favorites: self.favorites.remove(name)
+        self.save_favorites_to_disk()
+        if self.show_favorites_only: self.reciter_onsearch()
     def check_media_loaded(self):
         if self.mp.duration() <= 0:
             speak("لا توجد سورة مُشَغَّلَة حالياً")
@@ -1302,8 +1360,53 @@ class QuranPlayer(qt.QWidget):
     def reciter_onsearch(self):
         search_text = self.reciterSearchEdit.text().lower()
         self.recitersListWidget.clear()
-        result = self.search(search_text, self.recitersList)
+        source = self.favorites if self.show_favorites_only else self.recitersList
+        result = self.search(search_text, source)
         self.recitersListWidget.addItems(result)
+    def load_favorites_from_disk(self):
+        if os.path.exists(self.fav_path):
+            try:
+                with open(self.fav_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self.favorites = data.get("favorites", [])
+                    self.show_favorites_only = data.get("show_favorites_only", False)
+            except: pass
+    def save_favorites_to_disk(self):
+        os.makedirs(os.path.dirname(self.fav_path), exist_ok=True)
+        with open(self.fav_path, 'w', encoding='utf-8') as f:
+            json.dump({"favorites": self.favorites, "show_favorites_only": self.show_favorites_only}, f, ensure_ascii=False)
+    def toggle_favorites(self):
+        self.show_favorites_only = not self.show_favorites_only
+        self.save_favorites_to_disk()
+        self.update_favorites_ui_state()
+        self.reciter_onsearch()
+    def update_favorites_ui_state(self):
+        if self.show_favorites_only:
+            self.view_favorites_btn.setText("عرض كل القراء")
+            self.reciterSearchLabel.setText("ابحث عن القارئ المفضل")
+            self.reciterSearchEdit.setAccessibleName("ابحث عن القارئ المفضل")
+        else:
+            self.view_favorites_btn.setText("عرض المفضلة")
+            self.reciterSearchLabel.setText("ابحث عن قارئ")
+            self.reciterSearchEdit.setAccessibleName("ابحث عن قارئ")
+    def open_reciter_menu(self, pos):
+        item = self.recitersListWidget.itemAt(pos)
+        if not item: return
+        name = item.text()
+        menu = qt.QMenu(self)
+        if name in self.favorites:
+            act = qt1.QAction("إزالة من المفضلة", self)
+            act.triggered.connect(lambda: self.manage_favorites(name, "remove"))
+        else:
+            act = qt1.QAction("إضافة إلى المفضلة", self)
+            act.triggered.connect(lambda: self.manage_favorites(name, "add"))
+        menu.addAction(act)
+        menu.exec(self.recitersListWidget.viewport().mapToGlobal(pos))
+    def manage_favorites(self, name, op):
+        if op == "add" and name not in self.favorites: self.favorites.append(name)
+        elif op == "remove" and name in self.favorites: self.favorites.remove(name)
+        self.save_favorites_to_disk()
+        if self.show_favorites_only: self.reciter_onsearch()
     def surah_onsearch(self):
         search_text = self.surahSearchEdit.text().lower()
         self.surahListWidget.clear()
