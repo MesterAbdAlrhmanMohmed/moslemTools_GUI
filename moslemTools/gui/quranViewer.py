@@ -1549,8 +1549,12 @@ class QuranViewer(qt.QDialog):
                              f"رقم آخر آية بترتيب المصحف: {ayahs[-1]['number']}.\n"
                              f"تبدأ في الصفحة: {min(pages)}.\n"
                              f"تنتهي في الصفحة: {max(pages)}.\n"
-                             f"تقع في الأجزاء: {', '.join(map(str, sorted(list(set(juzs)))))}.\n"
-                             f"تقع في الأحزاب: {', '.join(map(str, sorted(list(set([(r-1)//4+1 for r in rubs])))))}.")
+                             f"تبدأ في الجزء: {min(juzs)}.\n"
+                             f"تنتهي في الجزء: {max(juzs)}.\n"
+                             f"تبدأ في الحزب: {(min(rubs)-1)//4+1}.\n"
+                             f"تنتهي في الحزب: {(max(rubs)-1)//4+1}.\n"
+                             f"تبدأ في الربع: {min(rubs)}.\n"
+                             f"تنتهي في الربع: {max(rubs)}.")
                 guiTools.qMessageBox.MessageBox.view(self, f"معلومات سورة: {item_text}", info_text)
             else:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على معلومات.")
@@ -1562,6 +1566,7 @@ class QuranViewer(qt.QDialog):
             self._handle_invalid_search_line_action()
             return
         if self.is_search_view or self.type == 5:
+            winsound.Beep(440, 200)
             guiTools.speak("هذا الخيار غير متاح لهذا العرض.")
             self.resume_after_action()
             return
@@ -1598,8 +1603,12 @@ class QuranViewer(qt.QDialog):
                                  f"رقم آخر آية بترتيب المصحف: {ayahs[-1]['number']}.\n"
                                  f"تبدأ في الصفحة: {min(pages)}.\n"
                                  f"تنتهي في الصفحة: {max(pages)}.\n"
-                                 f"تقع في الأجزاء: {', '.join(map(str, sorted(list(set(juzs)))))}.\n"
-                                 f"تقع في الأحزاب: {', '.join(map(str, sorted(list(set([(r-1)//4+1 for r in rubs])))))}.")
+                                 f"تبدأ في الجزء: {min(juzs)}.\n"
+                                 f"تنتهي في الجزء: {max(juzs)}.\n"
+                                 f"تبدأ في الحزب: {(min(rubs)-1)//4+1}.\n"
+                                 f"تنتهي في الحزب: {(max(rubs)-1)//4+1}.\n"
+                                 f"تبدأ في الربع: {min(rubs)}.\n"
+                                 f"تنتهي في الربع: {max(rubs)}.")
             except (ValueError, KeyError, IndexError):
                 info_text = "لم يتم العثور على معلومات."
         elif category_index == 1:

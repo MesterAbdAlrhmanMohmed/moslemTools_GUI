@@ -276,13 +276,24 @@ class main(qt.QMainWindow):
             self.media_player.play()
     def open_developers_window(self):
         self.developers_window = AboutDeveloper()
-        self.developers_window.show()
+        self.developers_window.exec()
     def viewInfoTextEdit(self):
         username1 = os.getlogin()
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
-            if current_gregorian_weekday == 4:
+            if hijri_date_obj.month == 9:
+                if 21 <= hijri_date_obj.day <= 29:
+                    self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم")
+                else:
+                    self.info.setText(f"رمضان كريم يا {username1}")
+            elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1:
+                self.info.setText(f"عيد فطر مبارك يا {username1}")
+            elif hijri_date_obj.month == 12 and hijri_date_obj.day == 10:
+                self.info.setText(f"عيد أضحى مبارك يا {username1}")
+            elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
+                self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
+            elif current_gregorian_weekday == 4:
                 self.info.setText(f"جمعة مباركة يا {username1}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صل الله عليه وسلم")
             elif current_gregorian_weekday == 0:
                 self.info.setText(f"يا {username1} صيام يوم الإثنين، سنة عن النبي صل الله عليه وسلم")
@@ -298,20 +309,10 @@ class main(qt.QMainWindow):
                 self.info.setText(f"يا {username1} ليلة النصف من شعبان، يستحب فيها الدعاء")
             elif hijri_date_obj.month == 8:
                 self.info.setText(f"يا {username1} يستحب الصيام في شهر شعبان")
-            elif hijri_date_obj.month == 9 and 21 <= hijri_date_obj.day <= 29:
-                self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر")
-            elif hijri_date_obj.month == 9:
-                self.info.setText(f"رمضان كريم يا {username1}")
-            elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1:
-                self.info.setText(f"عيد فطر مبارك يا {username1}")
             elif hijri_date_obj.month == 10:
                 self.info.setText(f"يا {username1} صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صل الله عليه وسلم")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day == 9:
                 self.info.setText(f"يا {username1} صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
-            elif hijri_date_obj.month == 12 and hijri_date_obj.day == 10:
-                self.info.setText(f"عيد أضحى مبارك يا {username1}")
-            elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
-                self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [1, 2, 3, 4, 5, 6, 7, 8]:
                 self.info.setText(f"يا {username1} صيام العشر الأوائل من ذي الحجة سنة عن النبي صل الله عليه وسلم")
             elif hijri_date_obj.day in [13, 14, 15]:
