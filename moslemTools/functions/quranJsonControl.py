@@ -94,21 +94,30 @@ def getHizb():
     return juz
 def getAyah(text, category=None, type=None):
     _load_data()
-    if type == 0 and category:
-        match = re.match(r"(\d+)", category)
-        if match:
-            surah_key = match.group(1)                        
-            special_surahs = ["3", "28", "29", "30", "31", "32", "41", "43", "44", "45", "46"]
-            if surah_key in special_surahs:
-                if surah_key in _data:
-                    for ayah in _data[surah_key]["ayahs"]:
-                        t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))
-                        if t == text:
-                            return ayah["numberInSurah"], surah_key, [ayah["juz"], _data[surah_key]["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]    
+    if type is not None and category is not None:
+        if type == 0:
+            match = re.match(r"(\d+)", str(category))
+            if match:
+                s_key = match.group(1)
+                if s_key in _data:
+                    for ayah in _data[s_key]["ayahs"]:
+                        if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
+                            return ayah["numberInSurah"], s_key, [ayah["juz"], _data[s_key]["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]
+        else:
+            cat_str = str(category)
+            for key, value in _data.items():
+                for ayah in value["ayahs"]:
+                    found = False
+                    if type == 1 and str(ayah["page"]) == cat_str: found = True
+                    elif type == 2 and str(ayah["juz"]) == cat_str: found = True
+                    elif type == 3 and str(ayah["hizbQuarter"]) == cat_str: found = True
+                    elif type == 4 and str((ayah["hizbQuarter"]-1)//4+1) == cat_str: found = True
+                    if found:
+                        if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
+                            return ayah["numberInSurah"], key, [ayah["juz"], value["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]
     for key, value in _data.items():
         for ayah in value["ayahs"]:
-            t = "{} ({})".format(ayah["text"], str(ayah["numberInSurah"]))
-            if t == text:
+            if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
                 return ayah["numberInSurah"], key, [ayah["juz"], value["name"], ayah["hizbQuarter"], ayah["sajda"]], ayah["page"], ayah["number"]
     return 1, "1", ["1", "", "", False], "1", 1
 def getQuran():

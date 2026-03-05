@@ -406,6 +406,7 @@ class QuranViewer(qt.QDialog):
         self.previous.setAccessibleDescription("alt زائد السهم الأيسر")
         self.previous.setVisible(enableNextPreviouseButtons)
         self.previous.setStyleSheet("background-color: #0000AA; color: white;")
+        self.update_nav_buttons_text()
         self.changeCurrentReciterButton=guiTools.QPushButton("تغيير القارئ")
         self.changeCurrentReciterButton.setAutoDefault(False)
         self.changeCurrentReciterButton.clicked.connect(self.onChangeRecitersContextMenuRequested)
@@ -1881,6 +1882,11 @@ class QuranViewer(qt.QDialog):
         self.original_quran_text = new_text
         self.text_cache = {"by_surah": self.original_quran_text}
         self._update_display_text()
+    def update_nav_buttons_text(self):
+        cat_singular = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
+        name = cat_singular.get(self.type, "الفئة")
+        self.next.setText(f"{name} التالية")
+        self.previous.setText(f"{name} السابقة")
     def onNext(self):
         self.pause_for_action()
         if self.CurrentIndex==len(self.typeResult)-1:
@@ -1892,6 +1898,7 @@ class QuranViewer(qt.QDialog):
         self.category = indexs
         new_text = self.typeResult[indexs][1]
         self._update_view_for_new_content(new_text)
+        self.update_nav_buttons_text()
         winsound.PlaySound("data/sounds/next_page.wav",1)
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
@@ -1907,6 +1914,7 @@ class QuranViewer(qt.QDialog):
         self.category = indexs
         new_text = self.typeResult[indexs][1]
         self._update_view_for_new_content(new_text)
+        self.update_nav_buttons_text()
         winsound.PlaySound("data/sounds/previous_page.wav",1)
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
@@ -1940,6 +1948,7 @@ class QuranViewer(qt.QDialog):
             self.info.setText(formatted_name)
             new_text = self.typeResult[indexs][1]
             self._update_view_for_new_content(new_text)
+            self.update_nav_buttons_text()
         self.resume_after_action()
     def onChangeCategory(self):
         self.pause_for_action()
@@ -1982,6 +1991,7 @@ class QuranViewer(qt.QDialog):
         self.info.setText(formatted_name)
         new_text = self.typeResult[indexs][1]
         self._update_view_for_new_content(new_text)
+        self.update_nav_buttons_text()
         self.resume_after_action()
     def onRemoveBookmark(self):
         self.pause_for_action()
