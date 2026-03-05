@@ -330,14 +330,14 @@ class QuranPlayer(qt.QWidget):
         self.update_favorites_ui_state()
         self.reciter_onsearch()
     def update_favorites_ui_state(self):
-        if self.show_favorites_only:
+        if self.show_favorites_only:            
             self.view_favorites_btn.setText("عرض كل القراء")
             self.reciterSearchLabel.setText("ابحث عن القارئ المفضل")
-            self.reciterSearchEdit.setAccessibleName("ابحث عن القارئ المفضل")
-        else:
+            self.reciterSearchEdit.setAccessibleName("ابحث عن القارئ المفضل")            
+        else:            
             self.view_favorites_btn.setText("عرض المفضلة")
             self.reciterSearchLabel.setText("ابحث عن قارئ")
-            self.reciterSearchEdit.setAccessibleName("ابحث عن قارئ")
+            self.reciterSearchEdit.setAccessibleName("ابحث عن قارئ")            
     def open_reciter_menu(self, pos):
         item = self.recitersListWidget.itemAt(pos)
         if not item: return

@@ -102,6 +102,7 @@ class settings(qt.QDialog):
         settings_handler.set("audio", "athkar", get_audio_val(self.audioSettings.features["athkar"].currentText()))
         settings_handler.set("audio", "random_athkar", get_audio_val(self.audioSettings.features["random_athkar"].currentText()))
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
+        settings_handler.set("g", "randomMessageAtStartup", str(self.layout1.randomMessageAtStartup.isChecked()))
         if self.layout1.reciter.count() > 0:
              settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
         settings_handler.set("prayerTimes","volume",str(self.prayerTimesSettings.Sound_level.value()))

@@ -115,6 +115,10 @@ class main(qt.QMainWindow):
         action_notes.setShortcut("ctrl+n")
         action_notes.triggered.connect(lambda: notes.NotesDialog(self).exec())
         self.moreOptionsMenu.addAction(action_notes)
+        action_random_message = qt1.QAction("رسالة لك", self)
+        action_random_message.setShortcut("ctrl+shift+m")
+        action_random_message.triggered.connect(self.show_random_message)
+        self.moreOptionsMenu.addAction(action_random_message)
         action_whats_new = qt1.QAction("ما الجديد في آخر إصدار من البرنامج", self)
         action_whats_new.setShortcut("ctrl+w")
         action_whats_new.triggered.connect(self.whats_new_funktion)
@@ -184,6 +188,8 @@ class main(qt.QMainWindow):
             self.random_audio_theker()
         elif settings_handler.get("athkar", "playBasmalaAtStartup") == "True":
             self.play_random_basmala()
+        if settings_handler.get("g", "randomMessageAtStartup") == "True":
+            self.show_random_message()
     def play_random_basmala(self):
         if self.media_player.playbackState()==QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
@@ -243,6 +249,11 @@ class main(qt.QMainWindow):
             data = json.load(f)
         random_theckr = random.choice(data)
         guiTools.SendNotification("ذكر عشوائي", random_theckr)
+    def show_random_message(self):
+        with open("data/json/QuotesMessages.json", "r", encoding="utf_8") as f:
+            data = json.load(f)
+        random_message = random.choice(data)
+        guiTools.TextViewer(self, "رسالة لك", random_message).exec()
     def notification_random_thecker(self):
         self.TIMER1.stop()
         if formatDuration("athkar", "text") != 0:
