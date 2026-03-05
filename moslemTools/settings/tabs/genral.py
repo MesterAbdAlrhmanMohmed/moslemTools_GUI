@@ -61,7 +61,7 @@ class Genral(qt.QWidget):
         self.tray_note.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.tray_note.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         main_layout.addWidget(self.tray_note)        
-        self.run_note = qt.QLabel("تنبيه هام، يمكنكم تشغيل البرنامج من قائمة run بكتابة الأمر (mt)")
+        self.run_note = qt.QLabel("تنبيه هام، يمكنكم تشغيل البرنامج من قائمة run بكتابة الأمر (mt) أو الاختصار (ctrl+alt+m)")
         self.run_note.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.run_note.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)        
         main_layout.addWidget(self.run_note)        
