@@ -1,6 +1,6 @@
 {
   "name": "moslem tools",
-  "version": 6.3,
+  "version": 6.4,
   "what is new": "الجديد للإصدار 6.4\nإضافة رسائل تحفيزية للمستخدمين في البرنامج، نصل إليها من زر المزيد من الخيارات، أو الاختصار ctrl+shift+m، ويمكن عرض رسالة عشوائية أثناء تشغيل البرنامج\nتم إتاحة تشغيل البرنامج من الاختصار ctrl+alt+m\nإصلاح أخطاء مهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.4/moslem_tools_version_6.4.exe",
   "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.4/moslem_tools_version_6.4.exe",
   "is_beta": false
