@@ -19,5 +19,7 @@ def check(p):
         if remote_id > idMessage:
             TextViewer(p,"رسالة من المطور",data.get("message", "")).exec()
             settings_handler.set("g","messageID",str(remote_id))
+            return True
+        return False
     except:
-        pass
+        return False

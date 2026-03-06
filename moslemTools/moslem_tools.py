@@ -33,7 +33,7 @@ class main(qt.QMainWindow):
     audio_sig = qt2.pyqtSignal()
     text_sig = qt2.pyqtSignal()
     toggle_sig = qt2.pyqtSignal()
-    def __init__(self):
+    def __init__(self, startup_window_shown=False):
         super().__init__()
         self.setWindowTitle(app.name + "الإصدار:" + str(app.version))        
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
@@ -188,8 +188,9 @@ class main(qt.QMainWindow):
             self.random_audio_theker()
         elif settings_handler.get("athkar", "playBasmalaAtStartup") == "True":
             self.play_random_basmala()
-        if settings_handler.get("g", "randomMessageAtStartup") == "True":
+        if not startup_window_shown and settings_handler.get("g", "randomMessageAtStartup") == "True":
             self.show_random_message()
+
     def play_random_basmala(self):
         if self.media_player.playbackState()==QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
@@ -389,15 +390,18 @@ class main(qt.QMainWindow):
         else:
             return
 def run_startup_checks():
+    shown = False
     if settings_handler.get("update", "autoCheck") == "True":
         try:
-            update.check(None, message=False)
+            shown = update.check(None, message=False)
         except:
             pass
+    if shown: return True
     try:
-        guiTools.messageHandler.check(None)
+        shown = guiTools.messageHandler.check(None)
     except:
         pass
+    return shown
 if __name__ == "__main__":
     App = qt.QApplication([])
     default_font = qt1.QFont()
@@ -423,9 +427,9 @@ if __name__ == "__main__":
     dark_palette.setColor(qt1.QPalette.ColorRole.Highlight, qt1.QColor("#3A9FF5"))
     dark_palette.setColor(qt1.QPalette.ColorRole.HighlightedText, qt1.QColor("#000000"))
     App.setPalette(dark_palette)
-    run_startup_checks()
+    shown = run_startup_checks()
     shared=qt2.QSharedMemory("com.MTC.moslemTools")
-    window = main()
+    window = main(shown)
     if shared.attach() or not shared.create(1):
         guiTools.qMessageBox.MessageBox.error(window,"تنبيه","البرنامج يعمل بالفعل\nلإظهار البرنامج نستخدم الاختصار windows + alt + h أو نقوم بإظهاره من قائمة علبة النظان system tray")
         sys.exit(0)
