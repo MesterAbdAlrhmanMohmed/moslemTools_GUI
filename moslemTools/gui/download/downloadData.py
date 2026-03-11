@@ -67,6 +67,7 @@ class SelectItem(qt.QDialog):
 		self.item.clicked.connect(self.on_item_clicked)
 		self.fileName = fileName
 		self.loading_label = qt.QLabel("جاري تحميل البيانات، يرجى الانتظار...")
+		self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus
 		self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.loading_label)
 		self.item.setVisible(False)

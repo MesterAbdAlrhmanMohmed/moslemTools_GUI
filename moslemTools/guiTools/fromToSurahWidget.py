@@ -158,6 +158,7 @@ class FromToSurahWidget(qt.QDialog):
         self.label_from_verse = qt.QLabel("من الآية")
         self.spin_from_verse = qt.QSpinBox()
         self.spin_from_verse.setAccessibleName("من الآية")
+        self.spin_from_verse.setMinimumWidth(120)
         self.spin_from_verse.setFont(font)
         self.label_to_surah = qt.QLabel(f"إلى {item_name}")
         self.combo_to_surah = qt.QComboBox()
@@ -167,6 +168,7 @@ class FromToSurahWidget(qt.QDialog):
         self.label_to_verse = qt.QLabel("إلى الآية")
         self.spin_to_verse = qt.QSpinBox()
         self.spin_to_verse.setAccessibleName("إلى الآية")
+        self.spin_to_verse.setMinimumWidth(120)
         self.spin_to_verse.setFont(font)
         self.go = guiTools.QPushButton("خيارات")
         self.go.setStyleSheet("""

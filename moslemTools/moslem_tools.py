@@ -246,6 +246,9 @@ class main(qt.QMainWindow):
             self.raise_()
             self.show_action.setText("إخفاء البرنامج")
     def show_random_theker(self):
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            qt2.QTimer.singleShot(60000, self.show_random_theker)
+            return
         with open("data/json/text_athkar.json", "r", encoding="utf_8") as f:
             data = json.load(f)
         random_theckr = random.choice(data)
@@ -257,8 +260,9 @@ class main(qt.QMainWindow):
         guiTools.TextViewer(self, "رسالة لك", random_message).exec()
     def notification_random_thecker(self):
         self.TIMER1.stop()
-        if formatDuration("athkar", "text") != 0:
-            self.TIMER1.start(formatDuration("athkar", "text"))
+        duration = formatDuration("athkar", "text")
+        if duration != 0:
+            self.TIMER1.start(duration + 10000)
     def runAudioThkarTimer(self):
         self.timer.stop()
         if formatDuration("athkar", "voice") != 0:
@@ -275,7 +279,7 @@ class main(qt.QMainWindow):
         else:
             self.close()
     def random_audio_theker(self):
-        if self.media_player.isPlaying():
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
             return
         self.audio_output.setDevice(audio_manager.get_audio_device("random_athkar"))
@@ -296,7 +300,7 @@ class main(qt.QMainWindow):
             current_gregorian_weekday = datetime.datetime.now().weekday()
             if hijri_date_obj.month == 9:
                 if 21 <= hijri_date_obj.day <= 29:
-                    self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم")
+                    self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم، وجزاكم الله خيرا.")
                 else:
                     self.info.setText(f"رمضان كريم يا {username1}")
             elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1:
