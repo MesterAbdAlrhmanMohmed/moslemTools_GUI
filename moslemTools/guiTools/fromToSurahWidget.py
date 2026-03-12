@@ -1,4 +1,4 @@
-import functions, gui, guiTools, os, json, requests, subprocess
+import functions, gui, guiTools, os, json, requests, subprocess, shutil
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -121,6 +121,7 @@ class FromToSurahWidget(qt.QDialog):
         self.merge_list = []
         self.files_to_delete_after_merge = []
         self.is_merging = False
+        self.save_mode = False
         self.merge_phase = 'idle'
         self.cancellation_requested = False
         self.completed_merge_downloads = set()
@@ -183,7 +184,7 @@ class FromToSurahWidget(qt.QDialog):
         self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.merge_feedback_label.setWordWrap(True)
         self.merge_progress_bar = qt.QProgressBar()
-        self.merge_action_button = guiTools.QPushButton("إلغاء الدمج")
+        self.merge_action_button = guiTools.QPushButton("إلغاء العملية")
         self.merge_action_button.setAutoDefault(False)
         self.merge_action_button.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
         self.merge_action_button.clicked.connect(self.handle_merge_action)
@@ -239,7 +240,8 @@ class FromToSurahWidget(qt.QDialog):
         qt1.QShortcut("ctrl+t", self).activated.connect(self.onTafseerActionTriggered)
         qt1.QShortcut("ctrl+l", self).activated.connect(self.onTranslationActionTriggered)
         qt1.QShortcut("ctrl+i", self).activated.connect(self.onIarabActionTriggered)
-        qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.onMergeActionTriggered)
+        qt1.QShortcut("ctrl+d", self).activated.connect(self.onMergeActionTriggered)
+        qt1.QShortcut("ctrl+h", self).activated.connect(self.onSaveActionTriggered)
         qt1.QShortcut("escape", self).activated.connect(self.close)
     def update_spin_boxes(self, set_to_verse_to_max=False):
         self.spin_from_verse.blockSignals(True)
@@ -332,9 +334,13 @@ class FromToSurahWidget(qt.QDialog):
         menu.addAction(iarabAction)
         menu.addSeparator()
         mergeAction = qt1.QAction("دمج الآيات", self)
-        mergeAction.setShortcut("ctrl+alt+d")
+        mergeAction.setShortcut("ctrl+d")
         mergeAction.triggered.connect(self.onMergeActionTriggered)
         menu.addAction(mergeAction)
+        saveAction = qt1.QAction("حفظ الآيات", self)
+        saveAction.setShortcut("ctrl+h")
+        saveAction.triggered.connect(self.onSaveActionTriggered)
+        menu.addAction(saveAction)
         menu.exec(qt1.QCursor.pos())
     def onListenActionTriggert(self):
         result = self._get_selected_ayahs()
@@ -399,6 +405,25 @@ class FromToSurahWidget(qt.QDialog):
         if not all_ayahs_text:
             guiTools.qMessageBox.MessageBox.error(self, "تحذير", "لا توجد آيات في النطاق المحدد للدمج.")
             return
+        self.save_mode = False
+        self.set_ui_for_merge(True)
+        self.merge_feedback_label.setText("جاري التحقق من الآيات المطلوبة...")
+        self.merge_action_button.setText("إلغاء العملية")
+        self.merge_action_button.show()
+        self.merge_phase = 'preparing'
+        self.cancellation_requested = False
+        self.currentReciter = int(settings_handler.get("g", "reciter"))
+        self.pre_merge_thread = PreMergeCheckThread(all_ayahs_text, self.currentReciter, reciters)
+        self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
+        self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
+        self.pre_merge_thread.start()
+    def onSaveActionTriggered(self):
+        if self.is_merging: return
+        all_ayahs_text = self._get_selected_ayahs()
+        if not all_ayahs_text:
+            guiTools.qMessageBox.MessageBox.error(self, "تحذير", "لا توجد آيات في النطاق المحدد للحفظ.")
+            return
+        self.save_mode = True
         self.set_ui_for_merge(True)
         self.merge_feedback_label.setText("جاري التحقق من الآيات المطلوبة...")
         self.merge_action_button.setText("إلغاء العملية")
@@ -414,24 +439,34 @@ class FromToSurahWidget(qt.QDialog):
         if self.cancellation_requested: return
         self.merge_list = merge_list
         num_files_to_download = len(ayahs_to_download)
-        if num_files_to_download > 0:
-            confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\n"
-                               "سيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق النافذة**.\n"
-                               "بعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\n"
-                               "هل أنت متأكد أنك تريد المتابعة؟")
+        if self.save_mode:
+            if num_files_to_download > 0:
+                confirm_message = (f"تنبيه: يتطلب حفظ الآيات تحميل {num_files_to_download} آية غير موجودة.\n\nسيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق النافذة**.\nبعد انتهاء التحميل، سيتم حفظ الآيات في المجلد المختار.\n\nهل أنت متأكد أنك تريد المتابعة؟")
+            else:
+                confirm_message = ("جميع الآيات المحددة جاهزة للحفظ.\nسيتم حفظ الآيات الآن في المجلد المختار.\n\nهل تريد المتابعة؟")
+            reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الحفظ", confirm_message, "نعم", "لا")
+            if reply != 0:
+                self.set_ui_for_merge(False)
+                return
+            output_dir = qt.QFileDialog.getExistingDirectory(self, "اختر مجلد لحفظ الآيات")
+            if not output_dir:
+                self.set_ui_for_merge(False)
+                return
+            self.current_merge_output_path = output_dir
         else:
-            confirm_message = ("جميع الآيات المحددة جاهزة للدمج.\n"
-                               "ستبدأ عملية الدمج الآن. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق النافذة حتى انتهاء العملية.\n\n"
-                               "هل تريد المتابعة؟")
-        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
-        if reply != 0:
-            self.set_ui_for_merge(False)
-            return
-        output_filename, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف المدموج", "", "Audio Files (*.mp3)")
-        if not output_filename:
-            self.set_ui_for_merge(False)
-            return
-        self.current_merge_output_path = output_filename
+            if num_files_to_download > 0:
+                confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} آية غير موجودة.\n\nسيتم البدء بتحميل الآيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق النافذة**.\nبعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\nهل أنت متأكد أنك تريد المتابعة؟")
+            else:
+                confirm_message = ("جميع الآيات المحددة جاهزة للدمج.\nستبدأ عملية الدمج الآن. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق النافذة حتى انتهاء العملية.\n\nهل تريد المتابعة؟")
+            reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
+            if reply != 0:
+                self.set_ui_for_merge(False)
+                return
+            output_filename, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف المدموج", "", "Audio Files (*.mp3)")
+            if not output_filename:
+                self.set_ui_for_merge(False)
+                return
+            self.current_merge_output_path = output_filename
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()
         self.process_next_in_merge_queue()
@@ -445,9 +480,13 @@ class FromToSurahWidget(qt.QDialog):
             self.merge_action_button.hide()
             self.merge_feedback_label.setText("جاري تحميل الآيات المطلوبة...")
             self.merge_progress_bar.show()
-            output_dir = os.path.dirname(self.current_merge_output_path)
-            safe_filename = "".join(c for c in next_item_to_download['filename'] if c.isalnum() or c in ('.', '_')).rstrip()
-            download_path = os.path.join(output_dir, f"temp_{safe_filename}")
+            if self.save_mode:
+                output_dir = self.current_merge_output_path
+                download_path = os.path.join(output_dir, next_item_to_download['filename'])
+            else:
+                output_dir = os.path.dirname(self.current_merge_output_path)
+                safe_filename = "".join(c for c in next_item_to_download['filename'] if c.isalnum() or c in ('.', '_')).rstrip()
+                download_path = os.path.join(output_dir, f"temp_{safe_filename}")
             self.current_download_url = next_item_to_download['url']
             self.download_thread = DownloadThread(self.current_download_url, download_path)
             self.download_thread.progress.connect(self.merge_progress_bar.setValue)
@@ -456,12 +495,26 @@ class FromToSurahWidget(qt.QDialog):
             self.download_thread.start()
         else:
             self.merge_progress_bar.hide()
-            self.finalize_and_execute_merge()
+            if self.save_mode:
+                self.finalize_save()
+            else:
+                self.finalize_and_execute_merge()
     def on_single_merge_download_finished(self):
         if self.current_download_url:
             self.completed_merge_downloads.add(self.current_download_url)
             self.current_download_url = None
         self.process_next_in_merge_queue()
+    def finalize_save(self):
+        if self.cancellation_requested:
+            self.on_merge_finished(False, "تم إلغاء العملية.")
+            return
+        output_dir = self.current_merge_output_path
+        for item in self.merge_list:
+            dest_path = os.path.join(output_dir, item['filename'])
+            if os.path.exists(item['local_path']) and not os.path.exists(dest_path):
+                try: shutil.copy2(item['local_path'], dest_path)
+                except: pass
+        self.on_merge_finished(True, "تم حفظ الآيات بنجاح.")
     def finalize_and_execute_merge(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية قبل بدء الدمج.")
@@ -499,12 +552,16 @@ class FromToSurahWidget(qt.QDialog):
         self.is_merging = False
         self.merge_phase = 'idle'
         if self.cancellation_requested:
-            guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الدمج.")
-            if hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
+            title = "تم الإلغاء"
+            msg = "تم إلغاء عملية الحفظ." if self.save_mode else "تم إلغاء عملية الدمج."
+            guiTools.qMessageBox.MessageBox.view(self, title, msg)
+            if not self.save_mode and hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
                 try: os.remove(self.current_merge_output_path)
                 except: pass
         elif success:
-            guiTools.qMessageBox.MessageBox.view(self, "نجاح", "تم دمج الآيات بنجاح.")
+            title = "نجاح"
+            msg = "تم حفظ الآيات بنجاح." if self.save_mode else "تم دمج الآيات بنجاح."
+            guiTools.qMessageBox.MessageBox.view(self, title, msg)
         else:
             guiTools.qMessageBox.MessageBox.error(self, "فشل", message)
         if self.files_to_delete_after_merge:
@@ -520,13 +577,14 @@ class FromToSurahWidget(qt.QDialog):
         self.merge_list.clear()
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()
+        self.save_mode = False
     def set_ui_for_merge(self, is_active):
         self.is_merging = is_active
         self.controls_widget.setEnabled(not is_active)
         if is_active:
             self.setFixedHeight(self.merge_ui_height)
             self.merge_widget.setVisible(True)
-            self.merge_feedback_label.setText("جاري التحضير لعملية الدمج...")
+            self.merge_feedback_label.setText("جاري التحضير للعملية...")
             self.merge_action_button.setText("إلغاء العملية")
             self.merge_progress_bar.hide()
             self.merge_progress_bar.setValue(0)

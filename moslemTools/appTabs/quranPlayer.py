@@ -204,6 +204,7 @@ class QuranPlayer(qt.QWidget):
         self.repeat_surah_button.toggled.connect(lambda checked: self.update_button_style(self.repeat_surah_button, checked))
         self.repeat_surah_button.toggled.connect(self.handle_repeat_toggled)
         self.Slider = qt.QSlider(qt2.Qt.Orientation.Horizontal)
+        self.Slider.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
         self.Slider.setAccessibleName("التحكم في تقدم السورة")
         self.Slider.setRange(0, 100)
         self.Slider.setTracking(True)

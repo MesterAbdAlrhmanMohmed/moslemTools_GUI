@@ -44,6 +44,7 @@ class AthkarSettings(qt.QWidget):
         initial_volume = int(settings_handler.get("athkar", "voiceVolume"))
         self.voiceVolumeLabel = qt.QLabel(f"مستوى صوت الأذكار: {initial_volume}%")        
         self.voiceVolume = qt.QSlider(qt2.Qt.Orientation.Horizontal)
+        self.voiceVolume.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
         self.voiceVolume.setAccessibleName("مستوى صوت الأذكار")
         self.voiceVolume.setRange(0, 100)
         self.voiceVolume.setValue(initial_volume)

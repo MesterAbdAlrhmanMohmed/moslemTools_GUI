@@ -29,6 +29,7 @@ class AthkerDialog (qt.QDialog):
         self.athkerViewer.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.athkerViewer.customContextMenuRequested.connect(self.OnContextMenu)    
         self.media_progress = qt.QSlider(qt2.Qt.Orientation.Horizontal)
+        self.media_progress.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
         self.media_progress.setVisible(False)
         self.media_progress.setRange(0, 100)
         self.media_progress.valueChanged.connect(self.set_position_from_slider)

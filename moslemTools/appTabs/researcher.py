@@ -354,6 +354,7 @@ class Albaheth(qt.QWidget):
         player_layout = qt.QHBoxLayout(self.player_widget)
         player_layout.setContentsMargins(0, 5, 0, 5)
         self.media_progress = qt.QSlider(qt2.Qt.Orientation.Horizontal)        
+        self.media_progress.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
         self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.media_progress.setRange(0, 100)
         self.media_progress.valueChanged.connect(self.set_media_position)
