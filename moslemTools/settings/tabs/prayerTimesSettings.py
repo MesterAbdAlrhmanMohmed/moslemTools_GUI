@@ -30,7 +30,7 @@ class PrayerTimesSettings(qt.QWidget):
         main_layout = qt.QVBoxLayout(self)        
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(15, 15, 15, 15)                
-        group_box = qt.QGroupBox("إعدادات الأذان")
+        group_box = qt.QGroupBox()
         group_layout = qt.QVBoxLayout(group_box)
         group_layout.setSpacing(12)
         group_layout.setContentsMargins(12, 15, 12, 15)                
