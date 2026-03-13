@@ -298,7 +298,9 @@ class main(qt.QMainWindow):
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
-            if hijri_date_obj.month == 9:
+            if current_gregorian_weekday == 4:
+                self.info.setText(f"جمعة مباركة يا {username1}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صل الله عليه وسلم")
+            elif hijri_date_obj.month == 9:
                 if 21 <= hijri_date_obj.day <= 29:
                     self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم، وجزاكم الله خيرا.")
                 else:
@@ -309,8 +311,6 @@ class main(qt.QMainWindow):
                 self.info.setText(f"عيد أضحى مبارك يا {username1}")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
                 self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
-            elif current_gregorian_weekday == 4:
-                self.info.setText(f"جمعة مباركة يا {username1}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صل الله عليه وسلم")
             elif current_gregorian_weekday == 0:
                 self.info.setText(f"يا {username1} صيام يوم الإثنين، سنة عن النبي صل الله عليه وسلم")
             elif current_gregorian_weekday == 3:
