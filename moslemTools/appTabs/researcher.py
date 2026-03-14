@@ -1,4 +1,4 @@
-import guiTools, pyperclip, winsound, json, functions, re, os, settings
+import guiTools, pyperclip, winsound, json, functions, re, os, settings, requests, shutil
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -7,6 +7,35 @@ from gui.quranViewer import QuranViewer
 from gui.tafaseerViewer import TafaseerViewer
 from gui.translationViewer import translationViewer
 from gui.changeReciter import ChangeReciter
+class DownloadThread(qt2.QThread):
+    progress = qt2.pyqtSignal(int)
+    finished = qt2.pyqtSignal()
+    cancelled = qt2.pyqtSignal()
+    def __init__(self, url, filepath):
+        super().__init__()
+        self.url = url
+        self.filepath = filepath
+        self.is_cancelled = False
+    def run(self):
+        try:
+            response = requests.get(self.url, stream=True)
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded_size = 0
+            with open(self.filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if self.is_cancelled:
+                        self.cancelled.emit()
+                        return
+                    if chunk:
+                        f.write(chunk)
+                        downloaded_size += len(chunk)
+                        if total_size > 0:
+                            self.progress.emit(int((downloaded_size / total_size) * 100))
+            self.finished.emit()
+        except Exception as e:
+            self.cancelled.emit()
+    def cancel(self):
+        self.is_cancelled = True
 class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
         super().__init__(parent)
@@ -183,6 +212,8 @@ class Albaheth(qt.QWidget):
         self.media_player.setAudioOutput(self.audio_output)
         self.was_playing_before_action = False
         self.current_search_thread = None
+        self.is_saving = False
+        self.cancellation_requested = False
         self.setStyleSheet("""QPushButton {background-color: #007bff; color: white; border: none; border-radius: 6px; padding: 10px 15px; min-height: 40px; font-weight: bold; outline: none; } QPushButton:hover { background-color: #0056b3; } QPushButton:pressed { background-color: #003d80; } QPushButton#searchModeButton { background-color: #0056b3; } QPushButton#searchModeButton:hover { background-color: #003d80; } QPushButton#searchModeButton:pressed { background-color: #003d80; } QPushButton#startButton { background-color: #28a745; } QPushButton#startButton:hover { background-color: #218838; } QPushButton#startButton:pressed { background-color: #218838; } QPushButton#applySearchModeChangesButton { background-color: #28a745; } QPushButton#applySearchModeChangesButton:hover { background-color: #218838; } QPushButton#applySearchModeChangesButton:pressed { background-color: #218838; } QPushButton#cancelButton { background-color: #dc3545; } QPushButton#cancelButton:hover { background-color: #c82333; } QPushButton#cancelButton:pressed { background-color: #bd2130; } QPushButton#clearResultsButton { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 10px 15px; min-height: 40px; font-weight: bold; outline: none; } QPushButton#clearResultsButton:hover { background-color: #c82333; } QPushButton#clearResultsButton:pressed { background-color: #bd2130; } """)
         self.init_ui()
         self.create_shortcuts()
@@ -197,6 +228,7 @@ class Albaheth(qt.QWidget):
         qt1.QShortcut("Ctrl+R", self).activated.connect(self.on_tanzil_shortcut)
         qt1.QShortcut("Ctrl+G", self).activated.connect(self.on_goto_surah_shortcut)
         qt1.QShortcut("Ctrl+F", self).activated.connect(self.on_ayah_info_shortcut)
+        qt1.QShortcut("Ctrl+H", self).activated.connect(self.on_save_shortcut)
         qt1.QShortcut("Ctrl+Shift+R", self).activated.connect(self.on_change_reciter_requested)
         qt1.QShortcut("Ctrl+C", self).activated.connect(self.copy_line)
         qt1.QShortcut("Ctrl+A", self).activated.connect(self.copy_text)
@@ -210,6 +242,7 @@ class Albaheth(qt.QWidget):
         qt1.QShortcut("ctrl+8", self).activated.connect(self.t80)
         qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
+        qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
     def t10(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
@@ -264,7 +297,6 @@ class Albaheth(qt.QWidget):
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.9))
-        qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
     def on_shortcut_activated(self, action_func):
         cursor = self.results.textCursor()
         line_number = cursor.blockNumber() + 1
@@ -292,6 +324,8 @@ class Albaheth(qt.QWidget):
         self.on_shortcut_activated(self.go_to_surah)
     def on_ayah_info_shortcut(self):
         self.on_shortcut_activated(self.show_ayah_info)
+    def on_save_shortcut(self):
+        self.on_shortcut_activated(self.save_ayah)
     def init_ui(self):
         font_combo = qt1.QFont()
         font_combo.setBold(True)
@@ -350,6 +384,20 @@ class Albaheth(qt.QWidget):
         self.results.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.results.customContextMenuRequested.connect(self.OnContextMenu)
         self.results.viewport().installEventFilter(self)
+        self.save_feedback_label = qt.QLabel()
+        self.save_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.save_progress_bar = qt.QProgressBar()
+        self.save_action_button = guiTools.QPushButton("إلغاء العملية")
+        self.save_action_button.setAutoDefault(False)
+        self.save_action_button.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+        self.save_action_button.clicked.connect(self.cancel_save)
+        save_layout = qt.QHBoxLayout()
+        save_layout.addWidget(self.save_feedback_label)
+        save_layout.addWidget(self.save_progress_bar)
+        save_layout.addWidget(self.save_action_button)
+        self.save_widget = qt.QWidget()
+        self.save_widget.setLayout(save_layout)
+        self.save_widget.setVisible(False)
         self.player_widget = qt.QWidget()
         player_layout = qt.QHBoxLayout(self.player_widget)
         player_layout.setContentsMargins(0, 5, 0, 5)
@@ -406,6 +454,7 @@ class Albaheth(qt.QWidget):
         search_layout.addWidget(self.start)
         main_layout.addLayout(search_layout)
         main_layout.addWidget(self.results)
+        main_layout.addWidget(self.save_widget)
         main_layout.addWidget(self.player_widget)
         bottom_layout = qt.QHBoxLayout()
         bottom_layout.addWidget(self.clear_results_button)
@@ -428,6 +477,14 @@ class Albaheth(qt.QWidget):
     def resume_after_action(self):
         if self.was_playing_before_action:
             self.media_player.play()
+    def closeEvent(self, event):
+        if getattr(self, 'is_saving', False):
+            guiTools.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء عملية الحفظ.")
+            event.ignore()
+        else:
+            if self.media_player.isPlaying():
+                self.media_player.stop()
+            super().closeEvent(event)
     def eventFilter(self, obj, event):
         if obj == self.results.viewport() and event.type() == qt2.QEvent.Type.MouseButtonPress:
             if event.button() == qt2.Qt.MouseButton.LeftButton:
@@ -450,6 +507,91 @@ class Albaheth(qt.QWidget):
                 self.media_player.play()
         else:
             self.start_playback(selected_metadata)
+    def save_ayah(self, metadata):
+        if getattr(self, 'is_saving', False): return
+        self.pause_for_action()
+        with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
+            reciters = json.load(file)
+        reciter_url = list(reciters.values())[self.currentReciter]
+        reciter_folder = reciter_url.split('/')[-3]
+        surah_num_str = str(metadata["surah_number"]).zfill(3)
+        ayah_num_str = str(metadata["ayah_number_in_surah"]).zfill(3)
+        filename = f"{surah_num_str}{ayah_num_str}.mp3"
+        local_path = os.path.join(os.getenv('appdata'), settings.app.appName, "reciters", reciter_folder, filename)
+        is_local = os.path.exists(local_path)
+        if not is_local:
+            confirm_message = "تنبيه: الآية غير موجودة محلياً وسيتم تحميلها الآن.\n\nهل تريد المتابعة؟"
+        else:
+            confirm_message = "الآية موجودة محلياً وجاهزة للحفظ.\n\nهل تريد المتابعة؟"
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الحفظ", confirm_message, "نعم", "لا")
+        if reply != 0:
+            self.resume_after_action()
+            return
+        output_dir = qt.QFileDialog.getExistingDirectory(self, "اختر مجلد لحفظ الآية")
+        if not output_dir:
+            self.resume_after_action()
+            return
+        self.save_mode_data = {"filename": filename, "local_path": local_path, "url": reciter_url + filename, "output_dir": output_dir, "is_local": is_local}
+        self.set_ui_for_save(True)
+        if is_local:
+            self.save_feedback_label.setText("جاري حفظ الآية...")
+            dest = os.path.join(output_dir, filename)
+            try:
+                shutil.copy2(local_path, dest)
+                self.on_save_finished(True, "تم حفظ الآية بنجاح.")
+            except Exception as e:
+                self.on_save_finished(False, f"فشل نسخ الآية: {str(e)}")
+        else:
+            self.save_feedback_label.setText("جاري تحميل الآية المطلوبة...")
+            self.cancellation_requested = False
+            safe_filename = "".join(c for c in filename if c.isalnum() or c in ('.', '_')).rstrip()
+            self.temp_download_path = os.path.join(output_dir, f"temp_{safe_filename}")
+            self.download_thread = DownloadThread(self.save_mode_data["url"], self.temp_download_path)
+            self.download_thread.progress.connect(self.save_progress_bar.setValue)
+            self.download_thread.finished.connect(self.on_download_finished)
+            self.download_thread.cancelled.connect(lambda: self.on_save_finished(False, "تم إلغاء العملية."))
+            self.download_thread.start()
+    def on_download_finished(self):
+        if self.cancellation_requested:
+            self.on_save_finished(False, "تم إلغاء العملية.")
+            return
+        dest = os.path.join(self.save_mode_data["output_dir"], self.save_mode_data["filename"])
+        try:
+            if os.path.exists(self.temp_download_path):
+                shutil.move(self.temp_download_path, dest)
+                self.on_save_finished(True, "تم حفظ الآية بنجاح.")
+            else:
+                self.on_save_finished(False, "الملف المؤقت غير موجود.")
+        except Exception as e:
+            self.on_save_finished(False, f"فشل نقل الآية: {str(e)}")
+    def cancel_save(self):
+        self.cancellation_requested = True
+        if hasattr(self, 'download_thread') and self.download_thread.isRunning():
+            self.download_thread.cancel()
+    def on_save_finished(self, success, message):
+        self.set_ui_for_save(False)
+        if self.cancellation_requested:
+            guiTools.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الحفظ.")
+            if hasattr(self, 'temp_download_path') and os.path.exists(self.temp_download_path):
+                try: os.remove(self.temp_download_path)
+                except: pass
+        elif success:
+            guiTools.MessageBox.view(self, "نجاح", message)
+        else:
+            guiTools.MessageBox.error(self, "فشل", message)
+            if hasattr(self, 'temp_download_path') and os.path.exists(self.temp_download_path):
+                try: os.remove(self.temp_download_path)
+                except: pass
+        self.cancellation_requested = False
+        self.resume_after_action()
+    def set_ui_for_save(self, is_active):
+        self.is_saving = is_active
+        widgets_to_disable = [self.serch, self.ahadeeth, self.surahs, self.specific_scope_combo, self.serch_input, self.search_mode_button, self.start, self.results, self.clear_results_button]
+        for widget in widgets_to_disable:
+            widget.setEnabled(not is_active)
+        self.save_widget.setVisible(is_active)
+        if is_active:
+            self.save_progress_bar.setValue(0)
     def show_search_mode_dialog(self):
         self.pause_for_action()
         dialog = SearchModeDialog(self, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
@@ -624,6 +766,10 @@ class Albaheth(qt.QWidget):
             info_action.setShortcut("Ctrl+F")
             info_action.triggered.connect(lambda: self.show_ayah_info(metadata))
             ayah_menu.addAction(info_action)
+            save_ayah_action = qt1.QAction("حفظ الآية", self)
+            save_ayah_action.setShortcut("Ctrl+H")
+            save_ayah_action.triggered.connect(lambda: self.save_ayah(metadata))
+            ayah_menu.addAction(save_ayah_action)
             menu.addMenu(ayah_menu)
             menu.addSeparator()
         text_menu = qt.QMenu("خيارات النص", self)
