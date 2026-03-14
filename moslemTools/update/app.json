@@ -1,7 +1,7 @@
 {
   "name": "moslem tools",
-  "version": 6.4,
-  "what is new": "الجديد للإصدار 6.4\nإضافة رسائل تحفيزية للمستخدمين في البرنامج، نصل إليها من زر المزيد من الخيارات، أو الاختصار ctrl+shift+m، ويمكن عرض رسالة عشوائية أثناء تشغيل البرنامج\nتم إتاحة تشغيل البرنامج من الاختصار ctrl+alt+m\nإصلاح أخطاء مهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.4/moslem_tools_version_6.4.exe",
-  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.4/moslem_tools_version_6.4.exe",
+  "version": 6.5,
+  "what is new": "الجديد للإصدار 6.5\nإضافة ستايلات جديدة لشريط التقدم في البرنامج\nإضافة إمكانية حفظ الآيات في الجهاز\nتم إنشاء قناة تليجرام للبرنامج، يمكن الوصول لها من زر المزيد من الخيارات في البرنامج، أرجو من كل مستخدمين البرنامج الانضمام لها، وشكرا لكم\nإصلاح الكثير من الأخطاء المهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.5/moslem_tools_version_6.5.exe",
+  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.5/moslem_tools_version_6.5.exe",
   "is_beta": false
 }
