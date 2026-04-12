@@ -8,7 +8,6 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from functions import audio_manager
-
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
@@ -40,7 +39,6 @@ class DownloadThread(qt2.QThread):
             self.cancelled.emit()
     def cancel(self):
         self.is_cancelled = True
-
 class MergeThread(qt2.QThread):
     finished = qt2.pyqtSignal(bool, str)
     def __init__(self, parent, ffmpeg_path, input_files, output_file):
@@ -75,7 +73,6 @@ class MergeThread(qt2.QThread):
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
-
 class QuranPlayer(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -306,20 +303,16 @@ class QuranPlayer(qt.QWidget):
         self.surahListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.surahListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
-
     def update_progress_label(self, current, total):
         if total == 1:
             self.progress_text_label.setText("جاري تحميل سورة واحدة...")
             return
-            
         if current == 0:
             current_text = "0 سورة"
         else:
             current_text = self.format_surah_count(current)
-            
         total_text = self.format_surah_count(total)
         self.progress_text_label.setText(f"تم تحميل {current_text} من أصل {total_text}")
-
     def showEvent(self, event):
         if not self.is_loaded:
             self.load_data()
@@ -649,11 +642,8 @@ class QuranPlayer(qt.QWidget):
         if next_item_to_download:
             self.progressBar.setVisible(True)
             self.progress_text_label.setVisible(True)
-            
-            # Update the text label for merge progress
             total_downloads = len([item for item in self.merge_list if not os.path.exists(os.path.join(os.getenv('appdata'), app.appName, 'quran surah reciters', item['reciter'], item['surah'] + '.mp3'))])
             self.update_progress_label(len(self.completed_merge_downloads), total_downloads)
-            
             self.cancel_download_button.setVisible(False)
             url = next_item_to_download['url']
             reciter = next_item_to_download['reciter']
@@ -1123,11 +1113,8 @@ class QuranPlayer(qt.QWidget):
                     return
                 self.set_ui_enabled(False)
                 self.progressBar.setVisible(True)
-                
-                # Single file text logic
                 self.progress_text_label.setText("جاري تحميل سورة واحدة...")
                 self.progress_text_label.setVisible(True)
-                
                 self.cancel_download_button.setVisible(True)
                 self.current_download_filename = selected_item.text()
                 self.current_download_reciter = reciter
@@ -1194,10 +1181,7 @@ class QuranPlayer(qt.QWidget):
                 self.current_file_index += 1
                 self.download_next_audio_to_app()
                 return
-                
-            # Update the progress text label
             self.update_progress_label(self.current_file_index, len(self.files_to_download))
-            
             self.current_file_index += 1
             self.progressBar.setVisible(True)
             self.progress_text_label.setVisible(True)
@@ -1205,12 +1189,10 @@ class QuranPlayer(qt.QWidget):
             self.download_thread = DownloadThread(self, url, filepath)
             self.download_thread.progress.connect(self.progressBar.setValue)
             self.download_thread.finished.connect(self.on_single_batch_download_finished)
-            
             if hasattr(self, 'is_downloading_all_app') and self.is_downloading_all_app:
                 self.download_thread.cancelled.connect(self.on_download_cancelled_all_app)
             else:
                 self.download_thread.cancelled.connect(self.on_download_cancelled_batch_internal)
-                
             self.download_thread.start()
         else:
             self.progressBar.setVisible(False)
@@ -1238,12 +1220,9 @@ class QuranPlayer(qt.QWidget):
                 self.cancel_download_batch()
             else:
                 self.set_ui_for_batch_download(True)
-                
             if hasattr(self, 'is_downloading_all_app'):
                 self.is_downloading_all_app = False
-                
             self.update_merge_ui()
-            
     def on_download_cancelled_all_app(self):
         self.progressBar.setVisible(False)
         self.progress_text_label.setVisible(False)
@@ -1251,16 +1230,13 @@ class QuranPlayer(qt.QWidget):
         self.info_menu.setEnabled(True)
         self.duration.setEnabled(True)
         self.set_ui_for_batch_download(True)
-        
         if hasattr(self, 'current_download_filename') and hasattr(self, 'current_download_reciter'):
             self.mark_for_deletion(self.current_download_filename, self.current_download_reciter, app_internal=True)
             del self.current_download_filename
-            
         guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل باقي السور، وتم الاحتفاظ بما تم تحميله بنجاح.")
         self.is_downloading_all_app = False
         self.current_file_index = len(self.files_to_download)
         self.update_merge_ui()
-
     def download_audio_complete(self):
         self.progressBar.setValue(100)
         self.progressBar.setVisible(False)
@@ -1297,10 +1273,7 @@ class QuranPlayer(qt.QWidget):
         if self.current_file_index < len(self.files_to_download):
             file_name, url = self.files_to_download[self.current_file_index]
             filepath = os.path.join(self.save_folder, f"{file_name}.mp3")
-            
-            # Update the progress text label
             self.update_progress_label(self.current_file_index, len(self.files_to_download))
-            
             self.current_file_index += 1
             self.progressBar.setVisible(True)
             self.progress_text_label.setVisible(True)
@@ -1337,7 +1310,6 @@ class QuranPlayer(qt.QWidget):
                 if hasattr(self, 'download_thread') and self.download_thread.isRunning():
                     self.download_thread.cancel()
             return
-            
         is_batch_download = self.is_downloading_batch or (hasattr(self, 'files_to_download') and self.current_file_index < len(self.files_to_download) and hasattr(self, 'current_download_reciter'))
         if is_batch_download and not self.full_batch_cancellation_requested:
             current_surah_name = self.current_download_filename
@@ -1547,11 +1519,8 @@ class QuranPlayer(qt.QWidget):
                 if filepath:
                     self.set_ui_enabled(False)
                     self.progressBar.setVisible(True)
-                    
-                    # Single file text logic
                     self.progress_text_label.setText("جاري تحميل سورة واحدة...")
                     self.progress_text_label.setVisible(True)
-                    
                     self.cancel_download_button.setVisible(True)
                     self.save_folder = os.path.dirname(filepath)
                     self.current_download_filename = os.path.splitext(os.path.basename(filepath))[0]
@@ -1688,7 +1657,6 @@ class QuranPlayer(qt.QWidget):
                             batch_download_device_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
                             if current_index != self.first_download_selection_index:
                                 download_range_action = qt1.QAction("التحميل من البداية المحددة إلى هنا", self)
-                                download_range_action.triggered.connect(lambda: self.download_from_start_to_here('device'))
                                 download_range_action.triggered.connect(lambda: self.download_from_start_to_here('device'))
                                 batch_download_device_menu.addAction(download_range_action)
                             cancel_start_dl_action = qt1.QAction("إلغاء تحديد بداية التحميل", self)

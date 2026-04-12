@@ -8,7 +8,6 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from functions import audio_manager
-
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
@@ -40,7 +39,6 @@ class DownloadThread(qt2.QThread):
             self.cancelled.emit()
     def cancel(self):
         self.is_cancelled = True
-
 class MergeThread(qt2.QThread):
     finished = qt2.pyqtSignal(bool, str)
     def __init__(self, parent, ffmpeg_path, input_files, output_file):
@@ -75,7 +73,6 @@ class MergeThread(qt2.QThread):
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
-
 class StoryPlayer(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -149,15 +146,12 @@ class StoryPlayer(qt.QWidget):
         self.storyListWidget.setSpacing(3)
         self.storyListWidget.clicked.connect(self.play_selected_audio)
         self.storySearchEdit.textChanged.connect(self.story_onsearch)
-        
         self.progressBar = qt.QProgressBar()
         self.progressBar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.progressBar.setVisible(False)
-        
         self.progress_text_label = qt.QLabel("")
         self.progress_text_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.progress_text_label.setVisible(False)
-
         self.cancel_download_button = guiTools.QPushButton("إلغاء التنزيل")
         self.cancel_download_button.setShortcut("ctrl+c")
         self.cancel_download_button.setAccessibleDescription("control plus c")
@@ -262,12 +256,10 @@ class StoryPlayer(qt.QWidget):
         layout.addLayout(topLayout)
         layout.addLayout(download_buttons_layout)
         layout.addWidget(self.Slider)
-        
         progress_cancel_layout = qt.QHBoxLayout()
         progress_cancel_layout.addWidget(self.cancel_download_button)
         progress_cancel_layout.addWidget(self.progressBar)
         progress_cancel_layout.addWidget(self.progress_text_label)
-        
         layout.addLayout(progress_cancel_layout)
         playback_buttons_layout = qt.QHBoxLayout()
         playback_buttons_layout.addWidget(self.play_all_to_end)
@@ -282,20 +274,16 @@ class StoryPlayer(qt.QWidget):
         self.storyListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.storyListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
-
     def update_progress_label(self, current, total):
         if total == 1:
             self.progress_text_label.setText("جاري تحميل قصة واحدة...")
             return
-            
         if current == 0:
             current_text = "0 قصة"
         else:
             current_text = self.format_story_count(current)
-            
         total_text = self.format_story_count(total)
         self.progress_text_label.setText(f"تم تحميل {current_text} من أصل {total_text}")
-
     def showEvent(self, event):
         if not self.is_loaded:
             self.load_data()
@@ -539,10 +527,8 @@ class StoryPlayer(qt.QWidget):
         if next_item_to_download:
             self.progressBar.setVisible(True)
             self.progress_text_label.setVisible(True)
-            
             total_downloads = len([item for item in self.merge_list if not os.path.exists(os.path.join(os.getenv('appdata'), app.appName, 'stories', item['category'], item['story'] + '.mp3'))])
             self.update_progress_label(len(self.completed_merge_downloads), total_downloads)
-            
             self.cancel_download_button.setVisible(False)
             url = next_item_to_download['url']
             category = next_item_to_download['category']
@@ -1024,9 +1010,7 @@ class StoryPlayer(qt.QWidget):
                 self.current_file_index += 1
                 self.download_next_audio_to_app()
                 return
-                
             self.update_progress_label(self.current_file_index, len(self.files_to_download))
-            
             self.current_file_index += 1
             self.progressBar.setVisible(True)
             self.progress_text_label.setVisible(True)
@@ -1034,12 +1018,10 @@ class StoryPlayer(qt.QWidget):
             self.download_thread = DownloadThread(self, url, filepath)
             self.download_thread.progress.connect(self.progressBar.setValue)
             self.download_thread.finished.connect(self.on_single_batch_download_finished)
-            
             if hasattr(self, 'is_downloading_all_app') and self.is_downloading_all_app:
                 self.download_thread.cancelled.connect(self.on_download_cancelled_all_app)
             else:
                 self.download_thread.cancelled.connect(self.on_download_cancelled_batch_internal)
-                
             self.download_thread.start()
         else:
             self.progressBar.setVisible(False)
@@ -1067,12 +1049,9 @@ class StoryPlayer(qt.QWidget):
                 self.cancel_download_batch()
             else:
                 self.set_ui_for_batch_download(True)
-                
             if hasattr(self, 'is_downloading_all_app'):
                 self.is_downloading_all_app = False
-                
             self.update_merge_ui()
-
     def on_download_cancelled_all_app(self):
         self.progressBar.setVisible(False)
         self.progress_text_label.setVisible(False)
@@ -1080,16 +1059,13 @@ class StoryPlayer(qt.QWidget):
         self.info_menu.setEnabled(True)
         self.duration.setEnabled(True)
         self.set_ui_for_batch_download(True)
-        
         if hasattr(self, 'current_download_filename') and hasattr(self, 'current_download_category'):
             self.mark_for_deletion(self.current_download_filename, self.current_download_category, app_internal=True)
             del self.current_download_filename
-            
         guiTools.qMessageBox.MessageBox.view(self, "إلغاء التحميل", "تم إلغاء تحميل باقي القصص، وتم الاحتفاظ بما تم تحميله بنجاح.")
         self.is_downloading_all_app = False
         self.current_file_index = len(self.files_to_download)
         self.update_merge_ui()
-
     def download_audio_complete(self):
         self.progressBar.setValue(100)
         self.progressBar.setVisible(False)
@@ -1125,9 +1101,7 @@ class StoryPlayer(qt.QWidget):
         if self.current_file_index < len(self.files_to_download):
             file_name, url = self.files_to_download[self.current_file_index]
             filepath = os.path.join(self.save_folder, f"{file_name}.mp3")
-            
             self.update_progress_label(self.current_file_index, len(self.files_to_download))
-            
             self.current_file_index += 1
             self.progressBar.setVisible(True)
             self.progress_text_label.setVisible(True)
@@ -1164,7 +1138,6 @@ class StoryPlayer(qt.QWidget):
                 if hasattr(self, 'download_thread') and self.download_thread.isRunning():
                     self.download_thread.cancel()
             return
-            
         is_batch_download = self.is_downloading_batch or (hasattr(self, 'files_to_download') and self.current_file_index < len(self.files_to_download) and hasattr(self, 'current_download_category'))
         if is_batch_download and not self.full_batch_cancellation_requested:
             current_story_name = self.current_download_filename
@@ -1457,7 +1430,6 @@ class StoryPlayer(qt.QWidget):
                             batch_download_device_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
                             if current_index != self.first_download_selection_index:
                                 download_range_action = qt1.QAction("التحميل من البداية المحددة إلى هنا", self)
-                                download_range_action.triggered.connect(lambda: self.download_from_start_to_here('device'))
                                 download_range_action.triggered.connect(lambda: self.download_from_start_to_here('device'))
                                 batch_download_device_menu.addAction(download_range_action)
                             cancel_start_dl_action = qt1.QAction("إلغاء تحديد بداية التحميل", self)
