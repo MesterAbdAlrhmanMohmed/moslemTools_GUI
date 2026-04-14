@@ -34,6 +34,10 @@ class translationViewer(qt.QDialog):
         self.permanent_stabilizer_bar.setAccessibleName(" ")
         self.permanent_stabilizer_bar.setAccessibleDescription(" ")
         layout.addWidget(self.permanent_stabilizer_bar)
+        self.current_translation_label = qt.QLabel(f"الترجمة المحددة هي: {functions.translater.gettranslationByIndex(self.index)}")
+        self.current_translation_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.current_translation_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.current_translation_label)
         layout.addWidget(self.text)
         bottomLayout = qt.QHBoxLayout()
         self.changeTranslation = qt.QPushButton("تغيير الترجمة")
@@ -85,19 +89,16 @@ class translationViewer(qt.QDialog):
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
         menu.addMenu(fontMenu)
         menu.exec(qt1.QCursor.pos())
-
     def on_change_translation(self):
         menu = qt.QMenu("اختر ترجمة", self)
         menu.setAccessibleName("اختر ترجمة")
         action_group = qt1.QActionGroup(self)
         action_group.setExclusive(True)
-
         current_translation_name = functions.translater.gettranslationByIndex(self.index)                
         all_translations = list(functions.translater.translations.keys())
         if current_translation_name in all_translations:
             all_translations.remove(current_translation_name)
             all_translations.insert(0, current_translation_name)
-
         for name in all_translations:
             action = qt1.QAction(name, self)
             action.setCheckable(True)
@@ -106,20 +107,23 @@ class translationViewer(qt.QDialog):
             action.triggered.connect(lambda checked, n=name: self.on_translation_changed(n) if checked else None)
             menu.addAction(action)
             action_group.addAction(action)
-
         menu.exec(qt1.QCursor.pos())
-
     def on_translation_changed(self, name: str):
         new_index = functions.translater.translations.get(name)
         if new_index is not None and self.index != new_index:
             self.index = new_index
+            self.current_translation_label.setText(f"الترجمة المحددة هي: {functions.translater.gettranslationByIndex(self.index)}")
             self.getResult()
     def print_text(self):
         try:
             printer = QPrinter()
             dialog = QPrintDialog(printer, self)
             if dialog.exec() == QPrintDialog.DialogCode.Accepted:
-                self.text.print(printer)
+                doc = qt1.QTextDocument()
+                translation_name = functions.translater.gettranslationByIndex(self.index)
+                doc.setPlainText(f"ترجمة: {translation_name}\n\n{self.text.toPlainText()}")
+                doc.setDefaultFont(self.text.font())
+                doc.print(printer)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def save_text_astxt(self):
@@ -131,7 +135,9 @@ class translationViewer(qt.QDialog):
             if file_dialog.exec() == qt.QFileDialog.DialogCode.Accepted:
                 file_name = file_dialog.selectedFiles()[0]
                 with open(file_name, 'w', encoding='utf-8') as file:
-                    file.write(self.text.toPlainText())
+                    translation_name = functions.translater.gettranslationByIndex(self.index)
+                    text = f"ترجمة: {translation_name}\n\n{self.text.toPlainText()}"
+                    file.write(text)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def font_size_changed(self, value):
@@ -157,8 +163,10 @@ class translationViewer(qt.QDialog):
             self.show_font.setValue(self.font_size)
             self.show_font.blockSignals(False)
     def copy_text(self):
-        try:            
-            pyperclip.copy(self.text.toPlainText())
+        try:
+            translation_name = functions.translater.gettranslationByIndex(self.index)
+            content_to_copy = f"ترجمة: {translation_name}\n\n{self.text.toPlainText()}"
+            pyperclip.copy(content_to_copy)
             winsound.Beep(1000, 100)
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:

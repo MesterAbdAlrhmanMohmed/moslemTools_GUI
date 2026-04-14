@@ -34,6 +34,10 @@ class TafaseerViewer(qt.QDialog):
         self.permanent_stabilizer_bar.setAccessibleName(" ")
         self.permanent_stabilizer_bar.setAccessibleDescription(" ")
         layout.addWidget(self.permanent_stabilizer_bar)
+        self.current_tafaseer_label = qt.QLabel(f"التفسير المحدد هو: {functions.tafseer.getTafaseerByIndex(self.index)}")
+        self.current_tafaseer_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.current_tafaseer_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.current_tafaseer_label)
         layout.addWidget(self.text)
         bottomLayout = qt.QHBoxLayout()
         self.changeTafaseer = qt.QPushButton("تغيير التفسير")
@@ -85,19 +89,16 @@ class TafaseerViewer(qt.QDialog):
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
         menu.addMenu(fontMenu)
         menu.exec(qt1.QCursor.pos())
-
     def on_change_tafaseer(self):
         menu = qt.QMenu("اختر تفسير", self)
         menu.setAccessibleName("اختر تفسير")
         action_group = qt1.QActionGroup(self)
         action_group.setExclusive(True)
-
         current_tafaseer_name = functions.tafseer.getTafaseerByIndex(self.index)                
         all_tafseers = list(functions.tafseer.tafaseers.keys())
         if current_tafaseer_name in all_tafseers:
             all_tafseers.remove(current_tafaseer_name)
             all_tafseers.insert(0, current_tafaseer_name)
-
         for name in all_tafseers:
             action = qt1.QAction(name, self)
             action.setCheckable(True)
@@ -106,21 +107,23 @@ class TafaseerViewer(qt.QDialog):
             action.triggered.connect(lambda checked, n=name: self.onTafaseerChanged(n) if checked else None)
             menu.addAction(action)
             action_group.addAction(action)
-
         menu.exec(qt1.QCursor.pos())
-
     def onTafaseerChanged(self, name: str):
         new_index = functions.tafseer.tafaseers.get(name)
         if new_index is not None and self.index != new_index:
             self.index = new_index
+            self.current_tafaseer_label.setText(f"التفسير المحدد هو: {functions.tafseer.getTafaseerByIndex(self.index)}")
             self.getResult()
-
     def print_text(self):
         try:
             printer = QPrinter()
             dialog = QPrintDialog(printer, self)
             if dialog.exec() == QPrintDialog.DialogCode.Accepted:
-                self.text.print(printer)
+                doc = qt1.QTextDocument()
+                tafaseer_name = functions.tafseer.getTafaseerByIndex(self.index)
+                doc.setPlainText(f"تفسير: {tafaseer_name}\n\n{self.text.toPlainText()}")
+                doc.setDefaultFont(self.text.font())
+                doc.print(printer)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
     def save_text_as_txt(self):
@@ -132,7 +135,8 @@ class TafaseerViewer(qt.QDialog):
             if file_dialog.exec() == qt.QFileDialog.DialogCode.Accepted:
                 file_name = file_dialog.selectedFiles()[0]
                 with open(file_name, 'w', encoding='utf-8') as file:
-                    text = self.text.toPlainText()
+                    tafaseer_name = functions.tafseer.getTafaseerByIndex(self.index)
+                    text = f"تفسير: {tafaseer_name}\n\n{self.text.toPlainText()}"
                     file.write(text)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
@@ -160,7 +164,9 @@ class TafaseerViewer(qt.QDialog):
             self.show_font.blockSignals(False)
     def copy_text(self):
         try:
-            pyperclip.copy(self.text.toPlainText())
+            tafaseer_name = functions.tafseer.getTafaseerByIndex(self.index)
+            content_to_copy = f"تفسير: {tafaseer_name}\n\n{self.text.toPlainText()}"
+            pyperclip.copy(content_to_copy)
             winsound.Beep(1000, 100)
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
