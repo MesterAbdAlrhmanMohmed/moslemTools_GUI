@@ -179,6 +179,55 @@ class SaveThread(qt2.QThread):
         self.finished.emit(True, msg)
     def cancel(self):
         self.cancelled = True
+class SajdaGoToDialog(qt.QDialog):
+    def __init__(self, parent, title, label, items, selected_index):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.resize(250, 120)
+        self.selected_index = -1
+        layout = qt.QVBoxLayout(self)
+        self.label = qt.QLabel(label)
+        self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.label)
+        self.combo = qt.QComboBox()
+        self.combo.addItems(items)
+        if selected_index != -1:
+            self.combo.setCurrentIndex(selected_index)
+        self.combo.setFixedHeight(40)
+        layout.addWidget(self.combo)
+        buttons = qt.QHBoxLayout()
+        self.go_button = guiTools.QPushButton("ذهاب")
+        self.go_button.setStyleSheet("background-color:#006400;color:white;padding:5px;")
+        self.go_button.clicked.connect(self.on_go)
+        self.go_button.setFixedHeight(40)
+        self.cancel_button = guiTools.QPushButton("إلغاء")
+        self.cancel_button.setStyleSheet("background-color:#8B0000;color:white;padding:5px;")
+        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setFixedHeight(40)
+        buttons.addWidget(self.go_button)
+        buttons.addWidget(self.cancel_button)
+        layout.addLayout(buttons)
+    def on_go(self):
+        self.selected_index = self.combo.currentIndex()
+        self.accept()
+class SajdaFinderThread(qt2.QThread):
+    finished = qt2.pyqtSignal(list)
+    def __init__(self, ayah_list, category, category_type):
+        super().__init__()
+        self.ayah_list = ayah_list
+        self.category = category
+        self.category_type = category_type
+    def run(self):
+        sajda_verses = []
+        for index, ayah_text in enumerate(self.ayah_list):
+            try:
+                if not ayah_text.strip(): continue
+                num, _, juz_info, _, _ = functions.quranJsonControl.getAyah(ayah_text, self.category, self.category_type)
+                if juz_info[3]:
+                    sajda_verses.append({"index": index, "surah": juz_info[1], "numberInSurah": num})
+            except:
+                continue
+        self.finished.emit(sajda_verses)
 class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
         super().__init__(parent)
@@ -317,6 +366,8 @@ class QuranViewer(qt.QDialog):
         self.verse_numbering_mode = "by_surah"
         self.remove_tashkeel = False
         self.text_cache = {"by_surah": self.original_quran_text}
+        self.is_counting_sajdas = False
+        self.original_info_text = ""
         self.media=QMediaPlayer(self)
         self.audioOutput=QAudioOutput(self)
         self.audioOutput.setDevice(audio_manager.get_audio_device("quran_text"))
@@ -542,6 +593,7 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
         qt1.QShortcut("ctrl+x", self).activated.connect(self.removeTashkeelForAyah)
+        qt1.QShortcut("ctrl+alt+j", self).activated.connect(self.showSajdaVerses)
     def t10(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
@@ -1410,6 +1462,14 @@ class QuranViewer(qt.QDialog):
                 removeTashkeelCategoryAction.setShortcut("ctrl+shift+x")
                 surahOption.addAction(removeTashkeelCategoryAction)
                 removeTashkeelCategoryAction.triggered.connect(self.toggleTashkeelView)
+            if self.type == 5:
+                sajda_action_text = "عرض جميع الآيات التي تحتوي على سجدة في العرض المخصص"
+            else:
+                sajda_action_text = f"عرض جميع الآيات التي تحتوي على سجدة في {category_name_no_al} {self.category}"
+            showSajdaAction = qt1.QAction(sajda_action_text, self)
+            showSajdaAction.setShortcut("ctrl+alt+j")
+            surahOption.addAction(showSajdaAction)
+            showSajdaAction.triggered.connect(self.showSajdaVerses)
             if self.enableNextPreviouseButtons and go_to_action_text:
                 goToCategoryAction = qt1.QAction(go_to_action_text, self)
                 goToCategoryAction.setShortcut("ctrl+shift+g")
@@ -1922,6 +1982,45 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على معلومات.")
         self.resume_after_action()
+    def showSajdaVerses(self):
+        if self.is_search_view:
+            return
+        self.is_counting_sajdas = True
+        self.original_info_text = self.info.text()
+        self.info.setText("جاري حصر الآيات")
+        self.info.setFocus()
+        self.sajda_thread = SajdaFinderThread(self.original_quran_text.split('\n'), self.category, self.type)
+        self.sajda_thread.finished.connect(self.onSajdaFinderFinished)
+        self.sajda_thread.start()
+    def onSajdaFinderFinished(self, sajda_verses):
+        self.is_counting_sajdas = False
+        self.info.setText(self.original_info_text)
+        if not sajda_verses:
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا توجد آيات تحتوي على سجدة في هذه الفئة.")
+            return
+        items = []
+        selected_index = -1
+        for i, v in enumerate(sajda_verses):
+            if self.type == 0:
+                item_text = f"الآية {v['numberInSurah']}"
+            else:
+                item_text = f"سورة {v['surah']} الآية {v['numberInSurah']}"
+            items.append(item_text)
+            if v['index'] == self.saved_ayah_index:
+                selected_index = i
+        dialog = SajdaGoToDialog(self, "السجدات", "اختر آية للذهاب إليها", items, selected_index)
+        if dialog.exec() == qt.QDialog.DialogCode.Accepted:
+            target_index = sajda_verses[dialog.selected_index]['index']
+            cursor = self.text.textCursor()
+            cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
+            for _ in range(target_index):
+                cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
+            self.text.setTextCursor(cursor)
+            self.text.setFocus()
+    def keyPressEvent(self, event):
+        if event.key() == qt2.Qt.Key.Key_Escape:
+            self.close()
+        super().keyPressEvent(event)
     def closeEvent(self, event):
         if getattr(self, 'is_merging', False):
             if getattr(self, 'save_mode', False):
@@ -1941,6 +2040,10 @@ class QuranViewer(qt.QDialog):
                 else:
                     event.ignore()
                     return
+        if getattr(self, 'is_counting_sajdas', False):
+            self.is_counting_sajdas = False
+            if hasattr(self, 'sajda_thread') and self.sajda_thread.isRunning():
+                self.sajda_thread.terminate()
         self.media.stop()
         super().closeEvent(event)
     def getCurentAyahIArab(self):
