@@ -1,4 +1,5 @@
-import os,settings,json
+import os,settings
+import ujson as json
 _tafaseers=None
 def load_tafaseers():
     global _tafaseers

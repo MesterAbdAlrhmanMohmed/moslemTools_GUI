@@ -1,4 +1,4 @@
-import json
+import ujson as json
 import functions.quranJsonControl
 _iarab_data = None
 def getIarab(From:int,to:int):

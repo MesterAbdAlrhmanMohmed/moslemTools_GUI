@@ -1,4 +1,5 @@
-import guiTools, requests, json, os, gui, functions, subprocess, shutil, winsound
+import guiTools, requests, os, gui, functions, subprocess, shutil, winsound
+import ujson as json
 from guiTools import TextViewer
 from guiTools import speak
 from guiTools.QCustomListDialog import QCustomListDialog

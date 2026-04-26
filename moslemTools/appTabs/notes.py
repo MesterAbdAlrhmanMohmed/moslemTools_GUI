@@ -8,7 +8,8 @@ import functions.quranJsonControl as quranJsonControl
 from gui import quranViewer, hadeeth_viewer, storyViewer
 from gui.islamicBooks import book_viewer
 from gui.islamicTopicViewer import IslamicTopicViewer
-import json,os,guiTools,re
+import os,guiTools,re
+import ujson as json
 from guiTools import QPushButton
 class NotesDialog(qt.QDialog):
     def __init__(self, p):

@@ -1,4 +1,5 @@
-import os,settings,json
+import os,settings
+import ujson as json
 _translations=None
 def load_translations():
     global _translations

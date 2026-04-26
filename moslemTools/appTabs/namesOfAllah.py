@@ -1,4 +1,5 @@
-import guiTools, pyperclip, winsound, json
+import guiTools, pyperclip, winsound
+import ujson as json
 from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1

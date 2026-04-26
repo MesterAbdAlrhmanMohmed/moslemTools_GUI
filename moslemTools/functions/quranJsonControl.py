@@ -1,4 +1,5 @@
-import json,re
+import re
+import ujson as json
 _data = None
 def _load_data():
     global _data

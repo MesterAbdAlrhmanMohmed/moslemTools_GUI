@@ -1,4 +1,5 @@
-import gui,guiTools,os,json,re,shutil,threading
+import gui,guiTools,os,re,shutil,threading
+import ujson as json
 from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1

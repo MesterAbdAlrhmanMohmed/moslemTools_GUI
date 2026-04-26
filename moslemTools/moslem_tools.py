@@ -1,7 +1,8 @@
 from custome_errors import *
 import sys
 sys.excepthook = my_excepthook
-import update,guiTools,json,random,os,shutil,datetime,webbrowser,requests,pyperclip,winsound,ctypes,threading
+import update,guiTools,random,os,shutil,datetime,webbrowser,requests,pyperclip,winsound,ctypes,threading
+import ujson as json
 from pynput import keyboard as p_key
 from hijridate import Gregorian
 from settings import *

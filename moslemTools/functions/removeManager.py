@@ -1,4 +1,5 @@
-import json, os, settings
+import os, settings
+import ujson as json
 path = os.path.join(os.getenv('appdata'), settings.app.appName, "remover.json")
 if not os.path.exists(path) or os.stat(path).st_size == 0:
     with open(path, "w", encoding="utf-8") as file:

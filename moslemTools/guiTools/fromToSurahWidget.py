@@ -1,4 +1,5 @@
-import functions, gui, guiTools, os, json, requests, subprocess, shutil
+import functions, gui, guiTools, os, requests, subprocess, shutil
+import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2

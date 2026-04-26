@@ -1,4 +1,5 @@
-import os,json,settings
+import os,settings
+import ujson as json
 _books=None
 def load_books():
     global _books

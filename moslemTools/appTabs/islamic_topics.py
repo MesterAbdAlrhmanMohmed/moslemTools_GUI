@@ -1,4 +1,5 @@
-import os,json,re
+import os,re
+import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 from collections import defaultdict

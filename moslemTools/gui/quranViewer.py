@@ -4,7 +4,8 @@ from .changeReciter import ChangeReciter
 from .translationViewer import translationViewer
 from .tafaseerViewer import TafaseerViewer
 from .quranPlayer import QuranPlayer
-import time, winsound, pyperclip, os, json, re, requests, subprocess, shutil
+import time, winsound, pyperclip, os, re, requests, subprocess, shutil
+import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2

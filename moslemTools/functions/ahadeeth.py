@@ -1,4 +1,5 @@
-import os,json,settings
+import os,settings
+import ujson as json
 _ahadeeths=None
 def load_ahadeeths():
     global _ahadeeths

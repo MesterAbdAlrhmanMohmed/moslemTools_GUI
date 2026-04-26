@@ -1,4 +1,4 @@
-import json
+import ujson as json
 _tanzil_data = None
 def gettanzil(From:int):
     global _tanzil_data

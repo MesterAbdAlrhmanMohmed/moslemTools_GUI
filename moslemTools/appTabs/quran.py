@@ -1,5 +1,6 @@
 import gui.translationViewer
-import gui, guiTools, functions, re, os, json, requests, subprocess, shutil
+import gui, guiTools, functions, re, os, requests, subprocess, shutil
+import ujson as json
 from settings.app import appName
 from settings import settings_handler
 import PyQt6.QtWidgets as qt

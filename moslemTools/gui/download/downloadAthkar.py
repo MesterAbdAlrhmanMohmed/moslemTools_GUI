@@ -1,4 +1,5 @@
-import json,os,requests,re
+import os,requests,re
+import ujson as json
 import guiTools,settings,settings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1

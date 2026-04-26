@@ -1,5 +1,6 @@
 from . import quranJsonControl
-import json, os, gui
+import os, gui
+import ujson as json
 from settings import app
 bookMarksPath=os.path.join(os.getenv('appdata'),app.appName,"bookMarks.json")
 if not os.path.exists(bookMarksPath):

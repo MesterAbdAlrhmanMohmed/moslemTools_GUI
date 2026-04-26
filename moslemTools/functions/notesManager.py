@@ -1,4 +1,5 @@
-import json, os
+import os
+import ujson as json
 from settings import app
 notesPath = os.path.join(os.getenv('appdata'), app.appName, "notes.json")
 def openNotesFile():

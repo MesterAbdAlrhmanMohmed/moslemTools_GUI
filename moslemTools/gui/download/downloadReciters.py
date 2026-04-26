@@ -1,4 +1,5 @@
-import json,os,requests,re
+import os,requests,re
+import ujson as json
 from functions import quranJsonControl
 import guiTools,gui,settings,settings
 import PyQt6.QtWidgets as qt

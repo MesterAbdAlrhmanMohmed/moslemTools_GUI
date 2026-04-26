@@ -1,6 +1,7 @@
 from guiTools import note_dialog
 import functions.notesManager as notesManager
-import guiTools, pyperclip, winsound, json, functions, settings, os
+import guiTools, pyperclip, winsound, functions, settings, os
+import ujson as json
 import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
