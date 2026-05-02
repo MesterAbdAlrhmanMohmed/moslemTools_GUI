@@ -72,7 +72,7 @@ class main(qt.QMainWindow):
         self.quranPlayer = QuranPlayer()
         self.storiesPlayer = StoryPlayer()
         self.researcher = Albaheth()
-        tabs = [(prayer_times(self), "مواقيت الصلاة والتاريخ"),(Quran(), "القرآن الكريم مكتوب"),(self.quranPlayer, "القرآن الكريم صوتي"),(Athker(), "الأذكار والأدعية"),(sibha(), "السبحة الإلكترونية"),(hadeeth(), "الأحاديث النبوية والقدسية"),(NamesOfAllah(), "أسماء الله الحُسْنى"),(IslamicBooks(), "الكتب الإسلامية"),(ProphetStories(), "القصص الإسلامية المكتوبة"),(self.storiesPlayer, "القصص الإسلامية الصوتية للأطفال"),(IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),(self.researcher, "الباحث في القرآن والأحاديث"),(protcasts(), "إذاعات الراديو الإسلامية"),(DateConverter(), "محول التاريخ"),]
+        tabs = [(prayer_times(self), "مواقيت الصلاة والتاريخ"),(Quran(), "القرآن الكريم مكتوب"),(self.quranPlayer, "القرآن الكريم صوتي"),(Athker(), "الأذكار والأدعية"),(sibha(), "السبحة الإلكترونية"),(hadeeth(), "الأحاديث النبوية والقدسية"),(NamesOfAllah(), "أسماء الله الحُسْنى"),(IslamicBooks(), "الكتب الإسلامية"),(ProphetStories(), "القصص الإسلامية المكتوبة"),(self.storiesPlayer, "القصص الإسلامية الصوتية للأطفال"),(IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),(IslamicQuestionsGame(), "لعبة الأسئلة الإسلامية"),(self.researcher, "الباحث في القرآن والأحاديث"),(protcasts(), "إذاعات الراديو الإسلامية"),(DateConverter(), "محول التاريخ"),]
         for widget_class, label in tabs:
             self.list_widget.add(label, widget_class)
         for i in range(self.list_widget.count()):
