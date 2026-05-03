@@ -203,6 +203,7 @@ class IslamicQuestionsGame(qt.QWidget):
             self.current_question_index = 0
             self.show_question()
             self.stacked_widget.setCurrentIndex(3)
+            qt2.QTimer.singleShot(10, self.question_edit.setFocus)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"فشل تحميل الأسئلة: {e}")
     def load_questions_from_path(self, json_path):
@@ -229,7 +230,7 @@ class IslamicQuestionsGame(qt.QWidget):
             msg = f"أحسنت! لقد انتهى الاختبار.\nلقد قمت بحل {solved_text} من {total_text} في {cat_name} في فئة {topic_name}، المستوى {level_name}."
             guiTools.qMessageBox.MessageBox.view(self, "انتهى الاختبار", msg)
             self.stacked_widget.setCurrentIndex(0)
-            self.first_cat_btn.setFocus()
+            qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
             return
         q_data = self.questions[self.current_question_index]
         self.question_edit.setText(q_data.get("q", ""))
@@ -255,8 +256,6 @@ class IslamicQuestionsGame(qt.QWidget):
         if selected_answer["t"] == 1:
             guiTools.qMessageBox.MessageBox.view(self, "إجابة صحيحة", "أحسنت، إجابتك صحيحة!")
             self.solved_count += 1
-            self.current_question_index += 1
-            self.show_question()
         else:
             q_data = self.questions[self.current_question_index]
             correct_text = ""
@@ -265,11 +264,12 @@ class IslamicQuestionsGame(qt.QWidget):
                     correct_text = ans["answer"]
                     break
             guiTools.qMessageBox.MessageBox.error(self, "إجابة خاطئة", f"للأسف الإجابة خاطئة.\nالإجابة الصحيحة هي: {correct_text}")
-            self.current_question_index += 1
-            self.show_question()
-        self.question_edit.setFocus()
+        self.current_question_index += 1
+        self.show_question()
+        if self.current_question_index < self.total_questions:
+            self.question_edit.setFocus()
     def confirm_exit_game(self):
         self.stacked_widget.setCurrentIndex(0)
-        self.first_cat_btn.setFocus()
+        qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
     def showEvent(self, event):
         super().showEvent(event)
