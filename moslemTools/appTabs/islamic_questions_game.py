@@ -70,7 +70,7 @@ class IslamicQuestionsGame(qt.QWidget):
         self.level_btns = []
         levels_data = [
             ("سهل", "#2E7D32", 1),       # Green
-            ("متوسط", "#FBC02D", 2),    # Yellow
+            ("متوسط", "#E65100", 2),    # Yellow
             ("صعب", "#C62828", 3),      # Red
         ]        
         for name, color, lvl in levels_data:
@@ -82,7 +82,7 @@ class IslamicQuestionsGame(qt.QWidget):
             self.level_btns.append(btn)            
         self.all_levels_btn = guiTools.QPushButton("كل المستويات")
         self.all_levels_btn.setFixedSize(300, 60)
-        self.all_levels_btn.setStyleSheet("background-color: #00BCD4; color: white; font-weight: bold; font-size: 18px; border-radius: 8px;") # Light Blue
+        self.all_levels_btn.setStyleSheet("background-color: #0056b3; color: white; font-weight: bold; font-size: 18px; border-radius: 8px;") # Light Blue
         self.all_levels_btn.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.all_levels_btn.customContextMenuRequested.connect(self.show_all_levels_menu)
         self.all_levels_btn.clicked.connect(self.show_all_levels_menu_at_pos)
