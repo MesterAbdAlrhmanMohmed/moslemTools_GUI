@@ -1,4 +1,4 @@
-import os,guiTools,random,re
+import os,guiTools,random,re,winsound
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -254,7 +254,7 @@ class IslamicQuestionsGame(qt.QWidget):
             self.answers_layout.addWidget(btn)
     def check_answer(self, selected_answer):
         if selected_answer["t"] == 1:
-            guiTools.qMessageBox.MessageBox.view(self, "إجابة صحيحة", "أحسنت، إجابتك صحيحة!")
+            winsound.PlaySound(r"data\sounds\game\true.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
             self.solved_count += 1
         else:
             q_data = self.questions[self.current_question_index]
@@ -263,7 +263,7 @@ class IslamicQuestionsGame(qt.QWidget):
                 if ans["t"] == 1:
                     correct_text = ans["answer"]
                     break
-            guiTools.qMessageBox.MessageBox.error(self, "إجابة خاطئة", f"للأسف الإجابة خاطئة.\nالإجابة الصحيحة هي: {correct_text}")
+            guiTools.MessageBoxForGame.error(self, "إجابة خاطئة", f"للأسف الإجابة خاطئة.\nالإجابة الصحيحة هي: {correct_text}")
         self.current_question_index += 1
         self.show_question()
         if self.current_question_index < self.total_questions:
