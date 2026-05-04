@@ -211,6 +211,37 @@ class SajdaGoToDialog(qt.QDialog):
     def on_go(self):
         self.selected_index = self.combo.currentIndex()
         self.accept()
+class AsbabAlnozoleGoToDialog(qt.QDialog):
+    def __init__(self, parent, title, label, items, selected_index):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.resize(250, 120)
+        self.selected_index = -1
+        layout = qt.QVBoxLayout(self)
+        self.label = qt.QLabel(label)
+        self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.label)
+        self.combo = qt.QComboBox()
+        self.combo.addItems(items)
+        if selected_index != -1:
+            self.combo.setCurrentIndex(selected_index)
+        self.combo.setFixedHeight(40)
+        layout.addWidget(self.combo)
+        buttons = qt.QHBoxLayout()
+        self.go_button = guiTools.QPushButton("ذهاب")
+        self.go_button.setStyleSheet("background-color:#006400;color:white;padding:5px;")
+        self.go_button.clicked.connect(self.on_go)
+        self.go_button.setFixedHeight(40)
+        self.cancel_button = guiTools.QPushButton("إلغاء")
+        self.cancel_button.setStyleSheet("background-color:#8B0000;color:white;padding:5px;")
+        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setFixedHeight(40)
+        buttons.addWidget(self.go_button)
+        buttons.addWidget(self.cancel_button)
+        layout.addLayout(buttons)
+    def on_go(self):
+        self.selected_index = self.combo.currentIndex()
+        self.accept()
 class SajdaFinderThread(qt2.QThread):
     finished = qt2.pyqtSignal(list)
     def __init__(self, ayah_list, category, category_type):
@@ -229,6 +260,24 @@ class SajdaFinderThread(qt2.QThread):
             except:
                 continue
         self.finished.emit(sajda_verses)
+class AsbabAlnozoleFinderThread(qt2.QThread):
+    finished = qt2.pyqtSignal(list)
+    def __init__(self, ayah_list, category, category_type):
+        super().__init__()
+        self.ayah_list = ayah_list
+        self.category = category
+        self.category_type = category_type
+    def run(self):
+        asbab_verses = []
+        for index, ayah_text in enumerate(self.ayah_list):
+            try:
+                if not ayah_text.strip(): continue
+                num, _, juz_info, _, _ = functions.quranJsonControl.getAyah(ayah_text, self.category, self.category_type)
+                if juz_info[4]:
+                    asbab_verses.append({"index": index, "surah": juz_info[1], "numberInSurah": num})
+            except:
+                continue
+        self.finished.emit(asbab_verses)
 class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
         super().__init__(parent)
@@ -368,6 +417,7 @@ class QuranViewer(qt.QDialog):
         self.remove_tashkeel = False
         self.text_cache = {"by_surah": self.original_quran_text}
         self.is_counting_sajdas = False
+        self.is_counting_asbab_alnozole = False
         self.original_info_text = ""
         self.media=QMediaPlayer(self)
         self.audioOutput=QAudioOutput(self)
@@ -595,6 +645,7 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
         qt1.QShortcut("ctrl+x", self).activated.connect(self.removeTashkeelForAyah)
         qt1.QShortcut("ctrl+alt+j", self).activated.connect(self.showSajdaVerses)
+        qt1.QShortcut("ctrl+alt+r", self).activated.connect(self.showAsbabAlnozoleVerses)
     def t10(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
@@ -1471,6 +1522,14 @@ class QuranViewer(qt.QDialog):
             showSajdaAction.setShortcut("ctrl+alt+j")
             surahOption.addAction(showSajdaAction)
             showSajdaAction.triggered.connect(self.showSajdaVerses)
+            if self.type == 5:
+                asbab_action_text = "عرض جميع الآيات التي تحتوي على أسباب نزول في العرض المخصص"
+            else:
+                asbab_action_text = f"عرض جميع الآيات التي تحتوي على أسباب نزول في {category_name_no_al} {self.category}"
+            showAsbabAction = qt1.QAction(asbab_action_text, self)
+            showAsbabAction.setShortcut("ctrl+alt+r")
+            surahOption.addAction(showAsbabAction)
+            showAsbabAction.triggered.connect(self.showAsbabAlnozoleVerses)
             if self.enableNextPreviouseButtons and go_to_action_text:
                 goToCategoryAction = qt1.QAction(go_to_action_text, self)
                 goToCategoryAction.setShortcut("ctrl+shift+g")
@@ -1986,9 +2045,10 @@ class QuranViewer(qt.QDialog):
     def showSajdaVerses(self):
         if self.is_search_view:
             return
+        self.saved_ayah_index = self.getCurrentAyah()
         self.is_counting_sajdas = True
         self.original_info_text = self.info.text()
-        self.info.setText("جاري حصر الآيات")
+        self.info.setText("جاري حصر الآيات التي تحتوي على سجدة...")
         self.info.setFocus()
         self.sajda_thread = SajdaFinderThread(self.original_quran_text.split('\n'), self.category, self.type)
         self.sajda_thread.finished.connect(self.onSajdaFinderFinished)
@@ -2012,6 +2072,42 @@ class QuranViewer(qt.QDialog):
         dialog = SajdaGoToDialog(self, "السجدات", "اختر آية للذهاب إليها", items, selected_index)
         if dialog.exec() == qt.QDialog.DialogCode.Accepted:
             target_index = sajda_verses[dialog.selected_index]['index']
+            cursor = self.text.textCursor()
+            cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
+            for _ in range(target_index):
+                cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
+            self.text.setTextCursor(cursor)
+            self.text.setFocus()
+    def showAsbabAlnozoleVerses(self):
+        if self.is_search_view:
+            return
+        self.saved_ayah_index = self.getCurrentAyah()
+        self.is_counting_asbab_alnozole = True
+        self.original_info_text = self.info.text()
+        self.info.setText("جاري حصر الآيات التي تحتوي على أسباب نزول...")
+        self.info.setFocus()
+        self.asbab_thread = AsbabAlnozoleFinderThread(self.original_quran_text.split('\n'), self.category, self.type)
+        self.asbab_thread.finished.connect(self.onAsbabAlnozoleFinderFinished)
+        self.asbab_thread.start()
+    def onAsbabAlnozoleFinderFinished(self, asbab_verses):
+        self.is_counting_asbab_alnozole = False
+        self.info.setText(self.original_info_text)
+        if not asbab_verses:
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا توجد آيات تحتوي على أسباب نزول في هذه الفئة.")
+            return
+        items = []
+        selected_index = -1
+        for i, v in enumerate(asbab_verses):
+            if self.type == 0:
+                item_text = f"الآية {v['numberInSurah']}"
+            else:
+                item_text = f"سورة {v['surah']} الآية {v['numberInSurah']}"
+            items.append(item_text)
+            if v['index'] == self.saved_ayah_index:
+                selected_index = i
+        dialog = AsbabAlnozoleGoToDialog(self, "أسباب النزول", "اختر آية للذهاب إليها", items, selected_index)
+        if dialog.exec() == qt.QDialog.DialogCode.Accepted:
+            target_index = asbab_verses[dialog.selected_index]['index']
             cursor = self.text.textCursor()
             cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
             for _ in range(target_index):
@@ -2045,6 +2141,10 @@ class QuranViewer(qt.QDialog):
             self.is_counting_sajdas = False
             if hasattr(self, 'sajda_thread') and self.sajda_thread.isRunning():
                 self.sajda_thread.terminate()
+        if getattr(self, 'is_counting_asbab_alnozole', False):
+            self.is_counting_asbab_alnozole = False
+            if hasattr(self, 'asbab_thread') and self.asbab_thread.isRunning():
+                self.asbab_thread.terminate()
         self.media.stop()
         super().closeEvent(event)
     def getCurentAyahIArab(self):
