@@ -16,6 +16,9 @@ try:
     updatePath = os.path.join(os.getenv('appdata'), settings_handler.appName, "update")
     if os.path.exists(updatePath):
         shutil.rmtree(updatePath)
+    asked_file = os.path.join(os.getenv('appdata'), settings_handler.appName, "asked_questions.json")
+    if os.path.exists(asked_file):
+        os.remove(asked_file)
 except:
     pass
 class MessageCheckWorker(qt2.QObject):

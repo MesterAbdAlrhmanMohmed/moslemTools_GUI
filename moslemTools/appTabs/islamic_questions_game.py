@@ -7,6 +7,10 @@ class IslamicQuestionsGame(qt.QWidget):
     def __init__(self):
         super().__init__()
         self.base_path = os.path.join("data", "json", "Islamic_questions_game")
+        self.asked_file = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "asked_questions.json")
+        try:
+            with open(self.asked_file, "r", encoding="utf-8") as f: self.asked_questions = set(json.load(f))
+        except: self.asked_questions = set()
         self.categories_info = {
             "tafseer": {"name": "التفسير", "color": "#1B5E20", "file": "tafseer.json"},
             "figh": {"name": "الفقه", "color": "#0D47A1", "file": "figh.json"},
@@ -93,7 +97,7 @@ class IslamicQuestionsGame(qt.QWidget):
         self.all_levels_btn.clicked.connect(self.show_all_levels_menu_at_pos)
         levels_layout.addWidget(self.all_levels_btn, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         levels_back_btn = guiTools.QPushButton("رجوع")
-        levels_back_btn .setAccessibleDescription("Escape")
+        levels_back_btn.setAccessibleDescription("Escape")
         levels_back_btn.setFixedSize(300, 50)
         levels_back_btn.setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold; border-radius: 8px;")
         levels_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
@@ -103,7 +107,7 @@ class IslamicQuestionsGame(qt.QWidget):
         game_layout = qt.QVBoxLayout(self.game_widget)
         top_layout = qt.QHBoxLayout()
         self.game_back_btn = guiTools.QPushButton("رجوع")
-        self.game_back_btn .setAccessibleDescription("Escape")
+        self.game_back_btn.setAccessibleDescription("Escape")
         self.game_back_btn.setFixedSize(80, 40)
         self.game_back_btn.setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold; border-radius: 5px;")
         self.game_back_btn.clicked.connect(self.confirm_exit_game)
@@ -198,6 +202,19 @@ class IslamicQuestionsGame(qt.QWidget):
             if not self.questions:
                 guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا توجد أسئلة متاحة لهذا القسم.")
                 return
+            u_qs, seen = [], set()
+            for q in self.questions:
+                if q.get("q") not in seen:
+                    u_qs.append(q)
+                    seen.add(q.get("q"))
+            self.questions = u_qs
+            temp_qs = [q for q in self.questions if q.get("q") not in self.asked_questions]
+            if temp_qs: self.questions = temp_qs
+            else:
+                for q in self.questions: self.asked_questions.discard(q.get("q"))
+                try:
+                    with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
+                except: pass
             self.solved_count = 0
             self.total_questions = len(self.questions)
             self.current_question_index = 0
@@ -229,10 +246,16 @@ class IslamicQuestionsGame(qt.QWidget):
             level_name = level_map.get(self.current_level, "")
             msg = f"أحسنت! لقد انتهى الاختبار.\nلقد قمت بحل {solved_text} من {total_text} في {cat_name} في فئة {topic_name}، المستوى {level_name}."
             guiTools.qMessageBox.MessageBox.view(self, "انتهى الاختبار", msg)
+            self.clear_asked_questions()
             self.stacked_widget.setCurrentIndex(0)
             qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
             return
         q_data = self.questions[self.current_question_index]
+        if q_data.get("q") not in self.asked_questions:
+            self.asked_questions.add(q_data.get("q"))
+            try:
+                with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
+            except: pass
         self.question_edit.setText(q_data.get("q", ""))
         solved_text = self.get_arabic_count_text(self.solved_count)
         total_text = self.get_arabic_count_text(self.total_questions)
@@ -268,7 +291,13 @@ class IslamicQuestionsGame(qt.QWidget):
         self.show_question()
         if self.current_question_index < self.total_questions:
             self.question_edit.setFocus()
+    def clear_asked_questions(self):
+        self.asked_questions.clear()
+        if os.path.exists(self.asked_file):
+            try: os.remove(self.asked_file)
+            except: pass
     def confirm_exit_game(self):
+        self.clear_asked_questions()
         self.stacked_widget.setCurrentIndex(0)
         qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
     def showEvent(self, event):
