@@ -8,9 +8,13 @@ class IslamicQuestionsGame(qt.QWidget):
         super().__init__()
         self.base_path = os.path.join("data", "json", "Islamic_questions_game")
         self.asked_file = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "asked_questions.json")
+        self.game_settings_file = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "game_settings.json")
         try:
             with open(self.asked_file, "r", encoding="utf-8") as f: self.asked_questions = set(json.load(f))
         except: self.asked_questions = set()
+        try:
+            with open(self.game_settings_file, "r", encoding="utf-8") as f: self.game_settings = json.load(f)
+        except: self.game_settings = {"sound_enabled": True}
         self.categories_info = {
             "tafseer": {"name": "التفسير", "color": "#1B5E20", "file": "tafseer.json"},
             "figh": {"name": "الفقه", "color": "#0D47A1", "file": "figh.json"},
@@ -44,8 +48,17 @@ class IslamicQuestionsGame(qt.QWidget):
         self.stacked_widget = qt.QStackedWidget()
         self.main_layout.addWidget(self.stacked_widget)
         self.categories_widget = qt.QWidget()
-        self.categories_grid = qt.QGridLayout(self.categories_widget)
+        categories_layout = qt.QVBoxLayout(self.categories_widget)
+        categories_layout.addStretch()
+        self.sound_checkbox = qt.QCheckBox("تفعيل المؤثرات الصوتية")
+        self.sound_checkbox.setChecked(self.game_settings.get("sound_enabled", True))
+        self.sound_checkbox.stateChanged.connect(self.save_game_settings)
+        categories_layout.addWidget(self.sound_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        categories_layout.addSpacing(20)
+        self.categories_grid = qt.QGridLayout()
         self.categories_grid.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        categories_layout.addLayout(self.categories_grid)
+        categories_layout.addStretch()
         cats = list(self.categories_info.keys())
         for i, cat_key in enumerate(cats):
             cat_data = self.categories_info[cat_key]
@@ -276,8 +289,9 @@ class IslamicQuestionsGame(qt.QWidget):
             btn.clicked.connect(lambda checked, a=ans: self.check_answer(a))
             self.answers_layout.addWidget(btn)
     def check_answer(self, selected_answer):
+        sound_enabled = self.sound_checkbox.isChecked()
         if selected_answer["t"] == 1:
-            winsound.PlaySound(r"data\sounds\game\true.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
+            if sound_enabled: winsound.PlaySound(r"data\sounds\game\true.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
             self.solved_count += 1
         else:
             q_data = self.questions[self.current_question_index]
@@ -286,11 +300,17 @@ class IslamicQuestionsGame(qt.QWidget):
                 if ans["t"] == 1:
                     correct_text = ans["answer"]
                     break
-            guiTools.MessageBoxForGame.error(self, "إجابة خاطئة", f"للأسف الإجابة خاطئة.\nالإجابة الصحيحة هي: {correct_text}")
+            guiTools.MessageBoxForGame.error(self, "إجابة خاطئة", f"للأسف الإجابة خاطئة.\nالإجابة الصحيحة هي: {correct_text}", sound_enabled=sound_enabled)
         self.current_question_index += 1
         self.show_question()
         if self.current_question_index < self.total_questions:
             self.question_edit.setFocus()
+    def save_game_settings(self):
+        self.game_settings["sound_enabled"] = self.sound_checkbox.isChecked()
+        try:
+            os.makedirs(os.path.dirname(self.game_settings_file), exist_ok=True)
+            with open(self.game_settings_file, "w", encoding="utf-8") as f: json.dump(self.game_settings, f, ensure_ascii=False)
+        except: pass
     def clear_asked_questions(self):
         self.asked_questions.clear()
         if os.path.exists(self.asked_file):

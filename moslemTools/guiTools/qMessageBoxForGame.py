@@ -35,8 +35,9 @@ class MessageBoxForGame(qt.QDialog):
         frame_geometry.moveCenter(screen_center)        
         self.move(frame_geometry.topLeft())
     @staticmethod
-    def error(parent, title:str, label:str):
-        winsound.PlaySound(r"data\sounds\game\false.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
+    def error(parent, title:str, label:str, sound_enabled=True):
+        if sound_enabled:
+            winsound.PlaySound(r"data\sounds\game\false.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
         dlg = MessageBoxForGame(parent, title, label)
         dlg.setWindowIcon(dlg.style().standardIcon(qt.QStyle.StandardPixmap.SP_MessageBoxCritical))
         result = dlg.exec()    
