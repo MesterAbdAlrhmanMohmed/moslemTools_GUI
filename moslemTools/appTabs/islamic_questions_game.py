@@ -27,8 +27,10 @@ class IslamicQuestionsGame(qt.QWidget):
         self.current_topic = None
         self.current_level = None
         self.questions = []
+        self.incorrect_questions = []
         self.solved_count = 0
         self.total_questions = 0
+        self.grand_total = 0
         self.current_question_index = -1
         self.filtered_topics_data = []
         self.setup_ui()
@@ -221,6 +223,7 @@ class IslamicQuestionsGame(qt.QWidget):
                     u_qs.append(q)
                     seen.add(q.get("q"))
             self.questions = u_qs
+            self.grand_total = len(self.questions)
             temp_qs = [q for q in self.questions if q.get("q") not in self.asked_questions]
             if temp_qs: self.questions = temp_qs
             else:
@@ -229,6 +232,7 @@ class IslamicQuestionsGame(qt.QWidget):
                     with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
                 except: pass
             self.solved_count = 0
+            self.incorrect_questions = []
             self.total_questions = len(self.questions)
             self.current_question_index = 0
             self.show_question()
@@ -250,14 +254,17 @@ class IslamicQuestionsGame(qt.QWidget):
         if n >= 11: return f"{n} سؤالاً"
         return f"{n} سؤال"
     def show_question(self):
+        cat_name = self.categories_info[self.current_category]["name"]
+        topic_name = self.current_topic.get("arabicName", self.current_topic.get("englishName", ""))
+        level_map = {1: "السهل", 2: "المتوسط", 3: "الصعب", "all": "كل المستويات"}
+        level_name = level_map.get(self.current_level, "")
         if self.current_question_index >= self.total_questions:
             solved_text = self.get_arabic_count_text(self.solved_count)
             total_text = self.get_arabic_count_text(self.total_questions)
-            cat_name = self.categories_info[self.current_category]["name"]
-            topic_name = self.current_topic.get("arabicName", self.current_topic.get("englishName", ""))
-            level_map = {1: "السهل", 2: "المتوسط", 3: "الصعب", "all": "كل المستويات"}
-            level_name = level_map.get(self.current_level, "")
             msg = f"أحسنت! لقد انتهى الاختبار.\nلقد قمت بحل {solved_text} من {total_text} في {cat_name} في فئة {topic_name}، المستوى {level_name}."
+            if self.incorrect_questions:
+                msg += "\n\nالأسئلة التي تم حلها بشكل خاطئ:\n\n"
+                msg += "\n\n".join([f"{item['q']}\nالإجابة الصحيحة: {item['correct']}" for item in self.incorrect_questions])
             guiTools.qMessageBox.MessageBox.view(self, "انتهى الاختبار", msg)
             self.clear_asked_questions()
             self.stacked_widget.setCurrentIndex(0)
@@ -271,19 +278,16 @@ class IslamicQuestionsGame(qt.QWidget):
             except: pass
         self.question_edit.setText(q_data.get("q", ""))
         solved_text = self.get_arabic_count_text(self.solved_count)
+        seen_text = self.get_arabic_count_text(self.current_question_index)
         total_text = self.get_arabic_count_text(self.total_questions)
-        cat_name = self.categories_info[self.current_category]["name"]
-        topic_name = self.current_topic.get("arabicName", self.current_topic.get("englishName", ""))
-        level_map = {1: "السهل", 2: "المتوسط", 3: "الصعب", "all": "كل المستويات"}
-        level_name = level_map.get(self.current_level, "")
-        self.progress_label.setText(f"تم حل {solved_text} من {total_text} في {cat_name} في فئة {topic_name}، المستوى {level_name}")
+        self.progress_label.setText(f"لقد قمت بحل {solved_text} من {seen_text} عُرِضَتْ عَلَيْكَ، وإجمالي الجولة {total_text} في {cat_name} في فئة {topic_name}، المستوى {level_name}")
         while self.answers_layout.count():
             item = self.answers_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            if item.widget(): item.widget().deleteLater()
         answers = q_data.get("answers", [])
+        shuffled_answers = random.sample(answers, len(answers))
         cat_color = self.categories_info[self.current_category]["color"]
-        for ans in answers:
+        for ans in shuffled_answers:
             btn = guiTools.QPushButton(ans["answer"])
             btn.setStyleSheet(f"background-color: {cat_color}; color: white; font-weight: bold; font-size: 16px; border-radius: 5px; padding: 10px;")
             btn.clicked.connect(lambda checked, a=ans: self.check_answer(a))
@@ -300,6 +304,7 @@ class IslamicQuestionsGame(qt.QWidget):
                 if ans["t"] == 1:
                     correct_text = ans["answer"]
                     break
+            self.incorrect_questions.append({"q": q_data.get("q"), "correct": correct_text})
             guiTools.MessageBoxForGame.error(self, "إجابة خاطئة", f"للأسف الإجابة خاطئة.\nالإجابة الصحيحة هي: {correct_text}", sound_enabled=sound_enabled)
         self.current_question_index += 1
         self.show_question()
