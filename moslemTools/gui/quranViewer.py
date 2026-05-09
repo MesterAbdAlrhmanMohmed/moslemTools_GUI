@@ -191,6 +191,7 @@ class SajdaGoToDialog(qt.QDialog):
         self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label)
         self.combo = qt.QComboBox()
+        self.combo.setAccessibleName(label)
         self.combo.addItems(items)
         if selected_index != -1:
             self.combo.setCurrentIndex(selected_index)
@@ -222,6 +223,7 @@ class AsbabAlnozoleGoToDialog(qt.QDialog):
         self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label)
         self.combo = qt.QComboBox()
+        self.combo.setAccessibleName(label)
         self.combo.addItems(items)
         if selected_index != -1:
             self.combo.setCurrentIndex(selected_index)
@@ -853,11 +855,11 @@ class QuranViewer(qt.QDialog):
             self.resume_after_action()
             return
         total_ayahs = len(self.original_quran_text.split("\n"))
-        start_ayah, ok1 = guiTools.QInputDialog.getInt(self, "تحديد بداية الدمج", "من الآية رقم:", self.getCurrentAyah() + 1, 1, total_ayahs)
+        start_ayah, ok1 = guiTools.QInputDialog.getInt(self, "تحديد بداية الدمج", "الدمج من", self.getCurrentAyah() + 1, 1, total_ayahs)
         if not ok1:
             self.resume_after_action()
             return
-        end_ayah, ok2 = guiTools.QInputDialog.getInt(self, "تحديد نهاية الدمج", "إلى الآية رقم:", total_ayahs, start_ayah, total_ayahs)
+        end_ayah, ok2 = guiTools.QInputDialog.getInt(self, "تحديد نهاية الدمج", "الدمج إلى", total_ayahs, start_ayah, total_ayahs)
         if not ok2:
             self.resume_after_action()
             return
@@ -922,11 +924,11 @@ class QuranViewer(qt.QDialog):
             return
         self.pause_for_action()
         total_ayahs = len(self.original_quran_text.split("\n"))
-        start_ayah, ok1 = guiTools.QInputDialog.getInt(self, "حفظ من آية إلى آية", "من الآية رقم:", self.getCurrentAyah() + 1, 1, total_ayahs)
+        start_ayah, ok1 = guiTools.QInputDialog.getInt(self, "حفظ من آية إلى آية", "الحفظ من", self.getCurrentAyah() + 1, 1, total_ayahs)
         if not ok1:
             self.resume_after_action()
             return
-        end_ayah, ok2 = guiTools.QInputDialog.getInt(self, "حفظ من آية إلى آية", "إلى الآية رقم:", total_ayahs, start_ayah, total_ayahs)
+        end_ayah, ok2 = guiTools.QInputDialog.getInt(self, "حفظ من آية إلى آية", "الحفظ إلى", total_ayahs, start_ayah, total_ayahs)
         if not ok2:
             self.resume_after_action()
             return
@@ -2259,9 +2261,9 @@ class QuranViewer(qt.QDialog):
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","التشغيل من",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","التشغيل إلى",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
             if ok:
                 verses=[]
                 allVerses=self.original_quran_text.split("\n")
@@ -2278,9 +2280,9 @@ class QuranViewer(qt.QDialog):
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","التفسير من",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","التفسير إلى",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
             if ok:
                 ayahList=self.original_quran_text.split("\n")
                 Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[FromVers-1], self.category, self.type)
@@ -2294,9 +2296,9 @@ class QuranViewer(qt.QDialog):
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","الترجمة من",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","الترجمة إلى",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
             if ok:
                 ayahList=self.original_quran_text.split("\n")
                 Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[FromVers-1], self.category, self.type)
@@ -2310,9 +2312,9 @@ class QuranViewer(qt.QDialog):
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","أكتب الرقم",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","الإعراب من",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","أكتب الرقم",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","الإعراب إلى",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
             if ok:
                 ayahList=self.original_quran_text.split("\n")
                 Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[FromVers-1], self.category, self.type)
@@ -2551,9 +2553,9 @@ class QuranViewer(qt.QDialog):
         self.pause_for_action()
         allVerses = self.text.toPlainText().split("\n")
         total_ayahs = len(allVerses)
-        FromVers, ok = guiTools.QInputDialog.getInt(self, "نسخ من الآية", "أكتب رقم الآية للبداية:", self.getCurrentAyah() + 1, 1, total_ayahs)
+        FromVers, ok = guiTools.QInputDialog.getInt(self, "نسخ من الآية", "النسخ من", self.getCurrentAyah() + 1, 1, total_ayahs)
         if ok:
-            toVers, ok = guiTools.QInputDialog.getInt(self, "نسخ إلى الآية", "أكتب رقم الآية للنهاية:", total_ayahs, FromVers, total_ayahs)
+            toVers, ok = guiTools.QInputDialog.getInt(self, "نسخ إلى الآية", "النسخ إلى", total_ayahs, FromVers, total_ayahs)
             if ok:
                 start_index = FromVers - 1
                 end_index = toVers
