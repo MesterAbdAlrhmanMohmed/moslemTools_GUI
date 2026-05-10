@@ -322,8 +322,9 @@ class IslamicQuestionsGame(qt.QWidget):
             try: os.remove(self.asked_file)
             except: pass
     def confirm_exit_game(self):
-        self.clear_asked_questions()
-        self.stacked_widget.setCurrentIndex(0)
-        qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
+        if guiTools.QQuestionMessageBox.view(self, "تأكيد الخروج", "هل أنت متأكد من الخروج من الجولة؟", "نعم", "لا") == 0:
+            self.clear_asked_questions()
+            self.stacked_widget.setCurrentIndex(0)
+            qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
     def showEvent(self, event):
         super().showEvent(event)

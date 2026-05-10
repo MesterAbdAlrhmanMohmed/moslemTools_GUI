@@ -133,7 +133,8 @@ class StoryPlayer(qt.QWidget):
         self.categorySearchEdit.setObjectName("categorySearch")
         self.categorySearchEdit.setVisible(False)
         self.categoriesListWidget = guiTools.QListWidget()
-        self.categoriesListWidget.setSpacing(3)
+        self.categoriesListWidget.setSpacing(5)
+        self.categoriesListWidget.setStyleSheet("QListWidget::item { padding: 5px; }")
         self.categoriesListWidget.itemSelectionChanged.connect(self.on_category_selected)
         self.storiesLabel = qt.QLabel("القصص")
         self.storiesLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -144,7 +145,8 @@ class StoryPlayer(qt.QWidget):
         self.storySearchEdit.setAccessibleName("ابحث عن قصة")
         self.storySearchEdit.setObjectName("storySearch")
         self.storyListWidget = guiTools.QListWidget()
-        self.storyListWidget.setSpacing(3)
+        self.storyListWidget.setSpacing(5)
+        self.storyListWidget.setStyleSheet("QListWidget::item { padding: 5px; }")
         self.storyListWidget.clicked.connect(self.play_selected_audio)
         self.storySearchEdit.textChanged.connect(self.story_onsearch)
         self.progressBar = qt.QProgressBar()
@@ -187,7 +189,7 @@ class StoryPlayer(qt.QWidget):
         self.repeat_story_button.toggled.connect(self.handle_repeat_toggled)
         self.repeat_story_button.setEnabled(False)
         self.Slider = qt.QSlider(qt2.Qt.Orientation.Horizontal)
-        self.Slider.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
+        self.Slider.setStyleSheet("QSlider{min-height:30px; margin: 5px 0;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
         self.Slider.setAccessibleName("التحكم في تقدم القصة")
         self.Slider.setRange(0, 100)
         self.Slider.setTracking(True)
@@ -229,11 +231,13 @@ class StoryPlayer(qt.QWidget):
         self.merge_all_button.clicked.connect(self.prepare_merge_all)
         self.merge_all_button.setVisible(True)
         categoriesLayout = qt.QVBoxLayout()
+        categoriesLayout.setSpacing(10)
         categoriesLayout.addWidget(self.categoriesLabel)
         categoriesLayout.addWidget(self.categorySearchLabel)
         categoriesLayout.addWidget(self.categorySearchEdit)
         categoriesLayout.addWidget(self.categoriesListWidget)
         storiesLayout = qt.QVBoxLayout()
+        storiesLayout.setSpacing(10)
         storiesLayout.addWidget(self.storiesLabel)
         storiesLayout.addWidget(self.storySearchLabel)
         storiesLayout.addWidget(self.storySearchEdit)
@@ -242,31 +246,39 @@ class StoryPlayer(qt.QWidget):
         storiesLayout.addWidget(self.merge_feedback_label)
         storiesLayout.addWidget(self.batch_download_feedback_label)
         merge_buttons_layout = qt.QVBoxLayout()
+        merge_buttons_layout.setSpacing(8)
         merge_buttons_layout.addWidget(self.merge_action_button)
         merge_buttons_layout.addWidget(self.batch_download_action_button)
         merge_buttons_layout.addWidget(self.merge_all_button)
         storiesLayout.addLayout(merge_buttons_layout)
         topLayout = qt.QHBoxLayout()
+        topLayout.setSpacing(20)
         topLayout.addLayout(categoriesLayout)
         topLayout.addLayout(storiesLayout)
         download_buttons_layout = qt.QHBoxLayout()
+        download_buttons_layout.setSpacing(10)
         download_buttons_layout.addWidget(self.dl_all_app)
         download_buttons_layout.addWidget(self.delete)
         download_buttons_layout.addWidget(self.dl_all)
         layout = qt.QVBoxLayout()
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(12)
         layout.addLayout(topLayout)
         layout.addLayout(download_buttons_layout)
         layout.addWidget(self.Slider)
         progress_cancel_layout = qt.QHBoxLayout()
+        progress_cancel_layout.setSpacing(10)
         progress_cancel_layout.addWidget(self.cancel_download_button)
         progress_cancel_layout.addWidget(self.progressBar)
         progress_cancel_layout.addWidget(self.progress_text_label)
         layout.addLayout(progress_cancel_layout)
         playback_buttons_layout = qt.QHBoxLayout()
+        playback_buttons_layout.setSpacing(10)
         playback_buttons_layout.addWidget(self.play_all_to_end)
         playback_buttons_layout.addWidget(self.repeat_story_button)
         layout.addLayout(playback_buttons_layout)
         layout1 = qt.QHBoxLayout()
+        layout1.setSpacing(10)
         layout1.addWidget(self.User_guide)
         layout1.addWidget(self.duration)
         layout1.addWidget(self.openBookmarks)
@@ -1597,3 +1609,34 @@ class StoryPlayer(qt.QWidget):
             guiTools.qMessageBox.MessageBox.view(self,"تم","تم الحذف")
         except:
             guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر حذف العلامة المرجعية")
+    def onChangeStartingPosition(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        position = self.mp.position()
+        self.startingPosition = position
+        self.endingPosition = None
+        self.repeatFromPositionToPosition = False
+        winsound.Beep(400, 500)
+    def onChangeEndingPosition(self):
+        if self.mp.duration() == 0:
+            speak("لا يوجد مقطع مشغل حالياً")
+            return
+        if self.startingPosition is not None:
+            if self.startingPosition == self.mp.position():
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يمكن أن يكون موضع البداية هو نفس موضع النهاية")
+            elif self.startingPosition > self.mp.position():
+                guiTools.qMessageBox.MessageBox.view(self, "خطأ", "لا يمكن أن يكون موضع البداية أكبر من موضع النهاية")
+            else:
+                position = self.mp.position()
+                self.endingPosition = position
+                winsound.Beep(500, 500)
+                self.repeatFromPositionToPosition = True
+                self.mp.setPosition(self.startingPosition)
+        else:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "يرجى تحديد موضع البداية أولا")
+    def removePosition(self):
+        self.startingPosition = None
+        self.endingPosition = None
+        self.repeatFromPositionToPosition = False
+        winsound.Beep(300, 500)
