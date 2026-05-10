@@ -7,22 +7,25 @@ from PyQt6.QtCore import Qt
 class settings(qt.QDialog):
     def __init__(self, p):
         super().__init__(p)
-        self.resize(590,430)
+        self.resize(960,480)
         self.center()
         self.setWindowTitle("الإعدادات")
-        self.p = p                
+        self.p = p
         layout = qt.QVBoxLayout()
         self.sectian_l=qt.QLabel("اختر قسم")
         layout.addWidget(self.sectian_l,alignment=Qt.AlignmentFlag.AlignCenter)
-        self.sectian = guiTools.ComboBook()
+        h_layout = qt.QHBoxLayout()
+        self.sectian = guiTools.listBook()
         self.sectian.setFocus()
         font = qt1.QFont()
         font.setBold(True)
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر قسم")
         self.sectian.setFont(font)
-        layout.addWidget(self.sectian)
-        layout.addWidget(self.sectian.w)
+        self.sectian.setFixedWidth(350)
+        h_layout.addWidget(self.sectian)
+        h_layout.addWidget(self.sectian.w)
+        layout.addLayout(h_layout)
         self.update = tabs.Update(self)
         buttonsLayout = qt.QHBoxLayout()
         self.ok = qt.QPushButton("موافق")
@@ -36,7 +39,7 @@ class settings(qt.QDialog):
         self.cancel.clicked.connect(self.fcancel)
         self.cancel.setStyleSheet("background-color: #333333; color: #e0e0e0; padding: 12px; font-weight: bold;")
         self.layout1 = tabs.Genral(self)
-        self.sectian.add("الإعدادات العامة", self.layout1)                
+        self.sectian.add("الإعدادات العامة", self.layout1)
         self.fontSettings = tabs.FontSettings()
         self.sectian.add("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings)
         self.tafaseerSettings = tabs.TafaseerSettings()
@@ -60,6 +63,7 @@ class settings(qt.QDialog):
         buttonsLayout.addWidget(self.cancel)
         layout.addLayout(buttonsLayout)
         self.setLayout(layout)
+        self.sectian.setCurrentRow(0)
     def center(self):
         frame_geometry = self.frameGeometry()
         screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
@@ -68,7 +72,7 @@ class settings(qt.QDialog):
     def fok(self):
         restart_required = 0
         original_font_bold = settings_handler.get("font", "bold")
-        original_font_size = settings_handler.get("font", "size")        
+        original_font_size = settings_handler.get("font", "size")
         original_audio_global = settings_handler.get("audio", "global")
         original_audio_quran_text = settings_handler.get("audio", "quran_text")
         original_audio_quran_audio = settings_handler.get("audio", "quran_audio")
@@ -91,7 +95,7 @@ class settings(qt.QDialog):
             original_audio_adhan != get_audio_val(self.audioSettings.features["adhan"].currentText()) or
             original_audio_athkar != get_audio_val(self.audioSettings.features["athkar"].currentText()) or
             original_audio_random_athkar != get_audio_val(self.audioSettings.features["random_athkar"].currentText())):
-            restart_required = 1                
+            restart_required = 1
         settings_handler.set("audio", "global", get_audio_val(self.audioSettings.global_combo.currentText()))
         settings_handler.set("audio", "quran_text", get_audio_val(self.audioSettings.features["quran_text"].currentText()))
         settings_handler.set("audio", "quran_audio", get_audio_val(self.audioSettings.features["quran_audio"].currentText()))
@@ -108,8 +112,8 @@ class settings(qt.QDialog):
         settings_handler.set("prayerTimes","volume",str(self.prayerTimesSettings.Sound_level.value()))
         settings_handler.set("location","autoDetect",str(self.locationSettings.autoDetectLocation.isChecked()))
         settings_handler.set("location","LT1",str(self.locationSettings.LT1.value()))
-        settings_handler.set("location","LT2",str(self.locationSettings.LT2.value()))        
-        settings_handler.set("location", "calculationMethod", str(self.locationSettings.methodCombo.currentData()))        
+        settings_handler.set("location","LT2",str(self.locationSettings.LT2.value()))
+        settings_handler.set("location", "calculationMethod", str(self.locationSettings.methodCombo.currentData()))
         settings_handler.set("prayerTimes","remindBeforeAdaan",str(self.prayerTimesSettings.before.currentIndex()))
         settings_handler.set("prayerTimes", "remindAfterAdaan", str(self.prayerTimesSettings.iqamaTime.currentIndex()))
         settings_handler.set("prayerTimes", "iqamaVolume", str(self.prayerTimesSettings.iqamaVolumeSlider.value()))
@@ -137,7 +141,6 @@ class settings(qt.QDialog):
         new_font_size = str(self.fontSettings.font_size_spinbox.value())
         settings_handler.set("font", "bold", new_font_bold)
         settings_handler.set("font", "size", new_font_size)
-        
         if original_font_bold != new_font_bold or original_font_size != new_font_size:
             restart_required = 1
         self.p.runAudioThkarTimer()
