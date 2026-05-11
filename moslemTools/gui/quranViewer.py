@@ -2340,8 +2340,10 @@ class QuranViewer(qt.QDialog):
     def update_nav_buttons_text(self):
         cat_singular = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
         name = cat_singular.get(self.type, "الفئة")
-        self.next.setText(f"{name} التالية")
-        self.previous.setText(f"{name} السابقة")
+        next_suffix = "التالي" if self.type in [2, 3, 4] else "التالية"
+        prev_suffix = "السابق" if self.type in [2, 3, 4] else "السابقة"
+        self.next.setText(f"{name} {next_suffix}")
+        self.previous.setText(f"{name} {prev_suffix}")
     def onNext(self):
         self.pause_for_action()
         if self.CurrentIndex==len(self.typeResult)-1:
