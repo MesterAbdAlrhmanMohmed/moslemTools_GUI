@@ -1,7 +1,7 @@
 {
   "name": "moslem tools",
-  "version": 6.8,
-  "what is new": "الجديد للإصدار 6.8\nإضافة تنبيه هل تريد الخروج أثناء جولة في لعبة الأسئلة الإسلامية\nتضمين جميع الأسئلة التي تم إجابتها بشكلا خاطئ وإجاباتها في نهاية الجولة\nإضافة طرق لحساب مواقيط الصلاة للمغرب وتونس والجزائر\nتغييرات كبيرة في تخطيطات الكثير من واجهات البرنامج\nإعادة ترتيب تبويبات البرنامج\nتغيير في تخطيط واجهة الإعدادات\nإصلاح الكثير من الأخطاء المهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.8/moslem_tools_version_6.8.exe",
-  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.8/moslem_tools_version_6.8.exe",
+  "version": 6.9,
+  "what is new": "الجديد للإصدار 6.9\nإضافة المزيد من طرق حساب الوقت لمواقيت الصلاة\nإصلاح الكثير من الأخطاء المهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.9/moslem_tools_version_6.9.exe",
+  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_6.9/moslem_tools_version_6.9.exe",
   "is_beta": false
 }
