@@ -21,7 +21,7 @@ class IslamicQuestionsGame(qt.QWidget):
             "hadith": {"name": "الحديث", "color": "#B71C1C", "file": "hadith.json"},
             "akida": {"name": "العقيدة", "color": "#006064", "file": "akida.json"},
             "arabia": {"name": "اللغة العربية", "color": "#4A148C", "file": "arabia.json"},
-            "history": {"name": "السيرة والتاريخ", "color": "#E65100", "file": "history.json"}
+            "history": {"name": "السيرة والتاريخ", "color": "#8E2405", "file": "history.json"}
         }
         self.current_category = None
         self.current_topic = None
