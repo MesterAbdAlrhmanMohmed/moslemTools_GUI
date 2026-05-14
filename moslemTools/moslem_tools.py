@@ -166,11 +166,7 @@ class main(qt.QMainWindow):
         telegram_action=qt1.QAction("رابط القناة الرسمية للبرنامج على telegram", self)
         telegram_action.setShortcut("ctrl+shift+t")
         telegram_action.triggered.connect(lambda: webbrowser.open("https://t.me/moslem_tools"))
-        self.moreOptionsMenu.addAction(telegram_action)
-        donateAction=qt1.QAction("تبرع",self)
-        self.moreOptionsMenu.addAction(donateAction)
-        donateAction.triggered.connect(self.OnDonation)
-        donateAction.setShortcut("ctrl+shift+d")
+        self.moreOptionsMenu.addAction(telegram_action)        
         action_delete_program_data = qt1.QAction("حذف بيانات البرنامج لإلغاء تثبيته", self)
         action_delete_program_data .setShortcut("ctrl+shift+delete")
         action_delete_program_data.triggered.connect(self.delete_program_data_with_confirmation)
@@ -214,7 +210,6 @@ class main(qt.QMainWindow):
             self.play_random_basmala()
         if not startup_window_shown and settings_handler.get("g", "randomMessageAtStartup") == "True":
             self.show_random_message()
-
     def play_random_basmala(self):
         if self.media_player.playbackState()==QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
@@ -377,30 +372,9 @@ class main(qt.QMainWindow):
     def onToolChanged(self, current, previous):
         self.quranPlayer.mp.pause()
         self.storiesPlayer.mp.pause()
-        self.researcher.media_player.pause()
-    def OnDonation(self):
-        guiTools.MessageBox.view(self,"تنبيه","في حالة التبرع الرجاء إرسال صورة للتحويل على حساب Telegram الخاص بي، حتى لا تختلط التحويلات الخاطئة بالتحويلات المقصودة")
-        menu=qt.QMenu("اختر طريقة",self)
-        font=qt1.QFont()
-        font.setBold(True)
-        menu.setAccessibleName("اختر طريقة")
-        menu.setFocus()
-        vodafone_cash_action=qt1.QAction("نسخ رقم vodafone cash",self)
-        vodafone_cash_action.triggered.connect(self.VFC)
-        menu.addAction(vodafone_cash_action)
-        instaPayAction=qt1.QAction("نسخ رابط حساب InstaPay",self)
-        menu.addAction(instaPayAction)
-        instaPayAction.triggered.connect(self.instaPay)
-        menu.setFont(font)
-        menu.exec(qt1.QCursor.pos())
-    def instaPay(self):
-        pyperclip.copy("https://ipn.eg/S/av369852/instapay/23Mu5Z")
-        winsound.Beep(1000, 100)
-    def VFC(self):
-        pyperclip.copy("+201022701463")
-        guiTools.MessageBox.view(self,"تنبيه","تم نسخ رقم vodafone cash لكن هذا الرقم للتبرع فقط، يمنع الإتصال بهذا الرقم أو مراسلته بأي شكل")
+        self.researcher.media_player.pause()    
     def delete_program_data_with_confirmation(self):
-        confirm = guiTools.QQuestionMessageBox.view(self,"تأكيد الحذف النهائي لبيانات البرنامج","تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nالأفضل عمل نسخة احتياطية لجميع إعداداتك وملفاتك أولا قبل هذه العملية الخطيرة\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟","نعم، احذف البرنامج","لا، إلغاء")
+        confirm = guiTools.QQuestionMessageBox.view(self,"تأكيد الحذف النهائي لبيانات البرنامج","تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nالأفضل عمل نسخة احتياطية لجميع إعداداتك وملفاتك أولا قبل هذه العملية الخطيرة\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟","نعم، احذف مجلد بيانات البرنامج","لا، إلغاء")
         if confirm == 0:
             try:
                 roaming_path = os.path.join(os.getenv('appdata'))
