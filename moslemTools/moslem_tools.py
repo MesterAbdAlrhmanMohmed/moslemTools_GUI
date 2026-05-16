@@ -318,7 +318,7 @@ class main(qt.QMainWindow):
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
             if current_gregorian_weekday == 4:
-                self.info.setText(f"جمعة مباركة يا {username1}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صل الله عليه وسلم")
+                self.info.setText(f"جمعة مباركة يا {username1}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 9:
                 if 21 <= hijri_date_obj.day <= 29:
                     self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم، وجزاكم الله خيرا.")
