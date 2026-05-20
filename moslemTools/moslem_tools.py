@@ -331,13 +331,13 @@ class main(qt.QMainWindow):
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
                 self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
             elif current_gregorian_weekday == 0:
-                self.info.setText(f"يا {username1} صيام يوم الإثنين، سنة عن النبي صل الله عليه وسلم")
+                self.info.setText(f"يا {username1} صيام يوم الإثنين، سنة عن النبي صلى الله عليه وسلم")
             elif current_gregorian_weekday == 3:
-                self.info.setText(f"يا {username1} صيام يوم الخميس، سنة عن النبي صل الله عليه وسلم")
+                self.info.setText(f"يا {username1} صيام يوم الخميس، سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 1:
                 self.info.setText("كل عام وأنتم بخير بمناسبة رأس السنة الهجرية الجديدة")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 10:
-                self.info.setText(f"يا {username1} صيام عاشوراء، مستحب عن النبي صل الله عليه وسلم")
+                self.info.setText(f"يا {username1} صيام عاشوراء، مستحب عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 7 and hijri_date_obj.day == 27:
                 self.info.setText("ذكرى الإسراء والمعراج")
             elif hijri_date_obj.month == 8 and hijri_date_obj.day == 15:
@@ -345,13 +345,13 @@ class main(qt.QMainWindow):
             elif hijri_date_obj.month == 8:
                 self.info.setText(f"يا {username1} يستحب الصيام في شهر شعبان")
             elif hijri_date_obj.month == 10:
-                self.info.setText(f"يا {username1} صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صل الله عليه وسلم")
+                self.info.setText(f"يا {username1} صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day == 9:
                 self.info.setText(f"يا {username1} صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [1, 2, 3, 4, 5, 6, 7, 8]:
-                self.info.setText(f"يا {username1} صيام العشر الأوائل من ذي الحجة سنة عن النبي صل الله عليه وسلم")
+                self.info.setText(f"يا {username1} صيام العشر الأوائل من ذي الحجة سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.day in [13, 14, 15]:
-                self.info.setText(f"يا {username1} صيام الأيام القمرية، سنة عن النبي صل الله عليه وسلم")
+                self.info.setText(f"يا {username1} صيام الأيام القمرية، سنة عن النبي صلى الله عليه وسلم")
             else:
                 self.info.setText("لا تَنْسوا ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم")
         except Exception as e:
