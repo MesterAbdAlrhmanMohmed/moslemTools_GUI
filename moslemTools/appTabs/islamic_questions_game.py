@@ -264,7 +264,8 @@ class IslamicQuestionsGame(qt.QWidget):
             total_text = self.get_arabic_count_text(self.total_questions)
             msg = f"أحسنت! لقد انتهى الاختبار.\nلقد قمت بحل {solved_text} من {total_text} في {cat_name} في فئة {topic_name}، المستوى {level_name}."
             if self.incorrect_questions:
-                msg += "\n\nالأسئلة التي تم حلها بشكل خاطئ:\n\n"
+                incorrect_text = self.get_arabic_count_text(len(self.incorrect_questions))
+                msg += f"\n\nالأسئلة التي تم حلها بشكل خاطئ: {incorrect_text}\n\n"
                 msg += "\n\n".join([f"{item['q']}\nالإجابة الصحيحة: {item['correct']}" for item in self.incorrect_questions])
             guiTools.qMessageBox.MessageBox.view(self, "انتهى الاختبار", msg)
             self.clear_asked_questions()
