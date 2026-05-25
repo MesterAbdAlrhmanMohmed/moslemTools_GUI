@@ -87,6 +87,9 @@ settingsConfig={
         "bold":"False",
         "size":"12"
     },
+    "fanar":{
+        "api_key":""
+    },
     "audio": {
         "global": "Default",
         "quran_text": "Default",

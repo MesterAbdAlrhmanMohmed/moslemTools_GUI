@@ -1,5 +1,6 @@
 from .quranPlayer import QuranPlayer
 from .researcher import Albaheth
+from .ai_chat import AskAI
 from .book_marks import book_marcks
 from .ahadeeth import hadeeth
 from .brotcasts import protcasts

@@ -75,12 +75,14 @@ class main(qt.QMainWindow):
         self.quranPlayer = QuranPlayer()
         self.storiesPlayer = StoryPlayer()
         self.researcher = Albaheth()
+        self.askAI = AskAI()
         tabs = [
     (prayer_times(self), "مواقيت الصلاة والتاريخ"),
     (Quran(), "القرآن الكريم مكتوب"),
     (self.quranPlayer, "القرآن الكريم صوتي"),
     (hadeeth(), "الأحاديث النبوية والقدسية"),
     (self.researcher, "الباحث في القرآن والأحاديث"),
+    (self.askAI, "اسأل الذكاء الاصطناعي"),
     (IslamicQuestionsGame(), "لعبة الأسئلة الإسلامية"),
     (IslamicBooks(), "الكتب الإسلامية"),
     (protcasts(), "إذاعات الراديو الإسلامية"),
