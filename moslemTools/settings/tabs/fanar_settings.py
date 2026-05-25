@@ -19,19 +19,26 @@ class FanarSettings(qt.QWidget):
                 font-size: 13px;
                 background-color: #1E1E1E;
             }
+            QCheckBox {
+                color: #e0e0e0;
+                font-size: 13px;
+            }
         """)        
         main_layout = qt.QVBoxLayout(self)
         main_layout.setSpacing(15)
         main_layout.setContentsMargins(15, 15, 15, 15)                
-        api_key_layout = qt.QHBoxLayout()
         self.api_key_label = qt.QLabel("مفتاح الـ API الخاص بـ فنار:")
+        main_layout.addWidget(self.api_key_label)
+        api_key_layout = qt.QHBoxLayout()
         self.api_key_input = qt.QLineEdit()
         self.api_key_input.setEchoMode(qt.QLineEdit.EchoMode.Password)
         self.api_key_input.setText(settings_handler.get("fanar", "api_key"))
         self.api_key_input.setAccessibleName("مفتاح الـ API الخاص بـ فنار")        
+        self.show_key_checkbox = qt.QCheckBox("إظهار المفتاح")
+        self.show_key_checkbox.stateChanged.connect(lambda state: self.api_key_input.setEchoMode(qt.QLineEdit.EchoMode.Normal if state == 2 else qt.QLineEdit.EchoMode.Password))
         api_key_layout.addWidget(self.api_key_input)
-        api_key_layout.addWidget(self.api_key_label)
-        main_layout.addLayout(api_key_layout)                
+        api_key_layout.addWidget(self.show_key_checkbox)
+        main_layout.addLayout(api_key_layout)                                
         self.get_api_button = guiTools.QPushButton("الحصول على مفتاح الـ API")
         self.get_api_button.setStyleSheet("background-color: #0000AA; color: #e0e0e0; font-weight: bold;")        
         self.get_api_button.setAutoDefault(False)

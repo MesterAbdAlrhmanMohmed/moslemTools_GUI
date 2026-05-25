@@ -93,6 +93,10 @@ class AskAI(qt.QWidget):
             QPushButton#sendButton:pressed {
                 background-color: #218838;
             }
+            QPushButton#sendButton:disabled {
+                background-color: #6c757d;
+                color: #d3d3d3;
+            }
             QPushButton#clearButton {
                 background-color: #dc3545;
                 color: white;
@@ -114,7 +118,7 @@ class AskAI(qt.QWidget):
                 color: #d3d3d3;
             }
             QPushButton#sourcesButton {
-                background-color: #007bff;
+                background-color: #0056b3;
                 color: white;
                 border: none;
                 border-radius: 6px;
@@ -123,7 +127,7 @@ class AskAI(qt.QWidget):
                 font-weight: bold;
             }
             QPushButton#sourcesButton:hover {
-                background-color: #0056b3;
+                background-color: #003d80;
             }
             QPushButton#sourcesButton:pressed {
                 background-color: #003d80;
@@ -189,6 +193,8 @@ class AskAI(qt.QWidget):
         font_layout.addWidget(self.font_label)
         font_layout.addWidget(self.font_spin)        
         self.sources_button = guiTools.QPushButton("المصادر والمراجع")        
+        self.sources_button.setShortcut("ctrl+r")
+        self.sources_button.setAccessibleDescription("control plus R")
         self.sources_button.setVisible(False)
         self.sources_button.clicked.connect(self.show_sources_dialog)        
         bottom_layout.addWidget(self.clear_button)
