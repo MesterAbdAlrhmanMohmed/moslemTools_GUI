@@ -147,11 +147,6 @@ class StoryViewer(qt.QDialog):
             add_bookmark_action.triggered.connect(self.onAddBookMark)
             story_options.addAction(add_bookmark_action)
         menu.addMenu(story_options)
-        fontMenu = qt.QMenu("حجم الخط", self)
-        fontMenu.setFont(boldFont)
-        fontMenu.addAction("تكبير الخط", self.increase_font_size).setShortcut("ctrl+=")
-        fontMenu.addAction("تصغير الخط", self.decrease_font_size).setShortcut("ctrl+-")
-        menu.addMenu(fontMenu)
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
     def restore_after_menu(self):

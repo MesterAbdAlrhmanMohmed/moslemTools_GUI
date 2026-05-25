@@ -126,17 +126,6 @@ class hadeeth_viewer(qt.QDialog):
         copy_selected_action.setShortcut("ctrl+c")
         copy_selected_action.triggered.connect(self.copy_line)
         menu.addMenu(text_options_menu)
-        font_menu = qt.QMenu("حجم الخط", self)
-        font_menu.setFont(boldFont)
-        increase_font_action = qt1.QAction("تكبير الخط", self)
-        increase_font_action.setShortcut("ctrl+=")
-        increase_font_action.triggered.connect(self.increase_font_size)
-        decrease_font_action = qt1.QAction("تصغير الخط", self)
-        decrease_font_action.setShortcut("ctrl+-")
-        decrease_font_action.triggered.connect(self.decrease_font_size)
-        font_menu.addAction(increase_font_action)
-        font_menu.addAction(decrease_font_action)
-        menu.addMenu(font_menu)
         hadeeth_position = {"bookName": self.bookName,"hadeethNumber": self.index}
         note_exists = notesManager.getNotesForPosition("ahadeeth", hadeeth_position)
         if note_exists:
