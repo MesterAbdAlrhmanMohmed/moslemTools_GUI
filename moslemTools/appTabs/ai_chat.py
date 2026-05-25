@@ -5,7 +5,7 @@ from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 import guiTools,requests,pyperclip,winsound,webbrowser,re
 from settings import settings_handler
 class AIChatThread(qt2.QThread):
-    finished = qt2.pyqtSignal(str, bool)
+    finished = qt2.pyqtSignal(dict, bool)
     def __init__(self, api_key, message):
         super().__init__()
         self.api_key = api_key
@@ -23,18 +23,29 @@ class AIChatThread(qt2.QThread):
                     "role": "user",
                     "content": self.message
                 }
-            ]
+            ],
+            "search": True
         }
         try:
             response = requests.post(url, headers=headers, json=data, timeout=60)
             if response.status_code == 200:
                 result = response.json()
                 content = result['choices'][0]['message']['content']
-                self.finished.emit(content, True)
+                # Try to get citations from the response
+                citations = []
+                # Check different possible locations for citations based on API documentation
+                if 'citations' in result:
+                    citations = result['citations']
+                elif 'citations' in result['choices'][0]:
+                    citations = result['choices'][0]['citations']
+                elif 'message' in result['choices'][0] and 'citations' in result['choices'][0]['message']:
+                    citations = result['choices'][0]['message']['citations']
+                
+                self.finished.emit({"content": content, "citations": citations}, True)
             else:
-                self.finished.emit(f"خطأ من الخادم: {response.status_code}\n{response.text}", False)
+                self.finished.emit({"error": f"خطأ من الخادم: {response.status_code}\n{response.text}"}, False)
         except Exception as e:
-            self.finished.emit(f"حدث خطأ أثناء الاتصال: {str(e)}", False)
+            self.finished.emit({"error": f"حدث خطأ أثناء الاتصال: {str(e)}"}, False)
 class SourcesDialog(qt.QDialog):
     def __init__(self, parent, sources):
         super().__init__(parent)
@@ -193,6 +204,7 @@ class AskAI(qt.QWidget):
         font_layout.addWidget(self.font_label)
         font_layout.addWidget(self.font_spin)        
         self.sources_button = guiTools.QPushButton("المصادر والمراجع")        
+        self.sources_button.setObjectName("sourcesButton")
         self.sources_button.setShortcut("ctrl+r")
         self.sources_button.setAccessibleDescription("control plus R")
         self.sources_button.setVisible(False)
@@ -244,24 +256,87 @@ class AskAI(qt.QWidget):
         self.thread = AIChatThread(api_key, message)
         self.thread.finished.connect(self.on_ai_finished)
         self.thread.start()
-    def extract_and_clean(self, text):        
-        text = text.replace("<quran_start>", "").replace("<quran_end>", "")                
-        url_pattern = r'https?://[^\s<>"]+|www\.[^\s<>"]+'
-        urls = re.findall(url_pattern, text)        
+    def extract_and_clean(self, text):
+        # Remove specific tags
+        text = text.replace("<quran_start>", "").replace("<quran_end>", "")
+        
+        # Regex for URLs - excludes common trailing punctuation to keep URLs clean
+        url_pattern = r'(?:https?://|www\.)[^\s<>"\(\)\[\]{}|\\^`]+'
+        urls = re.findall(url_pattern, text)
+        
         clean_text = text
-        for url in urls:
-            clean_text = clean_text.replace(url, "")                
-        clean_text = re.sub(r'\n(المصادر|المراجع|Sources):\s*$', '', clean_text, flags=re.MULTILINE)
-        clean_text = re.sub(r'\n(المصادر|المراجع|Sources):\s*\n', '\n', clean_text, flags=re.MULTILINE)        
-        return clean_text.strip(), list(set(urls))
-    def on_ai_finished(self, response, success):
+        
+        # 1. Remove lines that are purely source markers and a URL
+        clean_text = re.sub(r'^\s*[\-\*\d\.]*\s*(?:المصدر|المرجع|Source|Reference)?\s*\d*[:\-]?\s*(?:https?://|www\.)[^\s<>"]+\s*$', '', clean_text, flags=re.MULTILINE | re.IGNORECASE)
+        
+        # 2. Remove all URLs from the text
+        for u in urls:
+            clean_text = clean_text.replace(u, "")
+            
+        # 3. Remove source blocks at the end (Sources: ... EOF)
+        clean_text = re.sub(r'\n+(?:المصادر|المراجع|Sources|References|Citations):?.*$', '', clean_text, flags=re.DOTALL | re.IGNORECASE | re.MULTILINE)
+        
+        # 4. Remove leftover citation markers like [1], [2], (1)
+        clean_text = re.sub(r'\[\d+\]|\(\d+\)', '', clean_text)
+        
+        # 5. Cleanup leftover source headers that might be on their own line now
+        clean_text = re.sub(r'^\s*(?:المصدر|المرجع|Source|Reference)\s*\d*[:\-]?\s*$', '', clean_text, flags=re.MULTILINE | re.IGNORECASE)
+        
+        # 6. Final cleanup: empty brackets, multiple newlines
+        clean_text = clean_text.replace("()", "").replace("[]", "").replace("<>", "")
+        clean_text = re.sub(r'\n{3,}', '\n\n', clean_text)
+        
+        # Normalize URLs for the dialog
+        unique_urls = []
+        seen = set()
+        for u in urls:
+            normalized = u.strip()
+            if normalized.startswith("www."):
+                normalized = "http://" + normalized
+            elif not normalized.startswith("http"):
+                normalized = "http://" + normalized
+                
+            if normalized not in seen:
+                unique_urls.append(normalized)
+                seen.add(normalized)
+                
+        return clean_text.strip(), unique_urls
+    def on_ai_finished(self, response_data, success):
         self.send_button.setEnabled(True)
         self.send_button.setText("إرسال الرسالة")
         if success:
-            clean_text, urls = self.extract_and_clean(response)
+            response_text = response_data.get("content", "")
+            json_citations = response_data.get("citations", [])
+            
+            clean_text, extracted_urls = self.extract_and_clean(response_text)
             self.results.setText(clean_text)
-            self.current_urls = urls            
-            if urls:
+            
+            # Combine JSON citations and extracted URLs, preserving order and uniqueness
+            final_urls = []
+            seen = set()
+            
+            def add_url(u):
+                if not u or not isinstance(u, str): return
+                u = u.strip()
+                if not u: return
+                normalized = u if u.startswith("http") else "http://" + u
+                if normalized not in seen:
+                    final_urls.append(normalized)
+                    seen.add(normalized)
+
+            # 1. Prioritize JSON citations
+            for item in json_citations:
+                if isinstance(item, str):
+                    add_url(item)
+                elif isinstance(item, dict):
+                    add_url(item.get('url'))
+            
+            # 2. Add URLs extracted from text
+            for url in extracted_urls:
+                add_url(url)
+            
+            self.current_urls = final_urls            
+            if final_urls:
                 self.sources_button.setVisible(True)
             else:
                 self.sources_button.setVisible(False)            
@@ -270,10 +345,11 @@ class AskAI(qt.QWidget):
             guiTools.speak("تمت الإجابة على سؤالك، يمكنك قراءة النتيجة الآن.")
             self.results.setFocus()
         else:
-            if "Connection" in response or "timeout" in response:
+            error_msg = response_data.get("error", "حدث خطأ غير معروف")
+            if "Connection" in error_msg or "timeout" in error_msg:
                  guiTools.MessageBox.error(self, "خطأ في الاتصال", "لا يوجد اتصال بالإنترنت أو فشل الاتصال بالخادم. يرجى التحقق من الشبكة والمحاولة مرة أخرى.")
             else:
-                 guiTools.MessageBox.error(self, "خطأ", response)
+                 guiTools.MessageBox.error(self, "خطأ", error_msg)
             self.results.clear()
             self.input_box.setFocus()
     def clear_results(self):
