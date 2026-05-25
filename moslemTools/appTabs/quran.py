@@ -263,7 +263,7 @@ class Quran(qt.QWidget):
         self.info_of_quran.clicked.connect(lambda: guiTools.TextViewer(self, "معلومات عن المصحف", ("معلومات عامة عن مصحف المدينة برواية حفص عن عاصم:\nعدد السور: 114 سورة (86 مكية + 28 مدنية).\nعدد الآيات: 6236 آية (بحسب رواية حفص، دون احتساب البسملة في السور ما عدا سورة الفاتحة).\nعدد الأجزاء: 30 جزءًا.\nعدد الأحزاب: 60 حزبًا.\nعدد الأرباع: 240 ربعًا (4 أرباع في الحزب، 8 أرباع في الجزء).\nعدد السجدات التلاوية: 15 سجدة.\nعدد الصفحات (في مصحف المدينة العادي): حوالي 604 صفحة.\n\nملاحظات:\nعدد الكلمات تقريبي، حوالي 77430 كلمة حسب طرق العد الطباعية.\nعدد الحروف تقريبي، يتراوح بين 320000 و324000 حرف حسب احتساب النقاط والحركات.\nعدد الركوعات تقريبي (558 ركوعاً)، وهو رقم متداول حسب تقسيم السور في الطبعات.\n\nكل الأرقام المدونة تمثل الطبعة الرسمية لمصحف المدينة برواية حفص عن عاصم، الصادرة عن مجمع الملك فهد لطباعة المصحف الشريف.")).exec())
         self.info1 = qt.QLabel()
         self.info1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.info1.setText("لخيارات عنصر الفئة, نستخدم مفتاح التطبيقات أو click الأيمن")
+        self.info1.setText("لخيارات العنصر المحدد, نستخدم مفتاح التطبيقات أو click الأيمن")
         self.info1.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         guide_layout.addWidget(self.info1)
         guide_layout.addWidget(self.info_of_quran)
@@ -358,8 +358,9 @@ class Quran(qt.QWidget):
             result = functions.quranJsonControl.getHizb()
         return result[self.info.currentItem().text()][1]
     def onContextMenu(self):
-        menu = qt.QMenu(self)
-        menu.setAccessibleName("خيارات عنصر الفئة")
+        category_name = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}.get(self.type.currentIndex(), "الفئة")
+        menu = qt.QMenu(f"خيارات {category_name}", self)
+        menu.setAccessibleName(f"خيارات {category_name}")
         menu.setFocus()
         listenAction = qt1.QAction("تشغيل", self)
         listenAction.setShortcut("ctrl+p")
