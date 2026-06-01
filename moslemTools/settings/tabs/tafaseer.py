@@ -63,7 +63,7 @@ class TafaseerSettings(qt.QWidget):
         self.selecttranslation.setAccessibleDescription("لحذف أيا من الترجمات قم باستخدام زر التطبيقات")
         main_layout.addWidget(group_box)
         main_layout.addStretch()                
-        self.info = qt.QLabel("لحذف أيا من التفاسير والترجمات, قم باستخدام زر التطبيقات")        
+        self.info = qt.QLabel("لحذف أيا من التفاسير والترجمات, قم باستخدام زر التطبيقات أو click الأيمن")
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setStyleSheet("font-weight: bold;")
