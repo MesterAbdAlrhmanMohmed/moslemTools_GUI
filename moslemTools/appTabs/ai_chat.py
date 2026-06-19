@@ -2,14 +2,17 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
-import guiTools,requests,pyperclip,winsound,webbrowser,re
+import guiTools, requests, pyperclip, winsound, webbrowser, re
 from settings import settings_handler
+
 class AIChatThread(qt2.QThread):
     finished = qt2.pyqtSignal(dict, bool)
+    
     def __init__(self, api_key, message):
         super().__init__()
         self.api_key = api_key
         self.message = message
+        
     def run(self):
         url = "https://api.fanar.qa/v1/chat/completions"
         headers = {
@@ -31,21 +34,25 @@ class AIChatThread(qt2.QThread):
             if response.status_code == 200:
                 result = response.json()
                 content = result['choices'][0]['message']['content']
-                # Try to get citations from the response
-                citations = []
-                # Check different possible locations for citations based on API documentation
-                if 'citations' in result:
-                    citations = result['citations']
-                elif 'citations' in result['choices'][0]:
-                    citations = result['choices'][0]['citations']
-                elif 'message' in result['choices'][0] and 'citations' in result['choices'][0]['message']:
-                    citations = result['choices'][0]['message']['citations']
                 
-                self.finished.emit({"content": content, "citations": citations}, True)
+                # استخراج المراجع من المسار الصحيح بناءً على الـ JSON المرتجع (references)
+                references = []
+                try:
+                    if 'message' in result['choices'][0] and 'references' in result['choices'][0]['message']:
+                        references = result['choices'][0]['message']['references']
+                    elif 'references' in result['choices'][0]:
+                        references = result['choices'][0]['references']
+                    elif 'references' in result:
+                        references = result['references']
+                except Exception:
+                    references = []
+                
+                self.finished.emit({"content": content, "references": references}, True)
             else:
                 self.finished.emit({"error": f"خطأ من الخادم: {response.status_code}\n{response.text}"}, False)
         except Exception as e:
             self.finished.emit({"error": f"حدث خطأ أثناء الاتصال: {str(e)}"}, False)
+
 class SourcesDialog(qt.QDialog):
     def __init__(self, parent, sources):
         super().__init__(parent)
@@ -75,6 +82,7 @@ class SourcesDialog(qt.QDialog):
         buttons_layout.addWidget(self.cancel)
         layout.addLayout(buttons_layout)        
         self.setLayout(layout)        
+        
     def go_to_source(self):
         url = self.combo.currentData()
         if url:
@@ -82,6 +90,7 @@ class SourcesDialog(qt.QDialog):
             self.accept()
         else:
             guiTools.MessageBox.view(self, "تنبيه", "لا يوجد رابط متاح لهذا المصدر")
+
 class AskAI(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -153,6 +162,7 @@ class AskAI(qt.QWidget):
         """)
         self.init_ui()
         self.create_shortcuts()
+        
     def create_shortcuts(self):
         qt1.QShortcut("Ctrl+C", self).activated.connect(self.copy_selection)
         qt1.QShortcut("Ctrl+A", self).activated.connect(self.copy_all)
@@ -161,6 +171,7 @@ class AskAI(qt.QWidget):
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+del", self).activated.connect(self.clear_results)
+        
     def init_ui(self):
         layout = qt.QVBoxLayout(self)                
         self.disclaimer = qt.QLabel("تنبيه مهم: هذا ذكاء اصطناعي للمساعدة، ويرجى سؤال أهل العلم في المسائل الإسلامية المهمة.")
@@ -168,6 +179,7 @@ class AskAI(qt.QWidget):
         self.disclaimer.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.disclaimer.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.disclaimer)                
+        
         input_layout = qt.QHBoxLayout()
         self.input_box = qt.QTextEdit()
         self.input_box.setObjectName("inputBox")
@@ -175,22 +187,26 @@ class AskAI(qt.QWidget):
         self.input_box.setTabChangesFocus(True)
         self.input_box.setMaximumHeight(100)
         self.input_box.setAccessibleName("اكتب سؤالك هنا")        
+        
         self.send_button = guiTools.QPushButton("إرسال الرسالة")
         self.send_button.setObjectName("sendButton")
         self.send_button.clicked.connect(self.on_send_clicked)        
         input_layout.addWidget(self.input_box)
         input_layout.addWidget(self.send_button)
         layout.addLayout(input_layout)                
+        
         self.results = guiTools.QReadOnlyTextEdit()
         self.results.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.results.customContextMenuRequested.connect(self.show_context_menu)
         layout.addWidget(self.results)                
+        
         bottom_layout = qt.QHBoxLayout()        
         self.clear_button = guiTools.QPushButton("حذف النتائج")
         self.clear_button.setObjectName("clearButton")
         self.clear_button.clicked.connect(self.clear_results)
         self.clear_button.setAccessibleDescription("control plus delete")
         self.clear_button.setEnabled(False)
+        
         font_layout = qt.QVBoxLayout()
         self.font_label = qt.QLabel("حجم الخط")
         self.font_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -203,12 +219,14 @@ class AskAI(qt.QWidget):
         self.font_spin.valueChanged.connect(self.font_size_changed)
         font_layout.addWidget(self.font_label)
         font_layout.addWidget(self.font_spin)        
+        
         self.sources_button = guiTools.QPushButton("المصادر والمراجع")        
         self.sources_button.setObjectName("sourcesButton")
         self.sources_button.setShortcut("ctrl+r")
         self.sources_button.setAccessibleDescription("control plus R")
         self.sources_button.setVisible(False)
         self.sources_button.clicked.connect(self.show_sources_dialog)        
+        
         bottom_layout.addWidget(self.clear_button)
         bottom_layout.addStretch(1)
         bottom_layout.addLayout(font_layout)
@@ -216,9 +234,11 @@ class AskAI(qt.QWidget):
         bottom_layout.addWidget(self.sources_button)
         layout.addLayout(bottom_layout)        
         self.update_font_size()
+        
     def show_sources_dialog(self):
         if self.current_urls:
             SourcesDialog(self, self.current_urls).exec()
+            
     def show_context_menu(self, pos):
         menu = qt.QMenu(self)
         font = qt1.QFont()
@@ -238,6 +258,7 @@ class AskAI(qt.QWidget):
         print_act.setShortcut("Ctrl+P")
         print_act.triggered.connect(self.print_results)        
         menu.exec(self.results.mapToGlobal(pos))
+        
     def on_send_clicked(self):
         message = self.input_box.toPlainText().strip()
         if not message:
@@ -256,37 +277,22 @@ class AskAI(qt.QWidget):
         self.thread = AIChatThread(api_key, message)
         self.thread.finished.connect(self.on_ai_finished)
         self.thread.start()
-    def extract_and_clean(self, text):
-        # Remove specific tags
-        text = text.replace("<quran_start>", "").replace("<quran_end>", "")
         
-        # Regex for URLs - excludes common trailing punctuation to keep URLs clean
+    def extract_and_clean(self, text):
+        text = text.replace("<quran_start>", "").replace("<quran_end>", "")
         url_pattern = r'(?:https?://|www\.)[^\s<>"\(\)\[\]{}|\\^`]+'
         urls = re.findall(url_pattern, text)
-        
         clean_text = text
         
-        # 1. Remove lines that are purely source markers and a URL
         clean_text = re.sub(r'^\s*[\-\*\d\.]*\s*(?:المصدر|المرجع|Source|Reference)?\s*\d*[:\-]?\s*(?:https?://|www\.)[^\s<>"]+\s*$', '', clean_text, flags=re.MULTILINE | re.IGNORECASE)
-        
-        # 2. Remove all URLs from the text
         for u in urls:
             clean_text = clean_text.replace(u, "")
-            
-        # 3. Remove source blocks at the end (Sources: ... EOF)
         clean_text = re.sub(r'\n+(?:المصادر|المراجع|Sources|References|Citations):?.*$', '', clean_text, flags=re.DOTALL | re.IGNORECASE | re.MULTILINE)
-        
-        # 4. Remove leftover citation markers like [1], [2], (1)
         clean_text = re.sub(r'\[\d+\]|\(\d+\)', '', clean_text)
-        
-        # 5. Cleanup leftover source headers that might be on their own line now
         clean_text = re.sub(r'^\s*(?:المصدر|المرجع|Source|Reference)\s*\d*[:\-]?\s*$', '', clean_text, flags=re.MULTILINE | re.IGNORECASE)
-        
-        # 6. Final cleanup: empty brackets, multiple newlines
         clean_text = clean_text.replace("()", "").replace("[]", "").replace("<>", "")
         clean_text = re.sub(r'\n{3,}', '\n\n', clean_text)
         
-        # Normalize URLs for the dialog
         unique_urls = []
         seen = set()
         for u in urls:
@@ -301,17 +307,17 @@ class AskAI(qt.QWidget):
                 seen.add(normalized)
                 
         return clean_text.strip(), unique_urls
+        
     def on_ai_finished(self, response_data, success):
         self.send_button.setEnabled(True)
         self.send_button.setText("إرسال الرسالة")
         if success:
             response_text = response_data.get("content", "")
-            json_citations = response_data.get("citations", [])
+            json_references = response_data.get("references", [])
             
             clean_text, extracted_urls = self.extract_and_clean(response_text)
             self.results.setText(clean_text)
             
-            # Combine JSON citations and extracted URLs, preserving order and uniqueness
             final_urls = []
             seen = set()
             
@@ -324,14 +330,14 @@ class AskAI(qt.QWidget):
                     final_urls.append(normalized)
                     seen.add(normalized)
 
-            # 1. Prioritize JSON citations
-            for item in json_citations:
-                if isinstance(item, str):
+            # 1. قراءة الروابط من المراجع المستخرجة من الـ JSON (مفتاح source جواه)
+            for item in json_references:
+                if isinstance(item, dict) and 'source' in item:
+                    add_url(item.get('source'))
+                elif isinstance(item, str):
                     add_url(item)
-                elif isinstance(item, dict):
-                    add_url(item.get('url'))
             
-            # 2. Add URLs extracted from text
+            # 2. إضافة أي روابط تم استخراجها من النص كخيار احتياطي
             for url in extracted_urls:
                 add_url(url)
             
@@ -352,6 +358,7 @@ class AskAI(qt.QWidget):
                  guiTools.MessageBox.error(self, "خطأ", error_msg)
             self.results.clear()
             self.input_box.setFocus()
+            
     def clear_results(self):
         self.results.clear()
         self.input_box.clear()
@@ -359,16 +366,20 @@ class AskAI(qt.QWidget):
         self.sources_button.setVisible(False)
         self.clear_button.setEnabled(False)
         guiTools.speak("تم حذف النتائج")
+        
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(self.font_size))
+        
     def increase_font_size(self):
         if self.font_spin.value() < 100:
             self.font_spin.setValue(self.font_spin.value() + 1)
+            
     def decrease_font_size(self):
         if self.font_spin.value() > 1:
             self.font_spin.setValue(self.font_spin.value() - 1)
+            
     def update_font_size(self):
         cursor = self.results.textCursor()
         self.results.selectAll()
@@ -377,6 +388,7 @@ class AskAI(qt.QWidget):
         font.setBold(self.font_is_bold)
         self.results.setCurrentFont(font)
         self.results.setTextCursor(cursor)        
+        
     def copy_selection(self):
         try:
             cursor = self.results.textCursor()
@@ -389,6 +401,7 @@ class AskAI(qt.QWidget):
             guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as e:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
+            
     def copy_all(self):
         try:
             pyperclip.copy(self.results.toPlainText())
@@ -396,6 +409,7 @@ class AskAI(qt.QWidget):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as e:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
+            
     def save_as_txt(self):
         if not self.results.toPlainText():
             return
@@ -411,6 +425,7 @@ class AskAI(qt.QWidget):
                 guiTools.speak("تم الحفظ بنجاح")
         except Exception as e:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
+            
     def print_results(self):
         if not self.results.toPlainText():
             return
