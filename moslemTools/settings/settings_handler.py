@@ -16,6 +16,12 @@ if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"addan")):
     shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","maghrib.mp3"))
     shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","isha.mp3"))
     shutil.copy("data/sounds/adaan/ecama_alsalah.m4a",os.path.join(os.getenv('appdata'),appName,"addan","ecama_alsalah.m4a"))
+    shutil.copy("data/sounds/prayAfterAdaan.m4a",os.path.join(os.getenv('appdata'),appName,"addan","prayAfterAdaan.m4a"))
+if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"addan","prayAfterAdaan.m4a")):
+    try:
+        shutil.copy("data/sounds/prayAfterAdaan.m4a",os.path.join(os.getenv('appdata'),appName,"addan","prayAfterAdaan.m4a"))
+    except:
+        pass
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"quran surah reciters")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"quran surah reciters"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"athkar")):
@@ -79,7 +85,8 @@ settingsConfig={
         "asr": "asr.mp3",
         "maghrib": "maghrib.mp3",
         "isha": "isha.mp3",
-        "iqama": "ecama_alsalah.m4a"
+        "iqama": "ecama_alsalah.m4a",
+        "prayAfterAdaan": "prayAfterAdaan.m4a"
     },
     "font":{
         "bold":"False",

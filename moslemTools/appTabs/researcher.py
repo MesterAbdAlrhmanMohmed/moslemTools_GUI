@@ -175,6 +175,9 @@ class SearchThread(qt2.QThread):
                 search_books = functions.ahadeeth.ahadeeths
             else:
                 search_books = {self.ahadeeth_text: functions.ahadeeth.ahadeeths[self.ahadeeth_text]}
+            display_text.append("")
+            display_text.append("")
+            current_line_number = 3
             for book_name_ar, file_name in search_books.items():
                 try:
                     full_path = os.path.join(os.getenv("appdata"), settings.app.appName, "ahadeeth", file_name)
@@ -185,9 +188,28 @@ class SearchThread(qt2.QThread):
                         result = self._search(self.search_text, listOfWords)
                         if result:
                             display_text.append(f"عدد النتائج في كتاب {book_name_ar}, {len(result)} نتيجة")
+                            current_line_number += 1
                             display_text.append("")
-                            display_text.extend(result)
+                            current_line_number += 1
+                            for item in result:
+                                display_text.append(item)
+                                match = re.match(r'^(\d+)\.', item)
+                                if match:
+                                    hadith_index = int(match.group(1)) - 1
+                                    metadata = {
+                                        "type": "hadith",
+                                        "book_name": book_name_ar,
+                                        "file_name": file_name,
+                                        "hadith_index": hadith_index
+                                    }
+                                    num_lines = item.count('\n') + 1
+                                    for offset in range(num_lines):
+                                        search_metadata[current_line_number + offset] = metadata
+                                    current_line_number += num_lines
+                                else:
+                                    current_line_number += 1
                             display_text.append("")
+                            current_line_number += 1
                             total_results_count += len(result)
                     else:
                         qt.QMetaObject.invokeMethod(self.parent_widget, "handle_error", qt2.Qt.ConnectionType.QueuedConnection, qt2.Q_ARG(str, f"خطأ في البيانات: تنسيق ملف الأحاديث غير صحيح لكتاب: {book_name_ar}."))
@@ -196,8 +218,8 @@ class SearchThread(qt2.QThread):
             if display_text:
                 if display_text[-1] == "":
                     display_text.pop()
-                display_text.insert(0, f"إجمالي عدد النتائج: {total_results_count}")
-                display_text.insert(1, "")
+                display_text[0] = f"إجمالي عدد النتائج: {total_results_count}"
+                display_text[1] = ""
         self.searchFinished.emit(display_text, search_metadata, total_results_count)
 class Albaheth(qt.QWidget):
     def __init__(self):
@@ -305,13 +327,15 @@ class Albaheth(qt.QWidget):
         if not metadata:
             guiTools.speak("يرجى تحديد آية أولاً لتطبيق الإجراء")
             return
+        if isinstance(metadata, dict) and metadata.get("type") == "hadith":
+            return
         action_func(metadata)
     def on_spacebar_pressed(self):
         if self.results.hasFocus():
             cursor = self.results.textCursor()
             line_number = cursor.blockNumber() + 1
             selected_metadata = self.search_metadata.get(line_number)
-            if selected_metadata:
+            if selected_metadata and selected_metadata.get("type") != "hadith":
                 self.handle_play_toggle(selected_metadata)
     def on_tafseer_shortcut(self):
         self.on_shortcut_activated(self.show_tafseer)
@@ -322,7 +346,19 @@ class Albaheth(qt.QWidget):
     def on_tanzil_shortcut(self):
         self.on_shortcut_activated(self.show_tanzil)
     def on_goto_surah_shortcut(self):
-        self.on_shortcut_activated(self.go_to_surah)
+        cursor = self.results.textCursor()
+        line_number = cursor.blockNumber() + 1
+        metadata = self.search_metadata.get(line_number)
+        if not metadata:
+            if self.serch.currentIndex() == 1:
+                guiTools.speak("يرجى تحديد حديث أولاً لتطبيق الإجراء")
+            else:
+                guiTools.speak("يرجى تحديد آية أولاً لتطبيق الإجراء")
+            return
+        if isinstance(metadata, dict) and metadata.get("type") == "hadith":
+            self.go_to_hadith(metadata)
+        else:
+            self.go_to_surah(metadata)
     def on_ayah_info_shortcut(self):
         self.on_shortcut_activated(self.show_ayah_info)
     def on_save_shortcut(self):
@@ -494,6 +530,8 @@ class Albaheth(qt.QWidget):
                 line_number = cursor.blockNumber() + 1
                 metadata = self.search_metadata.get(line_number)
                 if metadata:
+                    if isinstance(metadata, dict) and metadata.get("type") == "hadith":
+                        return False
                     self.handle_play_toggle(metadata)
                     return True
         return super().eventFilter(obj, event)
@@ -733,57 +771,72 @@ class Albaheth(qt.QWidget):
         bold_font.setBold(True)
         menu.setFont(bold_font)
         if metadata:
-            ayah_menu = qt.QMenu("خيارات الآية", self)
-            ayah_menu.setFont(bold_font)
-            play_action = qt1.QAction("تشغيل الآية", self)
-            play_action.setShortcut(qt1.QKeySequence(qt2.Qt.Key.Key_Space))
-            play_action.triggered.connect(lambda: self.start_playback(metadata))
-            ayah_menu.addAction(play_action)
-            change_reciter_action = qt1.QAction("تغيير القارئ", self)
-            change_reciter_action.setShortcut("Ctrl+Shift+R")
-            change_reciter_action.triggered.connect(self.on_change_reciter_requested)
-            ayah_menu.addAction(change_reciter_action)
-            goto_surah_action = qt1.QAction("الذهاب إلى السورة التي تحتوي على هذه الآية", self)
-            goto_surah_action.setShortcut("Ctrl+G")
-            goto_surah_action.triggered.connect(lambda: self.go_to_surah(metadata))
-            ayah_menu.addAction(goto_surah_action)
-            tafseer_action = qt1.QAction("تفسير الآية", self)
-            tafseer_action.setShortcut("Ctrl+T")
-            tafseer_action.triggered.connect(lambda: self.show_tafseer(metadata))
-            ayah_menu.addAction(tafseer_action)
-            translation_action = qt1.QAction("ترجمة الآية", self)
-            translation_action.setShortcut("Ctrl+L")
-            translation_action.triggered.connect(lambda: self.show_translation(metadata))
-            ayah_menu.addAction(translation_action)
-            iarab_action = qt1.QAction("إعراب الآية", self)
-            iarab_action.setShortcut("Ctrl+I")
-            iarab_action.triggered.connect(lambda: self.show_iarab(metadata))
-            ayah_menu.addAction(iarab_action)
-            tanzil_action = qt1.QAction("أسباب نزول الآية", self)
-            tanzil_action.setShortcut("Ctrl+R")
-            tanzil_action.triggered.connect(lambda: self.show_tanzil(metadata))
-            ayah_menu.addAction(tanzil_action)
-            info_action = qt1.QAction("معلومات الآية", self)
-            info_action.setShortcut("Ctrl+F")
-            info_action.triggered.connect(lambda: self.show_ayah_info(metadata))
-            ayah_menu.addAction(info_action)
-            save_ayah_action = qt1.QAction("حفظ الآية", self)
-            save_ayah_action.setShortcut("Ctrl+H")
-            save_ayah_action.triggered.connect(lambda: self.save_ayah(metadata))
-            ayah_menu.addAction(save_ayah_action)
-            menu.addMenu(ayah_menu)
-            menu.addSeparator()
-            text_menu = qt.QMenu("خيارات النص", self)
-            text_menu.setFont(bold_font)
-            copy_all = qt1.QAction("نسخ النص كاملا", self)
-            copy_all.setShortcut("Ctrl+A")
-            copy_all.triggered.connect(self.copy_text)
-            text_menu.addAction(copy_all)
-            copy_selected = qt1.QAction("نسخ النص المحدد", self)
-            copy_selected.setShortcut("Ctrl+C")
-            copy_selected.triggered.connect(self.copy_line)
-            text_menu.addAction(copy_selected)
-            menu.addMenu(text_menu)
+            if isinstance(metadata, dict) and metadata.get("type") == "hadith":
+                goto_hadith_action = qt1.QAction(f"الذهاب إلى كتاب {metadata['book_name']}", self)
+                goto_hadith_action.setShortcut("Ctrl+G")
+                goto_hadith_action.triggered.connect(lambda: self.go_to_hadith(metadata))
+                menu.addAction(goto_hadith_action)
+                menu.addSeparator()
+                copy_all = qt1.QAction("نسخ النص كاملا", self)
+                copy_all.setShortcut("Ctrl+A")
+                copy_all.triggered.connect(self.copy_text)
+                menu.addAction(copy_all)
+                copy_selected = qt1.QAction("نسخ النص المحدد", self)
+                copy_selected.setShortcut("Ctrl+C")
+                copy_selected.triggered.connect(self.copy_line)
+                menu.addAction(copy_selected)
+            else:
+                ayah_menu = qt.QMenu("خيارات الآية", self)
+                ayah_menu.setFont(bold_font)
+                play_action = qt1.QAction("تشغيل الآية", self)
+                play_action.setShortcut(qt1.QKeySequence(qt2.Qt.Key.Key_Space))
+                play_action.triggered.connect(lambda: self.start_playback(metadata))
+                ayah_menu.addAction(play_action)
+                change_reciter_action = qt1.QAction("تغيير القارئ", self)
+                change_reciter_action.setShortcut("Ctrl+Shift+R")
+                change_reciter_action.triggered.connect(self.on_change_reciter_requested)
+                ayah_menu.addAction(change_reciter_action)
+                goto_surah_action = qt1.QAction(f"الذهاب إلى سورة {metadata['surah_name']}", self)
+                goto_surah_action.setShortcut("Ctrl+G")
+                goto_surah_action.triggered.connect(lambda: self.go_to_surah(metadata))
+                ayah_menu.addAction(goto_surah_action)
+                tafseer_action = qt1.QAction("تفسير الآية", self)
+                tafseer_action.setShortcut("Ctrl+T")
+                tafseer_action.triggered.connect(lambda: self.show_tafseer(metadata))
+                ayah_menu.addAction(tafseer_action)
+                translation_action = qt1.QAction("ترجمة الآية", self)
+                translation_action.setShortcut("Ctrl+L")
+                translation_action.triggered.connect(lambda: self.show_translation(metadata))
+                ayah_menu.addAction(translation_action)
+                iarab_action = qt1.QAction("إعراب الآية", self)
+                iarab_action.setShortcut("Ctrl+I")
+                iarab_action.triggered.connect(lambda: self.show_iarab(metadata))
+                ayah_menu.addAction(iarab_action)
+                tanzil_action = qt1.QAction("أسباب نزول الآية", self)
+                tanzil_action.setShortcut("Ctrl+R")
+                tanzil_action.triggered.connect(lambda: self.show_tanzil(metadata))
+                ayah_menu.addAction(tanzil_action)
+                info_action = qt1.QAction("معلومات الآية", self)
+                info_action.setShortcut("Ctrl+F")
+                info_action.triggered.connect(lambda: self.show_ayah_info(metadata))
+                ayah_menu.addAction(info_action)
+                save_ayah_action = qt1.QAction("حفظ الآية", self)
+                save_ayah_action.setShortcut("Ctrl+H")
+                save_ayah_action.triggered.connect(lambda: self.save_ayah(metadata))
+                ayah_menu.addAction(save_ayah_action)
+                menu.addMenu(ayah_menu)
+                menu.addSeparator()
+                text_menu = qt.QMenu("خيارات النص", self)
+                text_menu.setFont(bold_font)
+                copy_all = qt1.QAction("نسخ النص كاملا", self)
+                copy_all.setShortcut("Ctrl+A")
+                copy_all.triggered.connect(self.copy_text)
+                text_menu.addAction(copy_all)
+                copy_selected = qt1.QAction("نسخ النص المحدد", self)
+                copy_selected.setShortcut("Ctrl+C")
+                copy_selected.triggered.connect(self.copy_line)
+                text_menu.addAction(copy_selected)
+                menu.addMenu(text_menu)
         else:
             copy_all = qt1.QAction("نسخ النص كاملا", self)
             copy_all.setShortcut("Ctrl+A")
@@ -844,6 +897,11 @@ class Albaheth(qt.QWidget):
             QuranViewer(self, text=surah_text, type=5, category=surah_name_key, index=ayah_index, enableNextPreviouseButtons=False, enableBookmarks=False).exec()
         else:
             guiTools.MessageBox.error(self, "خطأ", f"لم يتم العثور على بيانات السورة: {surah_name_key}")
+        self.resume_after_action()
+    def go_to_hadith(self, metadata):
+        self.pause_for_action()
+        from gui import hadeeth_viewer
+        hadeeth_viewer(self, metadata["file_name"], index=metadata["hadith_index"]).exec()
         self.resume_after_action()
     def show_ayah_info(self, metadata):
         self.pause_for_action()

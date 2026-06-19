@@ -42,8 +42,14 @@ class PrayerTimesSettings(qt.QWidget):
         row1_layout.addWidget(self.adaanReminder)        
         self.playPrayerAfterAdhaan = qt.QCheckBox("تشغيل الدعاء بعد الأذان")
         self.playPrayerAfterAdhaan.setChecked(p.cbts(settings_handler.get("prayerTimes", "playPrayerAfterAdhaan")))
-        self.playPrayerAfterAdhaan.setVisible(p.cbts(settings_handler.get("prayerTimes", "adaanReminder")))                
+        self.playPrayerAfterAdhaan.setVisible(p.cbts(settings_handler.get("prayerTimes", "adaanReminder")))
+        self.playPrayerAfterAdhaan.stateChanged.connect(self.onPlayPrayerAfterAdhaanStateChanged)
         row1_layout.addWidget(self.playPrayerAfterAdhaan)
+        row1_layout.addSpacing(15)
+        self.changeDuaSound = qt.QPushButton("تغيير صوت الدعاء")
+        self.changeDuaSound.setVisible(p.cbts(settings_handler.get("prayerTimes", "adaanReminder")) and p.cbts(settings_handler.get("prayerTimes", "playPrayerAfterAdhaan")))
+        self.changeDuaSound.clicked.connect(self.onChangeDuaButtonClicked)
+        row1_layout.addWidget(self.changeDuaSound)
         row1_layout.addStretch()        
         group_layout.addLayout(row1_layout)                
         row2_layout = qt.QHBoxLayout()
@@ -138,6 +144,7 @@ class PrayerTimesSettings(qt.QWidget):
     def onprayerTimesReminderCheckboxStateChanged(self, state):        
         is_checked = bool(state)
         self.playPrayerAfterAdhaan.setVisible(is_checked)
+        self.changeDuaSound.setVisible(is_checked and self.playPrayerAfterAdhaan.isChecked())
         self.changeAdhanSound.setVisible(is_checked)        
         self.before.setVisible(is_checked)
         self.beforeLabel.setVisible(is_checked)
@@ -192,6 +199,10 @@ class PrayerTimesSettings(qt.QWidget):
         soundMenu.exec(mouse_position)            
     def onDefaultActionTriggered(self, prayer_key):        
         default_file = "fajr.mp3" if prayer_key == "fajr" else "genral.mp3"
+        current_sound = settings_handler.get("adhanSounds", prayer_key)
+        if current_sound == default_file:
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "الصوت الافتراضي محدد بالفعل.")
+            return
         path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", default_file)        
         try:                        
             if os.path.exists(path):
@@ -240,6 +251,10 @@ class PrayerTimesSettings(qt.QWidget):
     def onIqamaDefaultActionTriggered(self):
         prayer_key = "iqama"
         default_file = "ecama_alsalah.m4a"
+        current_sound = settings_handler.get("adhanSounds", prayer_key)
+        if current_sound == default_file:
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "الصوت الافتراضي محدد بالفعل.")
+            return
         path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", default_file)
         try:
             if os.path.exists(path):
@@ -269,5 +284,60 @@ class PrayerTimesSettings(qt.QWidget):
                 shutil.copy(selected_file, path)
                 settings_handler.set("adhanSounds", prayer_key, new_filename)
                 guiTools.qMessageBox.MessageBox.view(self, "تم", "تم تغيير صوت الإقامة بنجاح.")
+            except Exception as e:
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ غير متوقع: {e}")
+    def onPlayPrayerAfterAdhaanStateChanged(self, state):
+        self.changeDuaSound.setVisible(bool(state))
+    def onChangeDuaButtonClicked(self):
+        soundMenu = qt.QMenu("اختر صوت", self)
+        soundMenu.setAccessibleName("اختر صوت")
+        font1 = qt1.QFont()
+        font1.setBold(True)
+        soundMenu.setFont(font1)
+        default = qt1.QAction("الصوت الافتراضي", self)
+        default.triggered.connect(self.onDuaDefaultActionTriggered)
+        soundMenu.addAction(default)
+        chooseFromDevice = qt1.QAction("اختر من الجهاز", self)
+        chooseFromDevice.triggered.connect(self.onDuaChooseFromDevice)
+        soundMenu.addAction(chooseFromDevice)
+        soundMenu.setFocus()
+        mouse_position = qt1.QCursor.pos()
+        soundMenu.exec(mouse_position)
+    def onDuaDefaultActionTriggered(self):
+        prayer_key = "prayAfterAdaan"
+        default_file = "prayAfterAdaan.m4a"
+        current_sound = settings_handler.get("adhanSounds", prayer_key)
+        if current_sound == default_file:
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "الصوت الافتراضي محدد بالفعل.")
+            return
+        path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", default_file)
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+            shutil.copy(os.path.join("data/sounds/", default_file), path)
+            settings_handler.set("adhanSounds", prayer_key, default_file)
+            guiTools.qMessageBox.MessageBox.view(self, "تم", "تم استعادة الصوت الافتراضي بنجاح.")
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ غير متوقع: {e}")
+    def onDuaChooseFromDevice(self):
+        prayer_key = "prayAfterAdaan"
+        fileDialog = qt.QFileDialog(self, "اختر ملف صوتي")
+        fileDialog.setFileMode(qt.QFileDialog.FileMode.ExistingFile)
+        fileDialog.setNameFilter("ملفات الصوت (*.mp3 *.wav *.wma *.aac *.m4a *.flac *.ogg *.opus *.ape *.mpga *.alac *.wv *.mka *.aiff *.au *.dss *.iff *.m4r *.m4b *.midi *.mid *.ac3 *.tta *.m3u *.amr *.awb *.caf *.mod *.s3m *.xm *.it *.ra *.rm *.bwf *.rf64 *.pcm *.asf *.dvf *.msv *.qcp *.slk *.vox *.voc *.snd *.adx *.aif *.aifc *.ast *.brstm *.dts *.gsm *.m4p *.mp1 *.mp2 *.mus *.sb0 *.smp *.spx *.w64 *.xma *.ac3 *.dct *.ec3 *.mka *.mlp *.ofr *.tak *.thd *.tta *.wv)")
+        if fileDialog.exec() == qt.QFileDialog.DialogCode.Accepted:
+            try:
+                selected_file = fileDialog.selectedFiles()[0]
+                if not selected_file:
+                    return
+                file_ext = os.path.splitext(selected_file)[1]
+                new_filename = f"{prayer_key}{file_ext}"
+                path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", new_filename)
+                existing_files = os.listdir(os.path.join(os.getenv('appdata'), settings_handler.appName, "addan"))
+                for file in existing_files:
+                    if file.startswith(prayer_key):
+                        os.remove(os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", file))
+                shutil.copy(selected_file, path)
+                settings_handler.set("adhanSounds", prayer_key, new_filename)
+                guiTools.qMessageBox.MessageBox.view(self, "تم", "تم تغيير صوت الدعاء بنجاح.")
             except Exception as e:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ غير متوقع: {e}")

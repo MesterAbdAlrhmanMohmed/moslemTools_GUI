@@ -16,7 +16,16 @@ class AfterAdaan(qt.QDialog):
         self.audio_output=QAudioOutput()
         self.audio_output.setDevice(audio_manager.get_audio_device("adhan"))
         self.media_player.setAudioOutput(self.audio_output)
-        self.media_player.setSource(qt2.QUrl.fromLocalFile("data/sounds/prayAfterAdaan.m4a"))
+        dua_sound = settings.settings_handler.get("adhanSounds", "prayAfterAdaan")
+        if dua_sound:
+            import os
+            dua_path = os.path.join(os.getenv('appdata'), settings.settings_handler.appName, "addan", dua_sound)
+            if os.path.exists(dua_path):
+                self.media_player.setSource(qt2.QUrl.fromLocalFile(dua_path))
+            else:
+                self.media_player.setSource(qt2.QUrl.fromLocalFile("data/sounds/prayAfterAdaan.m4a"))
+        else:
+            self.media_player.setSource(qt2.QUrl.fromLocalFile("data/sounds/prayAfterAdaan.m4a"))
         self.media_player.mediaStatusChanged.connect(self.on_media_status_changed)
         self.media_player.play()        
         self.suplication = guiTools.QReadOnlyTextEdit()
