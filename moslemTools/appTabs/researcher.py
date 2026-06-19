@@ -684,12 +684,12 @@ class Albaheth(qt.QWidget):
             self.clear_results_button.setDisabled(True)
             self.serch_input.setFocus()
     def get_metadata_from_result(self, result_text):
-        match = re.search(r'^(\d+)(.+?)\s(.+)\((\d+)\)$', result_text)
+        match = re.search(r'^(\d+).+?\((\d+)\)$', result_text)
         if match:
             surah_number = int(match.group(1))
-            surah_name = match.group(2).strip()
-            ayah_number_in_surah = int(match.group(4))
+            ayah_number_in_surah = int(match.group(2))
             try:
+                surah_name = self.quran_data[str(surah_number)]["name"]
                 ayah_data = self.quran_data[str(surah_number)]['ayahs'][ayah_number_in_surah - 1]
                 overall_ayah_number = ayah_data['number']
                 return {"surah_number": surah_number,"surah_name": surah_name,"ayah_number_in_surah": ayah_number_in_surah,"overall_ayah_number": overall_ayah_number}
