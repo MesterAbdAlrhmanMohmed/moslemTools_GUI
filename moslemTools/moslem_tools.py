@@ -73,7 +73,6 @@ class main(qt.QMainWindow):
         self.list_widget.currentItemChanged.connect(self.onToolChanged)
         self.list_widget.setSpacing(3)
         self.quranPlayer = QuranPlayer()
-        self.storiesPlayer = StoryPlayer()
         self.researcher = Albaheth()
         self.askAI = AskAI()
         tabs = [
@@ -89,8 +88,7 @@ class main(qt.QMainWindow):
     (Athker(), "الأذكار والأدعية"),
     (sibha(), "السبحة الإلكترونية"),
     (NamesOfAllah(), "أسماء الله الحُسْنى"),
-    (ProphetStories(), "القصص الإسلامية المكتوبة"),
-    (self.storiesPlayer, "القصص الإسلامية الصوتية للأطفال"),
+    (ProphetStories(), "القصص الإسلامية المكتوبة"),    
     (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),
     (DateConverter(), "محول التاريخ"),
 ]
@@ -372,8 +370,7 @@ class main(qt.QMainWindow):
             print(e)
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشلت عملية جلب المعلومات, الرجاء الإتصال بالإنترنت")
     def onToolChanged(self, current, previous):
-        self.quranPlayer.mp.pause()
-        self.storiesPlayer.mp.pause()
+        self.quranPlayer.mp.pause()        
         self.researcher.media_player.pause()    
     def delete_program_data_with_confirmation(self):
         confirm = guiTools.QQuestionMessageBox.view(self,"تأكيد الحذف النهائي لبيانات البرنامج","تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nالأفضل عمل نسخة احتياطية لجميع إعداداتك وملفاتك أولا قبل هذه العملية الخطيرة\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟","نعم، قم بحذف مجلد بيانات البرنامج","لا، إلغاء")
