@@ -85,7 +85,8 @@ settingsConfig={
     },
     "font":{
         "bold":"False",
-        "size":"12"
+        "size":"12",
+        "wrap":"False"
     },
     "fanar":{
         "api_key":""

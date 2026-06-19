@@ -75,6 +75,7 @@ class settings(qt.QDialog):
         restart_required = 0
         original_font_bold = settings_handler.get("font", "bold")
         original_font_size = settings_handler.get("font", "size")
+        original_font_wrap = settings_handler.get("font", "wrap")
         original_audio_global = settings_handler.get("audio", "global")
         original_audio_quran_text = settings_handler.get("audio", "quran_text")
         original_audio_quran_audio = settings_handler.get("audio", "quran_audio")
@@ -142,9 +143,11 @@ class settings(qt.QDialog):
         settings_handler.set("prayerTimes", "playPrayerAfterAdhaan", str(self.prayerTimesSettings.playPrayerAfterAdhaan.isChecked()))
         new_font_bold = str(self.fontSettings.bold_checkbox.isChecked())
         new_font_size = str(self.fontSettings.font_size_spinbox.value())
+        new_font_wrap = str(self.fontSettings.wrap_checkbox.isChecked())
         settings_handler.set("font", "bold", new_font_bold)
         settings_handler.set("font", "size", new_font_size)
-        if original_font_bold != new_font_bold or original_font_size != new_font_size:
+        settings_handler.set("font", "wrap", new_font_wrap)
+        if original_font_bold != new_font_bold or original_font_size != new_font_size or original_font_wrap != new_font_wrap:
             restart_required = 1
         self.p.runAudioThkarTimer()
         self.p.notification_random_thecker()

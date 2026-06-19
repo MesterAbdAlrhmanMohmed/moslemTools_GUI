@@ -5,7 +5,13 @@ class QReadOnlyTextEdit(qt.QTextEdit):
         super().__init__(parent)
         self.setReadOnly(True)
         self.setTextInteractionFlags(qt2.Qt.TextInteractionFlag.TextSelectableByMouse | qt2.Qt.TextInteractionFlag.TextSelectableByKeyboard)
-        self.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
+        from settings import settings_handler
+        if settings_handler.get("font", "wrap") == "True":
+            self.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
+            import PyQt6.QtGui as qt1
+            self.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
+        else:
+            self.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
         self.setAcceptRichText(True)
         self.document().setDefaultCursorMoveStyle(qt2.Qt.CursorMoveStyle.VisualMoveStyle)
     def setText(self, text):
