@@ -179,6 +179,7 @@ class QuranPlayer(qt.QWidget):
         self.cancel_download_button.clicked.connect(self.cancel_current_download)
         self.cancel_download_button.setStyleSheet("QPushButton {background-color: #8B0000;color: white;border: none;padding: 5px 10px;border-radius: 5px;}QPushButton:hover {background-color: #A52A2A;}")
         self.mp = QMediaPlayer()
+        self.apply_speed()
         self.au = QAudioOutput()
         self.au.setDevice(audio_manager.get_audio_device("quran_audio"))
         self.mp.setAudioOutput(self.au)
@@ -1465,10 +1466,12 @@ class QuranPlayer(qt.QWidget):
                 audio_path = os.path.join(audio_folder, selected_item.text() + ".mp3")
                 if os.path.exists(audio_path):
                     self.mp.setSource(qt2.QUrl.fromLocalFile(audio_path))
+                    self.apply_speed()
                     self.mp.play()
                 else:
                     url = self.reciters_data[reciter][selected_item.text()]
                     self.mp.setSource(qt2.QUrl(url))
+                    self.apply_speed()
                     self.mp.play()
                 is_manual_playback = not self.play_all_to_end.isChecked() and not self.play_all_to_start.isChecked()
                 self.repeat_surah_button.setEnabled(is_manual_playback)
@@ -1523,6 +1526,15 @@ class QuranPlayer(qt.QWidget):
         boldFont=menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
+        speed_menu = menu.addMenu("سرعة التشغيل")
+        speed_menu.setFont(boldFont)
+        current_speed = self.load_speed()
+        speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]
+        for s in speeds:
+            action = speed_menu.addAction(f"{s}x")
+            action.setCheckable(True)
+            action.setChecked(abs(current_speed - s) < 0.01)
+            action.triggered.connect(lambda checked, val=s: self.change_speed(val))
         is_merging_active = self.merge_list or self.first_merge_selection_index is not None
         is_batch_download_active = bool(self.download_batch_list) or self.first_download_selection_index is not None
         if not is_batch_download_active:
@@ -1841,3 +1853,38 @@ class QuranPlayer(qt.QWidget):
             guiTools.qMessageBox.MessageBox.view(self,"تم","تم الحذف")
         except:
             guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر حذف العلامة المرجعية")
+    def load_speed(self):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    return json.load(f).get("quranPlayerTab", 1.0)
+        except:
+            pass
+        return 1.0
+    def save_speed(self, speed):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            data = {}
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                except:
+                    pass
+            data["quranPlayerTab"] = speed
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f)
+        except:
+            pass
+    def change_speed(self, speed):
+        self.save_speed(speed)
+        self.mp.setPlaybackRate(speed)
+        if hasattr(self.mp, 'setPitchCompensation'):
+            self.mp.setPitchCompensation(True)
+    def apply_speed(self):
+        speed = self.load_speed()
+        self.mp.setPlaybackRate(speed)
+        if hasattr(self.mp, 'setPitchCompensation'):
+            self.mp.setPitchCompensation(True)

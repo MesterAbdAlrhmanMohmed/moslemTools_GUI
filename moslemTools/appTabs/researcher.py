@@ -230,6 +230,7 @@ class Albaheth(qt.QWidget):
         self.search_metadata = {}
         self.currentReciter = int(settings.settings_handler.get("g", "reciter"))
         self.media_player = QMediaPlayer(self)
+        self.apply_speed()
         self.audio_output = QAudioOutput(self)
         self.audio_output.setDevice(functions.audio_manager.get_audio_device("researcher"))
         self.media_player.setAudioOutput(self.audio_output)
@@ -788,6 +789,15 @@ class Albaheth(qt.QWidget):
             else:
                 ayah_menu = qt.QMenu("خيارات الآية", self)
                 ayah_menu.setFont(bold_font)
+                speed_menu = ayah_menu.addMenu("سرعة التشغيل")
+                speed_menu.setFont(bold_font)
+                current_speed = self.load_speed()
+                speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]
+                for s in speeds:
+                    action = speed_menu.addAction(f"{s}x")
+                    action.setCheckable(True)
+                    action.setChecked(abs(current_speed - s) < 0.01)
+                    action.triggered.connect(lambda checked, val=s: self.change_speed(val))
                 play_action = qt1.QAction("تشغيل الآية", self)
                 play_action.setShortcut(qt1.QKeySequence(qt2.Qt.Key.Key_Space))
                 play_action.triggered.connect(lambda: self.start_playback(metadata))
@@ -862,6 +872,7 @@ class Albaheth(qt.QWidget):
         else:
             path = qt2.QUrl(reciter_url + filename)
         self.media_player.setSource(path)
+        self.apply_speed()
         self.media_player.play()
         self.player_widget.setVisible(True)
     def on_media_state_changed(self, state):
@@ -988,3 +999,38 @@ class Albaheth(qt.QWidget):
         if dlg.exec() == qt.QDialog.DialogCode.Accepted:
             self.currentReciter = dlg.recitersListWidget.currentRow()
         self.resume_after_action()
+    def load_speed(self):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    return json.load(f).get("researcherTab", 1.0)
+        except:
+            pass
+        return 1.0
+    def save_speed(self, speed):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            data = {}
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                except:
+                    pass
+            data["researcherTab"] = speed
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f)
+        except:
+            pass
+    def change_speed(self, speed):
+        self.save_speed(speed)
+        self.media_player.setPlaybackRate(speed)
+        if hasattr(self.media_player, 'setPitchCompensation'):
+            self.media_player.setPitchCompensation(True)
+    def apply_speed(self):
+        speed = self.load_speed()
+        self.media_player.setPlaybackRate(speed)
+        if hasattr(self.media_player, 'setPitchCompensation'):
+            self.media_player.setPitchCompensation(True)

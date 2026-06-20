@@ -422,6 +422,7 @@ class QuranViewer(qt.QDialog):
         self.is_counting_asbab_alnozole = False
         self.original_info_text = ""
         self.media=QMediaPlayer(self)
+        self.apply_speed()
         self.audioOutput=QAudioOutput(self)
         self.audioOutput.setDevice(audio_manager.get_audio_device("quran_text"))
         self.media.setAudioOutput(self.audioOutput)
@@ -1291,6 +1292,15 @@ class QuranViewer(qt.QDialog):
         menu.setFocus()
         ayahOptions = qt.QMenu("خيارات الآية الحالية", self)
         ayahOptions.setFont(font)
+        speed_menu = ayahOptions.addMenu("سرعة التشغيل")
+        speed_menu.setFont(font)
+        current_speed = self.load_speed()
+        speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]
+        for s in speeds:
+            action = speed_menu.addAction(f"{s}x")
+            action.setCheckable(True)
+            action.setChecked(abs(current_speed - s) < 0.01)
+            action.triggered.connect(lambda checked, val=s: self.change_speed(val))
         if self.is_search_view:
             goToAyahAction = qt1.QAction("الذهاب إلى موضع الآية والخروج من وضع البحث", self)
             goToAyahAction.setShortcut("ctrl+g")
@@ -1787,6 +1797,7 @@ class QuranViewer(qt.QDialog):
         else:
             self.media.stop()
             self.media.setSource(path)
+            self.apply_speed()
             self.media.play()
     def onPlayToEnd(self):
         if self._is_invalid_search_line():
@@ -2571,3 +2582,38 @@ class QuranViewer(qt.QDialog):
         elif category_type == 4:
             return f"الحزب {category_value}"
         return category_value
+    def load_speed(self):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    return json.load(f).get("quranViewer", 1.0)
+        except:
+            pass
+        return 1.0
+    def save_speed(self, speed):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            data = {}
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                except:
+                    pass
+            data["quranViewer"] = speed
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f)
+        except:
+            pass
+    def change_speed(self, speed):
+        self.save_speed(speed)
+        self.media.setPlaybackRate(speed)
+        if hasattr(self.media, 'setPitchCompensation'):
+            self.media.setPitchCompensation(True)
+    def apply_speed(self):
+        speed = self.load_speed()
+        self.media.setPlaybackRate(speed)
+        if hasattr(self.media, 'setPitchCompensation'):
+            self.media.setPitchCompensation(True)

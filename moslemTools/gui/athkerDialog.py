@@ -1,4 +1,4 @@
-import time,winsound,pyperclip,os,settings
+import time,winsound,pyperclip,os,settings,json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -15,6 +15,7 @@ class AthkerDialog (qt.QDialog):
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings.settings_handler.get("font", "size"))
         self.media=QMediaPlayer(self)
+        self.apply_speed()
         self.audioOutput=QAudioOutput(self)
         self.audioOutput.setDevice(audio_manager.get_audio_device("athkar"))
         self.media.setAudioOutput(self.audioOutput)
@@ -133,6 +134,7 @@ class AthkerDialog (qt.QDialog):
                 url=qt2.QUrl(self.athkerList[self.inex]["audio"])
             if url != self.media.source():
                 self.media.setSource(url)
+            self.apply_speed()
             self.media.play()
             self.media_progress.setVisible(True)
             self.time_label.setVisible(True)
@@ -177,7 +179,16 @@ class AthkerDialog (qt.QDialog):
         menu = qt.QMenu(self)
         boldFont = qt1.QFont()
         boldFont.setBold(True)
-        menu.setFont(boldFont)        
+        menu.setFont(boldFont)
+        speed_menu = menu.addMenu("سرعة التشغيل")
+        speed_menu.setFont(boldFont)
+        current_speed = self.load_speed()
+        speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]
+        for s in speeds:
+            action = speed_menu.addAction(f"{s}x")
+            action.setCheckable(True)
+            action.setChecked(abs(current_speed - s) < 0.01)
+            action.triggered.connect(lambda checked, val=s: self.change_speed(val))        
         save = qt1.QAction("حفظ كملف نصي", self)
         save.setShortcut("ctrl+s")
         save.triggered.connect(self.save_text_as_txt)
@@ -257,3 +268,38 @@ class AthkerDialog (qt.QDialog):
         self.audioOutput.setVolume(self.audioOutput.volume()+0.10)        
     def volume_down(self):
         self.audioOutput.setVolume(self.audioOutput.volume()-0.10)
+    def load_speed(self):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    return json.load(f).get("athkerDialog", 1.0)
+        except:
+            pass
+        return 1.0
+    def save_speed(self, speed):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            data = {}
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                except:
+                    pass
+            data["athkerDialog"] = speed
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f)
+        except:
+            pass
+    def change_speed(self, speed):
+        self.save_speed(speed)
+        self.media.setPlaybackRate(speed)
+        if hasattr(self.media, 'setPitchCompensation'):
+            self.media.setPitchCompensation(True)
+    def apply_speed(self):
+        speed = self.load_speed()
+        self.media.setPlaybackRate(speed)
+        if hasattr(self.media, 'setPitchCompensation'):
+            self.media.setPitchCompensation(True)
