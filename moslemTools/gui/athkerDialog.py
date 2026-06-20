@@ -37,7 +37,8 @@ class AthkerDialog (qt.QDialog):
         self.media.durationChanged.connect(self.update_slider)
         self.media.positionChanged.connect(self.update_slider)
         self.media.mediaStatusChanged.connect(self.on_state)
-        self.media_progress.setAccessibleName("شريط تتبع الصوت")                
+        self.media_progress.setAccessibleName("التحكم في تقدم المقطع")
+        self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.time_label = qt.QLabel()        
         self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.time_label.setVisible(False)
@@ -90,6 +91,15 @@ class AthkerDialog (qt.QDialog):
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)                
         qt1.QShortcut("shift+up",self).activated.connect(self.volume_up)
         qt1.QShortcut("shift+down",self).activated.connect(self.volume_down)
+        qt1.QShortcut("ctrl+1", self).activated.connect(self.t10)
+        qt1.QShortcut("ctrl+2", self).activated.connect(self.t20)
+        qt1.QShortcut("ctrl+3", self).activated.connect(self.t30)
+        qt1.QShortcut("ctrl+4", self).activated.connect(self.t40)
+        qt1.QShortcut("ctrl+5", self).activated.connect(self.t50)
+        qt1.QShortcut("ctrl+6", self).activated.connect(self.t60)
+        qt1.QShortcut("ctrl+7", self).activated.connect(self.t70)
+        qt1.QShortcut("ctrl+8", self).activated.connect(self.t80)
+        qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
@@ -303,3 +313,57 @@ class AthkerDialog (qt.QDialog):
         self.media.setPlaybackRate(speed)
         if hasattr(self.media, 'setPitchCompensation'):
             self.media.setPitchCompensation(True)
+    def t10(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.1))
+    def t20(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.2))
+    def t30(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.3))
+    def t40(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.4))
+    def t50(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.5))
+    def t60(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.6))
+    def t70(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.7))
+    def t80(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.8))
+    def t90(self):
+        if self.media.duration() == 0:
+            guiTools.speak("لا يوجد مقطع مشغل حالياً")
+            return
+        total_duration = self.media.duration()
+        self.media.setPosition(int(total_duration * 0.9))
