@@ -10,6 +10,7 @@ class TextViewer(qt.QDialog):
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings.settings_handler.get("font", "size"))
+        self.font_wrap = settings.settings_handler.get("font", "wrap") == "True"
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
@@ -24,6 +25,11 @@ class TextViewer(qt.QDialog):
         self.setWindowTitle(title)
         self.resize(1200, 600)
         self.text = guiTools.QReadOnlyTextEdit()
+        if self.font_wrap:
+            self.text.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
+            self.text.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
+        else:
+            self.text.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
         self.font_laybol = qt.QLabel("حجم الخط")
