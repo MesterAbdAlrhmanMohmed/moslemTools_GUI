@@ -104,6 +104,8 @@ class QuranPlayer(qt.QWidget):
         qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("shift+up", self).activated.connect(self.increase_volume)
         qt1.QShortcut("shift+down", self).activated.connect(self.decrease_volume)
+        qt1.QShortcut("shift+right", self).activated.connect(self.increase_speed)
+        qt1.QShortcut("shift+left", self).activated.connect(self.decrease_speed)
         qt1.QShortcut("shift+1", self).activated.connect(self.onChangeStartingPosition)
         qt1.QShortcut("shift+2", self).activated.connect(self.onChangeEndingPosition)
         qt1.QShortcut("backspace", self).activated.connect(self.removePosition)
@@ -192,7 +194,7 @@ class QuranPlayer(qt.QWidget):
         self.User_guide.setFixedSize(150, 40)
         self.User_guide.setShortcut("ctrl+f1")
         self.User_guide.setAccessibleDescription("control plus f1")
-        self.User_guide.clicked.connect(lambda:TextViewer(self,"دليل الاختصارات","ctrl+s: إيقاف\nspace: التشغيل والإيقاف المؤقت\nalt زائد السهم الأيمن: التقديم السريع لمدة 5 ثواني\nalt زائد السهم الأيسر: الترجيع السريع لمدة 5 ثواني\nalt زائد السهم الأعلى: التقديم السريع لمدة 10 ثواني\nalt زائد السهم الأسفل: الترجيع السريع لمدة 10 ثواني\nctrl زائد السهم الأيمن: التقديم السريع لمدة 30 ثانية\nctrl زائد السهم الأيسر: الترجيع السريع لمدة 30 ثانية\nctrl زائد السهم الأعلى: التقديم السريع لمدة دقيقة\nctrl زائد السهم الأسفل: الترجيع  السريع لمدة دقيقة\nctrl زائد رقم: الانتقال إلى موضع محدد من المقطع, مثلا ctrl+10 الانتقال إلى 10% من المقطع\nshift زائد السهم الأعلى: رفع الصوت\nshift زائد السهم الأسفل: خفض الصوت\nالضغط على زر التطبيقات أو click الأيمن على شريط مدة المقطع يسمح بإضافة علامة مرجعية للموضع الحالي").exec())
+        self.User_guide.clicked.connect(lambda:TextViewer(self,"دليل الاختصارات","ctrl+s: إيقاف\nspace: التشغيل والإيقاف المؤقت\nalt زائد السهم الأيمن: التقديم السريع لمدة 5 ثواني\nalt زائد السهم الأيسر: الترجيع السريع لمدة 5 ثواني\nalt زائد السهم الأعلى: التقديم السريع لمدة 10 ثواني\nalt زائد السهم الأسفل: الترجيع السريع لمدة 10 ثواني\nctrl زائد السهم الأيمن: التقديم السريع لمدة 30 ثانية\nctrl زائد السهم الأيسر: الترجيع السريع لمدة 30 ثانية\nctrl زائد السهم الأعلى: التقديم السريع لمدة دقيقة\nctrl زائد السهم الأسفل: الترجيع  السريع لمدة دقيقة\nctrl زائد رقم: الانتقال إلى موضع محدد من المقطع, مثلا ctrl+10 الانتقال إلى 10% من المقطع\nshift زائد السهم الأعلى: رفع الصوت\nshift زائد السهم الأسفل: خفض الصوت\nshift زائد السهم الأيمن: تسريع الصوت\nshift زائد السهم الأيسر: تبطئة الصوت\nالضغط على زر التطبيقات أو click الأيمن على شريط مدة المقطع يسمح بإضافة علامة مرجعية للموضع الحالي").exec())
         self.play_all_to_end = guiTools.QPushButton("تشغيل كل السور من السورة المحددة إلى النهاية")
         self.play_all_to_end.setAccessibleDescription("control plus A")
         self.play_all_to_end.setCheckable(True)
@@ -1761,6 +1763,26 @@ class QuranPlayer(qt.QWidget):
         volume_percent = int(new_volume * 100)
         speak(f"نسبة الصوت {volume_percent}")
         self.duration.setText(f"نسبة الصوت: {volume_percent}%")
+        self.volume_timer.start(1000)
+    def increase_speed(self):
+        speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]
+        current_speed = self.load_speed()
+        idx = min(range(len(speeds)), key=lambda i: abs(speeds[i] - current_speed))
+        new_idx = min(idx + 1, len(speeds) - 1)
+        new_speed = speeds[new_idx]
+        self.change_speed(new_speed)
+        speak(f"السرعة {new_speed}")
+        self.duration.setText(f"السرعة: {new_speed}")
+        self.volume_timer.start(1000)
+    def decrease_speed(self):
+        speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]
+        current_speed = self.load_speed()
+        idx = min(range(len(speeds)), key=lambda i: abs(speeds[i] - current_speed))
+        new_idx = max(idx - 1, 0)
+        new_speed = speeds[new_idx]
+        self.change_speed(new_speed)
+        speak(f"السرعة {new_speed}")
+        self.duration.setText(f"السرعة: {new_speed}")
         self.volume_timer.start(1000)
     def set_position_from_slider(self, value):
         duration = self.mp.duration()
