@@ -91,6 +91,43 @@ class SourcesDialog(qt.QDialog):
         else:
             guiTools.MessageBox.view(self, "تنبيه", "لا يوجد رابط متاح لهذا المصدر")
 
+class ChatInputTextEdit(qt.QTextEdit):
+    enterPressed = qt2.pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        from settings import settings_handler
+        if settings_handler.get("font", "wrap") == "True":
+            self.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
+            self.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
+        else:
+            self.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
+        self.setAcceptRichText(True)
+        self.document().setDefaultCursorMoveStyle(qt2.Qt.CursorMoveStyle.VisualMoveStyle)
+
+    def setText(self, text):
+        if text:
+            text = "\n".join([line if line.strip() else "\u200b" for line in text.split("\n")])
+        super().setText(text)
+
+    def keyPressEvent(self, event):
+        if event.key() in (qt2.Qt.Key.Key_Return, qt2.Qt.Key.Key_Enter):
+            if event.modifiers() == qt2.Qt.KeyboardModifier.NoModifier:
+                self.enterPressed.emit()
+                return
+            elif event.modifiers() == qt2.Qt.KeyboardModifier.ShiftModifier:
+                self.insertPlainText("\n\u200b")
+                return
+        super().keyPressEvent(event)
+
+    def insertFromMimeData(self, source):
+        if source.hasText():
+            text = source.text()
+            text = "\n".join([line if line.strip() else "\u200b" for line in text.split("\n")])
+            self.insertPlainText(text)
+        else:
+            super().insertFromMimeData(source)
+
 class AskAI(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -181,12 +218,13 @@ class AskAI(qt.QWidget):
         layout.addWidget(self.disclaimer)                
         
         input_layout = qt.QHBoxLayout()
-        self.input_box = qt.QTextEdit()
+        self.input_box = ChatInputTextEdit()
         self.input_box.setObjectName("inputBox")
         self.input_box.setPlaceholderText("اكتب سؤالك هنا...")
         self.input_box.setTabChangesFocus(True)
         self.input_box.setMaximumHeight(100)
-        self.input_box.setAccessibleName("اكتب سؤالك هنا")        
+        self.input_box.setAccessibleName("اكتب سؤالك هنا")
+        self.input_box.enterPressed.connect(self.on_send_clicked)
         
         self.send_button = guiTools.QPushButton("إرسال الرسالة")
         self.send_button.setObjectName("sendButton")
@@ -277,6 +315,7 @@ class AskAI(qt.QWidget):
         self.thread = AIChatThread(api_key, message)
         self.thread.finished.connect(self.on_ai_finished)
         self.thread.start()
+        self.results.setFocus()
         
     def extract_and_clean(self, text):
         text = text.replace("<quran_start>", "").replace("<quran_end>", "")
