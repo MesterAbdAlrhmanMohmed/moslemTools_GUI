@@ -34,8 +34,7 @@ class AIChatThread(qt2.QThread):
             if response.status_code == 200:
                 result = response.json()
                 content = result['choices'][0]['message']['content']
-                
-                # استخراج المراجع من المسار الصحيح بناءً على الـ JSON المرتجع (references)
+                                
                 references = []
                 try:
                     if 'message' in result['choices'][0] and 'references' in result['choices'][0]['message']:
@@ -73,9 +72,11 @@ class SourcesDialog(qt.QDialog):
         self.ok.setStyleSheet("background-color: #008000; color: #e0e0e0; font-weight: bold;")
         self.ok.clicked.connect(self.go_to_source)        
         self.copy_btn = qt.QPushButton("نسخ رابط المصدر")
+        self.copy_btn.setAutoDefault(False)
         self.copy_btn.setStyleSheet("background-color: #0000AA; color: #e0e0e0; font-weight: bold;")
         self.copy_btn.clicked.connect(self.copy_source_link)
         self.cancel = qt.QPushButton("خروج")
+        self.cancel.setAutoDefault(False)
         self.cancel.setStyleSheet("background-color: #AA0000; color: #e0e0e0; font-weight: bold;")
         self.cancel.clicked.connect(self.reject)        
         layout = qt.QVBoxLayout()
