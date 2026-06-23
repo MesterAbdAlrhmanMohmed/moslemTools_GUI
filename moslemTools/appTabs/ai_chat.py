@@ -56,21 +56,25 @@ class AIChatThread(qt2.QThread):
 class SourcesDialog(qt.QDialog):
     def __init__(self, parent, sources):
         super().__init__(parent)
-        self.resize(200, 100)
+        self.resize(450, 180)
         self.setWindowTitle("المصادر والمراجع")        
         lec = "اختر المصدر الذي تريد الذهاب إليه:"
         label = qt.QLabel(lec)        
         self.combo = qt.QComboBox()
+        self.combo.setMinimumHeight(60)
         self.combo.setAccessibleName(lec)
         font = qt1.QFont()
         font.setBold(True)
         self.combo.setFont(font)
         for i, url in enumerate(sources):
-            self.combo.addItem(f"المصدر {i+1}", url)        
+            self.combo.addItem(f"المصدر {i+1}\n{url}", url)        
         self.ok = qt.QPushButton("الذهاب")
         self.ok.setDefault(True)
         self.ok.setStyleSheet("background-color: #008000; color: #e0e0e0; font-weight: bold;")
         self.ok.clicked.connect(self.go_to_source)        
+        self.copy_btn = qt.QPushButton("نسخ رابط المصدر")
+        self.copy_btn.setStyleSheet("background-color: #0000AA; color: #e0e0e0; font-weight: bold;")
+        self.copy_btn.clicked.connect(self.copy_source_link)
         self.cancel = qt.QPushButton("خروج")
         self.cancel.setStyleSheet("background-color: #AA0000; color: #e0e0e0; font-weight: bold;")
         self.cancel.clicked.connect(self.reject)        
@@ -79,6 +83,7 @@ class SourcesDialog(qt.QDialog):
         layout.addWidget(self.combo)        
         buttons_layout = qt.QHBoxLayout()
         buttons_layout.addWidget(self.ok)
+        buttons_layout.addWidget(self.copy_btn)
         buttons_layout.addWidget(self.cancel)
         layout.addLayout(buttons_layout)        
         self.setLayout(layout)        
@@ -88,6 +93,15 @@ class SourcesDialog(qt.QDialog):
         if url:
             webbrowser.open(url)
             self.accept()
+        else:
+            guiTools.MessageBox.view(self, "تنبيه", "لا يوجد رابط متاح لهذا المصدر")
+
+    def copy_source_link(self):
+        url = self.combo.currentData()
+        if url:
+            pyperclip.copy(url)
+            winsound.Beep(1000, 100)
+            guiTools.speak("تم نسخ رابط المصدر بنجاح")
         else:
             guiTools.MessageBox.view(self, "تنبيه", "لا يوجد رابط متاح لهذا المصدر")
 
