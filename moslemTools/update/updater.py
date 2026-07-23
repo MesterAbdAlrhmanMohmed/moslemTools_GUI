@@ -21,12 +21,13 @@ class DownloadUpdateThread(qt2.QRunnable):
         try:
             if os.path.exists(self.path):
                 shutil.rmtree(self.path)
-        except:
+        except Exception as e:
+            print(f"Error removing directory: {e}")
             self.object.finish.emit("error")
             return
         os.makedirs(self.path)
         try:
-            with requests.get(self.URL,stream=True)as r:
+            with requests.get(self.URL,stream=True, timeout=30)as r:
                 if r.status_code!=200:
                     self.object.finish.emit("error")
                     return
@@ -48,7 +49,8 @@ class DownloadUpdateThread(qt2.QRunnable):
                         progress=int((recieved/size)*100)
                         self.object.progress.emit(progress)
                 self.object.installing.emit("yes")
-        except:
+        except Exception as e:
+            print(f"Error during update download: {e}")
             self.object.finish.emit("error")
         self.object.finish.emit(Name)
 class DownloadUpdateGUI(qt.QDialog):
@@ -90,7 +92,10 @@ class DownloadUpdateGUI(qt.QDialog):
         elif c=="cancelled":
             self.close()
         else:
-            subprocess.Popen([c, "/SILENT", "/NOCANCEL", "/SUPPRESSMSGBOXES", "/NORESTART"])
-            qt.QApplication.exit()
+            import sys
+            cmd = f'timeout /t 2 /nobreak > NUL && start "" "{c}"'
+            subprocess.Popen(cmd, shell=True)
+            qt.QApplication.quit()
+            sys.exit(0)
     def cancelBTN(self):
         self.run.object.download.emit(False)
