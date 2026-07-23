@@ -2,6 +2,7 @@ from custome_errors import *
 import sys
 sys.excepthook = my_excepthook
 import update,guiTools,random,os,shutil,datetime,webbrowser,requests,pyperclip,winsound,ctypes,threading
+from ctypes import wintypes
 import ujson as json
 from pynput import keyboard as p_key
 from hijridate import Gregorian
@@ -19,8 +20,27 @@ try:
     asked_file = os.path.join(os.getenv('appdata'), settings_handler.appName, "asked_questions.json")
     if os.path.exists(asked_file):
         os.remove(asked_file)
-except:
-    pass
+except Exception as e:
+    print(f"Error cleaning startup files: {e}")
+
+def get_smart_display_name():
+    try:
+        GetUserNameExW = ctypes.windll.secur32.GetUserNameExW
+        NameDisplay = 3
+        size = wintypes.DWORD(256)
+        buffer = ctypes.create_unicode_buffer(size.value)
+        if GetUserNameExW(NameDisplay, buffer, ctypes.byref(size)) and buffer.value.strip():
+            return buffer.value.strip()
+    except Exception:
+        pass
+    try:
+        username = os.getlogin()
+        generic_names = ['dell', 'hp', 'lenovo', 'user', 'admin', 'administrator', 'pc', 'com']
+        if username and username.lower().strip() not in generic_names:
+            return username.strip()
+    except Exception:
+        pass
+    return "المستخدم الكريم"
 class MessageCheckWorker(qt2.QObject):
     finished = qt2.pyqtSignal()
     def __init__(self, parent_window):
@@ -313,7 +333,7 @@ class main(qt.QMainWindow):
         self.developers_window = AboutDeveloper()
         self.developers_window.exec()
     def viewInfoTextEdit(self):
-        username1 = os.getlogin()
+        username1 = get_smart_display_name()
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
@@ -395,13 +415,13 @@ def run_startup_checks():
     if settings_handler.get("update", "autoCheck") == "True":
         try:
             shown = update.check(None, message=False)
-        except:
-            pass
+        except Exception as e:
+            print(f"Error checking update at startup: {e}")
     if shown: return True
     try:
         shown = guiTools.messageHandler.check(None)
-    except:
-        pass
+    except Exception as e:
+        print(f"Error checking messages at startup: {e}")
     return shown
 if __name__ == "__main__":
     App = qt.QApplication([])

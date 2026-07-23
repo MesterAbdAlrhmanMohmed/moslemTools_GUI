@@ -27,7 +27,7 @@ class IslamicTopicViewer(qt.QDialog):
         self.topic_titles = list(self.all_topics.keys())
         self.currentIndex = self.topic_titles.index(self.current_title)
         self.resize(1200, 600)
-        self.text = guiTools.QReadOnlyTextEdit()
+        self.text = guiTools.QReadOnlyTextEdit(viewer_name="islamicTopicViewer")
         self.text.setText(content)
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)

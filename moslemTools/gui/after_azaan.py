@@ -28,7 +28,7 @@ class AfterAdaan(qt.QDialog):
             self.media_player.setSource(qt2.QUrl.fromLocalFile("data/sounds/prayAfterAdaan.m4a"))
         self.media_player.mediaStatusChanged.connect(self.on_media_status_changed)
         self.media_player.play()        
-        self.suplication = guiTools.QReadOnlyTextEdit()
+        self.suplication = guiTools.QReadOnlyTextEdit(viewer_name="afterAzaan")
         self.suplication.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.suplication.customContextMenuRequested.connect(self.onContextMenu)        
         self.font_size = int(settings.settings_handler.get("font", "size"))

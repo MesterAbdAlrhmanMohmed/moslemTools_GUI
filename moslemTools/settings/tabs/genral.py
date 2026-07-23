@@ -27,7 +27,7 @@ class Genral(qt.QWidget):
         main_layout.addSpacing(10)
         self.startup = qt.QCheckBox("بدء تشغيل البرنامج عند بدء تشغيل النظام")
         self.startup.setChecked(self.check_in_startup())
-        self.startup.checkStateChanged.connect(self.onStartupChanged)
+        self.startup.stateChanged.connect(self.onStartupChanged)
         main_layout.addWidget(self.startup)
         self.randomMessageAtStartup = qt.QCheckBox("عرض رسالة عشوائية لك عند فتح البرنامج")
         self.randomMessageAtStartup.setChecked(p.cbts(settings_handler.get("g", "randomMessageAtStartup")))

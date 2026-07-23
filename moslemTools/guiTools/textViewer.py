@@ -24,12 +24,7 @@ class TextViewer(qt.QDialog):
         self.saved_selection_end = -1
         self.setWindowTitle(title)
         self.resize(1200, 600)
-        self.text = guiTools.QReadOnlyTextEdit()
-        if self.font_wrap:
-            self.text.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
-            self.text.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
-        else:
-            self.text.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
+        self.text = guiTools.QReadOnlyTextEdit(viewer_name="textViewer")
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)
         self.font_laybol = qt.QLabel("حجم الخط")

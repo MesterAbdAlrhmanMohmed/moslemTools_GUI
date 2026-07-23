@@ -27,7 +27,7 @@ class NoteDialog(qt.QDialog):
         self.content_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)                
         if self.mode == "view":
             self.title_edit.setReadOnly(True)
-            self.content_edit = QReadOnlyTextEdit()
+            self.content_edit = QReadOnlyTextEdit(viewer_name="noteDialog")
             self.content_edit.setPlainText(content)
         else:
             self.content_edit = qt.QTextEdit()

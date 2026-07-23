@@ -345,7 +345,7 @@ class other_brotcasts(qt.QWidget):
         elif station_name == "الدكتور سعد الحميد": url_to_play = qt2.QUrl("https://radio.alukah.net/humayid")
         elif station_name == "الدكتور خالد الجريسي": url_to_play = qt2.QUrl("https://radio.alukah.net/aljeraisy")
         if url_to_play:
-            if global_player.isPlaying() and global_current_url == url_to_play:
+            if global_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState and global_current_url == url_to_play:
                 global_player.stop()
                 global_current_url = None
             else:
@@ -401,7 +401,7 @@ class brotcasts_of_suplications(qt.QWidget):
         elif station_name == "أذكار المساء": url_to_play = qt2.QUrl("https://qurango.net/radio/athkar_masa")
         elif station_name == "أدعية وأذكار يومية": url_to_play = qt2.QUrl("https://radio.alukah.net/adiyyaha")
         if url_to_play:
-            if global_player.isPlaying() and global_current_url == url_to_play:
+            if global_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState and global_current_url == url_to_play:
                 global_player.stop()
                 global_current_url = None
             else:
@@ -461,7 +461,7 @@ class brotcasts_of_tafseer(qt.QWidget):
         elif station_name == "المختصر في التفسير": url_to_play = qt2.QUrl("http://live.mp3quran.net:9698")
         elif station_name == "إذاعة التفسير": url_to_play = qt2.QUrl("http://live.mp3quran.net:9718")
         if url_to_play:
-            if global_player.isPlaying() and global_current_url == url_to_play:
+            if global_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState and global_current_url == url_to_play:
                 global_player.stop()
                 global_current_url = None
             else:
@@ -573,7 +573,7 @@ class brotcasts_of_reciters(qt.QWidget):
         elif reciter_name == "القارئ الشيخ العيون الكوشي - ورش عن نافع": url_to_play = qt2.QUrl("http://live.mp3quran.net:9912/;")
         elif reciter_name == "القارِء الشيخ سعد الغامدي": url_to_play = qt2.QUrl("https://qurango.net/radio/saad_alghamdi")
         if url_to_play:
-            if global_player.isPlaying() and global_current_url == url_to_play:
+            if global_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState and global_current_url == url_to_play:
                 global_player.stop()
                 global_current_url = None
             else:
@@ -643,7 +643,7 @@ class quran_brotcast(qt.QWidget):
         elif station_name == "إذاعة القرآن الكريم من فَلَسطين": url_to_play = qt2.QUrl("http://streamer.mada.ps:8029/quranfm")
         elif station_name == "إذاعة تراتيل": url_to_play = qt2.QUrl("http://live.mp3quran.net:8030")
         if url_to_play:
-            if global_player.isPlaying() and global_current_url == url_to_play:
+            if global_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState and global_current_url == url_to_play:
                 global_player.stop()
                 global_current_url = None
             else:

@@ -449,7 +449,7 @@ class QuranViewer(qt.QDialog):
             QPushButton#clearResultsButton:hover, QPushButton#cancelButton:hover { background-color: #c82333; }
             QPushButton#clearResultsButton:pressed, QPushButton#cancelButton:pressed { background-color: #bd2130; }
         """)
-        self.text=guiTools.QReadOnlyTextEdit()
+        self.text=guiTools.QReadOnlyTextEdit(viewer_name="quranViewer")
         self._set_text_with_delay(text)
         self.update_font_size()
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -709,7 +709,7 @@ class QuranViewer(qt.QDialog):
                 self.close()
             else:
                 self.close()
-        elif self.media.isPlaying():
+        elif self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media.stop()
             qt2.QTimer.singleShot(100,self.close)
         else:
@@ -1215,7 +1215,7 @@ class QuranViewer(qt.QDialog):
             self.text.setText("\n".join(display_text))
             self.update_font_size()
             self.clear_results_button.show()
-            if self.media.isPlaying():
+            if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                 self.media.stop()
         else:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على نتائج")
@@ -1797,8 +1797,7 @@ class QuranViewer(qt.QDialog):
         else:
             self.media.stop()
             self.media.setSource(path)
-            self.apply_speed()
-            self.media.play()
+            qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))
     def onPlayToEnd(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()

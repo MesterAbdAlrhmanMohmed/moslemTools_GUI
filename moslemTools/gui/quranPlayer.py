@@ -153,9 +153,7 @@ class QuranPlayer(qt.QDialog):
         self.quranText=text.split("\n")
         self.show_diacritics = True
         self.original_ayah_text = self.quranText[self.index]
-        self.text=guiTools.QReadOnlyTextEdit()
-        self.text.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
-        self.text.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
+        self.text=guiTools.QReadOnlyTextEdit(viewer_name="quranPlayer")
         option = self.text.document().defaultTextOption()
         option.setAlignment(qt2.Qt.AlignmentFlag.AlignRight)
         option.setTextDirection(qt2.Qt.LayoutDirection.RightToLeft)
@@ -622,7 +620,7 @@ class QuranPlayer(qt.QDialog):
             self.merge_progress_bar.setValue(0)
         else: self.merge_action_button.setStyleSheet("")
     def OnContextMenu(self):
-        self.was_playing = self.media.isPlaying()
+        self.was_playing = self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState
         if self.was_playing:
             self.media.pause()
             self.PPS.setText("تشغيل")
@@ -677,7 +675,7 @@ class QuranPlayer(qt.QDialog):
         menu.aboutToHide.connect(self.resume_playback)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
     def resume_playback(self):
-        if hasattr(self, 'was_playing') and self.was_playing and not self.media.isPlaying() and not self.is_merging:
+        if hasattr(self, 'was_playing') and self.was_playing and not self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState and not self.is_merging:
             self.media.play()
             self.PPS.setText("إيقاف مؤقت")
     def font_size_changed(self, value):
@@ -708,14 +706,13 @@ class QuranPlayer(qt.QDialog):
         else: Ayah=str(Ayah)
         return surah+Ayah+".mp3"
     def on_play(self):
-        if not self.media.isPlaying():
+        if not self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],self.on_set())):
                 path=qt2.QUrl.fromLocalFile(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],self.on_set()))
             else: path=qt2.QUrl(reciters[self.getCurrentReciter()] + self.on_set())
             if not self.media.source()==path: self.media.setSource(path)
-            self.apply_speed()
-            self.media.play()
             self.PPS.setText("إيقاف مؤقت")
+            qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))
         else:
             self.media.pause()
             self.PPS.setText("تشغيل")
@@ -772,7 +769,7 @@ class QuranPlayer(qt.QDialog):
         TafaseerViewer(self,AyahNumber,AyahNumber).exec()
         self.resume_after_action()
     def safeClose(self):
-        if self.media.isPlaying():
+        if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media.stop()
             qt2.QTimer.singleShot(100,self.close)
         else: self.close()

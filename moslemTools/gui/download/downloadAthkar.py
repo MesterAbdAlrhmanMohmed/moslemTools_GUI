@@ -1,9 +1,10 @@
 import os,requests,re
 import ujson as json
-import guiTools,settings,settings
+import guiTools,settings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+
 class SelectAthkar(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
@@ -12,9 +13,9 @@ class SelectAthkar(qt.QDialog):
         serch=qt.QLabel("البحث عن فئة أذكار")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(serch)
-        self.search_bar=qt.QLineEdit()        
+        self.search_bar=qt.QLineEdit()
         self.search_bar.setPlaceholderText("البحث عن فئة أذكار")
-        self.search_bar.textChanged.connect(self.onsearch)        
+        self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)
         with open("data/json/athkar.json","r",encoding="utf-8-sig") as data:
@@ -27,17 +28,24 @@ class SelectAthkar(qt.QDialog):
         self.reciterData1=[]
         for athker in self.reciterData:
             self.reciterData1.append(athker["name"])
-        self.reciters.clicked.connect(lambda:DownloadReciter(self,self.reciterData[self.reciters.currentRow()]["content"],self.reciters.currentItem().text()).exec())
+        self.reciters.clicked.connect(self.on_item_clicked)
         self.reciters.addItems(self.reciterData1)
         layout.addWidget(self.reciters)
-    def search(self,pattern,text_list):    
-        tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')        
-        normalized_pattern=tashkeel_pattern.sub('', pattern)        
+    def on_item_clicked(self):
+        item = self.reciters.currentItem()
+        if item:
+            selected_text = item.text()
+            selected_data = next((rec for rec in self.reciterData if rec["name"] == selected_text), None)
+            if selected_data:
+                DownloadReciter(self, selected_data["content"], selected_text).exec()
+    def search(self,pattern,text_list):
+        tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+        normalized_pattern=tashkeel_pattern.sub('', pattern)
         matches=[
             text for text in text_list
             if normalized_pattern in tashkeel_pattern.sub('', text)
-        ]        
-        return matches        
+        ]
+        return matches
     def onsearch(self):
         search_text=self.search_bar.text().lower()
         self.reciters.clear()
@@ -50,15 +58,15 @@ class downloadObjects(qt2.QObject):
     finch=qt2.pyqtSignal(bool)
 class downloadThread(qt2.QRunnable):
     def __init__(self,p,url,name):
-        super().__init__()        
+        super().__init__()
         self.objects=downloadObjects()
         self.name=name
         self.url=url
         self.pause=False
-        self.objects.pauseDownloading.connect(self.on_pause)        
+        self.objects.pauseDownloading.connect(self.on_pause)
     def on_pause(self,s):
         self.pause=True
-    def  run(self):
+    def run(self):
         try:
             count=0
             for item in self.url:
@@ -79,7 +87,8 @@ class downloadThread(qt2.QRunnable):
                             size=r.headers.get("content-length")
                             try:
                                 size=int(size)
-                            except TypeError:
+                            except TypeError as e:
+                                print(f"Error parsing size: {e}")
                                 self.objects.finch.emit(False)
                                 return
                             recieved=0
@@ -94,12 +103,12 @@ class downloadThread(qt2.QRunnable):
                         self.objects.downloaded.emit(count)
             self.objects.finch.emit(True)
         except Exception as e:
-            print(e)
+            print(f"Error in downloadThread: {e}")
             self.objects.finch.emit(False)
 class DownloadReciter(qt.QDialog):
     def __init__(self,p,url,name):
-        super().__init__(p)                         
-        self.setWindowTitle("جاري التحميل")        
+        super().__init__(p)
+        self.setWindowTitle("جاري التحميل")
         qt1.QShortcut("escape",self).activated.connect(lambda:self.run.objects.pauseDownloading.emit("a"))
         self.progress=qt.QProgressBar()
         self.downloaded=qt.QSpinBox()

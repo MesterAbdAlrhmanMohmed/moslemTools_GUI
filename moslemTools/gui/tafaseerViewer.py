@@ -25,7 +25,7 @@ class TafaseerViewer(qt.QDialog):
         self.saved_selection_start = -1
         self.saved_selection_end = -1
         self.resize(1200, 600)
-        self.text = guiTools.QReadOnlyTextEdit()
+        self.text = guiTools.QReadOnlyTextEdit(viewer_name="tafaseerViewer")
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)        
         layout = qt.QVBoxLayout(self)

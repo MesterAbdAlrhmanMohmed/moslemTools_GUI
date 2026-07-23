@@ -305,7 +305,7 @@ class prayer_times(qt.QWidget):
                     medias={0:"fagrsoon.mp3",2:ZoharDay,3:"asrsoon.mp3",4:"maghribsoon.mp3",5:"eshaasoon.mp3"}
                     if beforeTime==currentTime:
                         self.reminded=True
-                        if self.p.media_player.isPlaying():
+                        if self.p.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                             self.p.media_player.stop()
                         self.p.audio_output.setDevice(audio_manager.get_audio_device("adhan"))
                         if index in medias:
@@ -318,7 +318,7 @@ class prayer_times(qt.QWidget):
         prayer_map = {"الفجر": "fajr", "العصر": "asr", "المغرب": "maghrib", "العشاء": "isha"}
         return prayer_map.get(prayer_name_ar, None)
     def play_iqama_sound(self):
-        if self.p.media_player.isPlaying():
+        if self.p.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.p.media_player.stop()
         sound_file = settings_handler.get("adhanSounds", "iqama")
         sound_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "addan", sound_file)

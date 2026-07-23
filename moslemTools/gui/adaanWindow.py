@@ -25,7 +25,7 @@ class AdaanDialog(qt.QDialog):
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.lay)    
     def closeEvent(self, event):
-        if self.media_player.isPlaying():
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
             qt2.QTimer.singleShot(100,self.accept)
         else:

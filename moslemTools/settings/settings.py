@@ -138,7 +138,7 @@ class settings(qt.QDialog):
         settings_handler.set("prayerTimes", "playPrayerAfterAdhaan", str(self.prayerTimesSettings.playPrayerAfterAdhaan.isChecked()))
         new_font_bold = str(self.fontSettings.bold_checkbox.isChecked())
         new_font_size = str(self.fontSettings.font_size_spinbox.value())
-        new_font_wrap = str(self.fontSettings.wrap_checkbox.isChecked())
+        new_font_wrap = str(self.fontSettings.select_all_checkbox.isChecked())
         settings_handler.set("font", "bold", new_font_bold)
         settings_handler.set("font", "size", new_font_size)
         settings_handler.set("font", "wrap", new_font_wrap)

@@ -25,7 +25,7 @@ class AthkerDialog (qt.QDialog):
         self.media.stop()
         self.athkerList=athkerList
         self.inex=0
-        self.athkerViewer=guiTools.QReadOnlyTextEdit()                                        
+        self.athkerViewer=guiTools.QReadOnlyTextEdit(viewer_name="athkerDialog")                                        
         self.athkerViewer.setText(self.athkerList[self.inex]["text"])
         self.athkerViewer.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.athkerViewer.customContextMenuRequested.connect(self.OnContextMenu)    
@@ -134,7 +134,7 @@ class AthkerDialog (qt.QDialog):
             self.time_label.setVisible(False)
             self.PPS.setText("تشغيل")            
     def onPlay(self):
-        if self.media.isPlaying():
+        if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media.pause()
             self.PPS.setText("تشغيل")
         else:            
@@ -144,13 +144,12 @@ class AthkerDialog (qt.QDialog):
                 url=qt2.QUrl(self.athkerList[self.inex]["audio"])
             if url != self.media.source():
                 self.media.setSource(url)
-            self.apply_speed()
-            self.media.play()
             self.media_progress.setVisible(True)
             self.time_label.setVisible(True)
-            self.PPS.setText("إيقاف مؤقت")            
+            self.PPS.setText("إيقاف مؤقت")
+            qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))            
     def closeEvent (self,event):
-        if self.media.isPlaying():
+        if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media.stop()        
             qt2.QTimer.singleShot(100,self.close)
         else:
@@ -182,7 +181,7 @@ class AthkerDialog (qt.QDialog):
         self.update_font_size()
         winsound.PlaySound("data/sounds/previous_page.wav",1)                
     def OnContextMenu(self):                        
-        self.was_playing = self.media.isPlaying()                
+        self.was_playing = self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState                
         if self.was_playing:
             self.media.pause()
             self.PPS.setText("تشغيل")            
@@ -218,7 +217,7 @@ class AthkerDialog (qt.QDialog):
         menu.aboutToHide.connect(self.resume_playback)        
         menu.exec(qt1.QCursor.pos())    
     def resume_playback(self):
-        if hasattr(self, 'was_playing') and self.was_playing and not self.media.isPlaying():
+        if hasattr(self, 'was_playing') and self.was_playing and not self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media.play()
             self.PPS.setText("إيقاف مؤقت")            
     def print_text(self):

@@ -33,7 +33,7 @@ class book_viewer(qt.QDialog):
         qt1.QShortcut("ctrl+alt+s", self).activated.connect(self.save_page_range_as_txt)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.save_page_range_as_docx)
         self.resize(1200, 600)
-        self.text = guiTools.QReadOnlyTextEdit()
+        self.text = guiTools.QReadOnlyTextEdit(viewer_name="bookViewer")
         self.text.setText(self.data[self.index])
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.OnContextMenu)        

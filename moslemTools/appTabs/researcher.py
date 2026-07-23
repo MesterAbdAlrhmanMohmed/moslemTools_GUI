@@ -418,7 +418,7 @@ class Albaheth(qt.QWidget):
         self.start = guiTools.QPushButton("البحث")
         self.start.setObjectName("startButton")
         self.start.clicked.connect(self.onSearchClicked)
-        self.results = guiTools.QReadOnlyTextEdit()
+        self.results = guiTools.QReadOnlyTextEdit(viewer_name="researcher")
         self.results.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.results.customContextMenuRequested.connect(self.OnContextMenu)
         self.results.viewport().installEventFilter(self)
@@ -520,7 +520,7 @@ class Albaheth(qt.QWidget):
             guiTools.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء عملية الحفظ.")
             event.ignore()
         else:
-            if self.media_player.isPlaying():
+            if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                 self.media_player.stop()
             super().closeEvent(event)
     def eventFilter(self, obj, event):
@@ -872,9 +872,8 @@ class Albaheth(qt.QWidget):
         else:
             path = qt2.QUrl(reciter_url + filename)
         self.media_player.setSource(path)
-        self.apply_speed()
-        self.media_player.play()
         self.player_widget.setVisible(True)
+        qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media_player.play()))
     def on_media_state_changed(self, state):
         if state == QMediaPlayer.MediaStatus.EndOfMedia:
             self.player_widget.setVisible(False)

@@ -109,12 +109,8 @@ class ChatInputTextEdit(qt.QTextEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        from settings import settings_handler
-        if settings_handler.get("font", "wrap") == "True":
-            self.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
-            self.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
-        else:
-            self.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
+        self.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
+        self.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
         self.setAcceptRichText(True)
         self.document().setDefaultCursorMoveStyle(qt2.Qt.CursorMoveStyle.VisualMoveStyle)
 
@@ -246,7 +242,7 @@ class AskAI(qt.QWidget):
         input_layout.addWidget(self.send_button)
         layout.addLayout(input_layout)                
         
-        self.results = guiTools.QReadOnlyTextEdit()
+        self.results = guiTools.QReadOnlyTextEdit(viewer_name="aiChat")
         self.results.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.results.customContextMenuRequested.connect(self.show_context_menu)
         layout.addWidget(self.results)                
