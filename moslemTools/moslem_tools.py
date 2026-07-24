@@ -252,7 +252,8 @@ class main(qt.QMainWindow):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
         self.audio_output.setDevice(audio_manager.get_audio_device("random_athkar"))
-        folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "sounds", "basmala"))
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+        folder_path = os.path.abspath(os.path.join(base_dir, "data", "sounds", "basmala"))
         if not os.path.exists(folder_path): return
         sound_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.mp3', '.wav', '.ogg'))]
         if sound_files:
@@ -306,12 +307,16 @@ class main(qt.QMainWindow):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             qt2.QTimer.singleShot(60000, self.show_random_theker)
             return
-        with open("data/json/text_athkar.json", "r", encoding="utf_8") as f:
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(base_dir, "data", "json", "text_athkar.json")
+        with open(file_path, "r", encoding="utf_8") as f:
             data = json.load(f)
         random_theckr = random.choice(data)
         guiTools.SendNotification("ذكر عشوائي", random_theckr)
     def show_random_message(self):
-        with open("data/json/QuotesMessages.json", "r", encoding="utf_8") as f:
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(base_dir, "data", "json", "QuotesMessages.json")
+        with open(file_path, "r", encoding="utf_8") as f:
             data = json.load(f)
         random_message = random.choice(data)
         guiTools.TextViewer(self, "رسالة لك", random_message).exec()
@@ -340,7 +345,8 @@ class main(qt.QMainWindow):
             self.media_player.stop()
             return
         self.audio_output.setDevice(audio_manager.get_audio_device("random_athkar"))
-        folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "sounds", "athkar"))
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+        folder_path = os.path.abspath(os.path.join(base_dir, "data", "sounds", "athkar"))
         if not os.path.exists(folder_path): return
         sound_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.mp3', '.wav', '.ogg'))]
         if sound_files:
