@@ -249,7 +249,10 @@ class settings(qt.QDialog):
     def cbts(self, string):
         return True if string == "True" else False
 def formatDuration(sectionName: str, keyName: str):
-    value = int(settings_handler.get(sectionName, keyName))
+    try:
+        value = int(settings_handler.get(sectionName, keyName))
+    except Exception:
+        value = 0
     result = 0
     if value == 0:
         result = 300

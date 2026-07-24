@@ -249,15 +249,15 @@ class main(qt.QMainWindow):
         if not startup_window_shown and settings_handler.get("g", "randomMessageAtStartup") == "True":
             self.show_random_message()
     def play_random_basmala(self):
-        if self.media_player.playbackState()==QMediaPlayer.PlaybackState.PlayingState:
+        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
         self.audio_output.setDevice(audio_manager.get_audio_device("random_athkar"))
-        folder_path=os.path.join(os.getcwd(),"data","sounds","basmala")
-        if not os.path.exists(folder_path):return
-        sound_files=[f for f in os.listdir(folder_path) if f.lower().endswith(('.ogg','.mp3','.wav'))]
+        folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "sounds", "basmala"))
+        if not os.path.exists(folder_path): return
+        sound_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.mp3', '.wav', '.ogg'))]
         if sound_files:
-            chosen_file=random.choice(sound_files)
-            file_path=os.path.join(folder_path,chosen_file)
+            chosen_file = random.choice(sound_files)
+            file_path = os.path.abspath(os.path.join(folder_path, chosen_file))
             self.media_player.setSource(qt2.QUrl.fromLocalFile(file_path))
             self.media_player.play()
     def start_message_check_thread(self):
@@ -340,11 +340,12 @@ class main(qt.QMainWindow):
             self.media_player.stop()
             return
         self.audio_output.setDevice(audio_manager.get_audio_device("random_athkar"))
-        folder_path = r"data\sounds\athkar"
-        sound_files = [f for f in os.listdir(folder_path) if f.endswith(('.ogg'))]
+        folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "sounds", "athkar"))
+        if not os.path.exists(folder_path): return
+        sound_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.mp3', '.wav', '.ogg'))]
         if sound_files:
             chosen_file = random.choice(sound_files)
-            file_path = os.path.join(folder_path, chosen_file)
+            file_path = os.path.abspath(os.path.join(folder_path, chosen_file))
             self.media_player.setSource(qt2.QUrl.fromLocalFile(file_path))
             self.media_player.play()
     def open_developers_window(self):
