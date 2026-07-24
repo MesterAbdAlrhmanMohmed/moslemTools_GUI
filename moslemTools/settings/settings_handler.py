@@ -42,7 +42,24 @@ settingsConfig={
     "g":{       
         "messageID":"0",
         "exitdialog":"True",
-        "reciter":"0"
+        "reciter":"0",
+        "user_name":"",
+        "use_name_in_occasions":"True",
+        "name_type":"custom_name"
+    },
+    "quran_search":{
+        "ignore_tashkeel":"True",
+        "ignore_hamza":"True",
+        "ignore_symbols":"True"
+    },
+    "researcher_search":{
+        "ignore_tashkeel":"True",
+        "ignore_hamza":"True",
+        "ignore_symbols":"True"
+    },
+    "quran_display":{
+        "verse_numbering_mode":"by_surah",
+        "remove_tashkeel":"False"
     },
     "tafaseer":{
         "tafaseer":"muyassar.json"

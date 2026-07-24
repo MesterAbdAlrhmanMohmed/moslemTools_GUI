@@ -407,9 +407,9 @@ class Albaheth(qt.QWidget):
         self.serch_input = qt.QLineEdit()
         self.serch_input.setAccessibleName("أكتب محتوى البحث")
         self.serch_input.returnPressed.connect(self.onSearchClicked)
-        self.ignore_tashkeel = True
-        self.ignore_hamza = True
-        self.ignore_symbols = True
+        self.ignore_tashkeel = settings.settings_handler.get("researcher_search", "ignore_tashkeel") != "False"
+        self.ignore_hamza = settings.settings_handler.get("researcher_search", "ignore_hamza") != "False"
+        self.ignore_symbols = settings.settings_handler.get("researcher_search", "ignore_symbols") != "False"
         self.search_mode_button = guiTools.QPushButton("نمط البحث")
         self.search_mode_button.setShortcut("ctrl+q")
         self.search_mode_button.setAccessibleDescription("control plus Q")

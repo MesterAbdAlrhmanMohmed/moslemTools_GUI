@@ -32,6 +32,7 @@ class Genral(qt.QWidget):
         self.randomMessageAtStartup = qt.QCheckBox("عرض رسالة عشوائية لك عند فتح البرنامج")
         self.randomMessageAtStartup.setChecked(p.cbts(settings_handler.get("g", "randomMessageAtStartup")))
         main_layout.addWidget(self.randomMessageAtStartup)
+
         reciter_section_layout = qt.QVBoxLayout()
         reciter_section_layout.setContentsMargins(0, 0, 0, 0)
         reciter_section_layout.setSpacing(5)
@@ -114,4 +115,4 @@ class Genral(qt.QWidget):
         search_text = self.search_bar.text().lower()
         self.reciter.clear()
         result = self.search(search_text, gui.reciters.keys())
-        self.reciter.addItems(result)
+        self.reciter.addItems(result)

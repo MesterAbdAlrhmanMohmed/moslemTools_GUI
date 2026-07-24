@@ -25,22 +25,40 @@ except Exception as e:
 
 def get_smart_display_name():
     try:
-        GetUserNameExW = ctypes.windll.secur32.GetUserNameExW
-        NameDisplay = 3
-        size = wintypes.DWORD(256)
-        buffer = ctypes.create_unicode_buffer(size.value)
-        if GetUserNameExW(NameDisplay, buffer, ctypes.byref(size)) and buffer.value.strip():
-            return buffer.value.strip()
+        if settings_handler.get("g", "use_name_in_occasions") == "False":
+            return ""
+        name_type = settings_handler.get("g", "name_type") or "custom_name"
+        if name_type == "custom_name":
+            custom_val = settings_handler.get("g", "user_name").strip()
+            if custom_val:
+                return custom_val
+        elif name_type == "os_username":
+            try:
+                username = os.getlogin()
+                if username and username.strip():
+                    return username.strip()
+            except Exception:
+                pass
+        elif name_type == "personal_name":
+            try:
+                GetUserNameExW = ctypes.windll.secur32.GetUserNameExW
+                NameDisplay = 3
+                size = wintypes.DWORD(256)
+                buffer = ctypes.create_unicode_buffer(size.value)
+                if GetUserNameExW(NameDisplay, buffer, ctypes.byref(size)) and buffer.value.strip():
+                    return buffer.value.strip()
+            except Exception:
+                pass
+            try:
+                username = os.getlogin()
+                generic_names = ['dell', 'hp', 'lenovo', 'user', 'admin', 'administrator', 'pc', 'com']
+                if username and username.lower().strip() not in generic_names:
+                    return username.strip()
+            except Exception:
+                pass
     except Exception:
         pass
-    try:
-        username = os.getlogin()
-        generic_names = ['dell', 'hp', 'lenovo', 'user', 'admin', 'administrator', 'pc', 'com']
-        if username and username.lower().strip() not in generic_names:
-            return username.strip()
-    except Exception:
-        pass
-    return "المستخدم الكريم"
+    return ""
 class MessageCheckWorker(qt2.QObject):
     finished = qt2.pyqtSignal()
     def __init__(self, parent_window):
@@ -334,44 +352,46 @@ class main(qt.QMainWindow):
         self.developers_window.exec()
     def viewInfoTextEdit(self):
         username1 = get_smart_display_name()
+        ya_name = f" يا {username1}" if username1 else ""
+        ya_prefix = f"يا {username1} " if username1 else ""
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
             if current_gregorian_weekday == 4:
-                self.info.setText(f"جمعة مباركة يا {username1}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"جمعة مباركة{ya_name}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 9:
                 if 21 <= hijri_date_obj.day <= 29:
                     self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم، وجزاكم الله خيرا.")
                 else:
-                    self.info.setText(f"رمضان كريم يا {username1}")
+                    self.info.setText(f"رمضان كريم{ya_name}")
             elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1:
-                self.info.setText(f"عيد فطر مبارك يا {username1}")
+                self.info.setText(f"عيد فطر مبارك{ya_name}")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day == 10:
-                self.info.setText(f"عيد أضحى مبارك يا {username1}")
+                self.info.setText(f"عيد أضحى مبارك{ya_name}")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
                 self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
             elif current_gregorian_weekday == 0:
-                self.info.setText(f"يا {username1} صيام يوم الإثنين، سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{ya_prefix}صيام يوم الإثنين، سنة عن النبي صلى الله عليه وسلم")
             elif current_gregorian_weekday == 3:
-                self.info.setText(f"يا {username1} صيام يوم الخميس، سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{ya_prefix}صيام يوم الخميس، سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 1:
                 self.info.setText("كل عام وأنتم بخير بمناسبة رأس السنة الهجرية الجديدة")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 10:
-                self.info.setText(f"يا {username1} صيام عاشوراء، مستحب عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{ya_prefix}صيام عاشوراء، مستحب عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 7 and hijri_date_obj.day == 27:
                 self.info.setText("ذكرى الإسراء والمعراج")
             elif hijri_date_obj.month == 8 and hijri_date_obj.day == 15:
-                self.info.setText(f"يا {username1} ليلة النصف من شعبان، يستحب فيها الدعاء")
+                self.info.setText(f"{ya_prefix}ليلة النصف من شعبان، يستحب فيها الدعاء")
             elif hijri_date_obj.month == 8:
-                self.info.setText(f"يا {username1} يستحب الصيام في شهر شعبان")
+                self.info.setText(f"{ya_prefix}يستحب الصيام في شهر شعبان")
             elif hijri_date_obj.month == 10:
-                self.info.setText(f"يا {username1} صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{ya_prefix}صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day == 9:
-                self.info.setText(f"يا {username1} صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
+                self.info.setText(f"{ya_prefix}صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [1, 2, 3, 4, 5, 6, 7, 8]:
-                self.info.setText(f"يا {username1} صيام العشر الأوائل من ذي الحجة سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{ya_prefix}صيام العشر الأوائل من ذي الحجة سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.day in [13, 14, 15]:
-                self.info.setText(f"يا {username1} صيام الأيام القمرية، سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{ya_prefix}صيام الأيام القمرية، سنة عن النبي صلى الله عليه وسلم")
             else:
                 self.info.setText("لا تَنْسوا ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم")
         except Exception as e:

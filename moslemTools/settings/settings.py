@@ -1,4 +1,5 @@
-import guiTools,functions,gui,subprocess,os,sys
+import guiTools,functions,gui,subprocess,os,sys,ctypes
+from ctypes import wintypes
 from . import settings_handler, app, tabs
 from .tabs import audioSettings
 import PyQt6.QtWidgets as qt
@@ -38,6 +39,8 @@ class settings(qt.QDialog):
         self.cancel.setStyleSheet("background-color: #333333; color: #e0e0e0; padding: 12px; font-weight: bold;")
         self.layout1 = tabs.Genral(self)
         self.sectian.add("الإعدادات العامة", self.layout1)
+        self.userNameSettings = tabs.UserNameSettings()
+        self.sectian.add("إعدادات التذكير بالمناسبات واسم المستخدم", self.userNameSettings)
         self.fontSettings = tabs.FontSettings()
         self.sectian.add("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings)
         self.tafaseerSettings = tabs.TafaseerSettings()
@@ -48,6 +51,12 @@ class settings(qt.QDialog):
         self.sectian.add("إعدادات تحديد الموقع الجغرافي لمواقيت الصلاة",self.locationSettings)
         self.quranPlayerTimes = tabs.QuranPlayerSettings(self)
         self.sectian.add("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes)
+        self.quranSearchSettings = tabs.QuranSearchSettings()
+        self.sectian.add("إعدادات البحث لتبويبة القرآن الكريم مكتوب", self.quranSearchSettings)
+        self.researcherSearchSettings = tabs.ResearcherSearchSettings()
+        self.sectian.add("إعدادات البحث لتبويبة الباحث في القرآن والأحاديث", self.researcherSearchSettings)
+        self.quranDisplaySettings = tabs.QuranDisplaySettings()
+        self.sectian.add("إعدادات عرض الآيات في عارض القرآن الكريم", self.quranDisplaySettings)
         self.sectian.add("إعدادات التحديثات", self.update)
         self.athkar = tabs.AthkarSettings()
         self.sectian.add("إعدادات الأذكار العشوائية", self.athkar)
@@ -70,6 +79,45 @@ class settings(qt.QDialog):
         frame_geometry.moveCenter(screen_center)
         self.move(frame_geometry.topLeft())
     def fok(self):
+        if self.userNameSettings.use_name_checkbox.isChecked():
+            selected_name_type = self.userNameSettings.get_selected_name_type()
+            generic_names = ['dell', 'hp', 'lenovo', 'user', 'admin', 'administrator', 'pc', 'com']
+            if selected_name_type == "custom_name":
+                if not self.userNameSettings.custom_name_input.text().strip():
+                    guiTools.MessageBox.view(self, "تنبيه", "مربع كتابة الاسم المخصص فارغ. يرجى كتابة اسم مخصص، أو تجربة استخدام اسم المستخدم الخاص بالجهاز، أو اسمك الشخصي.")
+                    return
+            elif selected_name_type == "os_username":
+                has_os_name = False
+                try:
+                    uname = os.getlogin()
+                    if uname and uname.lower().strip() not in generic_names:
+                        has_os_name = True
+                except Exception:
+                    pass
+                if not has_os_name:
+                    guiTools.MessageBox.view(self, "تنبيه", "تعذر العثور على اسم مستخدم مخصص للجهاز (الاسم الحالي عام أو غير متاح). يرجى تجربة استخدام اسمك الشخصي، أو كتابة اسم مخصص.")
+                    return
+            elif selected_name_type == "personal_name":
+                has_personal_name = False
+                try:
+                    GetUserNameExW = ctypes.windll.secur32.GetUserNameExW
+                    NameDisplay = 3
+                    size = wintypes.DWORD(256)
+                    buffer = ctypes.create_unicode_buffer(size.value)
+                    if GetUserNameExW(NameDisplay, buffer, ctypes.byref(size)) and buffer.value.strip():
+                        has_personal_name = True
+                except Exception:
+                    pass
+                if not has_personal_name:
+                    try:
+                        uname = os.getlogin()
+                        if uname and uname.lower().strip() not in generic_names:
+                            has_personal_name = True
+                    except Exception:
+                        pass
+                if not has_personal_name:
+                    guiTools.MessageBox.view(self, "تنبيه", "تعذر العثور على اسم شخصي للنظام. يرجى تجربة استخدام اسم المستخدم الخاص بالجهاز، أو كتابة اسم مخصص.")
+                    return
         restart_required = 0
         original_font_bold = settings_handler.get("font", "bold")
         original_font_size = settings_handler.get("font", "size")
@@ -82,6 +130,15 @@ class settings(qt.QDialog):
         original_audio_adhan = settings_handler.get("audio", "adhan")
         original_audio_athkar = settings_handler.get("audio", "athkar")
         original_audio_random_athkar = settings_handler.get("audio", "random_athkar")
+        original_use_name = settings_handler.get("g", "use_name_in_occasions")
+        original_name_type = settings_handler.get("g", "name_type")
+        original_user_name = settings_handler.get("g", "user_name")
+        orig_qs_tashkeel = settings_handler.get("quran_search", "ignore_tashkeel")
+        orig_qs_hamza = settings_handler.get("quran_search", "ignore_hamza")
+        orig_qs_symbols = settings_handler.get("quran_search", "ignore_symbols")
+        orig_rs_tashkeel = settings_handler.get("researcher_search", "ignore_tashkeel")
+        orig_rs_hamza = settings_handler.get("researcher_search", "ignore_hamza")
+        orig_rs_symbols = settings_handler.get("researcher_search", "ignore_symbols")
         def get_audio_val(text):
             if text == "افتراضي": return "Default"
             if text == "مخصص": return "Custom"
@@ -105,6 +162,17 @@ class settings(qt.QDialog):
         settings_handler.set("audio", "random_athkar", get_audio_val(self.audioSettings.features["random_athkar"].currentText()))
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
         settings_handler.set("g", "randomMessageAtStartup", str(self.layout1.randomMessageAtStartup.isChecked()))
+        settings_handler.set("g", "use_name_in_occasions", str(self.userNameSettings.use_name_checkbox.isChecked()))
+        settings_handler.set("g", "name_type", self.userNameSettings.get_selected_name_type())
+        settings_handler.set("g", "user_name", self.userNameSettings.custom_name_input.text().strip())
+        settings_handler.set("quran_search", "ignore_tashkeel", str(self.quranSearchSettings.tashkeel_checkbox.isChecked()))
+        settings_handler.set("quran_search", "ignore_hamza", str(self.quranSearchSettings.hamza_checkbox.isChecked()))
+        settings_handler.set("quran_search", "ignore_symbols", str(self.quranSearchSettings.symbols_checkbox.isChecked()))
+        settings_handler.set("researcher_search", "ignore_tashkeel", str(self.researcherSearchSettings.tashkeel_checkbox.isChecked()))
+        settings_handler.set("researcher_search", "ignore_hamza", str(self.researcherSearchSettings.hamza_checkbox.isChecked()))
+        settings_handler.set("researcher_search", "ignore_symbols", str(self.researcherSearchSettings.symbols_checkbox.isChecked()))
+        settings_handler.set("quran_display", "verse_numbering_mode", self.quranDisplaySettings.get_selected_mode())
+        settings_handler.set("quran_display", "remove_tashkeel", str(self.quranDisplaySettings.remove_tashkeel_checkbox.isChecked()))
         if self.layout1.reciter.count() > 0:
              settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
         settings_handler.set("prayerTimes","volume",str(self.prayerTimesSettings.Sound_level.value()))
@@ -144,6 +212,21 @@ class settings(qt.QDialog):
         settings_handler.set("font", "wrap", new_font_wrap)
         if original_font_bold != new_font_bold or original_font_size != new_font_size or original_font_wrap != new_font_wrap:
             restart_required = 1
+        new_use_name = str(self.userNameSettings.use_name_checkbox.isChecked())
+        new_name_type = self.userNameSettings.get_selected_name_type()
+        new_user_name = self.userNameSettings.custom_name_input.text().strip()
+        if original_use_name != new_use_name or original_name_type != new_name_type or original_user_name != new_user_name:
+            restart_required = 1
+        new_qs_tashkeel = str(self.quranSearchSettings.tashkeel_checkbox.isChecked())
+        new_qs_hamza = str(self.quranSearchSettings.hamza_checkbox.isChecked())
+        new_qs_symbols = str(self.quranSearchSettings.symbols_checkbox.isChecked())
+        new_rs_tashkeel = str(self.researcherSearchSettings.tashkeel_checkbox.isChecked())
+        new_rs_hamza = str(self.researcherSearchSettings.hamza_checkbox.isChecked())
+        new_rs_symbols = str(self.researcherSearchSettings.symbols_checkbox.isChecked())
+        if (orig_qs_tashkeel != new_qs_tashkeel or orig_qs_hamza != new_qs_hamza or orig_qs_symbols != new_qs_symbols or
+            orig_rs_tashkeel != new_rs_tashkeel or orig_rs_hamza != new_rs_hamza or orig_rs_symbols != new_rs_symbols):
+            restart_required = 1
+        self.p.viewInfoTextEdit()
         self.p.runAudioThkarTimer()
         self.p.notification_random_thecker()
         self.p.audio_output.setVolume(int(settings_handler.get("athkar", "voiceVolume")) / 100)

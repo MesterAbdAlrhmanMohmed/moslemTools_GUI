@@ -9,3 +9,7 @@ from .quranPlayerSettings import QuranPlayerSettings
 from .locationSettings import LocationSettings
 from .font_settings import FontSettings 
 from .fanar_settings import FanarSettings
+from .quranSearchSettings import QuranSearchSettings
+from .researcherSearchSettings import ResearcherSearchSettings
+from .quranDisplaySettings import QuranDisplaySettings
+from .userNameSettings import UserNameSettings

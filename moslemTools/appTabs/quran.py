@@ -381,8 +381,8 @@ class Quran(qt.QWidget):
         iarabAction.triggered.connect(self.onIarabActionTriggered)
         current_item = self.info.currentItem()
         if current_item:
-            cat_map = {0: "سورة", 1: "صفحة", 2: "جزء", 3: "ربع", 4: "حزب"}
-            info_action_text = f"معلومات {cat_map.get(self.type.currentIndex(), '')} {current_item.text()}"
+            cat_map = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
+            info_action_text = f"معلومات {cat_map.get(self.type.currentIndex(), '')}"
             infoAction = qt1.QAction(info_action_text, self)
             infoAction.setShortcut("ctrl+f")
             infoAction.triggered.connect(self.onCategoryInfoTriggered)

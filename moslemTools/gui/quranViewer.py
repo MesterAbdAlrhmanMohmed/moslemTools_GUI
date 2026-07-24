@@ -398,9 +398,9 @@ class QuranViewer(qt.QDialog):
         self.original_quran_text = text
         self.is_search_view = False
         self.initial_enableBookmarks = enableBookmarks
-        self.ignore_tashkeel = True
-        self.ignore_hamza = True
-        self.ignore_symbols = True
+        self.ignore_tashkeel = settings.settings_handler.get("quran_search", "ignore_tashkeel") != "False"
+        self.ignore_hamza = settings.settings_handler.get("quran_search", "ignore_hamza") != "False"
+        self.ignore_symbols = settings.settings_handler.get("quran_search", "ignore_symbols") != "False"
         self.resize(1200,600)
         self.type=type
         self.category=category
@@ -415,8 +415,8 @@ class QuranViewer(qt.QDialog):
         self.cancellation_requested = False
         self.completed_merge_downloads = set()
         self.current_download_url = None
-        self.verse_numbering_mode = "by_surah"
-        self.remove_tashkeel = False
+        self.verse_numbering_mode = settings.settings_handler.get("quran_display", "verse_numbering_mode") or "by_surah"
+        self.remove_tashkeel = settings.settings_handler.get("quran_display", "remove_tashkeel") == "True"
         self.text_cache = {"by_surah": self.original_quran_text}
         self.is_counting_sajdas = False
         self.is_counting_asbab_alnozole = False
@@ -450,7 +450,10 @@ class QuranViewer(qt.QDialog):
             QPushButton#clearResultsButton:pressed, QPushButton#cancelButton:pressed { background-color: #bd2130; }
         """)
         self.text=guiTools.QReadOnlyTextEdit(viewer_name="quranViewer")
-        self._set_text_with_delay(text)
+        if self.verse_numbering_mode != "by_surah" or self.remove_tashkeel:
+            self._update_display_text()
+        else:
+            self._set_text_with_delay(text)
         self.update_font_size()
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.text.customContextMenuRequested.connect(self.oncontextMenu)
@@ -641,7 +644,7 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+h", self).activated.connect(self.saveCurrentAyah)
         qt1.QShortcut("ctrl+alt+h", self).activated.connect(self.saveFromVersToVers)
         qt1.QShortcut("ctrl+shift+h", self).activated.connect(self.saveCategoryAyahs)
-        qt1.QShortcut("ctrl+shift+c", self).activated.connect(self.copyFromVersToVers)
+        qt1.QShortcut("ctrl+alt+c", self).activated.connect(self.copyFromVersToVers)
         qt1.QShortcut("ctrl+shift+p", self).activated.connect(self.onPlayToEnd)
         qt1.QShortcut("ctrl+n", self).activated.connect(self.onAddOrRemoveNote)
         qt1.QShortcut("ctrl+o", self).activated.connect(self.onViewNote)
@@ -738,7 +741,7 @@ class QuranViewer(qt.QDialog):
         menu = qt.QMenu(self)
         action_group = qt1.QActionGroup(self)
         action_group.setExclusive(True)
-        by_surah_action = qt1.QAction("إظهار الأرقام بحسب السورة (افتراضي)", self, checkable=True)
+        by_surah_action = qt1.QAction("إظهار الأرقام بحسب السورة", self, checkable=True)
         by_surah_action.setChecked(self.verse_numbering_mode == "by_surah")
         by_surah_action.triggered.connect(lambda: self._set_numbering_mode("by_surah"))
         cumulative_action = qt1.QAction("إظهار الأرقام بحسب الفئة", self, checkable=True)
@@ -1233,7 +1236,7 @@ class QuranViewer(qt.QDialog):
         if category_type == 0:
             return f"{category_value}"
         elif category_type == 1:
-            return f"صفحة {category_value}"
+            return f"الصفحة {category_value}"
         elif category_type == 2:
             return f"الجزء {category_value}"
         elif category_type == 3:
@@ -1499,7 +1502,7 @@ class QuranViewer(qt.QDialog):
             surahOption.addAction(IArabFromVersToVersAction)
             IArabFromVersToVersAction.triggered.connect(self.IArabFromVersToVers)
             copyFromVersToVersAction = qt1.QAction("نسخ من آية إلى آية", self)
-            copyFromVersToVersAction.setShortcut("ctrl+shift+c")
+            copyFromVersToVersAction.setShortcut("ctrl+alt+c")
             surahOption.addAction(copyFromVersToVersAction)
             copyFromVersToVersAction.triggered.connect(self.copyFromVersToVers)
             mergeRangeAction = qt1.QAction("الدمج من آية إلى آية", self)
@@ -2573,7 +2576,7 @@ class QuranViewer(qt.QDialog):
         if category_type == 0:
             return f"{category_value}"
         elif category_type == 1:
-            return f"صفحة {category_value}"
+            return f"الصفحة {category_value}"
         elif category_type == 2:
             return f"الجزء {category_value}"
         elif category_type == 3:

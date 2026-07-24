@@ -70,7 +70,7 @@ class FontSettings(qt.QWidget):
         main_layout.addLayout(top_controls_layout)
         main_layout.addSpacing(20)
 
-        self.info_label = qt.QLabel("تحديد العارضات لتشغيل أو إيقاف وضع التفاف النص:\nهذا الخيار يعرض المحتوة الطويل على أكثر من سطر")
+        self.info_label = qt.QLabel("تحديد العارضات لتشغيل أو إيقاف وضع التفاف النص:\nهذا الخيار يعرض المحتوة الطويل على أكثر من سطر، وهذا الخيار للمبصرين فقط")
         self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         main_layout.addWidget(self.info_label)
