@@ -20,6 +20,8 @@ class FontSettings(qt.QWidget):
         ("qMessageBox", "مربعات الرسائل"),
         ("noteDialog", "عارض الملاحظات"),
         ("aiChat", "شاشة الذكاء الاصطناعي"),
+        ("namesOfAllah", "عارض أسماء الله الحسنى"),
+        ("islamicQuestionsGame", "لعبة الأسئلة الإسلامية"),
     ]
 
     def __init__(self):
@@ -74,7 +76,7 @@ class FontSettings(qt.QWidget):
         self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         main_layout.addWidget(self.info_label)
-        main_layout.addSpacing(15)
+        main_layout.addSpacing(25)
 
         select_all_layout = qt.QHBoxLayout()
         select_all_layout.addStretch()

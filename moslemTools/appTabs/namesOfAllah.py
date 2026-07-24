@@ -15,7 +15,7 @@ class NamesOfAllah(qt.QWidget):
         self.setFont(font)
         self.is_loaded = False
         layout = qt.QVBoxLayout(self)
-        self.information = guiTools.QReadOnlyTextEdit()
+        self.information = guiTools.QReadOnlyTextEdit(viewer_name="namesOfAllah")
         self.information.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.information.customContextMenuRequested.connect(self.OnContextMenu)
         self.font_laybol = qt.QLabel("حجم الخط")
@@ -39,6 +39,16 @@ class NamesOfAllah(qt.QWidget):
         self.update_font_size()
     def showEvent(self, event):
         super().showEvent(event)
+        self.font_is_bold = settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings_handler.get("font", "size"))
+        self.show_font.setValue(self.font_size)
+        self.update_font_size()
+        wrap_val = settings_handler.get("font_wrap", "namesOfAllah")
+        if wrap_val == "True" or (wrap_val == "" and settings_handler.get("font", "wrap") == "True"):
+            self.information.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
+            self.information.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
+        else:
+            self.information.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
         if not self.is_loaded:
             self.load_data()
     def load_data(self):

@@ -3,6 +3,7 @@ import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+from settings import settings_handler
 class IslamicQuestionsGame(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -33,8 +34,11 @@ class IslamicQuestionsGame(qt.QWidget):
         self.grand_total = 0
         self.current_question_index = -1
         self.filtered_topics_data = []
+        self.font_size = int(settings_handler.get("font", "size") or 18)
         self.setup_ui()
         qt1.QShortcut(qt2.Qt.Key.Key_Escape, self).activated.connect(self.handle_escape)
+        qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
+        qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
     def handle_escape(self):
         current_index = self.stacked_widget.currentIndex()
         if current_index == 1:
@@ -135,13 +139,24 @@ class IslamicQuestionsGame(qt.QWidget):
         top_layout.addWidget(self.progress_label, 1)
         top_layout.addStretch()
         game_layout.addLayout(top_layout)
-        self.question_edit = guiTools.QReadOnlyTextEdit()
+        self.question_edit = guiTools.QReadOnlyTextEdit(viewer_name="islamicQuestionsGame")
         self.question_edit.setFixedHeight(150)
-        self.question_edit.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px;")
+        self.question_edit.setStyleSheet("padding: 10px;")
         game_layout.addWidget(self.question_edit)
         game_layout.addStretch()
         self.answers_layout = qt.QVBoxLayout()
         game_layout.addLayout(self.answers_layout)
+        self.font_laybol = qt.QLabel("حجم الخط")
+        self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.show_font = qt.QSpinBox()
+        self.show_font.setRange(1, 100)
+        self.show_font.setValue(self.font_size)
+        self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.show_font.setAccessibleDescription("حجم النص")
+        self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.show_font.valueChanged.connect(self.font_size_changed)
+        game_layout.addWidget(self.font_laybol)
+        game_layout.addWidget(self.show_font)
         self.stacked_widget.addWidget(self.game_widget)
     def search(self, pattern, text_list):
         tashkeel_pattern = re.compile(r'[\u064B-\u065F\u0670]')
@@ -279,6 +294,7 @@ class IslamicQuestionsGame(qt.QWidget):
                 with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
             except: pass
         self.question_edit.setText(q_data.get("q", ""))
+        self.update_question_font()
         solved_text = self.get_arabic_count_text(self.solved_count)
         seen_text = self.get_arabic_count_text(self.current_question_index)
         total_text = self.get_arabic_count_text(self.total_questions)
@@ -289,11 +305,18 @@ class IslamicQuestionsGame(qt.QWidget):
         answers = q_data.get("answers", [])
         shuffled_answers = random.sample(answers, len(answers))
         cat_color = self.categories_info[self.current_category]["color"]
+        answer_buttons = []
         for ans in shuffled_answers:
             btn = guiTools.QPushButton(ans["answer"])
             btn.setStyleSheet(f"background-color: {cat_color}; color: white; font-weight: bold; font-size: 16px; border-radius: 5px; padding: 10px;")
             btn.clicked.connect(lambda checked, a=ans: self.check_answer(a))
             self.answers_layout.addWidget(btn)
+            answer_buttons.append(btn)
+        if answer_buttons:
+            self.setTabOrder(self.question_edit, answer_buttons[0])
+            for i in range(len(answer_buttons) - 1):
+                self.setTabOrder(answer_buttons[i], answer_buttons[i + 1])
+            self.setTabOrder(answer_buttons[-1], self.show_font)
     def check_answer(self, selected_answer):
         sound_enabled = self.sound_checkbox.isChecked()
         if selected_answer["t"] == 1:
@@ -328,5 +351,40 @@ class IslamicQuestionsGame(qt.QWidget):
             self.clear_asked_questions()
             self.stacked_widget.setCurrentIndex(0)
             qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
+    def font_size_changed(self, value):
+        self.font_size = value
+        settings_handler.set("font", "size", str(value))
+        self.update_question_font()
+        guiTools.speak(str(self.font_size))
+    def increase_font_size(self):
+        if self.show_font.value() < 100:
+            self.show_font.setValue(self.show_font.value() + 1)
+    def decrease_font_size(self):
+        if self.show_font.value() > 1:
+            self.show_font.setValue(self.show_font.value() - 1)
+    def update_question_font(self):
+        font_is_bold = settings_handler.get("font", "bold") == "True"
+        font = qt1.QFont()
+        font.setPointSize(self.font_size)
+        font.setBold(font_is_bold)
+        self.question_edit.setFont(font)
+        cursor = self.question_edit.textCursor()
+        self.question_edit.selectAll()
+        self.question_edit.setCurrentFont(font)
+        self.question_edit.setTextCursor(cursor)
+        if hasattr(self, "show_font") and self.show_font.value() != self.font_size:
+            self.show_font.blockSignals(True)
+            self.show_font.setValue(self.font_size)
+            self.show_font.blockSignals(False)
+        wrap_val = settings_handler.get("font_wrap", "islamicQuestionsGame")
+        if wrap_val == "True" or (wrap_val == "" and settings_handler.get("font", "wrap") == "True"):
+            self.question_edit.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
+            self.question_edit.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
+        else:
+            self.question_edit.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
     def showEvent(self, event):
         super().showEvent(event)
+        self.font_size = int(settings_handler.get("font", "size") or 18)
+        if hasattr(self, "show_font"):
+            self.show_font.setValue(self.font_size)
+        self.update_question_font()
