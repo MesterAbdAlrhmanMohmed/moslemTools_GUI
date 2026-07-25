@@ -240,7 +240,7 @@ class settings(qt.QDialog):
         else:
             self.close()
     def default(self):
-        mb = guiTools.QQuestionMessageBox.view(self,"تنبيه","هل تريد إعادة تعيين إعداداتك؟ إذا قمت بالنقر على إعادة تعيين، سيعيد البرنامج التشغيل لإكمال إعادة التعيين.","إعادة التعيين وإعادة التشغيل","إلغاء")
+        mb = guiTools.QQuestionMessageBox.view(self,"تنبيه","هل تريد إعادة تعيين إعداداتك؟\nإذا قمت بالنقر على إعادة تعيين، سيعيد البرنامج التشغيل لإكمال إعادة التعيين.","إعادة التعيين وإعادة التشغيل","إلغاء")
         if mb==0:
             os.remove(os.path.join(os.getenv('appdata'), app.appName, "settings.ini"))
             os.execl(sys.executable, sys.executable, *sys.argv)
