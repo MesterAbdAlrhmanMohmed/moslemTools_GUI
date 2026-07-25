@@ -12,3 +12,4 @@ cx_Freeze
 python-docx
 accessible_output3
 ujson
+pynput
