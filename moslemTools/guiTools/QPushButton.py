@@ -1,5 +1,7 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
+
+
 class QPushButton(qt.QPushButton):
     def keyPressEvent(self, event):
         if event.key() in {

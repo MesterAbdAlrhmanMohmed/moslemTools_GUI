@@ -2,6 +2,8 @@ from guiTools import QPushButton
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from PyQt6.QtCore import Qt
+
+
 class QInputDialog(qt.QDialog):
     def __init__(self, parent, title: str, label: str, widget):
         super().__init__(parent)
@@ -12,13 +14,13 @@ class QInputDialog(qt.QDialog):
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label)
         self.text = widget
-        self.text.setAccessibleName(label)                
+        self.text.setAccessibleName(label)
         if isinstance(widget, qt.QLineEdit):
             self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         elif isinstance(widget, qt.QSpinBox):
-            self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)            
+            self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.text.textChanged.connect(self.onTextChanged)
-        layout.addWidget(self.text)        
+        layout.addWidget(self.text)
         self.OKBTN = QPushButton("موافق")
         self.OKBTN.setDisabled(True)
         self.OKBTN.clicked.connect(self.accept)
@@ -44,15 +46,17 @@ class QInputDialog(qt.QDialog):
         """)
         buttonsLayout = qt.QHBoxLayout()
         buttonsLayout.addWidget(self.OKBTN)
-        buttonsLayout.addWidget(self.cancelBTN)        
+        buttonsLayout.addWidget(self.cancelBTN)
         wrapper = qt.QHBoxLayout()
         wrapper.addLayout(buttonsLayout)
         wrapper.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addLayout(wrapper)
-        qt1.QShortcut("Escape", self).activated.connect(self.reject)    
+        qt1.QShortcut("Escape", self).activated.connect(self.reject)
+
     def closeEvent(self, event):
         self.reject()
-        event.accept()    
+        event.accept()
+
     def onTextChanged(self, text):
         if text.strip():
             self.OKBTN.setDisabled(False)
@@ -75,8 +79,9 @@ class QInputDialog(qt.QDialog):
                     padding: 8px 20px;
                     font-size: 14px;
                 }
-            """)    
+            """)
     @staticmethod
+
     def getText(parent, title: str, label: str, text: str = ""):
         dlg = QInputDialog(parent, title, label, qt.QLineEdit())
         dlg.text.setText(text)
@@ -85,8 +90,9 @@ class QInputDialog(qt.QDialog):
         if result == qt.QDialog.DialogCode.Accepted:
             return dlg.text.text(), True
         else:
-            return "", False    
+            return "", False
     @staticmethod
+
     def getInt(parent, title: str, label: str, value: int, min: int, max: int):
         dlg = QInputDialog(parent, title, label, qt.QSpinBox())
         dlg.text.setRange(min, max)
@@ -95,8 +101,9 @@ class QInputDialog(qt.QDialog):
         if result == qt.QDialog.DialogCode.Accepted:
             return dlg.text.value(), True
         else:
-            return 0, False    
+            return 0, False
     @staticmethod
+
     def getSingleInt(parent, title: str, label: str, value: int):
         dlg = QInputDialog(parent, title, label, qt.QSpinBox())
         dlg.text.setValue(value)

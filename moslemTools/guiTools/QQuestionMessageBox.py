@@ -5,6 +5,7 @@ from PyQt6.QtCore import Qt
 from .QReadOnlyTextEdit import QReadOnlyTextEdit
 import winsound
 
+
 class QQuestionMessageBox(qt.QDialog):
     def __init__(self, parent, title: str, label: str, yesLabel: str, noLabel: str):
         super().__init__(parent)
@@ -49,15 +50,18 @@ class QQuestionMessageBox(qt.QDialog):
         buttons_layout.addWidget(self.noBTN)
         main_layout.addWidget(buttons_widget, alignment=Qt.AlignmentFlag.AlignLeft)
         qt1.QShortcut("Escape", self).activated.connect(self.reject)
+
     def center(self):
         frame_geometry = self.frameGeometry()
         screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
         frame_geometry.moveCenter(screen_center)
         self.move(frame_geometry.topLeft())
+
     def onOk(self):
         self.result = 0
         self.accept()
     @staticmethod
+
     def view(parent, title: str, label: str, yesLabel: str, noLabel: str):
         winsound.MessageBeep(winsound.MB_ICONASTERISK)
         dlg = QQuestionMessageBox(parent, title, label, yesLabel, noLabel)

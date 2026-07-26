@@ -5,6 +5,8 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from .after_azaan import AfterAdaan
 import settings
 from functions import audio_manager
+
+
 class AdaanDialog(qt.QDialog):
     def __init__(self, p, index: int, title: str, sound_path: str):
         super().__init__(p)
@@ -12,27 +14,29 @@ class AdaanDialog(qt.QDialog):
         self.setWindowTitle(title)
         self.lay = qt.QLabel(title)
         self.lay.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.lay.setStyleSheet("font-size:100px;")        
+        self.lay.setStyleSheet("font-size:100px;")
         self.media_player = QMediaPlayer()
         self.media_player.mediaStatusChanged.connect(self.onStateChanged)
         self.audio_output = QAudioOutput()
         self.audio_output.setDevice(audio_manager.get_audio_device("adhan"))
         self.audio_output.setVolume(int(settings.settings_handler.get("prayerTimes", "volume")) / 100)
-        self.media_player.setAudioOutput(self.audio_output)                
+        self.media_player.setAudioOutput(self.audio_output)
         self.media_player.setSource(qt2.QUrl.fromLocalFile(sound_path))
-        self.media_player.play()        
+        self.media_player.play()
         qt1.QShortcut("escape", self).activated.connect(lambda: self.closeEvent(None))
         layout = qt.QVBoxLayout(self)
-        layout.addWidget(self.lay)    
+        layout.addWidget(self.lay)
+
     def closeEvent(self, event):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
             qt2.QTimer.singleShot(100,self.accept)
         else:
             self.accept
+
     def onStateChanged(self, state):
-        if state == self.media_player.MediaStatus.EndOfMedia:            
-            self.accept()            
+        if state == self.media_player.MediaStatus.EndOfMedia:
+            self.accept()
             if settings.settings_handler.get("prayerTimes", "playPrayerAfterAdhaan") == "True":
                 window = AfterAdaan(self)
                 window.exec()

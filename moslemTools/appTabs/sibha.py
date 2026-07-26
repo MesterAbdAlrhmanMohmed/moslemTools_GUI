@@ -5,6 +5,8 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtCore import Qt
+
+
 class LimitInputDialog(qt.QDialog):
     def __init__(self, parent, title: str):
         super().__init__(parent)
@@ -45,6 +47,7 @@ class LimitInputDialog(qt.QDialog):
         layout.addLayout(wrapper)
         qt1.QShortcut("Escape", self).activated.connect(self.reject)
         self.name_input.setFocus()
+
     def validate_inputs(self):
         name_valid = bool(self.name_input.text().strip())
         value_valid = self.value_input.value() > 0
@@ -54,10 +57,12 @@ class LimitInputDialog(qt.QDialog):
             self.OKBTN.setStyleSheet("QPushButton {background-color: #008000; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
         else:
             self.OKBTN.setStyleSheet("QPushButton {background-color: black; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
+
     def closeEvent(self, event):
         self.reject()
         event.accept()
     @staticmethod
+
     def getLimitData(parent):
         dlg = LimitInputDialog(parent, "إضافة حد أقصى جديد")
         result = dlg.exec()
@@ -73,6 +78,8 @@ if not os.path.exists(path):
 if not os.path.exists(limits_path):
     with open(limits_path, "w", encoding="utf-8") as file:
         file.write('{"limits": {}, "active": null}')
+
+
 class sibha(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -171,6 +178,7 @@ class sibha(qt.QWidget):
         main_layout.addLayout(btn_layout)
         self.setLayout(main_layout)
         self.setStyleSheet("QPushButton#resetButton {background-color: #8B0000; color: white; min-height: 40px; font-size: 16px;} QPushButton#addButton {background-color: #008000; color: white; min-height: 40px; font-size: 16px;} QPushButton#minusButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;} QComboBox, QLineEdit, QSpinBox {min-height: 40px; font-size: 16px;} QLabel {font-size: 16px;}")
+
     def show_athkar_context_menu(self, pos):
         menu = qt.QMenu(self)
         font = qt1.QFont()
@@ -183,16 +191,19 @@ class sibha(qt.QWidget):
         delete_all_action.setShortcut("Shift+Delete")
         delete_all_action.triggered.connect(self.onDeleteAllCustom)
         menu.exec(qt1.QCursor.pos())
+
     def update_limit_button_text(self):
         if not self.limits_data["limits"]:
             self.limit_button.setText("تعيين حد أقصى لعدد التسبيحات")
         else:
             self.limit_button.setText("فتح قائمة الحدود")
+
     def on_limit_button_clicked(self):
         if not self.limits_data["limits"]:
             self.add_new_limit()
         else:
             self.show_limits_menu()
+
     def add_new_limit(self):
         name, value, ok = LimitInputDialog.getLimitData(self)
         if ok and name:
@@ -200,6 +211,7 @@ class sibha(qt.QWidget):
             self.save_limits()
             self.update_limit_button_text()
             guiTools.speak(f"تم إضافة الحد الأقصى {name} بقيمة {value}")
+
     def show_limits_menu(self):
         menu = qt.QMenu(self)
         font=qt1.QFont()
@@ -214,6 +226,7 @@ class sibha(qt.QWidget):
         delete_all_limits_action.triggered.connect(self.onDeleteAllLimits)
         menu.setFont(font)
         menu.exec(qt1.QCursor.pos())
+
     def on_limit_selected(self, name):
         menu = qt.QMenu(self)
         font=qt1.QFont()
@@ -228,14 +241,17 @@ class sibha(qt.QWidget):
         delete_action.triggered.connect(lambda: self.delete_limit(name))
         menu.setFont(font)
         menu.exec(qt1.QCursor.pos())
+
     def deactivate_limit(self, name):
         self.limits_data["active"] = None
         self.save_limits()
         guiTools.speak(f"تم إلغاء تعيين الحد الأقصى {name}")
+
     def set_active_limit(self, name):
         self.limits_data["active"] = name
         self.save_limits()
         guiTools.speak(f"تم تعيين الحد الأقصى إلى {name} بقيمة {self.limits_data['limits'][name]}")
+
     def delete_limit(self, name):
         question = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل تريد حذف الحد الأقصى {name}؟", "نعم", "لا")
         if question == 0:
@@ -245,6 +261,7 @@ class sibha(qt.QWidget):
             self.save_limits()
             self.update_limit_button_text()
             guiTools.speak(f"تم حذف الحد الأقصى {name}")
+
     def onDeleteAllLimits(self):
         if not self.limits_data["limits"]:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا توجد حدود مضافة لحذفها")
@@ -256,9 +273,11 @@ class sibha(qt.QWidget):
             self.save_limits()
             self.update_limit_button_text()
             guiTools.speak("تم حذف جميع الحدود المضافة")
+
     def save_limits(self):
         with open(limits_path, "w", encoding="utf-8") as file:
             json.dump(self.limits_data, file, ensure_ascii=False, indent=4)
+
     def check_limit(self):
         if self.limits_data["active"]:
             active_limit = self.limits_data["limits"][self.limits_data["active"]]
@@ -268,15 +287,18 @@ class sibha(qt.QWidget):
                 guiTools.speak(f"لقد وصلت إلى الحد الأقصى {active_limit}")
                 return True
         return False
+
     def cansel_add_thecr(self):
         self.add_thecr.setVisible(True)
         self.line_of_thecr.setVisible(False)
         self.done_thecr.setVisible(False)
         self.cancel_add.setVisible(False)
         self.line_of_thecr.clear()
+
     def reset_count(self):
         self.numbers.setText("0")
         guiTools.speak("تم إعادة التعيين إلى 0")
+
     def increment_count(self):
         if self.check_limit():
             return
@@ -284,6 +306,7 @@ class sibha(qt.QWidget):
         current_count += 1
         self.numbers.setText(str(current_count))
         guiTools.speak(str(current_count))
+
     def decrement_count(self):
         current_count = int(self.numbers.text())
         if current_count > 0:
@@ -292,10 +315,13 @@ class sibha(qt.QWidget):
             guiTools.speak(str(current_count))
         else:
             guiTools.speak("لا يمكن الإنقاص أكثر من صفر")
+
     def speak_number(self):
         guiTools.speak(self.numbers.text())
+
     def speak_current_thecre(self):
         guiTools.speak(self.athkar.currentText())
+
     def onAddThakar(self):
         self.add_thecr.setVisible(False)
         self.line_of_thecr.setVisible(True)
@@ -303,6 +329,7 @@ class sibha(qt.QWidget):
         self.cancel_add.setVisible(True)
         self.done_thecr.setDisabled(True)
         self.line_of_thecr.setFocus()
+
     def onAddThkarCompeleted(self):
         thkar = self.line_of_thecr.text().strip()
         if not thkar:
@@ -317,8 +344,10 @@ class sibha(qt.QWidget):
         self.done_thecr.setVisible(False)
         self.cancel_add.setVisible(False)
         self.athkar.setFocus()
+
     def onLineTextChanged(self, text):
         self.done_thecr.setDisabled(text.strip() == "")
+
     def onDelete(self):
         itemText = self.athkar.currentText()
         if itemText not in self.externalAthkar:
@@ -331,6 +360,7 @@ class sibha(qt.QWidget):
                 with open(path, "w", encoding="utf-8") as file:
                     json.dump(self.externalAthkar, file, ensure_ascii=False, indent=4)
                 guiTools.speak("تم الحذف")
+
     def onDeleteAllCustom(self):
         if not self.externalAthkar:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا توجد أذكار مضافة لحذفها")

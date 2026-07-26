@@ -3,6 +3,7 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from .. import settings_handler
 
+
 class QuranSearchSettings(qt.QWidget):
     def __init__(self):
         super().__init__()

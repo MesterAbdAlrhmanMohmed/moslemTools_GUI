@@ -4,6 +4,8 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from settings import settings_handler
+
+
 class IslamicQuestionsGame(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -39,6 +41,7 @@ class IslamicQuestionsGame(qt.QWidget):
         qt1.QShortcut(qt2.Qt.Key.Key_Escape, self).activated.connect(self.handle_escape)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
+
     def handle_escape(self):
         current_index = self.stacked_widget.currentIndex()
         if current_index == 1:
@@ -47,6 +50,7 @@ class IslamicQuestionsGame(qt.QWidget):
             self.stacked_widget.setCurrentIndex(1)
         elif current_index == 3:
             self.confirm_exit_game()
+
     def setup_ui(self):
         self.main_layout = qt.QVBoxLayout(self)
         self.main_layout.setContentsMargins(20, 20, 20, 20)
@@ -158,11 +162,13 @@ class IslamicQuestionsGame(qt.QWidget):
         game_layout.addWidget(self.font_laybol)
         game_layout.addWidget(self.show_font)
         self.stacked_widget.addWidget(self.game_widget)
+
     def search(self, pattern, text_list):
         tashkeel_pattern = re.compile(r'[\u064B-\u065F\u0670]')
         normalized_pattern = tashkeel_pattern.sub('', pattern)
         matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text)]
         return matches
+
     def on_topic_search(self):
         search_text = self.search_bar.text().lower()
         self.topics_list.clear()
@@ -174,6 +180,7 @@ class IslamicQuestionsGame(qt.QWidget):
             if normalized_pattern in tashkeel_pattern.sub('', name.lower()):
                 self.topics_list.addItem(name)
                 self.filtered_topics_data.append(topic)
+
     def show_topics(self, category_key):
         self.current_category = category_key
         cat_data = self.categories_info[category_key]
@@ -189,13 +196,16 @@ class IslamicQuestionsGame(qt.QWidget):
             self.stacked_widget.setCurrentIndex(1)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"فشل تحميل البيانات: {e}")
+
     def show_levels(self):
         row = self.topics_list.currentRow()
         if row < 0: return
         self.current_topic = self.filtered_topics_data[row]
         self.stacked_widget.setCurrentIndex(2)
+
     def show_all_levels_menu_at_pos(self):
         self.show_all_levels_menu(qt2.Qt.AlignmentFlag.AlignCenter)
+
     def show_all_levels_menu(self, pos):
         menu = qt.QMenu(self)
         random_action = menu.addAction("لعب بعشوائية")
@@ -205,6 +215,7 @@ class IslamicQuestionsGame(qt.QWidget):
             self.start_game("all", mode="random")
         elif action == sequential_action:
             self.start_game("all", mode="sequential")
+
     def start_game(self, level, mode=None):
         self.current_level = level
         self.questions = []
@@ -256,12 +267,14 @@ class IslamicQuestionsGame(qt.QWidget):
             qt2.QTimer.singleShot(10, self.question_edit.setFocus)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"فشل تحميل الأسئلة: {e}")
+
     def load_questions_from_path(self, json_path):
         relative_path = json_path.replace("/database/", "").replace("/", os.sep)
         full_path = os.path.join(self.base_path, relative_path)
         if os.path.exists(full_path):
             with open(full_path, "r", encoding="utf-8-sig") as f:
                 self.questions.extend(json.load(f))
+
     def get_arabic_count_text(self, n):
         if n == 0: return "صفر سؤال"
         if n == 1: return "سؤال واحد"
@@ -269,6 +282,7 @@ class IslamicQuestionsGame(qt.QWidget):
         if 3 <= n <= 10: return f"{n} أسئلة"
         if n >= 11: return f"{n} سؤالاً"
         return f"{n} سؤال"
+
     def show_question(self):
         cat_name = self.categories_info[self.current_category]["name"]
         topic_name = self.current_topic.get("arabicName", self.current_topic.get("englishName", ""))
@@ -317,6 +331,7 @@ class IslamicQuestionsGame(qt.QWidget):
             for i in range(len(answer_buttons) - 1):
                 self.setTabOrder(answer_buttons[i], answer_buttons[i + 1])
             self.setTabOrder(answer_buttons[-1], self.show_font)
+
     def check_answer(self, selected_answer):
         sound_enabled = self.sound_checkbox.isChecked()
         if selected_answer["t"] == 1:
@@ -335,33 +350,40 @@ class IslamicQuestionsGame(qt.QWidget):
         self.show_question()
         if self.current_question_index < self.total_questions:
             self.question_edit.setFocus()
+
     def save_game_settings(self):
         self.game_settings["sound_enabled"] = self.sound_checkbox.isChecked()
         try:
             os.makedirs(os.path.dirname(self.game_settings_file), exist_ok=True)
             with open(self.game_settings_file, "w", encoding="utf-8") as f: json.dump(self.game_settings, f, ensure_ascii=False)
         except: pass
+
     def clear_asked_questions(self):
         self.asked_questions.clear()
         if os.path.exists(self.asked_file):
             try: os.remove(self.asked_file)
             except: pass
+
     def confirm_exit_game(self):
         if guiTools.QQuestionMessageBox.view(self, "تأكيد الخروج", "هل أنت متأكد من الخروج من الجولة؟", "نعم", "لا") == 0:
             self.clear_asked_questions()
             self.stacked_widget.setCurrentIndex(0)
             qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
+
     def font_size_changed(self, value):
         self.font_size = value
         settings_handler.set("font", "size", str(value))
         self.update_question_font()
         guiTools.speak(str(self.font_size))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def update_question_font(self):
         font_is_bold = settings_handler.get("font", "bold") == "True"
         font = qt1.QFont()
@@ -382,6 +404,7 @@ class IslamicQuestionsGame(qt.QWidget):
             self.question_edit.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
         else:
             self.question_edit.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
+
     def showEvent(self, event):
         super().showEvent(event)
         self.font_size = int(settings_handler.get("font", "size") or 18)

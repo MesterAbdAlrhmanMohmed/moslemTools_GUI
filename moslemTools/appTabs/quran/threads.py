@@ -3,46 +3,85 @@ import PyQt6.QtCore as qt2
 from settings.app import appName
 import functions
 
+
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
     cancelled = qt2.pyqtSignal()
+    network_error = qt2.pyqtSignal(str)
+
     def __init__(self, url, filepath):
         super().__init__()
         self.url = url
         self.filepath = filepath
         self.is_cancelled = False
-    def run(self):
-        try:
-            response = requests.get(self.url, stream=True)
-            total_size = int(response.headers.get('content-length', 0))
-            downloaded_size = 0
-            with open(self.filepath, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if self.is_cancelled:
-                        self.cancelled.emit()
-                        return
-                    if chunk:
-                        f.write(chunk)
-                        downloaded_size += len(chunk)
-                        if total_size > 0:
-                            progress_percent = int((downloaded_size / total_size) * 100)
-                            self.progress.emit(progress_percent)
-            self.finished.emit()
-        except Exception as e:
-            print(f"Error during download or file writing: {e}")
-            self.cancelled.emit()
+        self.is_paused = False
+
+    def pause(self):
+        self.is_paused = True
+
+    def resume(self):
+        self.is_paused = False
+
     def cancel(self):
         self.is_cancelled = True
 
+    def run(self):
+        while not self.is_cancelled:
+            if self.is_paused:
+                self.msleep(200)
+                continue
+            downloaded_size = os.path.getsize(self.filepath) if os.path.exists(self.filepath) else 0
+            headers = {}
+            if downloaded_size > 0:
+                headers['Range'] = f'bytes={downloaded_size}-'
+            try:
+                response = requests.get(self.url, stream=True, timeout=15, headers=headers)
+                if response.status_code in (200, 206):
+                    content_range = response.headers.get('content-range')
+                    if content_range:
+                        total_size = int(content_range.split('/')[-1])
+                    elif 'content-length' in response.headers:
+                        total_size = downloaded_size + int(response.headers['content-length'])
+                    else:
+                        total_size = 0
+                    mode = 'ab' if (downloaded_size > 0 and response.status_code == 206) else 'wb'
+                    if mode == 'wb':
+                        downloaded_size = 0
+                    with open(self.filepath, mode) as f:
+                        for chunk in response.iter_content(chunk_size=1024):
+                            while self.is_paused and not self.is_cancelled:
+                                self.msleep(200)
+                            if self.is_cancelled:
+                                self.cancelled.emit()
+                                return
+                            if chunk:
+                                f.write(chunk)
+                                downloaded_size += len(chunk)
+                                if total_size > 0:
+                                    progress_percent = int((downloaded_size / total_size) * 100)
+                                    self.progress.emit(progress_percent)
+                    self.finished.emit()
+                    return
+                else:
+                    self.cancelled.emit()
+                    return
+            except (requests.exceptions.RequestException, Exception) as e:
+                print(f"Error during download or file writing: {e}")
+                self.is_paused = True
+                self.network_error.emit("تم انقطاع الاتصال بالإنترنت وتم إيقاف التحميل مؤقتاً. يرجى التأكد من الاتصال ثم الضغط على زر الاستئناف.")
+
+
 class MergeThread(qt2.QThread):
     finished = qt2.pyqtSignal(bool, str)
+
     def __init__(self, ffmpeg_path, input_files, output_file):
         super().__init__()
         self.ffmpeg_path = ffmpeg_path
         self.input_files = input_files
         self.output_file = output_file
         self.process = None
+
     def run(self):
         list_filepath = os.path.join(os.path.dirname(self.output_file), "mergelist.txt")
         try:
@@ -66,13 +105,16 @@ class MergeThread(qt2.QThread):
         finally:
             if os.path.exists(list_filepath):
                 os.remove(list_filepath)
+
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
 
+
 class PreMergeCheckThread(qt2.QThread):
     finished = qt2.pyqtSignal(list, list, str, str)
     error = qt2.pyqtSignal(str)
+
     def __init__(self, all_ayahs_text, current_reciter, reciters_data, current_item_text, current_type_index):
         super().__init__()
         self.all_ayahs_text = all_ayahs_text
@@ -80,6 +122,7 @@ class PreMergeCheckThread(qt2.QThread):
         self.reciters_data = reciters_data
         self.current_item_text = current_item_text
         self.current_type_index = current_type_index
+
     def _create_ayah_filename(self, ayah_text):
         try:
             Ayah, surah, _, _, _ = functions.quranJsonControl.getAyah(ayah_text, self.current_item_text, self.current_type_index)
@@ -88,6 +131,7 @@ class PreMergeCheckThread(qt2.QThread):
             return f"{surah_str}{ayah_str}.mp3"
         except:
             return None
+
     def run(self):
         try:
             reciter_name = list(self.reciters_data.keys())[self.current_reciter]
@@ -108,15 +152,18 @@ class PreMergeCheckThread(qt2.QThread):
         except Exception as e:
             self.error.emit(f"حدث خطأ أثناء التحضير: {str(e)}")
 
+
 class SaveThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     status = qt2.pyqtSignal(str)
     finished = qt2.pyqtSignal(bool, str)
+
     def __init__(self, items, target_dir):
         super().__init__()
         self.items = items
         self.target_dir = target_dir
         self.cancelled = False
+
     def run(self):
         total = len(self.items)
         for idx, item in enumerate(self.items):
@@ -151,13 +198,17 @@ class SaveThread(qt2.QThread):
                     return
             self.progress.emit(idx + 1)
         self.finished.emit(True, f"تم حفظ {total} آية بنجاح")
+
     def cancel(self):
         self.cancelled = True
 
+
 class QuranLoader(qt2.QThread):
     data_loaded = qt2.pyqtSignal()
+
     def __init__(self):
         super().__init__()
+
     def run(self):
         try:
             functions.quranJsonControl.getSurahs()

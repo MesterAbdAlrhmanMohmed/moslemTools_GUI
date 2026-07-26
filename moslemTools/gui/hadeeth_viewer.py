@@ -7,6 +7,8 @@ from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
 from docx import Document
+
+
 class hadeeth_viewer(qt.QDialog):
     def __init__(self, p, book_name, index: int = 0):
         super().__init__(p)
@@ -81,6 +83,7 @@ class hadeeth_viewer(qt.QDialog):
         layout1.addWidget(self.N_hadeeth)
         layout.addLayout(layout1)
         self.update_font_size()
+
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
         boldFont = menu.font()
@@ -162,6 +165,7 @@ class hadeeth_viewer(qt.QDialog):
             add_bookmark_action.triggered.connect(self.onAddBookMark)
             hadeeth_menu.addAction(add_bookmark_action)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
+
     def get_page_range(self):
         start_page, ok1 = guiTools.QInputDialog.getInt(self, "بداية النطاق", "أدخل رقم حديث البداية:", value=self.index + 1, min=1, max=len(self.data))
         if not ok1:
@@ -173,6 +177,7 @@ class hadeeth_viewer(qt.QDialog):
             guiTools.MessageBox.error(self, "خطأ", "حديث البداية لا يمكن أن يكون أكبر من حديث النهاية")
             return None, None
         return start_page, end_page
+
     def copy_page_range(self):
         start, end = self.get_page_range()
         if start is None or end is None:
@@ -186,6 +191,7 @@ class hadeeth_viewer(qt.QDialog):
             guiTools.MessageBox.view(self, "تم النسخ", f"تم نسخ المحتوى من الحديث {start} إلى الحديث {end}")
         except Exception as e:
             guiTools.MessageBox.error(self, "خطأ في النسخ", str(e))
+
     def save_page_range_as_txt(self):
         start, end = self.get_page_range()
         if start is None or end is None:
@@ -204,6 +210,7 @@ class hadeeth_viewer(qt.QDialog):
                 guiTools.MessageBox.view(self, "تم الحفظ", f"تم حفظ المحتوى من الحديث {start} إلى الحديث {end} في ملف نصي")
         except Exception as e:
             guiTools.MessageBox.error(self, "خطأ في الحفظ", str(e))
+
     def save_page_range_as_docx(self):
         start, end = self.get_page_range()
         if start is None or end is None:
@@ -224,16 +231,19 @@ class hadeeth_viewer(qt.QDialog):
                 guiTools.MessageBox.view(self, "تم الحفظ", f"تم حفظ المحتوى من الحديث {start} إلى الحديث {end} في ملف Word")
         except Exception as e:
             guiTools.MessageBox.error(self, "خطأ في الحفظ", str(e))
+
     def onAddNote(self, position_data):
         dialog = note_dialog.NoteDialog(self, mode="add")
         dialog.saved.connect(lambda old, new, content: self.saveNote(position_data, new, content))
         dialog.exec()
+
     def onEditNote(self, position_data, note_name):
         note = notesManager.getNoteByName("ahadeeth", note_name)
         if note:
             dialog = note_dialog.NoteDialog(self, title=note["name"], content=note["content"], mode="edit", old_name=note["name"])
             dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
             dialog.exec()
+
     def saveNote(self, position_data, name, content):
         existing_note = notesManager.getNoteByName("ahadeeth", name)
         if existing_note is not None:
@@ -241,6 +251,7 @@ class hadeeth_viewer(qt.QDialog):
             return
         notesManager.addNewNote("ahadeeth", {"name": name, "content": content, "position_data": position_data})
         guiTools.speak("تمت إضافة الملاحظة")
+
     def updateNote(self, position_data, old_name, new_name, new_content):
         if old_name != new_name:
             existing_note = notesManager.getNoteByName("ahadeeth", new_name)
@@ -253,6 +264,7 @@ class hadeeth_viewer(qt.QDialog):
             guiTools.speak("تم تحديث الملاحظة بنجاح")
         else:
             guiTools.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")
+
     def onAddOrRemoveNote(self):
         position_data = {"bookName": self.bookName,"hadeethNumber": self.index}
         note_exists = notesManager.getNotesForPosition("ahadeeth", position_data)
@@ -260,6 +272,7 @@ class hadeeth_viewer(qt.QDialog):
             self.onEditNote(position_data, note_exists["name"])
         else:
             self.onAddNote(position_data)
+
     def onViewNote(self):
         position_data = {"bookName": self.bookName,"hadeethNumber": self.index}
         note_exists = notesManager.getNotesForPosition("ahadeeth", position_data)
@@ -267,12 +280,14 @@ class hadeeth_viewer(qt.QDialog):
             self.onNoteAction(position_data)
         else:
             guiTools.speak("لا توجد ملاحظة لهذا الحديث")
+
     def onNoteAction(self, position_data):
         note = notesManager.getNotesForPosition("ahadeeth", position_data)
         if note:
             dialog = note_dialog.NoteDialog(self, title=note["name"], content=note["content"], mode="view", old_name=note["name"])
             dialog.edit_requested.connect(lambda note_name: self.onEditNote(position_data, note_name))
             dialog.exec()
+
     def onDeleteNote(self, position_data):
         note = notesManager.getNotesForPosition("ahadeeth", position_data)
         if note:
@@ -280,6 +295,7 @@ class hadeeth_viewer(qt.QDialog):
             if confirm == 0:
                 notesManager.removeNote("ahadeeth", note["name"])
                 guiTools.speak("تم حذف الملاحظة")
+
     def next_hadeeth(self):
         if self.index == len(self.data) - 1:
             self.index = 0
@@ -290,6 +306,7 @@ class hadeeth_viewer(qt.QDialog):
         guiTools.speak(str(self.index + 1))
         self.show_hadeeth_number.setText(f"{self.index + 1} من {len(self.data)}")
         winsound.PlaySound("data/sounds/next_page.wav", 1)
+
     def previous_hadeeth(self):
         if self.index == 0:
             self.index = len(self.data) - 1
@@ -300,6 +317,7 @@ class hadeeth_viewer(qt.QDialog):
         guiTools.speak(str(self.index + 1))
         self.show_hadeeth_number.setText(f"{self.index + 1} من {len(self.data)}")
         winsound.PlaySound("data/sounds/previous_page.wav", 1)
+
     def go_to_hadeeth(self):
         hadeeth, OK = guiTools.QInputDialog.getInt(self, "الذهاب إلى حديث", "أكتب رقم الحديث", self.index + 1, 1, len(self.data))
         if OK:
@@ -307,6 +325,7 @@ class hadeeth_viewer(qt.QDialog):
             self.text.setText(self.data[self.index])
             self.update_font_size()
             self.show_hadeeth_number.setText(f"{self.index + 1} من {len(self.data)}")
+
     def print_text(self):
         try:
             printer = QPrinter()
@@ -315,6 +334,7 @@ class hadeeth_viewer(qt.QDialog):
                 self.text.print(printer)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def save_text_as_txt(self):
         try:
             file_dialog = qt.QFileDialog()
@@ -327,16 +347,20 @@ class hadeeth_viewer(qt.QDialog):
                     file.write(self.text.toPlainText())
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(self.font_size))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -345,6 +369,7 @@ class hadeeth_viewer(qt.QDialog):
         font.setBold(self.font_is_bold)
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
+
     def copy_line(self):
         try:
             cursor = self.text.textCursor()
@@ -354,6 +379,7 @@ class hadeeth_viewer(qt.QDialog):
                 guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def copy_text(self):
         try:
             pyperclip.copy(self.text.toPlainText())
@@ -361,6 +387,7 @@ class hadeeth_viewer(qt.QDialog):
             guiTools.speak("تم نسخ المحتوى بنجاح")
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def onAddBookMark(self):
         name, OK = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب أسم للعلامة المرجعية")
         if OK:
@@ -370,6 +397,7 @@ class hadeeth_viewer(qt.QDialog):
                 return
             functions.bookMarksManager.addNewHadeethBookMark(self.bookName, self.index, name)
             guiTools.speak("تمت إضافة العلامة المرجعية")
+
     def onRemoveBookmark(self):
         try:
             confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل أنت متأكد أنك تريد حذف العلامة المرجعية '{self.nameOfBookmark}'؟", "نعم", "لا")
@@ -378,12 +406,14 @@ class hadeeth_viewer(qt.QDialog):
                 guiTools.speak("تم حذف العلامة المرجعية")
         except:
             guiTools.MessageBox.error(self, "خطأ", "تعذر حذف العلامة المرجعية")
+
     def onAddOrRemoveBookmark(self):
         state, self.nameOfBookmark = functions.bookMarksManager.getAhdeethBookmarkName(self.bookName, self.index)
         if state:
             self.onRemoveBookmark()
         else:
             self.onAddBookMark()
+
     def onDeleteNoteShortcut(self):
         position_data = {"bookName": self.bookName,"hadeethNumber": self.index}
         note_exists = notesManager.getNotesForPosition("ahadeeth", position_data)

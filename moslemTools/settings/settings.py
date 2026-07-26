@@ -5,6 +5,8 @@ from .tabs import audioSettings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from PyQt6.QtCore import Qt
+
+
 class settings(qt.QDialog):
     def __init__(self, p):
         super().__init__(p)
@@ -12,7 +14,7 @@ class settings(qt.QDialog):
         self.center()
         self.setWindowTitle("الإعدادات")
         self.p = p
-        layout = qt.QVBoxLayout()                
+        layout = qt.QVBoxLayout()
         h_layout = qt.QHBoxLayout()
         self.sectian = guiTools.listBook()
         self.sectian.setFocus()
@@ -31,10 +33,10 @@ class settings(qt.QDialog):
         self.ok.setDefault(True)
         self.ok.clicked.connect(self.fok)
         self.ok.setStyleSheet("background-color: #006400; color: #e0e0e0; padding: 12px; font-weight: bold;")
-        self.defolt = guiTools.QPushButton("استعادة الإعدادات الافتراضية")                        
+        self.defolt = guiTools.QPushButton("استعادة الإعدادات الافتراضية")
         self.defolt.clicked.connect(self.default)
         self.defolt.setStyleSheet("background-color: #8B0000; color: #e0e0e0; padding: 12px; font-weight: bold;")
-        self.cancel = guiTools.QPushButton("إلغاء")        
+        self.cancel = guiTools.QPushButton("إلغاء")
         self.cancel.clicked.connect(self.fcancel)
         self.cancel.setStyleSheet("background-color: #333333; color: #e0e0e0; padding: 12px; font-weight: bold;")
         self.layout1 = tabs.Genral(self)
@@ -73,11 +75,13 @@ class settings(qt.QDialog):
         layout.addLayout(buttonsLayout)
         self.setLayout(layout)
         self.sectian.setCurrentRow(0)
+
     def center(self):
         frame_geometry = self.frameGeometry()
         screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
         frame_geometry.moveCenter(screen_center)
         self.move(frame_geometry.topLeft())
+
     def fok(self):
         if self.userNameSettings.use_name_checkbox.isChecked():
             selected_name_type = self.userNameSettings.get_selected_name_type()
@@ -92,8 +96,8 @@ class settings(qt.QDialog):
                     uname = os.getlogin()
                     if uname and uname.lower().strip() not in generic_names:
                         has_os_name = True
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Handled exception: {e}")
                 if not has_os_name:
                     guiTools.MessageBox.view(self, "تنبيه", "تعذر العثور على اسم مستخدم مخصص للجهاز (الاسم الحالي عام أو غير متاح). يرجى تجربة استخدام اسمك الشخصي، أو كتابة اسم مخصص.")
                     return
@@ -106,15 +110,15 @@ class settings(qt.QDialog):
                     buffer = ctypes.create_unicode_buffer(size.value)
                     if GetUserNameExW(NameDisplay, buffer, ctypes.byref(size)) and buffer.value.strip():
                         has_personal_name = True
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Handled exception: {e}")
                 if not has_personal_name:
                     try:
                         uname = os.getlogin()
                         if uname and uname.lower().strip() not in generic_names:
                             has_personal_name = True
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(f"Handled exception: {e}")
                 if not has_personal_name:
                     guiTools.MessageBox.view(self, "تنبيه", "تعذر العثور على اسم شخصي للنظام. يرجى تجربة استخدام اسم المستخدم الخاص بالجهاز، أو كتابة اسم مخصص.")
                     return
@@ -125,7 +129,7 @@ class settings(qt.QDialog):
         original_audio_global = settings_handler.get("audio", "global")
         original_audio_quran_text = settings_handler.get("audio", "quran_text")
         original_audio_quran_audio = settings_handler.get("audio", "quran_audio")
-        original_audio_researcher = settings_handler.get("audio", "researcher")        
+        original_audio_researcher = settings_handler.get("audio", "researcher")
         original_audio_broadcasts = settings_handler.get("audio", "broadcasts")
         original_audio_adhan = settings_handler.get("audio", "adhan")
         original_audio_athkar = settings_handler.get("audio", "athkar")
@@ -146,7 +150,7 @@ class settings(qt.QDialog):
         if (original_audio_global != get_audio_val(self.audioSettings.global_combo.currentText()) or
             original_audio_quran_text != get_audio_val(self.audioSettings.features["quran_text"].currentText()) or
             original_audio_quran_audio != get_audio_val(self.audioSettings.features["quran_audio"].currentText()) or
-            original_audio_researcher != get_audio_val(self.audioSettings.features["researcher"].currentText()) or            
+            original_audio_researcher != get_audio_val(self.audioSettings.features["researcher"].currentText()) or
             original_audio_broadcasts != get_audio_val(self.audioSettings.features["broadcasts"].currentText()) or
             original_audio_adhan != get_audio_val(self.audioSettings.features["adhan"].currentText()) or
             original_audio_athkar != get_audio_val(self.audioSettings.features["athkar"].currentText()) or
@@ -155,7 +159,7 @@ class settings(qt.QDialog):
         settings_handler.set("audio", "global", get_audio_val(self.audioSettings.global_combo.currentText()))
         settings_handler.set("audio", "quran_text", get_audio_val(self.audioSettings.features["quran_text"].currentText()))
         settings_handler.set("audio", "quran_audio", get_audio_val(self.audioSettings.features["quran_audio"].currentText()))
-        settings_handler.set("audio", "researcher", get_audio_val(self.audioSettings.features["researcher"].currentText()))        
+        settings_handler.set("audio", "researcher", get_audio_val(self.audioSettings.features["researcher"].currentText()))
         settings_handler.set("audio", "broadcasts", get_audio_val(self.audioSettings.features["broadcasts"].currentText()))
         settings_handler.set("audio", "adhan", get_audio_val(self.audioSettings.features["adhan"].currentText()))
         settings_handler.set("audio", "athkar", get_audio_val(self.audioSettings.features["athkar"].currentText()))
@@ -185,12 +189,12 @@ class settings(qt.QDialog):
         settings_handler.set("prayerTimes", "iqamaVolume", str(self.prayerTimesSettings.iqamaVolumeSlider.value()))
         try:
             settings_handler.set("tafaseer", "tafaseer", functions.tafseer.tafaseers[self.tafaseerSettings.selectTafaseer.currentText()])
-        except:
-            pass
+        except Exception as e:
+            print(f"Handled exception: {e}")
         try:
             settings_handler.set("translation", "translation", functions.translater.translations[self.tafaseerSettings.selecttranslation.currentText()])
-        except:
-            pass
+        except Exception as e:
+            print(f"Handled exception: {e}")
         settings_handler.set("athkar", "voice", str(self.athkar.voiceSelection.currentIndex()))
         settings_handler.set("athkar", "text", str(self.athkar.textSelection.currentIndex()))
         settings_handler.set("athkar", "playAtStartup", str(self.athkar.playAtStartup.isChecked()))
@@ -239,15 +243,20 @@ class settings(qt.QDialog):
                 self.close()
         else:
             self.close()
+
     def default(self):
         mb = guiTools.QQuestionMessageBox.view(self,"تنبيه","هل تريد إعادة تعيين إعداداتك؟\nإذا قمت بالنقر على إعادة تعيين، سيعيد البرنامج التشغيل لإكمال إعادة التعيين.","إعادة التعيين وإعادة التشغيل","إلغاء")
         if mb==0:
             os.remove(os.path.join(os.getenv('appdata'), app.appName, "settings.ini"))
             os.execl(sys.executable, sys.executable, *sys.argv)
+
     def fcancel(self):
         self.close()
+
     def cbts(self, string):
         return True if string == "True" else False
+
+
 def formatDuration(sectionName: str, keyName: str):
     try:
         value = int(settings_handler.get(sectionName, keyName))

@@ -4,10 +4,14 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 import threading
+
+
 class AhadeethLoader(qt2.QThread):
     data_loaded = qt2.pyqtSignal(list)
+
     def __init__(self):
         super().__init__()
+
     def run(self):
         try:
             book_list = list(functions.ahadeeth.ahadeeths.keys())
@@ -15,9 +19,11 @@ class AhadeethLoader(qt2.QThread):
         except Exception as e:
             print(f"Error loading ahadeeth: {e}")
             self.data_loaded.emit([])
+
+
 class hadeeth(qt.QWidget):
     def __init__(self):
-        super().__init__()                
+        super().__init__()
         font = qt1.QFont()
         font.setBold(True)
         self.setFont(font)
@@ -29,9 +35,9 @@ class hadeeth(qt.QWidget):
         serch=qt.QLabel("البحث عن كتاب حديث")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(serch)
-        self.search_bar=qt.QLineEdit()        
+        self.search_bar=qt.QLineEdit()
         self.search_bar.setPlaceholderText("البحث عن كتاب حديث")
-        self.search_bar.textChanged.connect(self.onsearch)        
+        self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)
         layout.addWidget(self.list_of_ahadeeth)
@@ -48,7 +54,7 @@ class hadeeth(qt.QWidget):
         self.info2=qt.QLabel()
         self.info2.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info2.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info2.setText("يمكنكم تحميل المزيد من تحميل موارد إضافية من الإعدادات")    
+        self.info2.setText("يمكنكم تحميل المزيد من تحميل موارد إضافية من الإعدادات")
         layout.addWidget(self.info2)
         self.list_of_ahadeeth.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.list_of_ahadeeth.setSpacing(3)
@@ -56,6 +62,7 @@ class hadeeth(qt.QWidget):
         qt1.QShortcut("delete",self).activated.connect(self.onDelete)
         self.is_loaded = False
         self.loader_thread = None
+
     def showEvent(self, event):
         super().showEvent(event)
         if not self.is_loaded:
@@ -67,10 +74,12 @@ class hadeeth(qt.QWidget):
                 self.loader_thread.finished.connect(self.loader_thread.deleteLater)
                 self.loader_thread.finished.connect(lambda: setattr(self, 'loader_thread', None))
                 self.loader_thread.start()
+
     def on_data_loaded(self, book_list):
         self.list_of_ahadeeth.clear()
         self.list_of_ahadeeth.addItems(book_list)
         self.is_loaded = True
+
     def onDelete(self):
         selectedItem=self.list_of_ahadeeth.currentItem()
         if selectedItem:
@@ -86,20 +95,24 @@ class hadeeth(qt.QWidget):
                     self.list_of_ahadeeth.clear()
                     self.list_of_ahadeeth.addItems(functions.ahadeeth.ahadeeths.keys())
                     guiTools.speak("تم الحذف")
+
     def open(self):
         gui.hadeeth_viewer(self,functions.ahadeeth.ahadeeths[self.list_of_ahadeeth.currentItem().text()]).exec()
+
     def refresh(self):
         functions.ahadeeth.reload_ahadeeths()
         self.list_of_ahadeeth.clear()
         self.list_of_ahadeeth.addItems(functions.ahadeeth.ahadeeths.keys())
-    def search(self,pattern,text_list):    
-        tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')        
-        normalized_pattern=tashkeel_pattern.sub('', pattern)        
+
+    def search(self,pattern,text_list):
+        tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+        normalized_pattern=tashkeel_pattern.sub('', pattern)
         matches=[
             text for text in text_list
             if normalized_pattern in tashkeel_pattern.sub('', text)
-        ]        
-        return matches        
+        ]
+        return matches
+
     def onsearch(self):
         search_text=self.search_bar.text().lower()
         self.list_of_ahadeeth.clear()

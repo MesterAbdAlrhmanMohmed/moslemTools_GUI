@@ -5,46 +5,85 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 import guiTools, settings, functions
 
+
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
     cancelled = qt2.pyqtSignal()
+    network_error = qt2.pyqtSignal(str)
+
     def __init__(self, url, filepath):
         super().__init__()
         self.url = url
         self.filepath = filepath
         self.is_cancelled = False
-    def run(self):
-        try:
-            response = requests.get(self.url, stream=True)
-            total_size = int(response.headers.get('content-length', 0))
-            downloaded_size = 0
-            with open(self.filepath, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if self.is_cancelled:
-                        self.cancelled.emit()
-                        return
-                    if chunk:
-                        f.write(chunk)
-                        downloaded_size += len(chunk)
-                        if total_size > 0:
-                            progress_percent = int((downloaded_size / total_size) * 100)
-                            self.progress.emit(progress_percent)
-            self.finished.emit()
-        except Exception as e:
-            print(f"Error during download or file writing: {e}")
-            self.cancelled.emit()
+        self.is_paused = False
+
+    def pause(self):
+        self.is_paused = True
+
+    def resume(self):
+        self.is_paused = False
+
     def cancel(self):
         self.is_cancelled = True
 
+    def run(self):
+        while not self.is_cancelled:
+            if self.is_paused:
+                self.msleep(200)
+                continue
+            downloaded_size = os.path.getsize(self.filepath) if os.path.exists(self.filepath) else 0
+            headers = {}
+            if downloaded_size > 0:
+                headers['Range'] = f'bytes={downloaded_size}-'
+            try:
+                response = requests.get(self.url, stream=True, timeout=15, headers=headers)
+                if response.status_code in (200, 206):
+                    content_range = response.headers.get('content-range')
+                    if content_range:
+                        total_size = int(content_range.split('/')[-1])
+                    elif 'content-length' in response.headers:
+                        total_size = downloaded_size + int(response.headers['content-length'])
+                    else:
+                        total_size = 0
+                    mode = 'ab' if (downloaded_size > 0 and response.status_code == 206) else 'wb'
+                    if mode == 'wb':
+                        downloaded_size = 0
+                    with open(self.filepath, mode) as f:
+                        for chunk in response.iter_content(chunk_size=1024):
+                            while self.is_paused and not self.is_cancelled:
+                                self.msleep(200)
+                            if self.is_cancelled:
+                                self.cancelled.emit()
+                                return
+                            if chunk:
+                                f.write(chunk)
+                                downloaded_size += len(chunk)
+                                if total_size > 0:
+                                    progress_percent = int((downloaded_size / total_size) * 100)
+                                    self.progress.emit(progress_percent)
+                    self.finished.emit()
+                    return
+                else:
+                    self.cancelled.emit()
+                    return
+            except (requests.exceptions.RequestException, Exception) as e:
+                print(f"Error during download or file writing: {e}")
+                self.is_paused = True
+                self.network_error.emit("تم انقطاع الاتصال بالإنترنت وتم إيقاف التحميل مؤقتاً. يرجى التأكد من الاتصال ثم الضغط على زر الاستئناف.")
+
+
 class MergeThread(qt2.QThread):
     finished = qt2.pyqtSignal(bool, str)
+
     def __init__(self, ffmpeg_path, input_files, output_file):
         super().__init__()
         self.ffmpeg_path = ffmpeg_path
         self.input_files = input_files
         self.output_file = output_file
         self.process = None
+
     def run(self):
         list_filepath = os.path.join(os.path.dirname(self.output_file), "mergelist.txt")
         try:
@@ -68,13 +107,16 @@ class MergeThread(qt2.QThread):
         finally:
             if os.path.exists(list_filepath):
                 os.remove(list_filepath)
+
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
 
+
 class PreMergeCheckThread(qt2.QThread):
     finished = qt2.pyqtSignal(list, list)
     error = qt2.pyqtSignal(str)
+
     def __init__(self, start_ayah_index, end_ayah_index, quran_text, category, type_index, current_reciter_index, reciters_data):
         super().__init__()
         self.start_ayah_index = start_ayah_index
@@ -84,8 +126,10 @@ class PreMergeCheckThread(qt2.QThread):
         self.type_index = type_index
         self.current_reciter_index = current_reciter_index
         self.reciters_data = reciters_data
+
     def _get_current_reciter_name(self):
         return list(self.reciters_data.keys())[self.current_reciter_index]
+
     def _create_ayah_filename(self, ayah_text):
         try:
             Ayah, surah, _, _, _ = functions.quranJsonControl.getAyah(ayah_text, self.category, self.type_index)
@@ -94,6 +138,7 @@ class PreMergeCheckThread(qt2.QThread):
             return f"{surah_str}{ayah_str}.mp3"
         except:
             return None
+
     def run(self):
         try:
             lines = self.quran_text.split("\n")
@@ -117,15 +162,18 @@ class PreMergeCheckThread(qt2.QThread):
         except Exception as e:
             self.error.emit(f"حدث خطأ أثناء التحضير للعملية: {str(e)}")
 
+
 class SaveThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal(bool, str)
+
     def __init__(self, merge_list, output_dir, numbering=True):
         super().__init__()
         self.merge_list = merge_list
         self.output_dir = output_dir
         self.numbering = numbering
         self.cancelled = False
+
     def run(self):
         total = len(self.merge_list)
         for idx, item in enumerate(self.merge_list):
@@ -170,8 +218,10 @@ class SaveThread(qt2.QThread):
             self.progress.emit(int((idx+1) * 100 / total))
         msg = "تم حفظ الآية بنجاح." if total == 1 else "تم حفظ الآيات بنجاح."
         self.finished.emit(True, msg)
+
     def cancel(self):
         self.cancelled = True
+
 
 class SajdaGoToDialog(qt.QDialog):
     def __init__(self, parent, title, label, items, selected_index):
@@ -202,9 +252,11 @@ class SajdaGoToDialog(qt.QDialog):
         buttons.addWidget(self.go_button)
         buttons.addWidget(self.cancel_button)
         layout.addLayout(buttons)
+
     def on_go(self):
         self.selected_index = self.combo.currentIndex()
         self.accept()
+
 
 class AsbabAlnozoleGoToDialog(qt.QDialog):
     def __init__(self, parent, title, label, items, selected_index):
@@ -235,17 +287,21 @@ class AsbabAlnozoleGoToDialog(qt.QDialog):
         buttons.addWidget(self.go_button)
         buttons.addWidget(self.cancel_button)
         layout.addLayout(buttons)
+
     def on_go(self):
         self.selected_index = self.combo.currentIndex()
         self.accept()
 
+
 class SajdaFinderThread(qt2.QThread):
     finished = qt2.pyqtSignal(list)
+
     def __init__(self, ayah_list, category, category_type):
         super().__init__()
         self.ayah_list = ayah_list
         self.category = category
         self.category_type = category_type
+
     def run(self):
         sajda_verses = []
         for index, ayah_text in enumerate(self.ayah_list):
@@ -258,13 +314,16 @@ class SajdaFinderThread(qt2.QThread):
                 continue
         self.finished.emit(sajda_verses)
 
+
 class AsbabAlnozoleFinderThread(qt2.QThread):
     finished = qt2.pyqtSignal(list)
+
     def __init__(self, ayah_list, category, category_type):
         super().__init__()
         self.ayah_list = ayah_list
         self.category = category
         self.category_type = category_type
+
     def run(self):
         asbab_verses = []
         for index, ayah_text in enumerate(self.ayah_list):
@@ -276,6 +335,7 @@ class AsbabAlnozoleFinderThread(qt2.QThread):
             except:
                 continue
         self.finished.emit(asbab_verses)
+
 
 class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
@@ -289,6 +349,7 @@ class SearchModeDialog(qt.QDialog):
         self.ignore_hamza = ignore_hamza
         self.ignore_symbols = ignore_symbols
         self.init_ui()
+
     def init_ui(self):
         layout = qt.QVBoxLayout(self)
         layout.setSpacing(10)
@@ -326,14 +387,19 @@ class SearchModeDialog(qt.QDialog):
         buttons_layout.addWidget(self.cancel_button)
         buttons_layout.addStretch(1)
         layout.addLayout(buttons_layout)
+
     def _set_ignore_tashkeel(self, state):
         self.ignore_tashkeel = bool(state)
+
     def _set_ignore_hamza(self, state):
         self.ignore_hamza = bool(state)
+
     def _set_ignore_symbols(self, state):
         self.ignore_symbols = bool(state)
+
     def get_settings(self):
         return {"ignore_tashkeel": self.ignore_tashkeel, "ignore_hamza": self.ignore_hamza, "ignore_symbols": self.ignore_symbols}
+
 
 class GoToCategoryDialog(qt.QDialog):
     def __init__(self,parent,title:str,label:str,items:list,selected_index:int):
@@ -363,11 +429,13 @@ class GoToCategoryDialog(qt.QDialog):
         buttons_layout.addWidget(self.ok_button)
         buttons_layout.addWidget(self.cancel_button)
         layout.addLayout(buttons_layout)
+
     def on_ok(self):
         if self.list_widget.currentText():
             self.selected_item=self.list_widget.currentText()
             self.accept()
     @staticmethod
+
     def getItem(parent,title:str,label:str,items:list,selected_index:int):
         dialog=GoToCategoryDialog(parent,title,label,items,selected_index)
         result=dialog.exec()

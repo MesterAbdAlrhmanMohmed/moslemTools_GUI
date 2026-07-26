@@ -1,5 +1,5 @@
 from .genral import Genral
-from .backupAndRestoart import Restoar
+from .backupAndRestore import Restoar, Restore
 from .update import Update
 from .tafaseer import TafaseerSettings
 from .athkarSettings import AthkarSettings
@@ -7,7 +7,7 @@ from .downloadSettings import Download
 from .prayerTimesSettings import PrayerTimesSettings
 from .quranPlayerSettings import QuranPlayerSettings
 from .locationSettings import LocationSettings
-from .font_settings import FontSettings 
+from .font_settings import FontSettings
 from .fanar_settings import FanarSettings
 from .quranSearchSettings import QuranSearchSettings
 from .researcherSearchSettings import ResearcherSearchSettings

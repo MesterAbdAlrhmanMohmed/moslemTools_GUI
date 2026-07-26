@@ -2,6 +2,8 @@ import guiTools,zipfile,subprocess,sys,os, shutil
 from settings import settings_handler
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
+
+
 class GUIForThread(qt.QDialog):
     def __init__(self, p, path, choice):
         super().__init__(p)
@@ -13,52 +15,58 @@ class GUIForThread(qt.QDialog):
                 color: #e0e0e0;
                 font-family: Arial;
             }
-        """)        
+        """)
         self.is_finished = False
-        self.choice = choice        
-        self.setWindowFlags(self.windowFlags() & ~qt2.Qt.WindowType.WindowCloseButtonHint)        
+        self.choice = choice
+        self.setWindowFlags(self.windowFlags() & ~qt2.Qt.WindowType.WindowCloseButtonHint)
         self.thread = Thread(path, choice)
         self.thread.objects.finish.connect(self.onFinished)
         qt2.QThreadPool.globalInstance().start(self.thread)
+
     def onFinished(self, state):
         self.is_finished = True
         if state:
-            if self.choice == 0:                
+            if self.choice == 0:
                 guiTools.MessageBox.view(self, "تم", "تم نسخ الإعدادات بنجاح")
-            else:                                
+            else:
                 mb = guiTools.QQuestionMessageBox.view(self,"تم تحديث الإعدادات","يجب عليك إعادة تشغيل البرنامج لتطبيق التغييرات. هل تريد إعادة التشغيل الآن؟","إعادة التشغيل الآن","إعادة التشغيل لاحقا")
                 if mb == 0:
                     subprocess.Popen([sys.executable] + sys.argv)
                     sys.exit()
         self.accept()
+
     def closeEvent(self, event):
-        if not self.is_finished:            
+        if not self.is_finished:
             if self.choice == 0:
                 message = "لا يمكن إغلاق النافذة حتى يكتمل النسخ."
             else:
-                message = "لا يمكن إغلاق النافذة حتى تكتمل الاستعادة."                        
+                message = "لا يمكن إغلاق النافذة حتى تكتمل الاستعادة."
             guiTools.MessageBox.error(self, "تحذير", message)
             event.ignore()
         else:
             event.accept()
+
     def keyPressEvent(self, event):
         if event.key() == qt2.Qt.Key.Key_Escape:
-            if not self.is_finished:                
+            if not self.is_finished:
                 if self.choice == 0:
                     message = "لا يمكن إلغاء العملية حتى يكتمل النسخ."
                 else:
-                    message = "لا يمكن إلغاء العملية حتى تكتمل الاستعادة."                                
-                guiTools.MessageBox.error(self, "تحذير", message)                
+                    message = "لا يمكن إلغاء العملية حتى تكتمل الاستعادة."
+                guiTools.MessageBox.error(self, "تحذير", message)
             else:
                 super().keyPressEvent(event)
         else:
             super().keyPressEvent(event)
+
+
 class Thread(qt2.QRunnable):
     def __init__(self, path, choice):
         super().__init__()
         self.path = path
         self.choice = choice
         self.objects = Objects()
+
     def run(self):
         try:
             if self.choice == 0:
@@ -78,9 +86,13 @@ class Thread(qt2.QRunnable):
         except Exception as e:
             print(f"An error occurred: {e}")
             self.objects.finish.emit(False)
+
+
 class Objects(qt2.QObject):
     finish = qt2.pyqtSignal(bool)
-class Restoar(qt.QWidget):
+
+
+class Restore(qt.QWidget):
     def __init__(self, p):
         super().__init__()
         self.setStyleSheet("""
@@ -114,11 +126,17 @@ class Restoar(qt.QWidget):
         self.restoar.clicked.connect(self.onrestoar)
         layout.addStretch()
         self.p = p
+
     def onbackup(self):
         path = qt.QFileDialog.getExistingDirectory(self, "اختر مجلد الحفظ")
         if path:
             GUIForThread(self, path, 0).exec()
+
     def onrestoar(self):
         path, _ = qt.QFileDialog.getOpenFileName(self, "اختر ملف الاستعادة", "", "Zip Files (*.zip)")
         if path:
             GUIForThread(self, path, 1).exec()
+
+
+class Restoar(Restore):
+    pass

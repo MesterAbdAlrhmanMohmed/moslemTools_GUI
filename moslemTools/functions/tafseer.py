@@ -1,6 +1,8 @@
 import os,settings
 import ujson as json
 _tafaseers=None
+
+
 def load_tafaseers():
     global _tafaseers
     if _tafaseers is None:
@@ -10,15 +12,21 @@ def load_tafaseers():
         for value in values:
             if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"tafaseer",value)):
                 del _tafaseers[getTafaseerByIndex(value)]
+
+
 def reload_tafaseers():
     global _tafaseers
     _tafaseers = None
     load_tafaseers()
+
+
 def __getattr__(name):
     if name == "tafaseers":
         load_tafaseers()
         return _tafaseers
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+
 def getTafaseerByIndex(index:str):
     load_tafaseers()
     try:
@@ -28,6 +36,8 @@ def getTafaseerByIndex(index:str):
         return rtafaseers[index]
     except:
         return ""
+
+
 def getTafaseer(tafaseerName:str,From:int,to:int):
     load_tafaseers()
     import functions.quranJsonControl

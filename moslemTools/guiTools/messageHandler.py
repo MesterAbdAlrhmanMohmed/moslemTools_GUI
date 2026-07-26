@@ -1,6 +1,8 @@
 import json,requests,os,time
 from settings import settings_handler
 from .textViewer import TextViewer
+
+
 def check(p):
     try:
         r=requests.get("https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/main/message.json", params={'t': int(time.time())}, timeout=10)

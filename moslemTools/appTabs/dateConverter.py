@@ -3,6 +3,8 @@ from settings import *
 from hijridate import Gregorian, Hijri
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
+
+
 class DateConverter(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -59,11 +61,11 @@ class DateConverter(qt.QWidget):
             QPushButton#convertButton:pressed {
                 background-color: #006600;
             }
-        """)        
+        """)
         content_layout = qt.QVBoxLayout()
         content_layout.setContentsMargins(20, 20, 20, 20)
         content_layout.setSpacing(15)
-        content_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignTop)        
+        content_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignTop)
         content_layout.addStretch(1)
         conv_layout = qt.QHBoxLayout()
         conv_layout.setSpacing(10)
@@ -77,7 +79,7 @@ class DateConverter(qt.QWidget):
         conv_layout.addWidget(self.Converter_combo)
         conv_layout.addWidget(self.l_Converter)
         conv_layout.addStretch(1)
-        content_layout.addLayout(conv_layout)        
+        content_layout.addLayout(conv_layout)
         year_layout = qt.QHBoxLayout()
         year_layout.setSpacing(10)
         self.l_year = qt.QLabel("العام")
@@ -108,76 +110,82 @@ class DateConverter(qt.QWidget):
         self.day.textChanged.connect(self.max_number)
         day_layout.addWidget(self.day, 2)
         day_layout.addWidget(self.l_day, 1)
-        content_layout.addLayout(day_layout)                
+        content_layout.addLayout(day_layout)
         result_controls_layout = qt.QHBoxLayout()
-        result_controls_layout.setSpacing(10)        
+        result_controls_layout.setSpacing(10)
         self.Convert = guiTools.QPushButton("التحويل إلى ميلادي")
-        self.Convert.setObjectName("convertButton")        
-        self.Convert.clicked.connect(self.convert_date)        
+        self.Convert.setObjectName("convertButton")
+        self.Convert.clicked.connect(self.convert_date)
         self.l_result = qt.QLabel("النتيجة")
-        self.l_result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)                
+        self.l_result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         result_area_layout = qt.QVBoxLayout()
-        result_area_layout.setSpacing(20)         
+        result_area_layout.setSpacing(20)
         self.result = qt.QLabel()
         self.result.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        result_area_layout.addWidget(self.result)                
+        result_area_layout.addWidget(self.result)
         self.clear_result = guiTools.QPushButton("حذف النتيجة")
         self.clear_result.setStyleSheet("background-color: #8B0000; color: white;")
         self.clear_result.clicked.connect(self.clear_action)
-        self.clear_result.setFixedWidth(180) 
+        self.clear_result.setFixedWidth(180)
         self.clear_result.setEnabled(False)
-        self.clear_result.setVisible(False)                 
+        self.clear_result.setVisible(False)
         clear_button_layout = qt.QHBoxLayout()
         clear_button_layout.addStretch()
         clear_button_layout.addWidget(self.clear_result)
         clear_button_layout.addStretch()
-        result_area_layout.addLayout(clear_button_layout)        
+        result_area_layout.addLayout(clear_button_layout)
         self.copy_result = guiTools.QPushButton("نسخ النتيجة")
-        self.copy_result.setObjectName("copyButton")    
+        self.copy_result.setObjectName("copyButton")
         self.copy_result.clicked.connect(self.copy)
-        self.copy_result.setEnabled(False)        
+        self.copy_result.setEnabled(False)
         result_controls_layout.addWidget(self.Convert)
         result_controls_layout.addWidget(self.l_result)
         result_controls_layout.addLayout(result_area_layout, 1)
-        result_controls_layout.addWidget(self.copy_result)        
-        content_layout.addLayout(result_controls_layout)        
-        content_layout.addStretch(1)                
+        result_controls_layout.addWidget(self.copy_result)
+        content_layout.addLayout(result_controls_layout)
+        content_layout.addStretch(1)
         main_layout = qt.QHBoxLayout()
         main_layout.setContentsMargins(150, 20, 150, 20)
-        main_layout.addLayout(content_layout)    
-        self.setLayout(main_layout)                
-        self.update_month_combo()        
+        main_layout.addLayout(content_layout)
+        self.setLayout(main_layout)
+        self.update_month_combo()
         self.year.textChanged.connect(self._reset_result_state)
         self.day.textChanged.connect(self._reset_result_state)
         self.month_combo.currentIndexChanged.connect(self._reset_result_state)
         self.Converter_combo.currentIndexChanged.connect(self._reset_result_state)
         self.Converter_combo.currentIndexChanged.connect(self.update_month_combo)
-        self.Converter_combo.currentIndexChanged.connect(self.update_button_text)    
+        self.Converter_combo.currentIndexChanged.connect(self.update_button_text)
+
     def clear_action(self):
         self._reset_result_state()
         self.Converter_combo.setFocus()
+
     def _reset_result_state(self):
         self.result.clear()
         self.copy_result.setEnabled(False)
         self.clear_result.setEnabled(False)
-        self.clear_result.setVisible(False)     
+        self.clear_result.setVisible(False)
+
     def max_number(self):
         try:
             if int(self.day.text()) > 31:
                 self.day.setText("31")
         except (ValueError, TypeError):
-            pass                    
+            pass
+
     def copy(self):
         if self.result.text():
             pyperclip.copy(self.result.text())
             winsound.Beep(1000, 100)
-            guiTools.speak("تم نسخ النتيجة")            
+            guiTools.speak("تم نسخ النتيجة")
+
     def update_button_text(self):
         if self.Converter_combo.currentIndex() == 0:
             self.Convert.setText("التحويل إلى ميلادي")
         else:
-            self.Convert.setText("التحويل إلى هجري")                        
+            self.Convert.setText("التحويل إلى هجري")
+
     def update_month_combo(self):
         self.month_combo.clear()
         if self.Converter_combo.currentIndex() == 0:
@@ -192,13 +200,14 @@ class DateConverter(qt.QWidget):
                 "مايو", "يونيو", "يوليو", "أغسطس",
                 "سِبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
             ]
-        self.month_combo.addItems(months)            
+        self.month_combo.addItems(months)
+
     def convert_date(self):
         days_of_week = [
             "الإثنين", "الثلثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"
         ]
         year_text = self.year.text()
-        day_text = self.day.text()        
+        day_text = self.day.text()
         if not (year_text.isdigit() and day_text.isdigit()):
             self._reset_result_state()
             self.result.setText("الرجاء إدخال أرقام صحيحة.")
@@ -206,12 +215,12 @@ class DateConverter(qt.QWidget):
             return
         year = int(year_text)
         day = int(day_text)
-        month = self.month_combo.currentIndex() + 1    
+        month = self.month_combo.currentIndex() + 1
         if not (year > 0 and day > 0):
             self._reset_result_state()
             self.result.setText("الرجاء إدخال أرقام موجبة.")
             self.result.setFocus()
-            return            
+            return
         try:
             if self.Converter_combo.currentIndex() == 0:
                 if year < 1:
@@ -234,14 +243,16 @@ class DateConverter(qt.QWidget):
             if isinstance(e, ValueError):
                 error_message = str(e)
             self.result.setText(error_message)
-            self.result.setFocus()            
+            self.result.setFocus()
+
     def get_gregorian_month_name(self, month):
         months = [
             "يَنايِر", "فَبرايِر", "مارِس", "أبريل",
             "مايو", "يونيو", "يوليو", "أغسطس",
             "سِبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
         ]
-        return months[month - 1]            
+        return months[month - 1]
+
     def get_hijri_month_name(self, month):
         months = [
             "مُحرَّم", "صَفَر", "رَبيع الأوَّل", "رَبيع الآخِر",

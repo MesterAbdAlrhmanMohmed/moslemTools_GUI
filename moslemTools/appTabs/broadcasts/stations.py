@@ -8,20 +8,25 @@ global_player = None
 global_audio_output = None
 global_current_url = None
 
+
 def get_global_player():
     return global_player
+
 
 def get_global_audio_output():
     return global_audio_output
 
+
 def get_global_current_url():
     return global_current_url
+
 
 def set_globals(player, output, url):
     global global_player, global_audio_output, global_current_url
     global_player = player
     global_audio_output = output
     global_current_url = url
+
 
 class other_brotcasts(qt.QWidget):
     def __init__(self, audio_output_instance, parent_widget):
@@ -70,6 +75,7 @@ class other_brotcasts(qt.QWidget):
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_other)
         self.volume_down_shortcut.activated.connect(self.decrease_volume)
+
     def play(self):
         global global_current_url, global_player
         selected_item = self.list_of_other.currentItem()
@@ -115,6 +121,7 @@ class other_brotcasts(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
+
     def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -124,6 +131,7 @@ class other_brotcasts(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
     def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -133,6 +141,7 @@ class other_brotcasts(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
 
 class brotcasts_of_suplications(qt.QWidget):
     def __init__(self, audio_output_instance, parent_widget):
@@ -154,6 +163,7 @@ class brotcasts_of_suplications(qt.QWidget):
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_adhkar)
         self.volume_down_shortcut.activated.connect(self.decrease_volume)
+
     def play(self):
         global global_current_url, global_player
         selected_item = self.list_of_adhkar.currentItem()
@@ -172,6 +182,7 @@ class brotcasts_of_suplications(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
+
     def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -181,6 +192,7 @@ class brotcasts_of_suplications(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
     def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -190,6 +202,7 @@ class brotcasts_of_suplications(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
 
 class brotcasts_of_tafseer(qt.QWidget):
     def __init__(self, audio_output_instance, parent_widget):
@@ -213,6 +226,7 @@ class brotcasts_of_tafseer(qt.QWidget):
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_tafseer)
         self.volume_down_shortcut.activated.connect(self.decrease_volume)
+
     def play(self):
         global global_current_url, global_player
         selected_item = self.list_of_tafseer.currentItem()
@@ -233,6 +247,7 @@ class brotcasts_of_tafseer(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
+
     def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -242,6 +257,7 @@ class brotcasts_of_tafseer(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
     def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -251,6 +267,7 @@ class brotcasts_of_tafseer(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
 
 class brotcasts_of_reciters(qt.QWidget):
     def __init__(self, audio_output_instance, parent_widget):
@@ -300,6 +317,7 @@ class brotcasts_of_reciters(qt.QWidget):
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_reciters)
         self.volume_down_shortcut.activated.connect(self.decrease_volume)
+
     def play(self):
         global global_current_url, global_player
         selected_item = self.list_of_reciters.currentItem()
@@ -346,6 +364,7 @@ class brotcasts_of_reciters(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
+
     def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -355,6 +374,7 @@ class brotcasts_of_reciters(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
     def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -364,6 +384,7 @@ class brotcasts_of_reciters(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
 
 class quran_brotcast(qt.QWidget):
     def __init__(self, audio_output_instance, parent_widget):
@@ -392,6 +413,7 @@ class quran_brotcast(qt.QWidget):
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_quran_brotcasts)
         self.volume_down_shortcut.activated.connect(self.decrease_volume)
+
     def play(self):
         global global_current_url, global_player
         selected_item = self.list_of_quran_brotcasts.currentItem()
@@ -417,6 +439,7 @@ class quran_brotcast(qt.QWidget):
                 global_player.setSource(url_to_play)
                 global_player.play()
                 global_current_url = url_to_play
+
     def increase_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
@@ -426,6 +449,7 @@ class quran_brotcast(qt.QWidget):
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
             self.parent_widget.volume_timer.start(1000)
+
     def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()

@@ -5,21 +5,26 @@ import PyQt6.QtCore as qt2
 from collections import defaultdict
 from guiTools.QListWidget import QListWidget
 from gui.islamicTopicViewer import IslamicTopicViewer
+
+
 class IslamicTopicsTab(qt.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.DATA_PATH = os.path.join("data", "json", "IslamicTopics")
         self.is_loaded = False
+
     def showEvent(self, event):
         if not self.is_loaded:
             self.initUI()
             self.is_loaded = True
         super().showEvent(event)
+
     def search(self, pattern, text_list):
         tashkeel_pattern = re.compile(r'[^\u0621-\u063A\u0641-\u064A\s]+')
         normalized_pattern = tashkeel_pattern.sub('', pattern)
         matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text)]
         return matches
+
     def initUI(self):
         self.tabs = qt.QTabWidget()
         self.tabs.setStyleSheet("""
@@ -56,6 +61,7 @@ class IslamicTopicsTab(qt.QWidget):
         main_layout = qt.QVBoxLayout(self)
         main_layout.addWidget(self.tabs)
         self.setLayout(main_layout)
+
     def load_json_data(self, file_path):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -63,6 +69,7 @@ class IslamicTopicsTab(qt.QWidget):
         except (IOError, json.JSONDecodeError) as e:
             print(f"Error loading {file_path}: {e}")
             return None
+
     def create_islamiyat_tab(self):
         widget = qt.QWidget()
         main_layout = qt.QVBoxLayout(widget)
@@ -107,7 +114,7 @@ class IslamicTopicsTab(qt.QWidget):
         for filename in files_order:
             base_name = os.path.splitext(filename)[0]
             main_list.addItem(base_name)
-            file_mapping[base_name] = os.path.join(islamiyat_path, filename)    
+            file_mapping[base_name] = os.path.join(islamiyat_path, filename)
         def filter_sub():
             search_text = sub_search.text()
             if not hasattr(sub_list, 'original_items'): return
@@ -116,7 +123,7 @@ class IslamicTopicsTab(qt.QWidget):
                 sub_list.addItems(sub_list.original_items)
             else:
                 results = self.search(search_text, sub_list.original_items)
-                sub_list.addItems(results)        
+                sub_list.addItems(results)
         def main_list_changed(current, previous):
             if not current:
                 sub_list.clear()
@@ -127,7 +134,7 @@ class IslamicTopicsTab(qt.QWidget):
             if not file_path:
                 sub_list.clear()
                 sub_search.hide()
-                return            
+                return
             sub_list.file_path = file_path
             if item_text in ["فرص ذهبية"]:
                 sub_list.clear()
@@ -159,7 +166,7 @@ class IslamicTopicsTab(qt.QWidget):
                     sub_list.addItem(str(number))
                     sub_list.mapping[str(number)] = label
                     sub_list.original_items.append(str(number))
-            sub_search.show()        
+            sub_search.show()
         def main_list_activated(item):
             if not item: return
             item_text = item.text()
@@ -189,7 +196,7 @@ class IslamicTopicsTab(qt.QWidget):
                     topic_title = f'{hint} (تكرار: {number})'
                     all_topics[topic_title] = "\n\n".join(texts)
             else:
-                all_topics = {d.get("number", ""): d.get("label", "") for d in data}            
+                all_topics = {d.get("number", ""): d.get("label", "") for d in data}
             content = all_topics.get(title)
             relative_path = os.path.relpath(file_path, self.DATA_PATH).replace('\\', '/')
             if content:
@@ -206,6 +213,7 @@ class IslamicTopicsTab(qt.QWidget):
         sub_search.hide()
         main_list.setFocus()
         return widget
+
     def create_hajj_tab(self):
         widget = qt.QWidget()
         layout = qt.QVBoxLayout(widget)
@@ -230,7 +238,7 @@ class IslamicTopicsTab(qt.QWidget):
                     base_name = os.path.splitext(filename)[0]
                     list_widget.addItem(base_name)
                     file_mapping[base_name] = os.path.join(hajj_path, filename)
-                    all_items.append(base_name)    
+                    all_items.append(base_name)
         def filter_list():
             search_text = search_edit.text()
             list_widget.clear()
@@ -247,10 +255,10 @@ class IslamicTopicsTab(qt.QWidget):
                 data = self.load_json_data(file_path)
                 if data:
                     all_topics = {entry.get("title", f"بند {i+1}"): f"{entry.get('title', '')}\n\n{entry.get('text', '')}" for i, entry in enumerate(data)}
-                    if not all_topics: return                    
+                    if not all_topics: return
                     first_title = list(all_topics.keys())[0]
                     first_content = all_topics[first_title]
-                    relative_path = os.path.relpath(file_path, self.DATA_PATH).replace('\\', '/')                    
+                    relative_path = os.path.relpath(file_path, self.DATA_PATH).replace('\\', '/')
                     viewer = IslamicTopicViewer(widget, relative_path, first_title, first_content, all_topics)
                     viewer.exec()
         search_edit.textChanged.connect(filter_list)
@@ -259,6 +267,7 @@ class IslamicTopicsTab(qt.QWidget):
         list_widget.setFocus()
         widget.setTabOrder(search_edit, list_widget)
         return widget
+
     def create_seerah_tab(self):
         files = [
             "نبذة عن حياة الرسول صلى الله عليه وسلم.json",
@@ -267,10 +276,12 @@ class IslamicTopicsTab(qt.QWidget):
             "غزوات الرسول صلى الله عليه وسلم.json"
         ]
         return self._create_complex_list_tab("السيرة النبوية", files)
+
     def create_ramadan_tab(self):
         ramadan_path = os.path.join(self.DATA_PATH, "رمضان")
         files = sorted([f for f in os.listdir(ramadan_path) if f.endswith('.json')]) if os.path.exists(ramadan_path) else []
         return self._create_complex_list_tab("رمضان", files)
+
     def _create_complex_list_tab(self, dir_name, file_order):
         widget = qt.QWidget()
         main_layout = qt.QVBoxLayout(widget)
@@ -309,7 +320,7 @@ class IslamicTopicsTab(qt.QWidget):
         for filename in file_order:
             base_name = os.path.splitext(filename)[0]
             main_list.addItem(base_name)
-            file_mapping[base_name] = os.path.join(base_path, filename)    
+            file_mapping[base_name] = os.path.join(base_path, filename)
         def show_sublist(current, previous):
             if not current:
                 sub_list.clear()
@@ -320,12 +331,12 @@ class IslamicTopicsTab(qt.QWidget):
             if not file_path:
                 sub_list.clear()
                 sub_search.hide()
-                return        
+                return
             data = self.load_json_data(file_path)
             if not data:
                 sub_list.clear()
                 sub_search.hide()
-                return            
+                return
             sub_list.clear()
             sub_list.file_path = file_path
             sub_list.mapping = {}
@@ -348,12 +359,12 @@ class IslamicTopicsTab(qt.QWidget):
             if not item: return
             title = item.text()
             file_path = getattr(sub_list, 'file_path', None)
-            if not file_path: return            
+            if not file_path: return
             data = self.load_json_data(file_path)
-            if not data: return            
+            if not data: return
             all_topics = {entry.get("number", ""): entry.get("label", "") for entry in data}
             content = all_topics.get(title)
-            relative_path = os.path.relpath(file_path, self.DATA_PATH).replace('\\', '/')            
+            relative_path = os.path.relpath(file_path, self.DATA_PATH).replace('\\', '/')
             if content:
                 viewer = IslamicTopicViewer(widget, relative_path, title, content, all_topics)
                 viewer.exec()
@@ -366,6 +377,7 @@ class IslamicTopicsTab(qt.QWidget):
         sub_search.hide()
         main_list.setFocus()
         return widget
+
     def create_ad3yah_tab(self):
         widget = qt.QWidget()
         main_layout = qt.QVBoxLayout(widget)
@@ -409,7 +421,7 @@ class IslamicTopicsTab(qt.QWidget):
                 main_list.addItem(base_name)
                 file_mapping[base_name] = {"type": "file", "path": os.path.join(ad3yah_path, filename)}
         main_list.addItem(masael_folder_name)
-        file_mapping[masael_folder_name] = {"type": "folder", "path": masael_path}        
+        file_mapping[masael_folder_name] = {"type": "folder", "path": masael_path}
         def main_list_changed(current, previous):
             if not current:
                 sub_list.clear()
@@ -438,7 +450,7 @@ class IslamicTopicsTab(qt.QWidget):
                     sub_search.hide()
             else:
                 sub_list.addItem("انقر نقراً مزدوجاً أو اضغط Enter لعرض المحتوى")
-                sub_search.hide()    
+                sub_search.hide()
         def filter_sub():
             search_text = sub_search.text()
             if not hasattr(sub_list, 'original_items'): return
@@ -447,7 +459,7 @@ class IslamicTopicsTab(qt.QWidget):
                 sub_list.addItems(sub_list.original_items)
             else:
                 results = self.search(search_text, sub_list.original_items)
-                sub_list.addItems(results)        
+                sub_list.addItems(results)
         def main_list_activated(item):
             if not item: return
             info = file_mapping.get(item.text())

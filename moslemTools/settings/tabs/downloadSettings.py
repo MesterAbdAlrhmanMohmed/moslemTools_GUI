@@ -2,6 +2,8 @@ import guiTools, gui
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+
+
 class Download(qt.QDialog):
     def __init__(self):
         super().__init__()
@@ -20,6 +22,7 @@ class Download(qt.QDialog):
         self.adminstration.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.types)
         layout.addWidget(self.adminstration)
+
     def onItemClicked(self):
         index = self.types.currentRow()
         if index == 0:
@@ -34,6 +37,7 @@ class Download(qt.QDialog):
             self.show_dialog(gui.download.SelectAthkar, ())
         elif index == 5:
             self.show_dialog(gui.download.SelectItem, ("all_islamic_books.json", "islamicBooks"))
+
     def show_dialog(self, dialog_class, args):
         if args:
             dialog = dialog_class(self, *args)

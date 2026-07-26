@@ -3,6 +3,7 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from .. import settings_handler
 
+
 class FontSettings(qt.QWidget):
     VIEWERS = [
         ("quranViewer", "عارض القرآن الكريم"),

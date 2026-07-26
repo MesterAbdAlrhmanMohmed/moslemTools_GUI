@@ -3,6 +3,8 @@ from settings import *
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+
+
 class AboutDeveloper(qt.QDialog):
     def __init__(self):
         super().__init__()
@@ -42,6 +44,7 @@ class AboutDeveloper(qt.QDialog):
         main_layout.addWidget(self.info, 4)
         main_layout.addLayout(labels_layout, 3)
         self.setLayout(main_layout)
+
     def open_link(self):
         current_item = self.info.currentItem()
         if current_item:
@@ -56,6 +59,7 @@ class AboutDeveloper(qt.QDialog):
                 webbrowser.open("https://github.com/MesterAbdAlrhmanMohmed")
             elif text == "حسابي على Facebook":
                 webbrowser.open("https://www.facebook.com/abd.alrhman.mohamed.alcoder?mibextid=ZbWKwL")
+
     def center(self):
         frame_geometry = self.frameGeometry()
         screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()

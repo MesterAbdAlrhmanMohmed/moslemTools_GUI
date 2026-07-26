@@ -1,5 +1,7 @@
 from .bookViewer import book_viewer
 import PyQt6.QtWidgets as qt
+
+
 class PartSelection (qt.QDialog):
     def __init__(self,p,bookName:str,content:dict):
         super().__init__(p)
@@ -13,6 +15,7 @@ class PartSelection (qt.QDialog):
         self.parts.addItems(content)
         self.parts.itemActivated.connect(self.openPart)
         layout.addWidget(self.parts)
+
     def openPart(self):
         partName=self.parts.currentItem().text()
         partContent=self.content[partName]

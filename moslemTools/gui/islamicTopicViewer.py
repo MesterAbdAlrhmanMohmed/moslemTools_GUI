@@ -5,6 +5,8 @@ import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
+
+
 class IslamicTopicViewer(qt.QDialog):
     def __init__(self, p, file_path: str, title: str, content: str, all_topics: dict, index: int = 0):
         super().__init__(p)
@@ -71,6 +73,7 @@ class IslamicTopicViewer(qt.QDialog):
             for _ in range(index):
                 cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
             self.text.setTextCursor(cursor)
+
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
         boldFont = menu.font()
@@ -131,26 +134,32 @@ class IslamicTopicViewer(qt.QDialog):
             add_bookmark_action.setShortcut("ctrl+b")
             add_bookmark_action.triggered.connect(self.onAddBookMark)
         menu.exec(qt1.QCursor.pos())
+
     def getCurrentLine(self):
         return self.text.textCursor().blockNumber()
+
     def get_position_data(self):
         return {"file": self.file_path, "title": self.current_title, "line": self.getCurrentLine()}
+
     def onAddNote(self, position_data):
         dialog = note_dialog.NoteDialog(self, mode="add")
         dialog.saved.connect(lambda old, new, content: self.saveNote(position_data, new, content))
         dialog.exec()
+
     def onEditNote(self, position_data, note_name):
         note = notesManager.getNoteByName("islamicTopics", note_name)
         if note:
             dialog = note_dialog.NoteDialog(self, title=note["name"], content=note["content"], mode="edit", old_name=note["name"])
             dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
             dialog.exec()
+
     def saveNote(self, position_data, name, content):
         if notesManager.getNoteByName("islamicTopics", name) is not None:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل.")
             return
         notesManager.addNewNote("islamicTopics", {"name": name, "content": content, "position_data": position_data})
         guiTools.speak("تمت إضافة الملاحظة")
+
     def updateNote(self, position_data, old_name, new_name, new_content):
         if old_name != new_name and notesManager.getNoteByName("islamicTopics", new_name) is not None:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "اسم الملاحظة الجديد موجود بالفعل.")
@@ -160,6 +169,7 @@ class IslamicTopicViewer(qt.QDialog):
             guiTools.speak("تم تحديث الملاحظة")
         else:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل تحديث الملاحظة.")
+
     def onAddOrRemoveNote(self):
         position_data = self.get_position_data()
         note = notesManager.getNotesForPosition("islamicTopics", position_data)
@@ -167,6 +177,7 @@ class IslamicTopicViewer(qt.QDialog):
             self.onEditNote(position_data, note["name"])
         else:
             self.onAddNote(position_data)
+
     def onViewNote(self):
         position_data = self.get_position_data()
         note = notesManager.getNotesForPosition("islamicTopics", position_data)
@@ -174,12 +185,14 @@ class IslamicTopicViewer(qt.QDialog):
             self.onNoteAction(position_data)
         else:
             guiTools.speak("لا توجد ملاحظة لهذا الموضوع")
+
     def onNoteAction(self, position_data):
         note = notesManager.getNotesForPosition("islamicTopics", position_data)
         if note:
             dialog = note_dialog.NoteDialog(self, title=note["name"], content=note["content"], mode="view", old_name=note["name"])
             dialog.edit_requested.connect(lambda note_name: self.onEditNote(position_data, note_name))
             dialog.exec()
+
     def onDeleteNote(self, position_data):
         note = notesManager.getNotesForPosition("islamicTopics", position_data)
         if note:
@@ -187,12 +200,14 @@ class IslamicTopicViewer(qt.QDialog):
             if confirm == 0:
                 notesManager.removeNote("islamicTopics", note["name"])
                 guiTools.speak("تم حذف الملاحظة")
+
     def onDeleteNoteShortcut(self):
         position_data = self.get_position_data()
         if notesManager.getNotesForPosition("islamicTopics", position_data):
             self.onDeleteNote(position_data)
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
+
     def onAddBookMark(self):
         name, OK = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب اسماً للعلامة المرجعية:")
         if OK and name:
@@ -201,23 +216,28 @@ class IslamicTopicViewer(qt.QDialog):
                 return
             functions.bookMarksManager.addNewIslamicTopicBookMark(self.file_path, self.current_title, self.getCurrentLine(), name)
             guiTools.speak("تمت إضافة العلامة المرجعية")
+
     def onRemoveBookmark(self, bookmark_name):
         confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل تريد حذف العلامة المرجعية '{bookmark_name}'؟", "نعم", "لا")
         if confirm == 0:
             functions.bookMarksManager.removeIslamicTopicBookMark(bookmark_name)
             guiTools.speak("تم حذف العلامة المرجعية")
+
     def onAddOrRemoveBookmark(self):
         state, bookmark_name = functions.bookMarksManager.getIslamicTopicBookmarkName(self.file_path, self.current_title, self.getCurrentLine())
         if state:
             self.onRemoveBookmark(bookmark_name)
         else:
             self.onAddBookMark()
+
     def onNext(self):
         self.currentIndex = (self.currentIndex + 1) % len(self.topic_titles)
         self.update_topic()
+
     def onPrevious(self):
         self.currentIndex = (self.currentIndex - 1 + len(self.topic_titles)) % len(self.topic_titles)
         self.update_topic()
+
     def update_topic(self):
         self.current_title = self.topic_titles[self.currentIndex]
         content = self.all_topics[self.current_title]
@@ -226,10 +246,12 @@ class IslamicTopicViewer(qt.QDialog):
         self.info.setText(self.current_title)
         winsound.PlaySound("data/sounds/next_page.wav", winsound.SND_ASYNC)
         guiTools.speak(self.current_title)
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(value))
+
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -242,22 +264,27 @@ class IslamicTopicViewer(qt.QDialog):
             self.show_font.blockSignals(True)
             self.show_font.setValue(self.font_size)
             self.show_font.blockSignals(False)
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def copy_text(self):
         pyperclip.copy(self.text.toPlainText())
         winsound.Beep(1000, 100)
         guiTools.speak("تم نسخ كل المحتوى")
+
     def copy_current_selection(self):
         cursor = self.text.textCursor()
         if cursor.hasSelection():
             pyperclip.copy(cursor.selectedText())
             winsound.Beep(1000, 100)
             guiTools.speak("تم نسخ النص المحدد")
+
     def save_text_as_txt(self):
         file_name, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف", "", "Text Files (*.txt);;All Files (*)")
         if file_name:
@@ -267,6 +294,7 @@ class IslamicTopicViewer(qt.QDialog):
                 guiTools.speak("تم حفظ الملف")
             except Exception as e:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"لم يتم حفظ الملف: {e}")
+
     def print_text(self):
         printer = QPrinter()
         dialog = QPrintDialog(printer, self)

@@ -4,10 +4,12 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6.QtCore import QTimer
+
+
 class TafaseerViewer(qt.QDialog):
     def __init__(self, p, From, to):
         super().__init__(p)
-        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)        
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
@@ -27,7 +29,7 @@ class TafaseerViewer(qt.QDialog):
         self.resize(1200, 600)
         self.text = guiTools.QReadOnlyTextEdit(viewer_name="tafaseerViewer")
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.text.customContextMenuRequested.connect(self.OnContextMenu)        
+        self.text.customContextMenuRequested.connect(self.OnContextMenu)
         layout = qt.QVBoxLayout(self)
         self.permanent_stabilizer_bar = qt.QWidget()
         self.permanent_stabilizer_bar.setFixedHeight(0)
@@ -44,11 +46,11 @@ class TafaseerViewer(qt.QDialog):
         self.changeTafaseer.setStyleSheet("background-color: #0000AA; color: white;")
         self.changeTafaseer.clicked.connect(self.on_change_tafaseer)
         self.changeTafaseer.setFixedSize(150,40)
-        bottomLayout.addWidget(self.changeTafaseer)        
+        bottomLayout.addWidget(self.changeTafaseer)
         fontLayout = qt.QVBoxLayout()
         self.font_laybol = qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        fontLayout.addWidget(self.font_laybol)        
+        fontLayout.addWidget(self.font_laybol)
         self.show_font = qt.QSpinBox()
         self.show_font.setRange(1, 100)
         self.show_font.setValue(self.font_size)
@@ -56,13 +58,14 @@ class TafaseerViewer(qt.QDialog):
         self.show_font.setAccessibleDescription("حجم النص")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.valueChanged.connect(self.font_size_changed)
-        fontLayout.addWidget(self.show_font)        
-        bottomLayout.addLayout(fontLayout)                
-        self.warning_label = qt.QLabel("تنبيه: إذا غيرت التفسير ولم يظهر النص، اختر نفس التفسير مرة أخرى.")                
-        self.warning_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)                
-        bottomLayout.addWidget(self.warning_label, 0, qt2.Qt.AlignmentFlag.AlignCenter)         
+        fontLayout.addWidget(self.show_font)
+        bottomLayout.addLayout(fontLayout)
+        self.warning_label = qt.QLabel("تنبيه: إذا غيرت التفسير ولم يظهر النص، اختر نفس التفسير مرة أخرى.")
+        self.warning_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        bottomLayout.addWidget(self.warning_label, 0, qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addLayout(bottomLayout)
         self.getResult()
+
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
         menu.setAccessibleName("الخيارات")
@@ -89,12 +92,13 @@ class TafaseerViewer(qt.QDialog):
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
         menu.addMenu(fontMenu)
         menu.exec(qt1.QCursor.pos())
+
     def on_change_tafaseer(self):
         menu = qt.QMenu("اختر تفسير", self)
         menu.setAccessibleName("اختر تفسير")
         action_group = qt1.QActionGroup(self)
         action_group.setExclusive(True)
-        current_tafaseer_name = functions.tafseer.getTafaseerByIndex(self.index)                
+        current_tafaseer_name = functions.tafseer.getTafaseerByIndex(self.index)
         all_tafseers = list(functions.tafseer.tafaseers.keys())
         if current_tafaseer_name in all_tafseers:
             all_tafseers.remove(current_tafaseer_name)
@@ -103,17 +107,19 @@ class TafaseerViewer(qt.QDialog):
             action = qt1.QAction(name, self)
             action.setCheckable(True)
             if name == current_tafaseer_name:
-                action.setChecked(True)            
+                action.setChecked(True)
             action.triggered.connect(lambda checked, n=name: self.onTafaseerChanged(n) if checked else None)
             menu.addAction(action)
             action_group.addAction(action)
         menu.exec(qt1.QCursor.pos())
+
     def onTafaseerChanged(self, name: str):
         new_index = functions.tafseer.tafaseers.get(name)
         if new_index is not None and self.index != new_index:
             self.index = new_index
             self.current_tafaseer_label.setText(f"التفسير المحدد هو: {functions.tafseer.getTafaseerByIndex(self.index)}")
             self.getResult()
+
     def print_text(self):
         try:
             printer = QPrinter()
@@ -126,6 +132,7 @@ class TafaseerViewer(qt.QDialog):
                 doc.print(printer)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def save_text_as_txt(self):
         try:
             file_dialog = qt.QFileDialog()
@@ -140,16 +147,20 @@ class TafaseerViewer(qt.QDialog):
                     file.write(text)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(value))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -162,6 +173,7 @@ class TafaseerViewer(qt.QDialog):
             self.show_font.blockSignals(True)
             self.show_font.setValue(self.font_size)
             self.show_font.blockSignals(False)
+
     def copy_text(self):
         try:
             tafaseer_name = functions.tafseer.getTafaseerByIndex(self.index)
@@ -171,16 +183,18 @@ class TafaseerViewer(qt.QDialog):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def copy_current_selection(self):
         try:
             cursor = self.text.textCursor()
             if cursor.hasSelection():
                 selected_text = cursor.selectedText()
                 pyperclip.copy(selected_text)
-                winsound.Beep(1000, 100)                
-                guiTools.speak("تم نسخ النص المحدد بنجاح")        
+                winsound.Beep(1000, 100)
+                guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def getResult(self):
         self.full_content = functions.tafseer.getTafaseer(functions.tafseer.getTafaseerByIndex(self.index),self.From, self.to)
         lines = self.full_content.split('\n')
@@ -188,6 +202,7 @@ class TafaseerViewer(qt.QDialog):
         self.update_font_size()
         if len(lines) > 40:
             QTimer.singleShot(500, self.display_full_content)
+
     def display_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.full_content)

@@ -1,5 +1,7 @@
 from notifypy import Notify
 from settings import  app
+
+
 def SendNotification(title,message):
 	notification = Notify()
 	notification.title = title

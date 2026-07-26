@@ -5,6 +5,7 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 
+
 class SelectAthkar(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
@@ -31,6 +32,7 @@ class SelectAthkar(qt.QDialog):
         self.reciters.clicked.connect(self.on_item_clicked)
         self.reciters.addItems(self.reciterData1)
         layout.addWidget(self.reciters)
+
     def on_item_clicked(self):
         item = self.reciters.currentItem()
         if item:
@@ -38,6 +40,7 @@ class SelectAthkar(qt.QDialog):
             selected_data = next((rec for rec in self.reciterData if rec["name"] == selected_text), None)
             if selected_data:
                 DownloadReciter(self, selected_data["content"], selected_text).exec()
+
     def search(self,pattern,text_list):
         tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
         normalized_pattern=tashkeel_pattern.sub('', pattern)
@@ -46,16 +49,22 @@ class SelectAthkar(qt.QDialog):
             if normalized_pattern in tashkeel_pattern.sub('', text)
         ]
         return matches
+
     def onsearch(self):
         search_text=self.search_bar.text().lower()
         self.reciters.clear()
         result=self.search(search_text,list(self.reciterData1))
         self.reciters.addItems(result)
+
+
 class downloadObjects(qt2.QObject):
     progress=qt2.pyqtSignal(int)
     downloaded=qt2.pyqtSignal(int)
     pauseDownloading=qt2.pyqtSignal(str)
+    network_error=qt2.pyqtSignal(str)
     finch=qt2.pyqtSignal(bool)
+
+
 class downloadThread(qt2.QRunnable):
     def __init__(self,p,url,name):
         super().__init__()
@@ -63,24 +72,33 @@ class downloadThread(qt2.QRunnable):
         self.name=name
         self.url=url
         self.pause=False
+        self.cancelled=False
         self.objects.pauseDownloading.connect(self.on_pause)
+
     def on_pause(self,s):
-        self.pause=True
+        self.pause=not self.pause
+
     def run(self):
         try:
             count=0
             for item in self.url:
-                if not self.pause:
-                    if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar")):
-                        os.makedirs(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar"))
-                    if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name)):
-                        os.makedirs(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name))
-                    file=str(self.url.index(item)) + ".mp3"
-                    if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name,file)):
-                        count+=1
-                        self.objects.downloaded.emit(count)
-                    else:
-                        with requests.get(item["audio"],stream=True) as r:
+                while self.pause and not self.cancelled:
+                    import time
+                    time.sleep(0.2)
+                if self.cancelled:
+                    return
+                if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar")):
+                    os.makedirs(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar"))
+                if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name)):
+                    os.makedirs(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name))
+                file=str(self.url.index(item)) + ".mp3"
+                target_file = os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name,file)
+                if os.path.exists(target_file):
+                    count+=1
+                    self.objects.downloaded.emit(count)
+                else:
+                    try:
+                        with requests.get(item["audio"],stream=True,timeout=15) as r:
                             if r.status_code!=200:
                                 self.objects.finch.emit(False)
                                 return
@@ -93,52 +111,90 @@ class downloadThread(qt2.QRunnable):
                                 return
                             recieved=0
                             progress=0
-                            with open(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name,file),"wb") as file:
+                            with open(target_file,"wb") as file_out:
                                 for pk in r.iter_content(1024):
-                                    file.write(pk)
+                                    while self.pause and not self.cancelled:
+                                        import time
+                                        time.sleep(0.2)
+                                    if self.cancelled:
+                                        return
+                                    file_out.write(pk)
                                     recieved+=len(pk)
                                     progress=int((recieved/size)*100)
                                     self.objects.progress.emit(progress)
                         count+=1
                         self.objects.downloaded.emit(count)
+                    except (requests.exceptions.RequestException, Exception) as net_err:
+                        self.pause = True
+                        self.objects.network_error.emit("تم انقطاع الاتصال بالإنترنت وتم إيقاف التحميل مؤقتاً. يرجى التأكد من الاتصال ثم الضغط على زر الاستئناف.")
+                        while self.pause and not self.cancelled:
+                            import time
+                            time.sleep(0.2)
             self.objects.finch.emit(True)
         except Exception as e:
             print(f"Error in downloadThread: {e}")
             self.objects.finch.emit(False)
+
+
 class DownloadReciter(qt.QDialog):
     def __init__(self,p,url,name):
         super().__init__(p)
+        self.resize(350,150)
         self.setWindowTitle("جاري التحميل")
-        qt1.QShortcut("escape",self).activated.connect(lambda:self.run.objects.pauseDownloading.emit("a"))
+        qt1.QShortcut("escape",self).activated.connect(self.close)
         self.progress=qt.QProgressBar()
         self.downloaded=qt.QSpinBox()
         self.downloaded.setAccessibleName("عدد الأذكار التي تم تحميلها")
         self.downloaded.setRange(0,7000)
         self.downloaded.setReadOnly(True)
         self.pause=guiTools.QPushButton("إيقاف مؤقت")
-        self.pause.setStyleSheet("background-color: #0000AA; color: white;")
+        self.pause.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
+        self.cancel=guiTools.QPushButton("إلغاء")
+        self.cancel.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
         layout=qt.QVBoxLayout(self)
         layout.addWidget(self.progress)
         layout.addWidget(qt.QLabel("عدد الأذكار التي تم تحميلها"))
         layout.addWidget(self.downloaded)
-        layout.addWidget(self.pause)
+        btns_layout = qt.QHBoxLayout()
+        btns_layout.addWidget(self.pause)
+        btns_layout.addWidget(self.cancel)
+        layout.addLayout(btns_layout)
         thread=qt2.QThreadPool(self)
         self.run=downloadThread(self,url,name)
         self.run.objects.finch.connect(self.on)
         self.run.objects.progress.connect(self.on_progress)
         self.run.objects.downloaded.connect(self.on_downloaded)
+        self.run.objects.network_error.connect(self.on_network_error)
         thread.start(self.run)
-        self.pause.clicked.connect(lambda:self.run.objects.pauseDownloading.emit("a"))
+        self.pause.clicked.connect(self.toggle_pause)
+        self.cancel.clicked.connect(self.close)
+
+    def toggle_pause(self):
+        if self.run.pause:
+            self.pause.setText("إيقاف مؤقت")
+            self.run.objects.pauseDownloading.emit("a")
+        else:
+            self.pause.setText("استئناف")
+            self.run.objects.pauseDownloading.emit("a")
+
+    def on_network_error(self, msg):
+        self.pause.setText("استئناف")
+        guiTools.MessageBox.error(self, "انقطاع الاتصال", msg)
+
     def closeEvent(self,event):
-        self.run.objects.pauseDownloading.emit("a")
+        self.run.cancelled = True
+        self.run.pause = False
+
     def on(self,state):
         if state==True:
             guiTools.qMessageBox.MessageBox.view(self,"تم","تم التحميل بنجاح")
             self.close()
         else:
-            guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعظر التحميل")
+            guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر التحميل")
             self.close()
+
     def on_progress(self,progress):
         self.progress.setValue(progress)
+
     def on_downloaded(self,count):
         self.downloaded.setValue(count)

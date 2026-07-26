@@ -7,15 +7,19 @@ from settings import settings_handler
 from settings.app import appName
 with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
     reciters = json.load(file)
+
+
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
     cancelled = qt2.pyqtSignal()
+
     def __init__(self, url, filepath):
         super().__init__()
         self.url = url
         self.filepath = filepath
         self.is_cancelled = False
+
     def run(self):
         try:
             response = requests.get(self.url, stream=True)
@@ -36,16 +40,21 @@ class DownloadThread(qt2.QThread):
         except Exception as e:
             print(f"Error during download or file writing: {e}")
             self.cancelled.emit()
+
     def cancel(self):
         self.is_cancelled = True
+
+
 class MergeThread(qt2.QThread):
     finished = qt2.pyqtSignal(bool, str)
+
     def __init__(self, ffmpeg_path, input_files, output_file):
         super().__init__()
         self.ffmpeg_path = ffmpeg_path
         self.input_files = input_files
         self.output_file = output_file
         self.process = None
+
     def run(self):
         list_filepath = os.path.join(os.path.dirname(self.output_file), "mergelist.txt")
         try:
@@ -72,17 +81,22 @@ class MergeThread(qt2.QThread):
         finally:
             if os.path.exists(list_filepath):
                 os.remove(list_filepath)
+
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
+
+
 class PreMergeCheckThread(qt2.QThread):
     finished = qt2.pyqtSignal(list, list, str, str)
     error = qt2.pyqtSignal(str)
+
     def __init__(self, all_ayahs_text, current_reciter, reciters_data):
         super().__init__()
         self.all_ayahs_text = all_ayahs_text
         self.current_reciter = current_reciter
         self.reciters_data = reciters_data
+
     def _create_ayah_filename(self, ayah_text):
         try:
             Ayah, surah, _, _, _ = functions.quranJsonControl.getAyah(ayah_text)
@@ -91,6 +105,7 @@ class PreMergeCheckThread(qt2.QThread):
             return f"{surah_str}{ayah_str}.mp3"
         except:
             return None
+
     def run(self):
         try:
             reciter_name = list(self.reciters_data.keys())[self.current_reciter]
@@ -110,10 +125,13 @@ class PreMergeCheckThread(qt2.QThread):
             self.finished.emit(merge_list, ayahs_to_download, reciter_name, reciter_local_path_base)
         except Exception as e:
             self.error.emit(f"حدث خطأ أثناء التحضير للدمج: {str(e)}")
+
+
 class SaveThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal(bool, str)
     cancelled = qt2.pyqtSignal()
+
     def __init__(self, merge_list, output_dir, parent=None):
         super().__init__(parent)
         self.merge_list = merge_list
@@ -121,6 +139,7 @@ class SaveThread(qt2.QThread):
         self.is_cancelled = False
         self.total = len(merge_list)
         self.current = 0
+
     def run(self):
         try:
             for idx, item in enumerate(self.merge_list, start=1):
@@ -142,8 +161,11 @@ class SaveThread(qt2.QThread):
             self.finished.emit(True, msg)
         except Exception as e:
             self.finished.emit(False, f"خطأ أثناء الحفظ: {str(e)}")
+
     def cancel(self):
         self.is_cancelled = True
+
+
 class FromToSurahWidget(qt.QDialog):
     def __init__(self, p, index:int):
         super().__init__()
@@ -279,6 +301,7 @@ class FromToSurahWidget(qt.QDialog):
         qt1.QShortcut("ctrl+d", self).activated.connect(self.onMergeActionTriggered)
         qt1.QShortcut("ctrl+h", self).activated.connect(self.onSaveActionTriggered)
         qt1.QShortcut("escape", self).activated.connect(self.close)
+
     def update_spin_boxes(self, set_to_verse_to_max=False):
         self.spin_from_verse.blockSignals(True)
         self.spin_to_verse.blockSignals(True)
@@ -300,6 +323,7 @@ class FromToSurahWidget(qt.QDialog):
         self.spin_from_verse.blockSignals(False)
         self.spin_to_verse.blockSignals(False)
         self.validate_verse_ranges()
+
     def validate_verse_ranges(self):
         from_surah_index = self.combo_from_surah.currentIndex()
         to_surah_index = self.combo_to_surah.currentIndex()
@@ -313,6 +337,7 @@ class FromToSurahWidget(qt.QDialog):
         elif from_surah_index > to_surah_index:
              self.combo_to_surah.setCurrentIndex(from_surah_index)
              self.update_spin_boxes(set_to_verse_to_max=True)
+
     def get_range_label(self):
         from_item = self.combo_from_surah.currentText()
         to_item = self.combo_to_surah.currentText()
@@ -328,6 +353,7 @@ class FromToSurahWidget(qt.QDialog):
             return f"من {item_type} {from_item} آية {from_ayah} إلى آية {to_ayah}"
         else:
             return f"من {item_type} {from_item} آية {from_ayah} إلى {item_type} {to_item} آية {to_ayah}"
+
     def _get_selected_ayahs(self):
         self.validate_verse_ranges()
         return functions.quranJsonControl.getFromTo(
@@ -337,10 +363,12 @@ class FromToSurahWidget(qt.QDialog):
             self.spin_to_verse.value(),
             self.index
         )
+
     def onOpen(self):
         result = self._get_selected_ayahs()
         label = self.get_range_label()
         gui.QuranViewer(self.p, "\n".join(result), 5, label, enableNextPreviouseButtons=False, enableBookmarks=False).exec()
+
     def onGo(self):
         menu = qt.QMenu(self)
         font = qt1.QFont()
@@ -378,10 +406,12 @@ class FromToSurahWidget(qt.QDialog):
         saveAction.triggered.connect(self.onSaveActionTriggered)
         menu.addAction(saveAction)
         menu.exec(qt1.QCursor.pos())
+
     def onListenActionTriggert(self):
         result = self._get_selected_ayahs()
         label = self.get_range_label()
         gui.QuranPlayer(self.p, "\n".join(result), 0, 5, label).exec()
+
     def onTafseerActionTriggered(self):
         result = self._get_selected_ayahs()
         if not result:
@@ -390,6 +420,7 @@ class FromToSurahWidget(qt.QDialog):
         Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(result[0])
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(result[-1])
         gui.TafaseerViewer(self.p, AyahNumber1, AyahNumber2).exec()
+
     def onTranslationActionTriggered(self):
         result = self._get_selected_ayahs()
         if not result:
@@ -398,6 +429,7 @@ class FromToSurahWidget(qt.QDialog):
         Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(result[0])
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(result[-1])
         gui.translationViewer(self.p, AyahNumber1, AyahNumber2).exec()
+
     def onIarabActionTriggered(self):
         ayahList = self._get_selected_ayahs()
         if not ayahList:
@@ -407,8 +439,10 @@ class FromToSurahWidget(qt.QDialog):
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1])
         result = functions.iarab.getIarab(AyahNumber1, AyahNumber2)
         guiTools.TextViewer(self.p, "إعراب", result).exec()
+
     def _get_current_reciter_name(self):
         return list(reciters.keys())[self.currentReciter]
+
     def _create_ayah_filename(self, ayah_text):
         try:
             Ayah, surah, _, _, _ = functions.quranJsonControl.getAyah(ayah_text)
@@ -417,6 +451,7 @@ class FromToSurahWidget(qt.QDialog):
             return f"{surah_str}{ayah_str}.mp3"
         except:
             return None
+
     def handle_merge_action(self):
         if self.is_merging and self.merge_phase == 'merging':
             self.confirm_and_cancel_merge()
@@ -427,6 +462,7 @@ class FromToSurahWidget(qt.QDialog):
             self.on_merge_finished(False, "تم إلغاء عملية التحضير من قبل المستخدم.")
         elif self.is_merging and self.merge_phase == 'saving':
             guiTools.qMessageBox.MessageBox.warning(self, "غير مسموح", "لا يمكن إلغاء عملية الحفظ.")
+
     def confirm_and_cancel_merge(self):
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء",
             "هل أنت متأكد أنك تريد إلغاء عملية الدمج الحالية؟", "نعم", "لا")
@@ -434,6 +470,7 @@ class FromToSurahWidget(qt.QDialog):
             self.cancellation_requested = True
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
                 self.merge_thread.stop()
+
     def onMergeActionTriggered(self):
         if self.is_merging: return
         if not os.path.exists(self.ffmpeg_path):
@@ -455,6 +492,7 @@ class FromToSurahWidget(qt.QDialog):
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
         self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
         self.pre_merge_thread.start()
+
     def onSaveActionTriggered(self):
         if self.is_merging: return
         all_ayahs_text = self._get_selected_ayahs()
@@ -473,6 +511,7 @@ class FromToSurahWidget(qt.QDialog):
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
         self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
         self.pre_merge_thread.start()
+
     def on_pre_merge_check_finished(self, merge_list, ayahs_to_download, reciter_name, reciter_local_path_base):
         if self.cancellation_requested: return
         self.merge_list = merge_list
@@ -511,6 +550,7 @@ class FromToSurahWidget(qt.QDialog):
             self.files_to_delete_after_merge.clear()
             self.completed_merge_downloads.clear()
             self.process_next_in_merge_queue()
+
     def process_next_in_merge_queue(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية من قبل المستخدم.")
@@ -543,11 +583,13 @@ class FromToSurahWidget(qt.QDialog):
                 self.start_save_thread()
             else:
                 self.finalize_and_execute_merge()
+
     def on_single_merge_download_finished(self):
         if self.current_download_url:
             self.completed_merge_downloads.add(self.current_download_url)
             self.current_download_url = None
         self.process_next_in_merge_queue()
+
     def start_save_thread(self):
         self.merge_phase = 'saving'
         self.merge_action_button.hide()
@@ -559,8 +601,10 @@ class FromToSurahWidget(qt.QDialog):
         self.save_thread.finished.connect(self.on_save_finished)
         self.save_thread.cancelled.connect(lambda: self.on_merge_finished(False, "تم إلغاء الحفظ."))
         self.save_thread.start()
+
     def on_save_finished(self, success, message):
         self.on_merge_finished(success, message)
+
     def finalize_and_execute_merge(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية قبل بدء الدمج.")
@@ -586,6 +630,7 @@ class FromToSurahWidget(qt.QDialog):
             self.on_merge_finished(False, "لم يتم العثور على جميع الملفات المطلوبة للدمج.")
             return
         self.execute_merge(files_for_ffmpeg, self.current_merge_output_path)
+
     def execute_merge(self, input_files, output_file):
         self.is_merging = True
         self.merge_phase = 'merging'
@@ -594,6 +639,7 @@ class FromToSurahWidget(qt.QDialog):
         self.merge_thread = MergeThread(self.ffmpeg_path, input_files, output_file)
         self.merge_thread.finished.connect(self.on_merge_finished)
         self.merge_thread.start()
+
     def on_merge_finished(self, success, message):
         self.is_merging = False
         self.merge_phase = 'idle'
@@ -624,6 +670,7 @@ class FromToSurahWidget(qt.QDialog):
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()
         self.save_mode = False
+
     def set_ui_for_merge(self, is_active):
         self.is_merging = is_active
         self.controls_widget.setEnabled(not is_active)
@@ -637,6 +684,7 @@ class FromToSurahWidget(qt.QDialog):
         else:
             self.merge_widget.setVisible(False)
             self.setFixedHeight(self.original_height)
+
     def closeEvent(self, event):
         if self.is_merging:
             if self.merge_phase == 'preparing':

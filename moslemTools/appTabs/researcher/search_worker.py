@@ -4,35 +4,72 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 import guiTools, functions
 
+
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
     cancelled = qt2.pyqtSignal()
+    network_error = qt2.pyqtSignal(str)
+
     def __init__(self, url, filepath):
         super().__init__()
         self.url = url
         self.filepath = filepath
         self.is_cancelled = False
-    def run(self):
-        try:
-            response = requests.get(self.url, stream=True)
-            total_size = int(response.headers.get('content-length', 0))
-            downloaded_size = 0
-            with open(self.filepath, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if self.is_cancelled:
-                        self.cancelled.emit()
-                        return
-                    if chunk:
-                        f.write(chunk)
-                        downloaded_size += len(chunk)
-                        if total_size > 0:
-                            self.progress.emit(int((downloaded_size / total_size) * 100))
-            self.finished.emit()
-        except Exception as e:
-            self.cancelled.emit()
+        self.is_paused = False
+
+    def pause(self):
+        self.is_paused = True
+
+    def resume(self):
+        self.is_paused = False
+
     def cancel(self):
         self.is_cancelled = True
+
+    def run(self):
+        while not self.is_cancelled:
+            if self.is_paused:
+                self.msleep(200)
+                continue
+            downloaded_size = os.path.getsize(self.filepath) if os.path.exists(self.filepath) else 0
+            headers = {}
+            if downloaded_size > 0:
+                headers['Range'] = f'bytes={downloaded_size}-'
+            try:
+                response = requests.get(self.url, stream=True, timeout=15, headers=headers)
+                if response.status_code in (200, 206):
+                    content_range = response.headers.get('content-range')
+                    if content_range:
+                        total_size = int(content_range.split('/')[-1])
+                    elif 'content-length' in response.headers:
+                        total_size = downloaded_size + int(response.headers['content-length'])
+                    else:
+                        total_size = 0
+                    mode = 'ab' if (downloaded_size > 0 and response.status_code == 206) else 'wb'
+                    if mode == 'wb':
+                        downloaded_size = 0
+                    with open(self.filepath, mode) as f:
+                        for chunk in response.iter_content(chunk_size=1024):
+                            while self.is_paused and not self.is_cancelled:
+                                self.msleep(200)
+                            if self.is_cancelled:
+                                self.cancelled.emit()
+                                return
+                            if chunk:
+                                f.write(chunk)
+                                downloaded_size += len(chunk)
+                                if total_size > 0:
+                                    self.progress.emit(int((downloaded_size / total_size) * 100))
+                    self.finished.emit()
+                    return
+                else:
+                    self.cancelled.emit()
+                    return
+            except (requests.exceptions.RequestException, Exception) as e:
+                self.is_paused = True
+                self.network_error.emit("تم انقطاع الاتصال بالإنترنت وتم إيقاف التحميل مؤقتاً. يرجى التأكد من الاتصال ثم الضغط على زر الاستئناف.")
+
 
 class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
@@ -46,6 +83,7 @@ class SearchModeDialog(qt.QDialog):
         self.ignore_hamza = ignore_hamza
         self.ignore_symbols = ignore_symbols
         self.init_ui()
+
     def init_ui(self):
         layout = qt.QVBoxLayout(self)
         layout.setSpacing(10)
@@ -83,17 +121,23 @@ class SearchModeDialog(qt.QDialog):
         buttons_layout.addWidget(self.cancel_button)
         buttons_layout.addStretch(1)
         layout.addLayout(buttons_layout)
+
     def _set_ignore_tashkeel(self, state):
         self.ignore_tashkeel = bool(state)
+
     def _set_ignore_hamza(self, state):
         self.ignore_hamza = bool(state)
+
     def _set_ignore_symbols(self, state):
         self.ignore_symbols = bool(state)
+
     def get_settings(self):
         return {"ignore_tashkeel": self.ignore_tashkeel, "ignore_hamza": self.ignore_hamza, "ignore_symbols": self.ignore_symbols}
 
+
 class SearchThread(qt2.QThread):
     searchFinished = qt2.pyqtSignal(list, dict, int)
+
     def __init__(self, parent, search_type, search_text, search_scope, ahadeeth_text, ignore_tashkeel, ignore_hamza, ignore_symbols):
         super().__init__(parent)
         self.parent_widget = parent
@@ -104,6 +148,7 @@ class SearchThread(qt2.QThread):
         self.ignore_tashkeel = ignore_tashkeel
         self.ignore_hamza = ignore_hamza
         self.ignore_symbols = ignore_symbols
+
     def _search(self, pattern, text_list):
         def remove_tashkeel(text):
             return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
@@ -122,6 +167,7 @@ class SearchThread(qt2.QThread):
             if normalized_pattern in normalize(search_text):
                 results.append(display_text)
         return results
+
     def run(self):
         display_text = []
         search_metadata = {}

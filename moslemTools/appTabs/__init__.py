@@ -3,7 +3,7 @@ from .researcher import Albaheth
 from .ai_chat import AskAI
 from .book_marks import book_marcks
 from .ahadeeth import hadeeth
-from .brotcasts import protcasts
+from .broadcasts import protcasts
 from .quran import Quran
 from .aboutDeveloper import AboutDeveloper
 from .sibha import sibha

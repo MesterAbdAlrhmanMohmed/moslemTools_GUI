@@ -1,46 +1,85 @@
 import requests, os, subprocess
 import PyQt6.QtCore as qt2
 
+
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
     cancelled = qt2.pyqtSignal()
+    network_error = qt2.pyqtSignal(str)
+
     def __init__(self, parent, url, filepath):
         super().__init__(parent)
         self.url = url
         self.filepath = filepath
         self.is_cancelled = False
-    def run(self):
-        try:
-            response = requests.get(self.url, stream=True)
-            total_size = int(response.headers.get('content-length', 0))
-            downloaded_size = 0
-            with open(self.filepath, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if self.is_cancelled:
-                        self.cancelled.emit()
-                        return
-                    if chunk:
-                        f.write(chunk)
-                        downloaded_size += len(chunk)
-                        if total_size > 0:
-                            progress_percent = int((downloaded_size / total_size) * 100)
-                            self.progress.emit(progress_percent)
-            self.finished.emit()
-        except Exception as e:
-            print(f"Error during download or file writing: {e}")
-            self.cancelled.emit()
+        self.is_paused = False
+
+    def pause(self):
+        self.is_paused = True
+
+    def resume(self):
+        self.is_paused = False
+
     def cancel(self):
         self.is_cancelled = True
 
+    def run(self):
+        while not self.is_cancelled:
+            if self.is_paused:
+                self.msleep(200)
+                continue
+            downloaded_size = os.path.getsize(self.filepath) if os.path.exists(self.filepath) else 0
+            headers = {}
+            if downloaded_size > 0:
+                headers['Range'] = f'bytes={downloaded_size}-'
+            try:
+                response = requests.get(self.url, stream=True, timeout=15, headers=headers)
+                if response.status_code in (200, 206):
+                    content_range = response.headers.get('content-range')
+                    if content_range:
+                        total_size = int(content_range.split('/')[-1])
+                    elif 'content-length' in response.headers:
+                        total_size = downloaded_size + int(response.headers['content-length'])
+                    else:
+                        total_size = 0
+                    mode = 'ab' if (downloaded_size > 0 and response.status_code == 206) else 'wb'
+                    if mode == 'wb':
+                        downloaded_size = 0
+                    with open(self.filepath, mode) as f:
+                        for chunk in response.iter_content(chunk_size=1024):
+                            while self.is_paused and not self.is_cancelled:
+                                self.msleep(200)
+                            if self.is_cancelled:
+                                self.cancelled.emit()
+                                return
+                            if chunk:
+                                f.write(chunk)
+                                downloaded_size += len(chunk)
+                                if total_size > 0:
+                                    progress_percent = int((downloaded_size / total_size) * 100)
+                                    self.progress.emit(progress_percent)
+                    self.finished.emit()
+                    return
+                else:
+                    self.cancelled.emit()
+                    return
+            except (requests.exceptions.RequestException, Exception) as e:
+                print(f"Error during download or file writing: {e}")
+                self.is_paused = True
+                self.network_error.emit("تم انقطاع الاتصال بالإنترنت وتم إيقاف التحميل مؤقتاً. يرجى التأكد من الاتصال ثم الضغط على زر الاستئناف.")
+
+
 class MergeThread(qt2.QThread):
     finished = qt2.pyqtSignal(bool, str)
+
     def __init__(self, parent, ffmpeg_path, input_files, output_file):
         super().__init__(parent)
         self.ffmpeg_path = ffmpeg_path
         self.input_files = input_files
         self.output_file = output_file
         self.process = None
+
     def run(self):
         list_filepath = os.path.join(os.path.dirname(self.output_file), "mergelist.txt")
         try:
@@ -64,6 +103,7 @@ class MergeThread(qt2.QThread):
         finally:
             if os.path.exists(list_filepath):
                 os.remove(list_filepath)
+
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()

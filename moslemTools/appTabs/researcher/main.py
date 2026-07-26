@@ -10,6 +10,7 @@ from gui.translationViewer import translationViewer
 from gui.changeReciter import ChangeReciter
 from .search_worker import DownloadThread, SearchModeDialog, SearchThread
 
+
 class Albaheth(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -33,6 +34,7 @@ class Albaheth(qt.QWidget):
         self.media_player.mediaStatusChanged.connect(self.on_media_state_changed)
         self.media_player.durationChanged.connect(self.update_slider_and_time)
         self.media_player.positionChanged.connect(self.update_slider_and_time)
+
     def create_shortcuts(self):
         qt1.QShortcut(qt2.Qt.Key.Key_Space, self).activated.connect(self.on_spacebar_pressed)
         qt1.QShortcut("Ctrl+T", self).activated.connect(self.on_tafseer_shortcut)
@@ -56,60 +58,70 @@ class Albaheth(qt.QWidget):
         qt1.QShortcut("ctrl+9", self).activated.connect(self.t90)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
+
     def t10(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.1))
+
     def t20(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.2))
+
     def t30(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.3))
+
     def t40(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.4))
+
     def t50(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.5))
+
     def t60(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.6))
+
     def t70(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.7))
+
     def t80(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.8))
+
     def t90(self):
         if self.media_player.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media_player.duration()
         self.media_player.setPosition(int(total_duration * 0.9))
+
     def on_shortcut_activated(self, action_func):
         cursor = self.results.textCursor()
         line_number = cursor.blockNumber() + 1
@@ -120,6 +132,7 @@ class Albaheth(qt.QWidget):
         if isinstance(metadata, dict) and metadata.get("type") == "hadith":
             return
         action_func(metadata)
+
     def on_spacebar_pressed(self):
         if self.results.hasFocus():
             cursor = self.results.textCursor()
@@ -127,14 +140,19 @@ class Albaheth(qt.QWidget):
             selected_metadata = self.search_metadata.get(line_number)
             if selected_metadata and selected_metadata.get("type") != "hadith":
                 self.handle_play_toggle(selected_metadata)
+
     def on_tafseer_shortcut(self):
         self.on_shortcut_activated(self.show_tafseer)
+
     def on_translation_shortcut(self):
         self.on_shortcut_activated(self.show_translation)
+
     def on_iarab_shortcut(self):
         self.on_shortcut_activated(self.show_iarab)
+
     def on_tanzil_shortcut(self):
         self.on_shortcut_activated(self.show_tanzil)
+
     def on_goto_surah_shortcut(self):
         cursor = self.results.textCursor()
         line_number = cursor.blockNumber() + 1
@@ -149,10 +167,13 @@ class Albaheth(qt.QWidget):
             self.go_to_hadith(metadata)
         else:
             self.go_to_surah(metadata)
+
     def on_ayah_info_shortcut(self):
         self.on_shortcut_activated(self.show_ayah_info)
+
     def on_save_shortcut(self):
         self.on_shortcut_activated(self.save_ayah)
+
     def init_ui(self):
         font_combo = qt1.QFont()
         font_combo.setBold(True)
@@ -216,10 +237,16 @@ class Albaheth(qt.QWidget):
         self.save_progress_bar = qt.QProgressBar()
         self.save_action_button = guiTools.QPushButton("إلغاء العملية")
         self.save_action_button.setAutoDefault(False)
-        self.save_action_button.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+        self.save_action_button.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
         self.save_action_button.clicked.connect(self.cancel_save)
+        self.resume_download_button = guiTools.QPushButton("استئناف")
+        self.resume_download_button.setAutoDefault(False)
+        self.resume_download_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
+        self.resume_download_button.setVisible(False)
+        self.resume_download_button.clicked.connect(self.resume_current_download)
         save_layout = qt.QHBoxLayout()
         save_layout.addWidget(self.save_feedback_label)
+        save_layout.addWidget(self.resume_download_button)
         save_layout.addWidget(self.save_progress_bar)
         save_layout.addWidget(self.save_action_button)
         self.save_widget = qt.QWidget()
@@ -228,7 +255,7 @@ class Albaheth(qt.QWidget):
         self.player_widget = qt.QWidget()
         player_layout = qt.QHBoxLayout(self.player_widget)
         player_layout.setContentsMargins(0, 5, 0, 5)
-        self.media_progress = qt.QSlider(qt2.Qt.Orientation.Horizontal)        
+        self.media_progress = qt.QSlider(qt2.Qt.Orientation.Horizontal)
         self.media_progress.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
         self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.media_progress.setRange(0, 100)
@@ -295,15 +322,18 @@ class Albaheth(qt.QWidget):
         self.ahadeeth_laibol.hide()
         self.ahadeeth.hide()
         self.update_font_size()
+
     def pause_for_action(self):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.was_playing_before_action = True
             self.media_player.pause()
         else:
             self.was_playing_before_action = False
+
     def resume_after_action(self):
         if self.was_playing_before_action:
             self.media_player.play()
+
     def closeEvent(self, event):
         if getattr(self, 'is_saving', False):
             guiTools.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء عملية الحفظ.")
@@ -312,6 +342,7 @@ class Albaheth(qt.QWidget):
             if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                 self.media_player.stop()
             super().closeEvent(event)
+
     def eventFilter(self, obj, event):
         if obj == self.results.viewport() and event.type() == qt2.QEvent.Type.MouseButtonPress:
             if event.button() == qt2.Qt.MouseButton.LeftButton:
@@ -325,6 +356,7 @@ class Albaheth(qt.QWidget):
                     self.handle_play_toggle(metadata)
                     return True
         return super().eventFilter(obj, event)
+
     def handle_play_toggle(self, selected_metadata):
         current_media_src = self.media_player.source().fileName().split('/')[-1]
         expected_filename = f'{str(selected_metadata["surah_number"]).zfill(3)}{str(selected_metadata["ayah_number_in_surah"]).zfill(3)}.mp3'
@@ -336,6 +368,7 @@ class Albaheth(qt.QWidget):
                 self.media_player.play()
         else:
             self.start_playback(selected_metadata)
+
     def save_ayah(self, metadata):
         if getattr(self, 'is_saving', False): return
         self.pause_for_action()
@@ -379,7 +412,19 @@ class Albaheth(qt.QWidget):
             self.download_thread.progress.connect(self.save_progress_bar.setValue)
             self.download_thread.finished.connect(self.on_download_finished)
             self.download_thread.cancelled.connect(lambda: self.on_save_finished(False, "تم إلغاء العملية."))
+            self.download_thread.network_error.connect(self.on_download_network_error)
+            self.resume_download_button.setVisible(False)
             self.download_thread.start()
+
+    def on_download_network_error(self, msg):
+        self.resume_download_button.setVisible(True)
+        guiTools.qMessageBox.MessageBox.error(self, "انقطاع الاتصال", msg)
+
+    def resume_current_download(self):
+        if hasattr(self, 'download_thread') and self.download_thread is not None:
+            self.download_thread.resume()
+            self.resume_download_button.setVisible(False)
+
     def on_download_finished(self):
         if self.cancellation_requested:
             self.on_save_finished(False, "تم إلغاء العملية.")
@@ -393,10 +438,12 @@ class Albaheth(qt.QWidget):
                 self.on_save_finished(False, "الملف المؤقت غير موجود.")
         except Exception as e:
             self.on_save_finished(False, f"فشل نقل الآية: {str(e)}")
+
     def cancel_save(self):
         self.cancellation_requested = True
         if hasattr(self, 'download_thread') and self.download_thread.isRunning():
             self.download_thread.cancel()
+
     def on_save_finished(self, success, message):
         self.set_ui_for_save(False)
         if self.cancellation_requested:
@@ -413,6 +460,7 @@ class Albaheth(qt.QWidget):
                 except: pass
         self.cancellation_requested = False
         self.resume_after_action()
+
     def set_ui_for_save(self, is_active):
         self.is_saving = is_active
         widgets_to_disable = [self.serch, self.ahadeeth, self.surahs, self.specific_scope_combo, self.serch_input, self.search_mode_button, self.start, self.results, self.clear_results_button]
@@ -421,6 +469,7 @@ class Albaheth(qt.QWidget):
         self.save_widget.setVisible(is_active)
         if is_active:
             self.save_progress_bar.setValue(0)
+
     def show_search_mode_dialog(self):
         self.pause_for_action()
         dialog = SearchModeDialog(self, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
@@ -434,11 +483,13 @@ class Albaheth(qt.QWidget):
             guiTools.speak("تم إلغاء التغييرات")
         self.resume_after_action()
     @qt2.pyqtSlot(str)
+
     def handle_error(self, error_msg):
         if "خطأ في البيانات" in error_msg:
             guiTools.MessageBox.error(self, "خطأ في البيانات", error_msg.split(': ', 1)[1])
         elif "خطأ غير متوقع" in error_msg:
             guiTools.MessageBox.error(self, "خطأ غير متوقع", error_msg.split(': ', 1)[1])
+
     def on_scope_changed(self, index):
         self.specific_scope_combo.clear()
         if index == 0:
@@ -468,6 +519,7 @@ class Albaheth(qt.QWidget):
             self.specific_scope_label.setText(label)
             self.specific_scope_combo.setAccessibleName(label)
             self.specific_scope_combo.addItems(items)
+
     def onSearchClicked(self):
         if not self.serch_input.text():
             guiTools.MessageBox.error(self, "تنبيه", "يرجى كتابة محتوى للبحث")
@@ -498,6 +550,7 @@ class Albaheth(qt.QWidget):
         self.current_search_thread.searchFinished.connect(self.onSearchFinished)
         self.current_search_thread.start()
     @qt2.pyqtSlot(list, dict, int)
+
     def onSearchFinished(self, display_text, search_metadata, total_results_count):
         self.start.setEnabled(True)
         self.start.setText("البحث")
@@ -511,6 +564,7 @@ class Albaheth(qt.QWidget):
             guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
             self.clear_results_button.setDisabled(True)
             self.serch_input.setFocus()
+
     def get_metadata_from_result(self, result_text):
         match = re.search(r'^(\d+).+?\((\d+)\)$', result_text)
         if match:
@@ -524,6 +578,7 @@ class Albaheth(qt.QWidget):
             except (KeyError, IndexError):
                 return None
         return None
+
     def clear_results(self):
         if self.results.toPlainText():
             self.results.clear()
@@ -535,6 +590,7 @@ class Albaheth(qt.QWidget):
             guiTools.speak("تم حذف نتائج البحث")
         else:
             self.clear_results_button.setDisabled(True)
+
     def toggle_ahadeeth_visibility(self):
         if self.serch.currentText() == "الأحاديث":
             self.ahadeeth_laibol.show()
@@ -551,6 +607,7 @@ class Albaheth(qt.QWidget):
             if self.surahs.currentIndex() != 0:
                 self.specific_scope_label.show()
                 self.specific_scope_combo.show()
+
     def OnContextMenu(self):
         self.pause_for_action()
         cursor = self.results.textCursor()
@@ -647,6 +704,7 @@ class Albaheth(qt.QWidget):
             menu.addAction(copy_selected)
         menu.exec(qt1.QCursor.pos())
         self.resume_after_action()
+
     def start_playback(self, metadata):
         with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
             reciters = json.load(file)
@@ -663,9 +721,11 @@ class Albaheth(qt.QWidget):
         self.media_player.setSource(path)
         self.player_widget.setVisible(True)
         qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media_player.play()))
+
     def on_media_state_changed(self, state):
         if state == QMediaPlayer.MediaStatus.EndOfMedia:
             self.player_widget.setVisible(False)
+
     def update_slider_and_time(self):
         self.media_progress.blockSignals(True)
         position = self.media_player.position()
@@ -681,12 +741,14 @@ class Albaheth(qt.QWidget):
             remaining_str = f"{remaining_sec // 60}:{remaining_sec % 60:02d}"
             self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
         self.media_progress.blockSignals(False)
+
     def set_media_position(self, value):
         duration = self.media_player.duration()
         if duration > 0:
             new_position = int((value / 100) * duration)
             self.media_player.setPosition(new_position)
             guiTools.speak(f"{value}%")
+
     def go_to_surah(self, metadata):
         self.pause_for_action()
         surah_name_key = f"{metadata['surah_number']}{metadata['surah_name']}"
@@ -697,11 +759,13 @@ class Albaheth(qt.QWidget):
         else:
             guiTools.MessageBox.error(self, "خطأ", f"لم يتم العثور على بيانات السورة: {surah_name_key}")
         self.resume_after_action()
+
     def go_to_hadith(self, metadata):
         self.pause_for_action()
         from gui import hadeeth_viewer
         hadeeth_viewer(self, metadata["file_name"], index=metadata["hadith_index"]).exec()
         self.resume_after_action()
+
     def show_ayah_info(self, metadata):
         self.pause_for_action()
         surah_number = metadata["surah_number"]
@@ -716,22 +780,26 @@ class Albaheth(qt.QWidget):
         info_text += f"الصفحة: {ayah_data['page']}\n{sajda_text}"
         guiTools.MessageBox.view(self, "معلومات الآية", info_text)
         self.resume_after_action()
+
     def show_tafseer(self, metadata):
         self.pause_for_action()
         ayah_num = metadata["overall_ayah_number"]
         TafaseerViewer(self, ayah_num, ayah_num).exec()
         self.resume_after_action()
+
     def show_translation(self, metadata):
         self.pause_for_action()
         ayah_num = metadata["overall_ayah_number"]
         translationViewer(self, ayah_num, ayah_num).exec()
         self.resume_after_action()
+
     def show_iarab(self, metadata):
         self.pause_for_action()
         ayah_num = metadata["overall_ayah_number"]
         result = functions.iarab.getIarab(ayah_num, ayah_num)
         guiTools.TextViewer(self, "إعراب", result).exec()
         self.resume_after_action()
+
     def show_tanzil(self, metadata):
         self.pause_for_action()
         ayah_num = metadata["overall_ayah_number"]
@@ -741,16 +809,20 @@ class Albaheth(qt.QWidget):
         else:
             guiTools.MessageBox.view(self, "تنبيه", "لا توجد أسباب نزول متاحة لهذه الآية")
         self.resume_after_action()
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(self.font_size))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def update_font_size(self):
         cursor = self.results.textCursor()
         self.results.selectAll()
@@ -759,6 +831,7 @@ class Albaheth(qt.QWidget):
         font.setBold(self.font_is_bold)
         self.results.setCurrentFont(font)
         self.results.setTextCursor(cursor)
+
     def copy_line(self):
         try:
             cursor = self.results.textCursor()
@@ -771,6 +844,7 @@ class Albaheth(qt.QWidget):
             guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as e:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
+
     def copy_text(self):
         try:
             pyperclip.copy(self.results.toPlainText())
@@ -778,6 +852,7 @@ class Albaheth(qt.QWidget):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as e:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
+
     def on_change_reciter_requested(self):
         self.pause_for_action()
         with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
@@ -787,15 +862,17 @@ class Albaheth(qt.QWidget):
         if dlg.exec() == qt.QDialog.DialogCode.Accepted:
             self.currentReciter = dlg.recitersListWidget.currentRow()
         self.resume_after_action()
+
     def load_speed(self):
         try:
             path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
             if os.path.exists(path):
                 with open(path, 'r', encoding='utf-8') as f:
                     return json.load(f).get("researcherTab", 1.0)
-        except:
-            pass
+        except Exception as e:
+            print(f"Handled exception: {e}")
         return 1.0
+
     def save_speed(self, speed):
         try:
             path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
@@ -805,18 +882,20 @@ class Albaheth(qt.QWidget):
                 try:
                     with open(path, 'r', encoding='utf-8') as f:
                         data = json.load(f)
-                except:
-                    pass
+                except Exception as e:
+                    print(f"Handled exception: {e}")
             data["researcherTab"] = speed
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f)
-        except:
-            pass
+        except Exception as e:
+            print(f"Handled exception: {e}")
+
     def change_speed(self, speed):
         self.save_speed(speed)
         self.media_player.setPlaybackRate(speed)
         if hasattr(self.media_player, 'setPitchCompensation'):
             self.media_player.setPitchCompensation(True)
+
     def apply_speed(self):
         speed = self.load_speed()
         self.media_player.setPlaybackRate(speed)

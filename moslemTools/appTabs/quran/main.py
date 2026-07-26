@@ -11,6 +11,7 @@ from .threads import DownloadThread, MergeThread, PreMergeCheckThread, SaveThrea
 with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
     reciters = json.load(file)
 
+
 class Quran(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -40,7 +41,11 @@ class Quran(qt.QWidget):
         layout = qt.QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
         layout.setSpacing(15)
-        self.setStyleSheet("QWidget{color:#f0f0f0;font:bold 12px;}QLineEdit{background-color:#3e3e3e;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#dc3545;color:white;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#c82333;}QListWidget{background-color:#000000;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QListWidget::item:selected{background-color:red;}QMenu{background-color:#3e3e3e;color:#f0f0f0;}QMenu::item:selected{background-color:#0078d7;}")
+        current_theme = settings_handler.get("g", "theme") or "dark"
+        if current_theme == "light":
+            self.setStyleSheet("QWidget{color:#1e1e1e;font:bold 12px;}QLineEdit{background-color:#ffffff;color:#1e1e1e;border:1px solid #cccccc;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #cccccc;border-radius:5px;padding:5px;color:#1e1e1e;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#8B0000;color:white;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#A52A2A;}QListWidget{background-color:#ffffff;color:#1e1e1e;border:1px solid #cccccc;border-radius:5px;padding:5px;}QListWidget::item:selected{background-color:red;color:#ffffff;}QMenu{background-color:#ffffff;color:#1e1e1e;}QMenu::item:selected{background-color:#0078d7;color:#ffffff;}")
+        else:
+            self.setStyleSheet("QWidget{color:#f0f0f0;font:bold 12px;}QLineEdit{background-color:#3e3e3e;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#8B0000;color:white;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#A52A2A;}QListWidget{background-color:#000000;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QListWidget::item:selected{background-color:red;}QMenu{background-color:#3e3e3e;color:#f0f0f0;}QMenu::item:selected{background-color:#0078d7;}")
         browse_layout = qt.QHBoxLayout()
         browse_layout.setSpacing(10)
         layout1=qt.QVBoxLayout()
@@ -91,9 +96,16 @@ class Quran(qt.QWidget):
         self.merge_action_button = guiTools.QPushButton("إلغاء العملية")
         self.merge_action_button.setObjectName("cancelMergeButton")
         self.merge_action_button.setAutoDefault(False)
+        self.merge_action_button.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
         self.merge_action_button.clicked.connect(self.handle_merge_action)
+        self.resume_download_button = guiTools.QPushButton("استئناف")
+        self.resume_download_button.setAutoDefault(False)
+        self.resume_download_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
+        self.resume_download_button.setVisible(False)
+        self.resume_download_button.clicked.connect(self.resume_current_download)
         merge_layout = qt.QHBoxLayout()
         merge_layout.addWidget(self.merge_feedback_label)
+        merge_layout.addWidget(self.resume_download_button)
         merge_layout.addWidget(self.merge_progress_bar)
         merge_layout.addWidget(self.merge_action_button)
         self.merge_widget = qt.QWidget()
@@ -114,6 +126,7 @@ class Quran(qt.QWidget):
         guide_layout.addWidget(self.info_of_quran)
         layout.addLayout(guide_layout)
         self.loader_thread = None
+
     def showEvent(self, event):
         super().showEvent(event)
         if self.info.count() == 0:
@@ -125,19 +138,23 @@ class Quran(qt.QWidget):
                 self.loader_thread.finished.connect(self.loader_thread.deleteLater)
                 self.loader_thread.finished.connect(lambda: setattr(self, 'loader_thread', None))
                 self.loader_thread.start()
+
     def on_data_loaded(self):
         self.info.clear()
         self.onTypeChanged(self.type.currentIndex())
+
     def search(self, pattern, text_list):
         tashkeel_pattern = re.compile(r'[\u064B-\u065F\u0670]')
         normalized_pattern = tashkeel_pattern.sub('', pattern)
         matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text)]
         return matches
+
     def onsearch(self):
         search_text = self.search_bar.text().lower()
         self.info.clear()
         result = self.search(search_text, self.infoData)
         self.info.addItems(result)
+
     def onItemTriggered(self):
         index = self.type.currentIndex()
         if index == 0:
@@ -156,6 +173,7 @@ class Quran(qt.QWidget):
         except ValueError:
             correct_index = self.info.currentRow()
         gui.QuranViewer(self, result[selected_item_text][1], index, selected_item_text, enableNextPreviouseButtons=True, typeResult=result, CurrentIndex=correct_index).exec()
+
     def onTypeChanged(self, index: int):
         self.info.clear()
         self.infoData = []
@@ -189,6 +207,7 @@ class Quran(qt.QWidget):
             self.search_bar.setAccessibleName("البحث عن حزب")
             self.info1.setText("لخيارات الحزب المحدد, نستخدم مفتاح التطبيقات أو click الأيمن")
         self.info.addItems(self.infoData)
+
     def getResult(self):
         index = self.type.currentIndex()
         if index == 0:
@@ -202,6 +221,7 @@ class Quran(qt.QWidget):
         elif index == 4:
             result = functions.quranJsonControl.getHizb()
         return result[self.info.currentItem().text()][1]
+
     def onContextMenu(self):
         category_name = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}.get(self.type.currentIndex(), "الفئة")
         menu = qt.QMenu(f"خيارات {category_name}", self)
@@ -242,6 +262,7 @@ class Quran(qt.QWidget):
         menu.addAction(saveAction)
         saveAction.triggered.connect(self.onSaveActionTriggered)
         menu.exec(qt1.QCursor.pos())
+
     def onCategoryInfoTriggered(self):
         if not self.info.currentItem():
             return
@@ -361,11 +382,13 @@ class Quran(qt.QWidget):
                              f"السور في الحزب: {', '.join(surah_names)}.")
         if info_text:
             guiTools.qMessageBox.MessageBox.view(self, title, info_text)
+
     def onListenActionTriggert(self):
         if not self.info.currentItem():
             return
         result = self.getResult()
         gui.QuranPlayer(self, result, 0, self.type.currentIndex(), self.info.currentItem().text()).exec()
+
     def onTafseerActionTriggered(self):
         if not self.info.currentItem():
             return
@@ -375,6 +398,7 @@ class Quran(qt.QWidget):
         Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0], category, type)
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], category, type)
         gui.TafaseerViewer(self, AyahNumber1, AyahNumber2).exec()
+
     def onTranslationActionTriggered(self):
         if not self.info.currentItem():
             return
@@ -384,6 +408,7 @@ class Quran(qt.QWidget):
         Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0], category, type)
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], category, type)
         gui.translationViewer(self, AyahNumber1, AyahNumber2).exec()
+
     def onIarabActionTriggered(self):
         if not self.info.currentItem():
             return
@@ -394,6 +419,7 @@ class Quran(qt.QWidget):
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], category, type)
         result = functions.iarab.getIarab(AyahNumber1, AyahNumber2)
         guiTools.TextViewer(self, "إعراب", result).exec()
+
     def onCostumBTNClicked(self):
         categories=["من سورة إلى سورة", "من صفحة إلى صفحة", "من جزء إلى جزء", "من ربع إلى ربع", "من حزب إلى حزب"]
         menu=qt.QMenu("اختر فئة",self)
@@ -409,12 +435,15 @@ class Quran(qt.QWidget):
             action.triggered.connect(self.onCostumBTNRequested)
         menu.exec(qt1.QCursor.pos())
         menu.setFont(font)
+
     def onCostumBTNRequested(self):
         categories=["من سورة إلى سورة", "من صفحة إلى صفحة", "من جزء إلى جزء", "من ربع إلى ربع", "من حزب إلى حزب"]
         index=categories.index(self.sender().text())
         guiTools.FromToSurahWidget(self,index).exec()
+
     def _get_current_reciter_name(self):
         return list(reciters.keys())[self.currentReciter]
+
     def _create_ayah_filename(self, ayah_text):
         category = self.info.currentItem().text()
         type_index = self.type.currentIndex()
@@ -422,6 +451,7 @@ class Quran(qt.QWidget):
         surah_str = str(surah).zfill(3)
         ayah_str = str(Ayah).zfill(3)
         return f"{surah_str}{ayah_str}.mp3"
+
     def handle_merge_action(self):
         if getattr(self, 'is_merging', False) and self.merge_phase == 'merging':
             self.confirm_and_cancel_merge()
@@ -435,12 +465,14 @@ class Quran(qt.QWidget):
             if hasattr(self, 'pre_save_thread') and self.pre_save_thread.isRunning():
                 self.pre_save_thread.terminate()
             self.on_save_finished(False, "تم إلغاء عملية التحضير من قبل المستخدم.")
+
     def confirm_and_cancel_merge(self):
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل أنت متأكد أنك تريد إلغاء العملية الحالية؟", "نعم", "لا")
         if reply == 0:
             self.cancellation_requested = True
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
                 self.merge_thread.stop()
+
     def onMergeActionTriggered(self):
         if not self.info.currentItem():
             return
@@ -463,6 +495,7 @@ class Quran(qt.QWidget):
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
         self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
         self.pre_merge_thread.start()
+
     def on_pre_merge_check_finished(self, merge_list, ayahs_to_download, reciter_name, reciter_local_path_base):
         if self.cancellation_requested: return
         self.merge_list = merge_list
@@ -486,6 +519,7 @@ class Quran(qt.QWidget):
         self.completed_merge_downloads.clear()
         self.cancellation_requested = False
         self.process_next_in_merge_queue()
+
     def process_next_in_merge_queue(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية من قبل المستخدم.")
@@ -509,15 +543,29 @@ class Quran(qt.QWidget):
             self.download_thread.progress.connect(self.merge_progress_bar.setValue)
             self.download_thread.finished.connect(self.on_single_merge_download_finished)
             self.download_thread.cancelled.connect(lambda: self.on_merge_finished(False, "حدث خطأ أثناء التحميل."))
+            self.download_thread.network_error.connect(self.on_download_network_error)
+            self.resume_download_button.setVisible(False)
             self.download_thread.start()
         else:
             self.merge_progress_bar.hide()
+            self.resume_download_button.setVisible(False)
             self.finalize_and_execute_merge()
+
+    def on_download_network_error(self, msg):
+        self.resume_download_button.setVisible(True)
+        guiTools.qMessageBox.MessageBox.error(self, "انقطاع الاتصال", msg)
+
+    def resume_current_download(self):
+        if hasattr(self, 'download_thread') and self.download_thread is not None:
+            self.download_thread.resume()
+            self.resume_download_button.setVisible(False)
+
     def on_single_merge_download_finished(self):
         if self.current_download_url:
             self.completed_merge_downloads.add(self.current_download_url)
             self.current_download_url = None
         self.process_next_in_merge_queue()
+
     def finalize_and_execute_merge(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية قبل بدء الدمج.")
@@ -543,6 +591,7 @@ class Quran(qt.QWidget):
             self.on_merge_finished(False, "لم يتم العثور على جميع الملفات المطلوبة للدمج.")
             return
         self.execute_merge(files_for_ffmpeg, self.current_merge_output_path)
+
     def execute_merge(self, input_files, output_file):
         self.merge_phase = 'merging'
         self.merge_feedback_label.setText(f"جاري دمج {len(self.merge_list)} آيات...")
@@ -550,6 +599,7 @@ class Quran(qt.QWidget):
         self.merge_thread = MergeThread(self.ffmpeg_path, input_files, output_file)
         self.merge_thread.finished.connect(self.on_merge_finished)
         self.merge_thread.start()
+
     def on_merge_finished(self, success, message):
         self.is_merging = False
         self.merge_phase = 'idle'
@@ -574,6 +624,7 @@ class Quran(qt.QWidget):
         self.merge_list.clear()
         self.files_to_delete_after_merge.clear()
         self.completed_merge_downloads.clear()
+
     def onSaveActionTriggered(self):
         if not self.info.currentItem(): return
         if getattr(self, 'is_merging', False) or getattr(self, 'is_saving', False): return
@@ -587,11 +638,13 @@ class Quran(qt.QWidget):
         self.pre_save_thread.finished.connect(self.on_pre_save_check_finished)
         self.pre_save_thread.error.connect(lambda msg: self.on_save_prepare_error(msg))
         self.pre_save_thread.start()
+
     def on_save_prepare_error(self, msg):
         self.set_ui_for_operation(False)
         self.is_saving = False
         self.merge_phase = 'idle'
         guiTools.qMessageBox.MessageBox.error(self, "خطأ", msg)
+
     def on_pre_save_check_finished(self, merge_list, ayahs_to_download, reciter_name, reciter_local_path_base):
         if self.cancellation_requested:
             self.set_ui_for_operation(False)
@@ -623,6 +676,7 @@ class Quran(qt.QWidget):
         self.save_thread.status.connect(self.merge_feedback_label.setText)
         self.save_thread.finished.connect(self.on_save_finished)
         self.save_thread.start()
+
     def on_save_finished(self, success, message):
         self.is_saving = False
         self.merge_phase = 'idle'
@@ -632,6 +686,7 @@ class Quran(qt.QWidget):
         else:
             guiTools.qMessageBox.MessageBox.error(self, "فشل", message)
         self.set_ui_for_operation(False)
+
     def set_ui_for_operation(self, is_active):
         widgets_to_disable = [self.by, self.type, self.custom, self.serch, self.search_bar, self.info, self.info_of_quran, self.info1]
         for widget in widgets_to_disable:

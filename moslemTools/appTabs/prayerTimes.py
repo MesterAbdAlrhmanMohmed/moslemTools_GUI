@@ -9,9 +9,12 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from functions import audio_manager
+
+
 class PrayerTimesWorker(qt2.QObject):
     finished = qt2.pyqtSignal(object, object, object, object, object, object, object, object, object, object, object)
     error = qt2.pyqtSignal(str)
+
     def get_dates_info(self):
         gregorian_months = ["يَنَايِر", "فِبْرَايِر", "مَارِس", "أَبْرِيل", "مَايُو", "يُونْيُو", "يُولْيُو", "أَغُسْطُس", "سِبْتَمْبَر", "أُكْتُوبَر", "نُوفَمْبَر", "دِيسَمْبَر"]
         hijri_months = ["مُحَرَّم", "صَفَر", "رَبِيع ٱلْأَوَّل", "رَبِيع ٱلثَّانِي", "جُمَادَىٰ ٱلْأُولَىٰ", "جُمَادَىٰ ٱلثَّانِيَة", "رَجَب", "شَعْبَان", "رَمَضَان", "شَوَّال", "ذُو ٱلْقَعْدَة", "ذُو ٱلْحِجَّة"]
@@ -44,6 +47,7 @@ class PrayerTimesWorker(qt2.QObject):
         first_day_next_hijri_greg = first_day_next_hijri_obj.to_gregorian()
         hijri_end_dt = datetime(first_day_next_hijri_greg.year, first_day_next_hijri_greg.month, first_day_next_hijri_greg.day)
         return gregorian_date, hijri_date, day, ramadan_start_greg, greg_end_dt, hijri_end_dt, current_greg_month_name, current_hijri_month_name
+
     def run(self):
         try:
             gregorian_date, hijri_date, day, ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month = self.get_dates_info()
@@ -56,7 +60,7 @@ class PrayerTimesWorker(qt2.QObject):
                     latitude=float(settings_handler.get("location","LT2"))
                     longitude=float(settings_handler.get("location","LT1"))
                 method = settings_handler.get("location", "calculationMethod")
-                if not method: method = 5 
+                if not method: method = 5
                 response = requests.get('http://api.aladhan.com/v1/timings', params={'latitude': latitude, 'longitude': longitude, 'method': int(method)})
                 if response.status_code == 200:
                     data = response.json()['data']['timings']
@@ -79,8 +83,11 @@ class PrayerTimesWorker(qt2.QObject):
                 self.finished.emit([], [], gregorian_date, hijri_date, day, f"حدث خطأ غير متوقع: {str(e)}", ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month)
             except Exception as e_inner:
                 self.error.emit(f"حدث خطأ غير متوقع: {str(e_inner)}")
+
+
 class prayer_times(qt.QWidget):
     TEST_MODE = False
+
     def __init__(self,p):
         super().__init__()
         self.p=p
@@ -143,10 +150,11 @@ class prayer_times(qt.QWidget):
         self.setLayout(layout)
         if self.TEST_MODE:
             self.information.addItem("وضع الاختبار يعمل...")
-            self.information.addItem("سيتم رفع أذان الظهر بعد 10 ثوانٍ.")            
+            self.information.addItem("سيتم رفع أذان الظهر بعد 10 ثوانٍ.")
             qt2.QTimer.singleShot(10000, self.trigger_test_adhan)
         else:
             self.display_prayer_times()
+
     def trigger_test_adhan(self):
         test_index = 2
         test_prayer_name = "صلاة الجمعة" if self.day == 4 else "الظهر"
@@ -160,6 +168,7 @@ class prayer_times(qt.QWidget):
             self.information.addItem("انتهى الاختبار بنجاح (وجاري انتظار الإقامة إذا تم ضبطها).")
         else:
             self.information.addItem("خطأ في تشغيل الاختبار.")
+
     def format_arabic_time_unit(self, number, units):
         if number == 0:
             return ""
@@ -170,7 +179,8 @@ class prayer_times(qt.QWidget):
         elif 3 <= number <= 10:
             return f"{number} {units['plural']}"
         else:
-            return f"{number} {units['singular_acc']}"        
+            return f"{number} {units['singular_acc']}"
+
     def format_timedelta_arabic(self, td):
         total_seconds = int(td.total_seconds())
         if total_seconds < 0: total_seconds = 0
@@ -190,6 +200,7 @@ class prayer_times(qt.QWidget):
         s_str = self.format_arabic_time_unit(seconds, second_units)
         parts = [p for p in [d_str, h_str, m_str, s_str] if p]
         return " و ".join(parts) if parts else "لحظات"
+
     def update_countdowns(self):
         now = datetime.now()
         if now.day != self.current_day_check:
@@ -271,6 +282,7 @@ class prayer_times(qt.QWidget):
             hijri_time_str = self.format_timedelta_arabic(hijri_time_left)
             if self.hijri_month_countdown_item:
                 self.hijri_month_countdown_item.setText(f"متبقي على نهاية شهر {self.current_hijri_month}: {hijri_time_str}")
+
     def onTimer(self):
         currentTimeOBJ = datetime.now()
         currentTime=currentTimeOBJ.strftime("%I:%M %p")
@@ -312,11 +324,13 @@ class prayer_times(qt.QWidget):
                             before_azan_sound = os.path.join("data", "sounds", "before_azan", medias[index])
                             self.p.media_player.setSource(qt2.QUrl.fromLocalFile(before_azan_sound))
                             self.p.media_player.play()
+
     def get_prayer_key(self, prayer_name_ar):
         if "الظهر" in prayer_name_ar or "الجمعة" in prayer_name_ar:
             return "dhuhr"
         prayer_map = {"الفجر": "fajr", "العصر": "asr", "المغرب": "maghrib", "العشاء": "isha"}
         return prayer_map.get(prayer_name_ar, None)
+
     def play_iqama_sound(self):
         if self.p.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.p.media_player.stop()
@@ -335,11 +349,13 @@ class prayer_times(qt.QWidget):
             self.iqama_media_player.play()
         except Exception as e:
             pass
+
     def on_iqama_finished(self, status):
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
             if hasattr(self, 'iqama_media_player'):
                 self.iqama_media_player.deleteLater()
                 self.iqama_audio_output.deleteLater()
+
     def schedule_iqama_timer(self, prayer_key):
         if prayer_key is None:
             return
@@ -351,17 +367,20 @@ class prayer_times(qt.QWidget):
         if minutes_to_wait:
             milliseconds_to_wait = minutes_to_wait * 60 * 1000
             qt2.QTimer.singleShot(milliseconds_to_wait, self.play_iqama_sound)
+
     def copy_all_items(self):
         all_text = "\n".join([self.information.item(i).text() for i in range(self.information.count())])
         pyperclip.copy(all_text)
         speak("تم نسخ كل المحتوى بنجاح")
         winsound.Beep(1000, 100)
+
     def copy_selected_item(self):
         selected_item = self.information.currentItem()
         if selected_item:
             pyperclip.copy(selected_item.text())
             winsound.Beep(1000, 100)
             speak("تم نسخ المحتوى المحدد بنجاح")
+
     def display_prayer_times(self):
         if hasattr(self, 'worker_thread') and self.worker_thread.isRunning():
             MessageBox.error(self, "خطأ", "يتم تحميل مواقيت الصلاة بالفعل، يرجى الانتظار.")
@@ -376,6 +395,7 @@ class prayer_times(qt.QWidget):
         self.worker.error.connect(self.on_prayer_times_error)
         self.worker_thread.started.connect(self.worker.run)
         self.worker_thread.start()
+
     def on_prayer_times_ready(self, prayers, times, gregorian_date, hijri_date, day, error_message, ramadan_start_greg, greg_end_dt, hijri_end_dt, greg_month, hijri_month):
         if hasattr(self, 'worker_thread'):
             self.worker_thread.quit()
@@ -409,6 +429,7 @@ class prayer_times(qt.QWidget):
             self.timer.start(1000)
         self.update_countdowns()
         self.countdown_timer.start(1000)
+
     def on_prayer_times_error(self, error_message):
         if hasattr(self, 'worker_thread'):
             self.worker_thread.quit()
@@ -427,5 +448,5 @@ class prayer_times(qt.QWidget):
             hijri_date = f"{hijri_date_obj.day} {hijri_months[hijri_date_obj.month - 1]} {hijri_date_obj.year}"
             self.information.addItem("التاريخ الميلادي: " + gregorian_date)
             self.information.addItem("التاريخ الهجري: " + hijri_date)
-        except:
-            pass
+        except Exception as e:
+            print(f"Handled exception: {e}")

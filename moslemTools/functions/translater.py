@@ -1,6 +1,8 @@
 import os,settings
 import ujson as json
 _translations=None
+
+
 def load_translations():
     global _translations
     if _translations is None:
@@ -10,15 +12,21 @@ def load_translations():
         for value in values:
             if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"Quran Translations",value)):
                 del _translations[gettranslationByIndex(value)]
+
+
 def reload_translations():
     global _translations
     _translations = None
     load_translations()
+
+
 def __getattr__(name):
     if name == "translations":
         load_translations()
         return _translations
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+
 def gettranslationByIndex(index:str):
     load_translations()
     try:
@@ -28,6 +36,8 @@ def gettranslationByIndex(index:str):
         return rtranslations[index]
     except:
         return ""
+
+
 def gettranslation(translationName:str,From:int,to:int):
     load_translations()
     try:

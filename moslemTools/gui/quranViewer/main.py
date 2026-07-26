@@ -19,6 +19,7 @@ from .threads import DownloadThread, MergeThread, PreMergeCheckThread, SaveThrea
 with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
     reciters = json.load(file)
 
+
 class QuranViewer(qt.QDialog):
     def __init__(self,p,text:str,type:int,category,index=0,enableNextPreviouseButtons=False,typeResult=[],CurrentIndex=0,enableBookmarks=True):
         super().__init__(p)
@@ -181,9 +182,16 @@ class QuranViewer(qt.QDialog):
         self.merge_progress_bar = qt.QProgressBar()
         self.merge_action_button = guiTools.QPushButton("إلغاء العملية")
         self.merge_action_button.setAutoDefault(False)
+        self.merge_action_button.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
         self.merge_action_button.clicked.connect(self.handle_merge_action)
+        self.resume_download_button = guiTools.QPushButton("استئناف")
+        self.resume_download_button.setAutoDefault(False)
+        self.resume_download_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
+        self.resume_download_button.setVisible(False)
+        self.resume_download_button.clicked.connect(self.resume_current_download)
         merge_layout = qt.QHBoxLayout()
         merge_layout.addWidget(self.merge_feedback_label)
+        merge_layout.addWidget(self.resume_download_button)
         merge_layout.addWidget(self.merge_progress_bar)
         merge_layout.addWidget(self.merge_action_button)
         self.merge_widget = qt.QWidget()
@@ -295,60 +303,70 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+x", self).activated.connect(self.removeTashkeelForAyah)
         qt1.QShortcut("ctrl+alt+j", self).activated.connect(self.showSajdaVerses)
         qt1.QShortcut("ctrl+alt+r", self).activated.connect(self.showAsbabAlnozoleVerses)
+
     def t10(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.1))
+
     def t20(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.2))
+
     def t30(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.3))
+
     def t40(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.4))
+
     def t50(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.5))
+
     def t60(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.6))
+
     def t70(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.7))
+
     def t80(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.8))
+
     def t90(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
         self.media.setPosition(int(total_duration * 0.9))
+
     def close_window(self):
         if getattr(self, 'is_merging', False):
             if getattr(self, 'save_mode', False):
@@ -360,19 +378,24 @@ class QuranViewer(qt.QDialog):
             qt2.QTimer.singleShot(100,self.close)
         else:
             self.close()
+
     def _is_invalid_search_line(self):
         if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):
             if self.text.textCursor().blockNumber() < 2:
                 return True
         return False
+
     def _handle_invalid_search_line_action(self):
         winsound.Beep(440, 200)
         guiTools.speak("لا يمكن تنفيذ هذا الإجراء على هذا السطر")
+
     def _remove_tashkeel_from_text(self, text):
         return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
+
     def _toggle_tashkeel(self, checked):
         self.remove_tashkeel = checked
         self._update_display_text()
+
     def _show_numbering_options(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -411,11 +434,13 @@ class QuranViewer(qt.QDialog):
         menu.addAction(self.remove_tashkeel_action)
         menu.aboutToHide.connect(self.resume_after_action)
         menu.exec(qt1.QCursor.pos())
+
     def _set_numbering_mode(self, mode):
         if self.verse_numbering_mode == mode:
             return
         self.verse_numbering_mode = mode
         self._update_display_text()
+
     def _update_display_text(self):
         if self.verse_numbering_mode in self.text_cache:
             formatted_text = self.text_cache[self.verse_numbering_mode]
@@ -475,6 +500,7 @@ class QuranViewer(qt.QDialog):
         if self.remove_tashkeel:
             display_text = self._remove_tashkeel_from_text(formatted_text)
         self._set_text_with_delay(display_text)
+
     def handle_merge_action(self):
         if self.is_merging and self.merge_phase == 'merging':
             self.confirm_and_cancel_merge()
@@ -483,15 +509,18 @@ class QuranViewer(qt.QDialog):
             if hasattr(self, 'pre_merge_thread') and self.pre_merge_thread.isRunning():
                 self.pre_merge_thread.terminate()
             self.on_merge_finished(False, "تم إلغاء عملية التحضير من قبل المستخدم.")
+
     def confirm_and_cancel_merge(self):
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل أنت متأكد أنك تريد إلغاء عملية العملية الحالية؟", "نعم", "لا")
         if reply == 0:
             self.cancellation_requested = True
             if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
                 self.merge_thread.stop()
+
     def _handle_search_view_restriction(self):
         winsound.Beep(440, 200)
         guiTools.speak("هذا الخيار غير متاح في وضع البحث")
+
     def mergeAyahs(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -523,6 +552,7 @@ class QuranViewer(qt.QDialog):
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
         self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
         self.pre_merge_thread.start()
+
     def mergeCategoryAyahs(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -544,6 +574,7 @@ class QuranViewer(qt.QDialog):
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
         self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
         self.pre_merge_thread.start()
+
     def saveCurrentAyah(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -565,6 +596,7 @@ class QuranViewer(qt.QDialog):
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished_for_save)
         self.pre_merge_thread.error.connect(lambda msg: self.on_save_finished(False, msg))
         self.pre_merge_thread.start()
+
     def saveFromVersToVers(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -590,6 +622,7 @@ class QuranViewer(qt.QDialog):
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished_for_save)
         self.pre_merge_thread.error.connect(lambda msg: self.on_save_finished(False, msg))
         self.pre_merge_thread.start()
+
     def saveCategoryAyahs(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -607,6 +640,7 @@ class QuranViewer(qt.QDialog):
         self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished_for_save)
         self.pre_merge_thread.error.connect(lambda msg: self.on_save_finished(False, msg))
         self.pre_merge_thread.start()
+
     def on_pre_merge_check_finished(self, merge_list, ayahs_to_download):
         if self.cancellation_requested: return
         self.merge_list = merge_list
@@ -637,6 +671,7 @@ class QuranViewer(qt.QDialog):
         self.completed_merge_downloads.clear()
         self.cancellation_requested = False
         self.process_next_in_merge_queue()
+
     def on_pre_merge_check_finished_for_save(self, merge_list, ayahs_to_download):
         if self.cancellation_requested: return
         self.merge_list = merge_list
@@ -673,6 +708,7 @@ class QuranViewer(qt.QDialog):
         self.save_thread.progress.connect(self.merge_progress_bar.setValue)
         self.save_thread.finished.connect(self.on_save_finished)
         self.save_thread.start()
+
     def on_save_finished(self, success, message):
         self.is_merging = False
         self.merge_phase = 'idle'
@@ -687,6 +723,7 @@ class QuranViewer(qt.QDialog):
         self.completed_merge_downloads.clear()
         self.resume_after_action()
         self.save_mode = False
+
     def process_next_in_merge_queue(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية من قبل المستخدم.")
@@ -710,18 +747,32 @@ class QuranViewer(qt.QDialog):
             self.download_thread.progress.connect(self.merge_progress_bar.setValue)
             self.download_thread.finished.connect(self.on_single_merge_download_finished)
             self.download_thread.cancelled.connect(lambda: self.on_merge_finished(False, "حدث خطأ أثناء التحميل."))
+            self.download_thread.network_error.connect(self.on_download_network_error)
+            self.resume_download_button.setVisible(False)
             self.download_thread.start()
         else:
             self.merge_progress_bar.hide()
+            self.resume_download_button.setVisible(False)
+
+    def on_download_network_error(self, msg):
+        self.resume_download_button.setVisible(True)
+        guiTools.qMessageBox.MessageBox.error(self, "انقطاع الاتصال", msg)
+
+    def resume_current_download(self):
+        if hasattr(self, 'download_thread') and self.download_thread is not None:
+            self.download_thread.resume()
+            self.resume_download_button.setVisible(False)
             if self.save_mode:
                 pass
             else:
                 self.finalize_and_execute_merge()
+
     def on_single_merge_download_finished(self):
         if self.current_download_url:
             self.completed_merge_downloads.add(self.current_download_url)
             self.current_download_url = None
         self.process_next_in_merge_queue()
+
     def finalize_and_execute_merge(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية قبل بدء الدمج.")
@@ -747,6 +798,7 @@ class QuranViewer(qt.QDialog):
             self.on_merge_finished(False, "لم يتم العثور على جميع الملفات المطلوبة للدمج.")
             return
         self.execute_merge(files_for_ffmpeg, self.current_merge_output_path)
+
     def execute_merge(self, input_files, output_file):
         self.is_merging = True
         self.merge_phase = 'merging'
@@ -756,6 +808,7 @@ class QuranViewer(qt.QDialog):
         self.merge_thread = MergeThread(self.ffmpeg_path, input_files, output_file)
         self.merge_thread.finished.connect(self.on_merge_finished)
         self.merge_thread.start()
+
     def on_merge_finished(self, success, message):
         self.is_merging = False
         self.merge_phase = 'idle'
@@ -789,6 +842,7 @@ class QuranViewer(qt.QDialog):
         self.completed_merge_downloads.clear()
         self.resume_after_action()
         self.save_mode = False
+
     def set_ui_for_merge(self, is_active):
         self.is_merging = is_active
         widgets_to_disable = [self.text, self.search_widget, self.next, self.previous, self.changeCategory, self.changeCurrentReciterButton, self.toggle_search_button]
@@ -803,6 +857,7 @@ class QuranViewer(qt.QDialog):
             self.merge_progress_bar.setValue(0)
         else:
             self.merge_action_button.setStyleSheet("")
+
     def toggle_search_bar(self):
         if self.search_widget.isVisible():
             self.search_widget.hide()
@@ -813,6 +868,7 @@ class QuranViewer(qt.QDialog):
             self.search_widget.show()
             self.toggle_search_button.setText("إخفاء شريط البحث")
             self.search_input.setFocus()
+
     def show_search_mode_dialog(self):
         self.pause_for_action()
         dialog = SearchModeDialog(self, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
@@ -825,6 +881,7 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.speak("تم إلغاء التغييرات")
         self.resume_after_action()
+
     def search(self, pattern, text_list):
         def remove_tashkeel(text):
             return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
@@ -839,6 +896,7 @@ class QuranViewer(qt.QDialog):
             return normalized_text
         normalized_pattern = normalize(pattern)
         return [text for text in text_list if normalized_pattern in normalize(text)]
+
     def perform_search(self):
         search_term = self.search_input.text()
         if not search_term:
@@ -865,6 +923,7 @@ class QuranViewer(qt.QDialog):
                 self.media.stop()
         else:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على نتائج")
+
     def clear_search_results(self):
         self.is_search_view = False
         self.numbering_button.setVisible(True)
@@ -875,6 +934,7 @@ class QuranViewer(qt.QDialog):
         self.clear_results_button.hide()
         self.search_input.clear()
         guiTools.speak("تمت العودة إلى العرض الأصلي")
+
     def format_category_name(self, category_type, category_value):
         if category_type == 0:
             return f"{category_value}"
@@ -887,15 +947,18 @@ class QuranViewer(qt.QDialog):
         elif category_type == 4:
             return f"الحزب {category_value}"
         return category_value
+
     def pause_for_action(self):
         if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.was_playing_before_action = True
             self.media.pause()
         else:
             self.was_playing_before_action = False
+
     def resume_after_action(self):
         if self.was_playing_before_action:
             self.media.play()
+
     def _set_text_with_delay(self, full_text):
         self.saved_text = full_text
         lines = full_text.split('\n')
@@ -904,10 +967,12 @@ class QuranViewer(qt.QDialog):
         self.update_font_size()
         if len(lines) > 40:
             qt2.QTimer.singleShot(500, self._display_full_content)
+
     def _display_full_content(self):
         if not hasattr(self, 'context_menu_active') or not self.context_menu_active:
             self.text.setText(self.saved_text)
             self.update_font_size()
+
     def eventFilter(self, obj, event):
         if obj == self.text.viewport() and event.type() == qt2.QEvent.Type.MouseButtonPress and event.button() == qt2.Qt.MouseButton.LeftButton:
             cursor = self.text.cursorForPosition(event.position().toPoint())
@@ -915,6 +980,7 @@ class QuranViewer(qt.QDialog):
             self.on_play()
             return True
         return super().eventFilter(obj, event)
+
     def oncontextMenu(self):
         if self._is_invalid_search_line():
             return
@@ -1197,6 +1263,7 @@ class QuranViewer(qt.QDialog):
         menu.aboutToHide.connect(lambda: self.__setattr__('context_menu_active', False))
         menu.aboutToHide.connect(self.resume_after_action)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
+
     def removeTashkeelForAyah(self, cursor_pos=None):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1253,6 +1320,7 @@ class QuranViewer(qt.QDialog):
         target_cursor.movePosition(qt1.QTextCursor.MoveOperation.Right, n=pos_in_block)
         self.text.setTextCursor(target_cursor)
         self.resume_after_action()
+
     def toggleTashkeelView(self):
         if self.is_search_view:
             winsound.Beep(440, 200)
@@ -1264,12 +1332,14 @@ class QuranViewer(qt.QDialog):
             guiTools.speak("تم إزالة التشكيل من الفئة")
         else:
             guiTools.speak("تم إظهار التشكيل للفئة")
+
     def onAddNote(self, position_data):
         self.pause_for_action()
         dialog = note_dialog.NoteDialog(self, mode="add")
         dialog.saved.connect(lambda old, new, content: self.saveNote(position_data, new, content))
         dialog.exec()
         self.resume_after_action()
+
     def onEditNote(self, position_data, note_name):
         self.pause_for_action()
         note = notesManager.getNoteByName("quran", note_name)
@@ -1278,6 +1348,7 @@ class QuranViewer(qt.QDialog):
             dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
             dialog.exec()
         self.resume_after_action()
+
     def saveNote(self, position_data, name, content):
         existing_note = notesManager.getNoteByName("quran", name)
         if existing_note is not None:
@@ -1285,6 +1356,7 @@ class QuranViewer(qt.QDialog):
             return
         notesManager.addNewNote("quran", {"name": name, "content": content, "position_data": position_data})
         guiTools.speak("تمت إضافة الملاحظة")
+
     def updateNote(self, position_data, old_name, new_name, new_content):
         if old_name != new_name:
             existing_note = notesManager.getNoteByName("quran", new_name)
@@ -1297,6 +1369,7 @@ class QuranViewer(qt.QDialog):
             guiTools.speak("تم تحديث الملاحظة بنجاح")
         else:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")
+
     def onAddOrRemoveNote(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1314,6 +1387,7 @@ class QuranViewer(qt.QDialog):
         else:
             self.onAddNote(ayah_position)
         self.resume_after_action()
+
     def onViewNote(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1331,6 +1405,7 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.speak("لا توجد ملاحظة لهذه الآية")
         self.resume_after_action()
+
     def onNoteAction(self, position_data):
         self.pause_for_action()
         note = notesManager.getNotesForPosition("quran", position_data)
@@ -1339,6 +1414,7 @@ class QuranViewer(qt.QDialog):
             dialog.edit_requested.connect(lambda note_name: self.onEditNote(position_data, note_name))
             dialog.exec()
         self.resume_after_action()
+
     def onDeleteNote(self, position_data):
         self.pause_for_action()
         note = notesManager.getNotesForPosition("quran", position_data)
@@ -1348,6 +1424,7 @@ class QuranViewer(qt.QDialog):
                 notesManager.removeNote("quran", note["name"])
                 guiTools.speak("تم حذف الملاحظة")
         self.resume_after_action()
+
     def copyAya(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1357,6 +1434,7 @@ class QuranViewer(qt.QDialog):
             pyperclip.copy(a)
             winsound.Beep(1000,100)
             guiTools.speak("تم نسخ الآية المحددة بنجاح")
+
     def _go_to_specific_ayah(self, ayah_index):
         cursor = self.text.textCursor()
         cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
@@ -1364,6 +1442,7 @@ class QuranViewer(qt.QDialog):
             cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
         self.text.setTextCursor(cursor)
         self.text.setFocus()
+
     def goToAyahAndExitSearch(self):
         if not self.is_search_view:
             return
@@ -1379,6 +1458,7 @@ class QuranViewer(qt.QDialog):
             return
         self.clear_search_results()
         qt2.QTimer.singleShot(100, lambda: self._go_to_specific_ayah(target_ayah_index))
+
     def goToAyah(self):
         if self.is_search_view:
             self.goToAyahAndExitSearch()
@@ -1391,10 +1471,12 @@ class QuranViewer(qt.QDialog):
         if OK:
             self._go_to_specific_ayah(ayah - 1)
         self.resume_after_action()
+
     def getCurrentAyah(self):
         if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):
             return self.text.textCursor().blockNumber() - 2
         return self.text.textCursor().blockNumber()
+
     def on_set(self, ayah_index=None):
         if ayah_index is None:
             ayah_index = self.getCurrentAyah()
@@ -1415,6 +1497,7 @@ class QuranViewer(qt.QDialog):
         else:
             Ayah=str(Ayah)
         return surah+Ayah+".mp3"
+
     def on_play(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1444,19 +1527,23 @@ class QuranViewer(qt.QDialog):
             self.media.stop()
             self.media.setSource(path)
             qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))
+
     def onPlayToEnd(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
             return
         text_for_player = self.original_quran_text if not self.is_search_view else self.quranText
         QuranPlayer(self, text_for_player, self.getCurrentAyah(), self.type, self.category).exec()
+
     def getCurrentReciter(self):
         index=self.currentReciter
         name=list(reciters.keys())[index]
         return name
+
     def getcurrentAyahText(self):
         line = self.getCurrentAyah()
         return self._get_line_text_for_action(line) or ""
+
     def print_text(self):
         try:
             printer=QPrinter()
@@ -1465,6 +1552,7 @@ class QuranViewer(qt.QDialog):
                 self.text.print(printer)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def save_text_as_txt(self):
         try:
             file_dialog=qt.QFileDialog()
@@ -1478,16 +1566,20 @@ class QuranViewer(qt.QDialog):
                     file.write(text)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(value))
+
     def update_font_size(self):
         cursor=self.text.textCursor()
         self.text.selectAll()
@@ -1496,6 +1588,7 @@ class QuranViewer(qt.QDialog):
         font.setBold(self.font_is_bold)
         self.text.setCurrentFont(font)
         self.text.setTextCursor(cursor)
+
     def copy_text(self):
         try:
             text=self.text.toPlainText()
@@ -1504,6 +1597,7 @@ class QuranViewer(qt.QDialog):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def getCurentAyahTafseer(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1519,6 +1613,7 @@ class QuranViewer(qt.QDialog):
         TafaseerViewer(self,AyahNumber,AyahNumber).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def getTafaseerForSurah(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -1531,6 +1626,7 @@ class QuranViewer(qt.QDialog):
         TafaseerViewer(self,AyahNumber1,AyahNumber2).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def show_current_surah_info(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1576,6 +1672,7 @@ class QuranViewer(qt.QDialog):
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ أثناء جلب معلومات السورة: {e}")
         self.resume_after_action()
+
     def onSurahInfo(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1689,6 +1786,7 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على معلومات.")
         self.resume_after_action()
+
     def showSajdaVerses(self):
         if self.is_search_view:
             return
@@ -1700,6 +1798,7 @@ class QuranViewer(qt.QDialog):
         self.sajda_thread = SajdaFinderThread(self.original_quran_text.split('\n'), self.category, self.type)
         self.sajda_thread.finished.connect(self.onSajdaFinderFinished)
         self.sajda_thread.start()
+
     def onSajdaFinderFinished(self, sajda_verses):
         self.is_counting_sajdas = False
         self.info.setText(self.original_info_text)
@@ -1725,6 +1824,7 @@ class QuranViewer(qt.QDialog):
                 cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
             self.text.setTextCursor(cursor)
             self.text.setFocus()
+
     def showAsbabAlnozoleVerses(self):
         if self.is_search_view:
             return
@@ -1736,6 +1836,7 @@ class QuranViewer(qt.QDialog):
         self.asbab_thread = AsbabAlnozoleFinderThread(self.original_quran_text.split('\n'), self.category, self.type)
         self.asbab_thread.finished.connect(self.onAsbabAlnozoleFinderFinished)
         self.asbab_thread.start()
+
     def onAsbabAlnozoleFinderFinished(self, asbab_verses):
         self.is_counting_asbab_alnozole = False
         self.info.setText(self.original_info_text)
@@ -1761,10 +1862,12 @@ class QuranViewer(qt.QDialog):
                 cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
             self.text.setTextCursor(cursor)
             self.text.setFocus()
+
     def keyPressEvent(self, event):
         if event.key() == qt2.Qt.Key.Key_Escape:
             self.close()
         super().keyPressEvent(event)
+
     def closeEvent(self, event):
         if getattr(self, 'is_merging', False):
             if getattr(self, 'save_mode', False):
@@ -1794,6 +1897,7 @@ class QuranViewer(qt.QDialog):
                 self.asbab_thread.terminate()
         self.media.stop()
         super().closeEvent(event)
+
     def getCurentAyahIArab(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1810,6 +1914,7 @@ class QuranViewer(qt.QDialog):
         guiTools.TextViewer(self,"إعراب",result).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def getIArabForSurah(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -1823,6 +1928,7 @@ class QuranViewer(qt.QDialog):
         guiTools.TextViewer(self,"إعراب",result).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def getCurrentAyahTanzel(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1842,6 +1948,7 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.qMessageBox.MessageBox.view(self,"تنبيه","لا توجد أسباب نزول متاحة لهذه الآية")
         self.resume_after_action()
+
     def getAyahInfo(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1858,6 +1965,7 @@ class QuranViewer(qt.QDialog):
             sajda="الآية تحتوي على سجدة"
         guiTools.qMessageBox.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nالجزء {} \nالربع {} \nالصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
         self.resume_after_action()
+
     def getCurentAyahTranslation(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1873,6 +1981,7 @@ class QuranViewer(qt.QDialog):
         translationViewer(self,AyahNumber,AyahNumber).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def getTranslationForSurah(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -1885,6 +1994,7 @@ class QuranViewer(qt.QDialog):
         translationViewer(self,AyahNumber1,AyahNumber2).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def onAddBookMark(self):
         self.pause_for_action()
         if self.enableBookmarks==False:
@@ -1901,6 +2011,7 @@ class QuranViewer(qt.QDialog):
             current_ayah = self.getCurrentAyah()
             functions.bookMarksManager.addNewQuranBookMark(self.type, self.category, current_ayah, False, name)
         self.resume_after_action()
+
     def playFromVersToVers(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -1920,6 +2031,7 @@ class QuranViewer(qt.QDialog):
                 QuranPlayer(self,"\n".join(verses),0,self.type,self.category).exec()
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def TafseerFromVersToVers(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -1936,6 +2048,7 @@ class QuranViewer(qt.QDialog):
                 TafaseerViewer(self,AyahNumber1,AyahNumber2).exec()
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def translateFromVersToVers(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -1952,6 +2065,7 @@ class QuranViewer(qt.QDialog):
                 translationViewer(self,AyahNumber1,AyahNumber2).exec()
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def IArabFromVersToVers(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -1969,6 +2083,7 @@ class QuranViewer(qt.QDialog):
                 guiTools.TextViewer(self,"إعراب",result).exec()
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()
+
     def _get_line_text_for_action(self, ayah_index):
         if ayah_index < 0:
             return None
@@ -1977,11 +2092,13 @@ class QuranViewer(qt.QDialog):
         if ayah_index < len(lines):
             return lines[ayah_index]
         return None
+
     def _update_view_for_new_content(self, new_text):
         self.quranText = new_text
         self.original_quran_text = new_text
         self.text_cache = {"by_surah": self.original_quran_text}
         self._update_display_text()
+
     def update_nav_buttons_text(self):
         cat_singular = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
         name = cat_singular.get(self.type, "الفئة")
@@ -1989,6 +2106,7 @@ class QuranViewer(qt.QDialog):
         prev_suffix = "السابق" if self.type in [2, 3, 4] else "السابقة"
         self.next.setText(f"{name} {next_suffix}")
         self.previous.setText(f"{name} {prev_suffix}")
+
     def onNext(self):
         self.pause_for_action()
         if self.CurrentIndex==len(self.typeResult)-1:
@@ -2005,6 +2123,7 @@ class QuranViewer(qt.QDialog):
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
         self.resume_after_action()
+
     def onPreviouse(self):
         self.pause_for_action()
         if self.CurrentIndex==0:
@@ -2021,6 +2140,7 @@ class QuranViewer(qt.QDialog):
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
         self.resume_after_action()
+
     def goToCategory(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -2052,6 +2172,7 @@ class QuranViewer(qt.QDialog):
             self._update_view_for_new_content(new_text)
             self.update_nav_buttons_text()
         self.resume_after_action()
+
     def onChangeCategory(self):
         self.pause_for_action()
         categories=["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"]
@@ -2071,6 +2192,7 @@ class QuranViewer(qt.QDialog):
             action.triggered.connect(self.ONChangeCategoryRequested)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
         self.resume_after_action()
+
     def ONChangeCategoryRequested(self):
         self.pause_for_action()
         categories=["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"]
@@ -2095,6 +2217,7 @@ class QuranViewer(qt.QDialog):
         self._update_view_for_new_content(new_text)
         self.update_nav_buttons_text()
         self.resume_after_action()
+
     def onRemoveBookmark(self):
         self.pause_for_action()
         try:
@@ -2105,6 +2228,7 @@ class QuranViewer(qt.QDialog):
         except:
             guiTools.speak("تم حذف العلامة المرجعية")
         self.resume_after_action()
+
     def onAddOrRemoveBookmark(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -2122,11 +2246,13 @@ class QuranViewer(qt.QDialog):
         else:
             self.onAddBookMark()
         self.resume_after_action()
+
     def set_position_from_slider(self, value):
         duration = self.media.duration()
         new_position = int((value / 100) * duration)
         self.media.setPosition(new_position)
         guiTools.speak(f"{value}%")
+
     def update_slider(self):
         try:
             self.media_progress.blockSignals(True)
@@ -2137,8 +2263,9 @@ class QuranViewer(qt.QDialog):
                 self.media_progress.setValue(progress_value)
                 self.update_time_label(position, duration)
             self.media_progress.blockSignals(False)
-        except:
-            pass
+        except Exception as e:
+            print(f"Handled exception: {e}")
+
     def update_time_label(self, position, duration):
         position_sec = position // 1000
         duration_sec = duration // 1000
@@ -2147,10 +2274,12 @@ class QuranViewer(qt.QDialog):
         duration_str = f"{duration_sec // 60}:{duration_sec % 60:02d}"
         remaining_str = f"{remaining_sec // 60}:{remaining_sec % 60:02d}"
         self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
+
     def on_state(self,state):
         if state==QMediaPlayer.MediaStatus.EndOfMedia:
             self.media_progress.setVisible(False)
             self.time_label.setVisible(False)
+
     def onChangeRecitersContextMenuRequested(self):
         self.pause_for_action()
         RL=list(reciters.keys())
@@ -2159,12 +2288,14 @@ class QuranViewer(qt.QDialog):
         if code==dlg.DialogCode.Accepted:
             self.currentReciter=list(reciters.keys()).index(dlg.recitersListWidget.currentItem().text())
         self.resume_after_action()
+
     def _set_initial_ayah_position(self):
         cerser = self.text.textCursor()
         cerser.movePosition(cerser.MoveOperation.Start)
         for i in range(self.initial_ayah_index):
             cerser.movePosition(cerser.MoveOperation.Down)
         self.text.setTextCursor(cerser)
+
     def onDeleteNoteShortcut(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -2183,6 +2314,7 @@ class QuranViewer(qt.QDialog):
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
         self.resume_after_action()
+
     def copy_current_selection(self):
         try:
             cursor = self.text.textCursor()
@@ -2195,6 +2327,7 @@ class QuranViewer(qt.QDialog):
                 self.copyAya()
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def copyFromVersToVers(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -2217,6 +2350,7 @@ class QuranViewer(qt.QDialog):
                 else:
                     guiTools.speak("لم يتم تحديد آيات للنسخ")
         self.resume_after_action()
+
     def format_category_name(self, category_type, category_value):
         if category_type == 0:
             return f"{category_value}"
@@ -2229,15 +2363,17 @@ class QuranViewer(qt.QDialog):
         elif category_type == 4:
             return f"الحزب {category_value}"
         return category_value
+
     def load_speed(self):
         try:
             path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
             if os.path.exists(path):
                 with open(path, 'r', encoding='utf-8') as f:
                     return json.load(f).get("quranViewer", 1.0)
-        except:
-            pass
+        except Exception as e:
+            print(f"Handled exception: {e}")
         return 1.0
+
     def save_speed(self, speed):
         try:
             path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "playback_speed.json")
@@ -2247,18 +2383,20 @@ class QuranViewer(qt.QDialog):
                 try:
                     with open(path, 'r', encoding='utf-8') as f:
                         data = json.load(f)
-                except:
-                    pass
+                except Exception as e:
+                    print(f"Handled exception: {e}")
             data["quranViewer"] = speed
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f)
-        except:
-            pass
+        except Exception as e:
+            print(f"Handled exception: {e}")
+
     def change_speed(self, speed):
         self.save_speed(speed)
         self.media.setPlaybackRate(speed)
         if hasattr(self.media, 'setPitchCompensation'):
             self.media.setPitchCompensation(True)
+
     def apply_speed(self):
         speed = self.load_speed()
         self.media.setPlaybackRate(speed)

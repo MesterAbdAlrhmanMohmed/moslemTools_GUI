@@ -2,6 +2,7 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 
+
 class QReadOnlyTextEdit(qt.QTextEdit):
     def __init__(self, parent=None, viewer_name=None):
         super().__init__(parent)
@@ -16,6 +17,7 @@ class QReadOnlyTextEdit(qt.QTextEdit):
             self.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
         self.setAcceptRichText(True)
         self.document().setDefaultCursorMoveStyle(qt2.Qt.CursorMoveStyle.VisualMoveStyle)
+
     def setText(self, text):
         if text:
             text = "\n".join([line if line.strip() else "\u200b" for line in text.split("\n")])

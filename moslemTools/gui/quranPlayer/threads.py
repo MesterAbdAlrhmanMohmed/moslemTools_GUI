@@ -1,15 +1,18 @@
 import os, requests, subprocess, shutil
 import PyQt6.QtCore as qt2
 
+
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal()
     cancelled = qt2.pyqtSignal()
+
     def __init__(self, url, filepath):
         super().__init__()
         self.url = url
         self.filepath = filepath
         self.is_cancelled = False
+
     def run(self):
         try:
             response = requests.get(self.url, stream=True)
@@ -29,17 +32,21 @@ class DownloadThread(qt2.QThread):
             self.finished.emit()
         except Exception as e:
             self.cancelled.emit()
+
     def cancel(self):
         self.is_cancelled = True
 
+
 class MergeThread(qt2.QThread):
     finished = qt2.pyqtSignal(bool, str)
+
     def __init__(self, ffmpeg_path, input_files, output_file):
         super().__init__()
         self.ffmpeg_path = ffmpeg_path
         self.input_files = input_files
         self.output_file = output_file
         self.process = None
+
     def run(self):
         list_filepath = os.path.join(os.path.dirname(self.output_file), "mergelist.txt")
         try:
@@ -63,14 +70,17 @@ class MergeThread(qt2.QThread):
         finally:
             if os.path.exists(list_filepath):
                 os.remove(list_filepath)
+
     def stop(self):
         if self.process and self.process.poll() is None:
             self.process.terminate()
+
 
 class SaveThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)
     finished = qt2.pyqtSignal(bool, str)
     cancelled = qt2.pyqtSignal()
+
     def __init__(self, merge_list, output_dir, parent=None):
         super().__init__(parent)
         self.merge_list = merge_list
@@ -78,6 +88,7 @@ class SaveThread(qt2.QThread):
         self.is_cancelled = False
         self.total = len(merge_list)
         self.current = 0
+
     def run(self):
         try:
             for idx, item in enumerate(self.merge_list, start=1):
@@ -105,5 +116,6 @@ class SaveThread(qt2.QThread):
             self.finished.emit(True, msg)
         except Exception as e:
             self.finished.emit(False, f"خطأ أثناء الحفظ: {str(e)}")
+
     def cancel(self):
         self.is_cancelled = True

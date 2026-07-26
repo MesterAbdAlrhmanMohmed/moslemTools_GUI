@@ -16,9 +16,11 @@ except ImportError:
 TMP_DIR = Path(tempfile.gettempdir()) / "radio_recordings_temp"
 TMP_DIR.mkdir(exist_ok=True)
 
+
 class WasapiRecorder(qt2.QObject):
     error = qt2.pyqtSignal(str)
     recording_stopped = qt2.pyqtSignal(str, str)
+
     def __init__(self, ffmpeg_path="ffmpeg"):
         super().__init__()
         self.ffmpeg_path = ffmpeg_path
@@ -66,15 +68,18 @@ class WasapiRecorder(qt2.QObject):
         except Exception as e:
             self.error.emit(f"خطأ غير متوقع: {e}")
             self._is_ready = False
+
     def is_ready(self):
         return self._is_ready
+
     def _callback(self, indata, frames, time_info, status):
         with self._lock:
             if self._running and not self._paused and self._sf_handle:
                 try:
                     self._sf_handle.write(indata.copy())
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Handled exception: {e}")
+
     def _run_stream(self):
         try:
             self._temp_wav_path = TMP_DIR / f"rec_{uuid.uuid4().hex}.wav"
@@ -101,6 +106,7 @@ class WasapiRecorder(qt2.QObject):
                 self.recording_stopped.emit("FAILED", "")
                 return
             self.recording_stopped.emit("STOPPED", str(temp_file))
+
     def start(self):
         if not self._is_ready:
             return
@@ -111,12 +117,15 @@ class WasapiRecorder(qt2.QObject):
             self._stop_requested = False
         self._thread = threading.Thread(target=self._run_stream, daemon=True)
         self._thread.start()
+
     def pause(self):
         with self._lock:
             self._paused = True
+
     def resume(self):
         with self._lock:
             self._paused = False
+
     def stop(self, cleanup_only=False):
         with self._lock:
             if not self._running: return
@@ -129,9 +138,10 @@ class WasapiRecorder(qt2.QObject):
             try:
                 if self._temp_wav_path and self._temp_wav_path.exists():
                     self._temp_wav_path.unlink(missing_ok=True)
-            except:
-                pass
+            except Exception as e:
+                print(f"Handled exception: {e}")
             self.recording_stopped.emit("CLEANUP_ONLY", "")
+
     def convert_and_cleanup(self, temp_file_path, output_filename):
         temp_file = Path(temp_file_path)
         if not temp_file.exists():
@@ -150,6 +160,7 @@ class WasapiRecorder(qt2.QObject):
         finally:
             try: temp_file.unlink(missing_ok=True)
             except: pass
+
 
 class SchedulingDialog(qt.QDialog):
     def __init__(self, parent):
@@ -246,6 +257,7 @@ class SchedulingDialog(qt.QDialog):
         wrapper.setAlignment(qt2.Qt.AlignmentFlag.AlignLeft)
         layout.addLayout(wrapper)
         qt1.QShortcut("Escape", self).activated.connect(self.reject)
+
     def validate_and_accept(self):
         total_start_time = (self.start_h_spin.value() * 3600) + (self.start_m_spin.value() * 60) + self.start_s_spin.value()
         if total_start_time == 0:
@@ -256,6 +268,7 @@ class SchedulingDialog(qt.QDialog):
              guiTools.qMessageBox.MessageBox.error(self, "خطأ في الإدخال", "يجب تحديد مدة للتسجيل (ثانية واحدة على الأقل).")
              return
         self.accept()
+
     def get_values(self):
         return (self.start_h_spin.value(), self.start_m_spin.value(), self.start_s_spin.value(),
                 self.dur_h_spin.value(), self.dur_m_spin.value(), self.dur_s_spin.value())

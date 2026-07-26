@@ -3,6 +3,7 @@ import ujson as json
 
 _ahadeeths=None
 
+
 def load_ahadeeths():
     global _ahadeeths
     if _ahadeeths is None:
@@ -16,16 +17,19 @@ def load_ahadeeths():
                 filtered[key] = value
         _ahadeeths = filtered
 
+
 def reload_ahadeeths():
     global _ahadeeths
     _ahadeeths = None
     load_ahadeeths()
+
 
 def __getattr__(name):
     if name == "ahadeeths":
         load_ahadeeths()
         return _ahadeeths
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 def getahadeethByIndex(val: str):
     load_ahadeeths()

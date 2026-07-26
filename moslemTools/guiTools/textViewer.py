@@ -4,6 +4,8 @@ from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
 from PyQt6.QtCore import QTimer
+
+
 class TextViewer(qt.QDialog):
     def __init__(self, p, title, text):
         super().__init__(p)
@@ -46,9 +48,11 @@ class TextViewer(qt.QDialog):
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
         self._set_text_with_delay(text)
+
     def _set_full_text_and_update_font(self, full_text):
         self.text.setText(full_text)
         self.update_font_size()
+
     def OnContextMenu(self):
         cursor = self.text.textCursor()
         self.saved_selection_start = cursor.selectionStart()
@@ -78,6 +82,7 @@ class TextViewer(qt.QDialog):
         copy_selected_text.triggered.connect(lambda: QTimer.singleShot(250, self.copy_line))
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
+
     def restore_after_menu(self):
         self.context_menu_active = False
         lines = self.saved_text.split('\n')
@@ -90,6 +95,7 @@ class TextViewer(qt.QDialog):
             self.text.setTextCursor(cursor)
         if len(lines) > 40:
             QTimer.singleShot(200, self.restore_full_content)
+
     def restore_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
@@ -98,6 +104,7 @@ class TextViewer(qt.QDialog):
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
                 self.text.setTextCursor(cursor)
+
     def print_text(self):
         try:
             printer = QPrinter()
@@ -106,6 +113,7 @@ class TextViewer(qt.QDialog):
                 self.text.print(printer)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def save_text_as_txt(self):
         try:
             file_dialog = qt.QFileDialog()
@@ -119,16 +127,20 @@ class TextViewer(qt.QDialog):
                     file.write(text)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(value))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -141,6 +153,7 @@ class TextViewer(qt.QDialog):
             self.show_font.blockSignals(True)
             self.show_font.setValue(self.font_size)
             self.show_font.blockSignals(False)
+
     def copy_line(self):
         try:
             if self.saved_selection_start != -1 and self.saved_selection_end != -1 and self.saved_selection_start < self.saved_selection_end:
@@ -153,6 +166,7 @@ class TextViewer(qt.QDialog):
                 winsound.Beep(1000, 100)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def copy_text(self):
         try:
             pyperclip.copy(self.saved_text)
@@ -160,6 +174,7 @@ class TextViewer(qt.QDialog):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def _set_text_with_delay(self, full_text):
         self.saved_text = full_text
         lines = full_text.split('\n')
@@ -167,6 +182,7 @@ class TextViewer(qt.QDialog):
         self.update_font_size()
         if len(lines) > 40:
             QTimer.singleShot(200, self._display_full_content)
+
     def _display_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.saved_text)
@@ -175,6 +191,7 @@ class TextViewer(qt.QDialog):
                 cursor = self.text.textCursor()
                 cursor.setPosition(self.saved_cursor_position)
                 self.text.setTextCursor(cursor)
+
     def copy_current_selection(self):
         try:
             cursor = self.text.textCursor()

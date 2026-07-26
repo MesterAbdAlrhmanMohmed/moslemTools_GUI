@@ -4,6 +4,8 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 import pyperclip,winsound
+
+
 class LocationSettings(qt.QWidget):
     def __init__(self, p):
         super().__init__()
@@ -39,7 +41,7 @@ class LocationSettings(qt.QWidget):
         lon_layout.addWidget(self.LT1l)
         lon_layout.addWidget(self.LT1)
         lat_layout = qt.QVBoxLayout()
-        self.LT2l=qt.QLabel("دائرة العرض") 
+        self.LT2l=qt.QLabel("دائرة العرض")
         self.LT2l.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.LT2=qt.QDoubleSpinBox()
         self.LT2.setAccessibleName("دائرة العرض")
@@ -114,6 +116,7 @@ class LocationSettings(qt.QWidget):
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         layout.addWidget(self.info)
+
     def onStateChanged(self,state):
         self.LT1.setVisible(state==False)
         self.LT2.setVisible(state==False)

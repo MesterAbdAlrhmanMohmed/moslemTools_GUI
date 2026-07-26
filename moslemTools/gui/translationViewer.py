@@ -4,10 +4,12 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6.QtCore import QTimer
+
+
 class translationViewer(qt.QDialog):
     def __init__(self, p, From, to):
         super().__init__(p)
-        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)        
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
@@ -63,6 +65,7 @@ class translationViewer(qt.QDialog):
         bottomLayout.addWidget(self.warning_label, 0, qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addLayout(bottomLayout)
         self.getResult()
+
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
         menu.setAccessibleName("الخيارات")
@@ -89,12 +92,13 @@ class translationViewer(qt.QDialog):
         decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
         menu.addMenu(fontMenu)
         menu.exec(qt1.QCursor.pos())
+
     def on_change_translation(self):
         menu = qt.QMenu("اختر ترجمة", self)
         menu.setAccessibleName("اختر ترجمة")
         action_group = qt1.QActionGroup(self)
         action_group.setExclusive(True)
-        current_translation_name = functions.translater.gettranslationByIndex(self.index)                
+        current_translation_name = functions.translater.gettranslationByIndex(self.index)
         all_translations = list(functions.translater.translations.keys())
         if current_translation_name in all_translations:
             all_translations.remove(current_translation_name)
@@ -103,17 +107,19 @@ class translationViewer(qt.QDialog):
             action = qt1.QAction(name, self)
             action.setCheckable(True)
             if name == current_translation_name:
-                action.setChecked(True)            
+                action.setChecked(True)
             action.triggered.connect(lambda checked, n=name: self.on_translation_changed(n) if checked else None)
             menu.addAction(action)
             action_group.addAction(action)
         menu.exec(qt1.QCursor.pos())
+
     def on_translation_changed(self, name: str):
         new_index = functions.translater.translations.get(name)
         if new_index is not None and self.index != new_index:
             self.index = new_index
             self.current_translation_label.setText(f"الترجمة المحددة هي: {functions.translater.gettranslationByIndex(self.index)}")
             self.getResult()
+
     def print_text(self):
         try:
             printer = QPrinter()
@@ -126,6 +132,7 @@ class translationViewer(qt.QDialog):
                 doc.print(printer)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def save_text_astxt(self):
         try:
             file_dialog = qt.QFileDialog(self)
@@ -140,16 +147,20 @@ class translationViewer(qt.QDialog):
                     file.write(text)
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(value))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -162,6 +173,7 @@ class translationViewer(qt.QDialog):
             self.show_font.blockSignals(True)
             self.show_font.setValue(self.font_size)
             self.show_font.blockSignals(False)
+
     def copy_text(self):
         try:
             translation_name = functions.translater.gettranslationByIndex(self.index)
@@ -171,6 +183,7 @@ class translationViewer(qt.QDialog):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def copy_current_selection(self):
         try:
             cursor = self.text.textCursor()
@@ -178,9 +191,10 @@ class translationViewer(qt.QDialog):
                 selected_text = cursor.selectedText()
                 pyperclip.copy(selected_text)
                 winsound.Beep(1000, 100)
-                guiTools.speak("تم نسخ النص المحدد بنجاح")        
+                guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def getResult(self):
         self.full_content = functions.translater.gettranslation(functions.translater.gettranslationByIndex(self.index),self.From, self.to)
         lines = self.full_content.split('\n')
@@ -188,6 +202,7 @@ class translationViewer(qt.QDialog):
         self.update_font_size()
         if len(lines) > 40:
             QTimer.singleShot(500, self.display_full_content)
+
     def display_full_content(self):
         if not self.context_menu_active:
             self.text.setText(self.full_content)

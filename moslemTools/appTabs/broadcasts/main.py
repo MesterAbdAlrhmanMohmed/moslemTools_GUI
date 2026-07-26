@@ -9,6 +9,7 @@ from functions import audio_manager
 from .recorder import WasapiRecorder, SchedulingDialog
 from .stations import quran_brotcast, brotcasts_of_reciters, brotcasts_of_tafseer, brotcasts_of_suplications, other_brotcasts, set_globals, get_global_player, get_global_current_url
 
+
 class protcasts(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -90,6 +91,7 @@ class protcasts(qt.QWidget):
         player = get_global_player()
         if player:
             player.playbackStateChanged.connect(self.on_radio_state_changed)
+
     def on_radio_state_changed(self, state):
         player = get_global_player()
         current_url = get_global_current_url()
@@ -98,6 +100,7 @@ class protcasts(qt.QWidget):
                 self.handle_manual_recording_stop_due_to_radio()
             elif self.countdown_timer.isActive() or self.duration_timer.isActive():
                 self.handle_scheduled_recording_stop_due_to_radio()
+
     def handle_manual_recording_stop_due_to_radio(self):
         result = guiTools.QQuestionMessageBox.view(self, "إيقاف التسجيل", "تم إيقاف التسجيل بسبب إيقاف الإذاعة. هل تريد حفظ التسجيل؟", "نعم", "لا")
         if result == 0:
@@ -106,6 +109,7 @@ class protcasts(qt.QWidget):
             self.recorder.stop(cleanup_only=True)
             self.resetRecorderState()
             guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الحفظ.")
+
     def handle_scheduled_recording_stop_due_to_radio(self):
         if self.countdown_timer.isActive():
             self.countdown_timer.stop()
@@ -117,9 +121,11 @@ class protcasts(qt.QWidget):
         else:
             guiTools.qMessageBox.MessageBox.view(self, "إيقاف التسجيل المجدول", "تم إيقاف التسجيل المجدول بسبب إيقاف الإذاعة. لم يتم بدء التسجيل بعد.")
             self.resetRecorderState()
+
     def restore_aud_text(self):
         if not self.convert_thread_worker and not self.countdown_timer.isActive():
             self.aud.setText(self.current_status_text)
+
     def get_current_station_name(self):
         try:
             current_tab = self.brotcasts_tab.currentWidget()
@@ -135,6 +141,7 @@ class protcasts(qt.QWidget):
                 return safe_name
         except Exception: pass
         return "تسجيل صوت النظام"
+
     def startRecording(self):
         if not self.check_is_playing(): return
         if not self.recorder.is_ready():
@@ -151,6 +158,7 @@ class protcasts(qt.QWidget):
         self.scheduleBtn.setEnabled(False)
         self.pauseBtn.setEnabled(True)
         self.stopBtn.setEnabled(True)
+
     def scheduleRecording(self):
         if self.countdown_timer.isActive():
             self.countdown_timer.stop()
@@ -182,6 +190,7 @@ class protcasts(qt.QWidget):
                     guiTools.qMessageBox.MessageBox.view(self, "إلغاء", "تم إلغاء الجدولة.")
                 else:
                     self.scheduleRecording()
+
     def updateCountdown(self):
         player = get_global_player()
         if not player or player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
@@ -212,6 +221,7 @@ class protcasts(qt.QWidget):
             self.duration_timer.timeout.connect(self.updateDurationCountdown)
             self.duration_timer.start(1000)
             self.updateDurationCountdown()
+
     def updateDurationCountdown(self):
         player = get_global_player()
         if not player or player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
@@ -228,6 +238,7 @@ class protcasts(qt.QWidget):
             self.current_status_text = msg
         else:
             self.stopRecording(skip_save_dialog=False)
+
     def format_time_arabic(self, h, m, s):
         parts = []
         if h == 1: parts.append("ساعة واحدة")
@@ -243,6 +254,7 @@ class protcasts(qt.QWidget):
         elif 3 <= s <= 10: parts.append(f"{s} ثواني")
         elif s > 10: parts.append(f"{s} ثانية")
         return " و ".join(parts) if parts else "الآن"
+
     def check_is_playing(self):
         player = get_global_player()
         current_url = get_global_current_url()
@@ -250,6 +262,7 @@ class protcasts(qt.QWidget):
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "يجب تشغيل إذاعة أولاً لبدء التسجيل.")
             return False
         return True
+
     def pauseRecording(self):
         self.recorder.pause()
         self.pauseBtn.setText("استئناف")
@@ -257,6 +270,7 @@ class protcasts(qt.QWidget):
         try: self.pauseBtn.clicked.disconnect()
         except TypeError: pass
         self.pauseBtn.clicked.connect(self.resumeRecording)
+
     def resumeRecording(self):
         self.recorder.resume()
         self.pauseBtn.setText("إيقاف مؤقت")
@@ -264,6 +278,7 @@ class protcasts(qt.QWidget):
         try: self.pauseBtn.clicked.disconnect()
         except TypeError: pass
         self.pauseBtn.clicked.connect(self.pauseRecording)
+
     def stopRecording(self, skip_save_dialog=False):
         if not self.recorder._running and not self.countdown_timer.isActive(): return
         self.startBtn.setEnabled(False)
@@ -298,6 +313,7 @@ class protcasts(qt.QWidget):
         self.current_status_text = "جاري إيقاف التسجيل..."
         self.recorder.stop(cleanup_only=False)
     @qt2.pyqtSlot(str, str)
+
     def on_recording_stopped(self, status, path):
         self.restore_aud_text()
         if status == "STOPPED":
@@ -324,6 +340,7 @@ class protcasts(qt.QWidget):
             self.resetRecorderState()
         elif status == "FAILED":
             self.resetRecorderState()
+
     def convert_and_save_prompt(self):
         if self.temp_wav_to_convert is None: return
         filePath, _ = qt.QFileDialog.getSaveFileName(self, "حفظ التسجيل", f"{self.get_current_station_name()}.mp3", "Audio Files (*.mp3);;All Files (*)")
@@ -344,12 +361,14 @@ class protcasts(qt.QWidget):
                 self.convert_and_save_prompt()
         self.temp_wav_to_convert = None
     @qt2.pyqtSlot(str)
+
     def recordingError(self, error_msg):
         self.restore_aud_text()
         self.recorder.stop(cleanup_only=True)
         if not self.startBtn.isEnabled() or self.countdown_timer.isActive():
             guiTools.qMessageBox.MessageBox.error(self, "خطأ في التسجيل", "يبدو أن جهاز تسجيل صوت الكمبيوتر stereo mix لا يعمل، لتشغيله اتبع الخطوات التالية\n\n1 فتح قائمة Run عن طريق الاختصار Windows + R ثم اكتب هذا الأمر:\nrundll32.exe shell32.dll,Control_RunDLL mmsys.cpl,,1\n2 اذهب إلى تبويبة التسجيل Recording واختر منها Stereo Mix ثم اضغط عليه بزر الفأرة الأيمن أو زر التطبيقات واختر Enable ثم اضغط OK.\nلمن واجه أي مشكلة يمكنه التواصل معي على حسابي في تليجرام من قسم (عن المطور) في قائمة المزيد من الخيارات.")
         self.resetRecorderState()
+
     def resetRecorderState(self):
         if hasattr(self, 'scheduled_stop_due_to_radio'):
             del self.scheduled_stop_due_to_radio

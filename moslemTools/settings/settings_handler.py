@@ -9,7 +9,7 @@ if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"islamicBooks"))
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"islamicBooks"))
     shutil.copy("data/json/islamicBooks/elShabahLibe.json",os.path.join(os.getenv('appdata'),appName,"islamicBooks","elShabahLibe.json"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"addan")):
-    os.mkdir(os.path.join(os.getenv('appdata'),appName,"addan"))    
+    os.mkdir(os.path.join(os.getenv('appdata'),appName,"addan"))
     shutil.copy("data/sounds/adaan/fajr.mp3",os.path.join(os.getenv('appdata'),appName,"addan","fajr.mp3"))
     shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","dhuhr.mp3"))
     shutil.copy("data/sounds/adaan/genral.mp3",os.path.join(os.getenv('appdata'),appName,"addan","asr.mp3"))
@@ -20,8 +20,8 @@ if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"addan")):
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"addan","prayAfterAdaan.m4a")):
     try:
         shutil.copy("data/sounds/prayAfterAdaan.m4a",os.path.join(os.getenv('appdata'),appName,"addan","prayAfterAdaan.m4a"))
-    except:
-        pass
+    except Exception as e:
+        print(f"Handled exception: {e}")
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"quran surah reciters")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"quran surah reciters"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"athkar")):
@@ -39,13 +39,14 @@ if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"ahadeeth")):
     shutil.copy("data/json/ahadeeth/nawawi40.json",os.path.join(os.getenv('appdata'),appName,"ahadeeth","nawawi40.json"))
     shutil.copy("data/json/ahadeeth/qudsi40.json",os.path.join(os.getenv('appdata'),appName,"ahadeeth","qudsi40.json"))
 settingsConfig={
-    "g":{       
+    "g":{
         "messageID":"0",
         "exitdialog":"True",
         "reciter":"0",
         "user_name":"",
         "use_name_in_occasions":"True",
-        "name_type":"custom_name"
+        "name_type":"custom_name",
+        "theme":"dark"
     },
     "quran_search":{
         "ignore_tashkeel":"True",
@@ -76,7 +77,7 @@ settingsConfig={
     "prayerTimes":{
         "adaanReminder":"True",
         "playPrayerAfterAdhaan":"True",
-        "volume":"100",        
+        "volume":"100",
         "remindBeforeAdaan":"0",
         "remindAfterAdaan":"3",
         "iqamaVolume":"100"
@@ -116,7 +117,7 @@ settingsConfig={
     "audio": {
         "global": "Default",
         "quran_text": "Default",
-        "quran_audio": "Default",        
+        "quran_audio": "Default",
         "broadcasts": "Default",
         "adhan": "Default",
         "athkar": "Default",
@@ -125,30 +126,34 @@ settingsConfig={
     }
 }
 if not os.path.exists(cpath):
-    config = ConfigParser() 
+    config = ConfigParser()
     for section,values in settingsConfig.items():
         config.add_section(section)
         for key,value in values.items():
             config[section][key]=value
     with open(cpath, "w",encoding="utf-8") as file:
         config.write(file)
+
+
 def get(section,key):
     try:
         config = ConfigParser()
         config.read(cpath, encoding="utf-8")
         value = config[section][key]
         return value
-    except:        
+    except:
         try:
             return settingsConfig[section][key]
         except:
             return ""
+
+
 def set(section,key, value):
         config = ConfigParser()
         config.read(cpath, encoding="utf-8")
         try:
             config[section][key] = value
-        except KeyError:            
+        except KeyError:
             config.add_section(section)
             config[section][key] = value
         with open(cpath, "w",encoding="utf-8") as file:

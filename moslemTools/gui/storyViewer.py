@@ -5,6 +5,8 @@ import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
+
+
 class StoryViewer(qt.QDialog):
     def __init__(self, p, text, type: int, category: str, stories: list, index=0):
         super().__init__(p)
@@ -70,12 +72,13 @@ class StoryViewer(qt.QDialog):
         layout.addLayout(buttonsLayout)
         if index != 0:
             cerser = self.text.textCursor()
-            cerser.movePosition(cerser.MoveOperation.Start)            
+            cerser.movePosition(cerser.MoveOperation.Start)
             for _ in range(index):
                 cerser.movePosition(cerser.MoveOperation.Down)
             self.text.setTextCursor(cerser)
         self.update_font_size()
-    def OnContextMenu(self):        
+
+    def OnContextMenu(self):
         current_line = self.getCurrentLine()
         cursor = self.text.textCursor()
         self.saved_selection_start = cursor.selectionStart()
@@ -108,7 +111,7 @@ class StoryViewer(qt.QDialog):
         story_options = qt.QMenu("خيارات القصة", self)
         story_options.setFont(boldFont)
         story_options.addAction("القصة التالية", self.onNext).setShortcut("alt+right")
-        story_options.addAction("القصة السابقة", self.onPreviouse).setShortcut("alt+left")                
+        story_options.addAction("القصة السابقة", self.onPreviouse).setShortcut("alt+left")
         story_position = {"type": self.type,"category": self.category,"line": current_line}
         note_exists = notesManager.getNotesForPosition("stories", story_position)
         if note_exists:
@@ -129,7 +132,7 @@ class StoryViewer(qt.QDialog):
             note_action = qt1.QAction("إضافة ملاحظة للسطر الحالي", self)
             note_action.setShortcut("ctrl+n")
             note_action.triggered.connect(lambda: self.onAddNote(story_position))
-            story_options.addAction(note_action)                
+            story_options.addAction(note_action)
         state, bookmark_name = functions.bookMarksManager.getStoriesBookmarkName(self.category, current_line)
         if state:
             delete_bookmark_action = qt.QWidgetAction(self)
@@ -149,6 +152,7 @@ class StoryViewer(qt.QDialog):
         menu.addMenu(story_options)
         menu.aboutToHide.connect(self.restore_after_menu)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
+
     def restore_after_menu(self):
         self.context_menu_active = False
         self.text.setText(self.saved_text)
@@ -158,22 +162,26 @@ class StoryViewer(qt.QDialog):
             cursor = self.text.textCursor()
             cursor.setPosition(self.saved_cursor_position)
             self.text.setTextCursor(cursor)
+
     def onAddNote(self, position_data):
         dialog = note_dialog.NoteDialog(self, mode="add")
         dialog.saved.connect(lambda old, new, content: self.saveNote(position_data, new, content))
         dialog.exec()
+
     def onEditNote(self, position_data, note_name):
         note = notesManager.getNoteByName("stories", note_name)
         if note:
             dialog = note_dialog.NoteDialog(self,title=note["name"],content=note["content"],mode="edit",old_name=note["name"])
             dialog.saved.connect(lambda old, new, content: self.updateNote(position_data, old, new, content))
             dialog.exec()
+
     def saveNote(self, position_data, name, content):
         if notesManager.getNoteByName("stories", name) is not None:
             guiTools.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
             return
         notesManager.addNewNote("stories", {"name": name,"content": content,"position_data": position_data})
         guiTools.speak("تمت إضافة الملاحظة")
+
     def updateNote(self, position_data, old_name, new_name, new_content):
         if old_name != new_name and notesManager.getNoteByName("stories", new_name) is not None:
             guiTools.MessageBox.error(self, "خطأ", "اسم الملاحظة موجود بالفعل، الرجاء اختيار اسم آخر.")
@@ -183,6 +191,7 @@ class StoryViewer(qt.QDialog):
             guiTools.speak("تم تحديث الملاحظة بنجاح")
         else:
             guiTools.MessageBox.error(self, "خطأ", "فشل في تحديث الملاحظة")
+
     def onAddOrRemoveNote(self):
         position_data = {"type": self.type,"category": self.category,"line": self.getCurrentLine()}
         note_exists = notesManager.getNotesForPosition("stories", position_data)
@@ -190,6 +199,7 @@ class StoryViewer(qt.QDialog):
             self.onEditNote(position_data, note_exists["name"])
         else:
             self.onAddNote(position_data)
+
     def onViewNote(self):
         position_data = {"type": self.type,"category": self.category,"line": self.getCurrentLine()}
         note_exists = notesManager.getNotesForPosition("stories", position_data)
@@ -197,12 +207,14 @@ class StoryViewer(qt.QDialog):
             self.onNoteAction(position_data)
         else:
             guiTools.speak("لا توجد ملاحظة لهذا السطر")
+
     def onNoteAction(self, position_data):
         note = notesManager.getNotesForPosition("stories", position_data)
         if note:
             dialog = note_dialog.NoteDialog(self,title=note["name"],content=note["content"],mode="view",old_name=note["name"])
             dialog.edit_requested.connect(lambda note_name: self.onEditNote(position_data, note_name))
             dialog.exec()
+
     def onDeleteNote(self, position_data):
         note = notesManager.getNotesForPosition("stories", position_data)
         if note:
@@ -210,6 +222,7 @@ class StoryViewer(qt.QDialog):
             if confirm == 0:
                 notesManager.removeNote("stories", note["name"])
                 guiTools.speak("تم حذف الملاحظة")
+
     def print_text(self):
         try:
             printer = QPrinter()
@@ -218,6 +231,7 @@ class StoryViewer(qt.QDialog):
                 self.text.print(printer)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def save_text_as_txt(self):
         try:
             file_dialog = qt.QFileDialog()
@@ -230,16 +244,20 @@ class StoryViewer(qt.QDialog):
                     file.write(self.text.toPlainText())
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(value))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def update_font_size(self):
         cursor = self.text.textCursor()
         self.text.selectAll()
@@ -252,6 +270,7 @@ class StoryViewer(qt.QDialog):
             self.show_font.blockSignals(True)
             self.show_font.setValue(self.font_size)
             self.show_font.blockSignals(False)
+
     def copy_line(self):
         try:
             if self.saved_selection_start != -1 and self.saved_selection_end != -1 and self.saved_selection_start < self.saved_selection_end:
@@ -261,6 +280,7 @@ class StoryViewer(qt.QDialog):
                 guiTools.speak("تم نسخ النص المحدد بنجاح")
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def copy_text(self):
         try:
             pyperclip.copy(self.saved_text)
@@ -268,8 +288,10 @@ class StoryViewer(qt.QDialog):
             guiTools.speak("تم نسخ كل المحتوى بنجاح")
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def getCurrentLine(self):
         return self.text.textCursor().blockNumber()
+
     def onAddBookMark(self):
         name, OK = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب أسم للعلامة المرجعية")
         if OK:
@@ -278,12 +300,14 @@ class StoryViewer(qt.QDialog):
                 return
             functions.bookMarksManager.addNewStoriesBookMark(self.type, self.category, self.getCurrentLine(), name)
             guiTools.speak("تمت إضافة العلامة المرجعية")
+
     def onAddOrRemoveBookmark(self):
         state, bookmark_name = functions.bookMarksManager.getStoriesBookmarkName(self.category, self.getCurrentLine())
         if state:
             self.onRemoveBookmark(bookmark_name)
         else:
             self.onAddBookMark()
+
     def onRemoveBookmark(self, bookmark_name):
         try:
             confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف",f"هل أنت متأكد أنك تريد حذف العلامة المرجعية '{bookmark_name}'؟","نعم", "لا")
@@ -292,6 +316,7 @@ class StoryViewer(qt.QDialog):
                 guiTools.speak("تم حذف العلامة المرجعية")
         except:
             guiTools.MessageBox.error(self, "خطأ", "تعذر حذف العلامة المرجعية")
+
     def onNext(self):
         self.CurrentIndex = (self.CurrentIndex + 1) % len(self.stories)
         self.category = list(self.stories.keys())[self.CurrentIndex]
@@ -300,6 +325,7 @@ class StoryViewer(qt.QDialog):
         self.info.setText(self.category)
         winsound.PlaySound("data/sounds/next_page.wav", 1)
         guiTools.speak(self.category)
+
     def onPreviouse(self):
         self.CurrentIndex = (self.CurrentIndex - 1) % len(self.stories)
         self.category = list(self.stories.keys())[self.CurrentIndex]
@@ -308,12 +334,14 @@ class StoryViewer(qt.QDialog):
         self.info.setText(self.category)
         winsound.PlaySound("data/sounds/next_page.wav", 1)
         guiTools.speak(self.category)
+
     def onDeleteNoteShortcut(self):
         position_data = {"type": self.type,"category": self.category,"line": self.getCurrentLine()}
         if notesManager.getNotesForPosition("stories", position_data):
             self.onDeleteNote(position_data)
         else:
             guiTools.speak("لا توجد ملاحظة لحذفها")
+
     def copy_current_selection(self):
         try:
             cursor = self.text.textCursor()

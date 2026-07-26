@@ -1,4 +1,4 @@
-from custome_errors import *
+from custom_errors import *
 import sys
 sys.excepthook = my_excepthook
 import update,guiTools,random,os,shutil,datetime,webbrowser,requests,pyperclip,winsound,ctypes,threading
@@ -23,6 +23,7 @@ try:
 except Exception as e:
     print(f"Error cleaning startup files: {e}")
 
+
 def get_smart_display_name():
     try:
         if settings_handler.get("g", "use_name_in_occasions") == "False":
@@ -37,8 +38,8 @@ def get_smart_display_name():
                 username = os.getlogin()
                 if username and username.strip():
                     return username.strip()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Handled exception: {e}")
         elif name_type == "personal_name":
             try:
                 GetUserNameExW = ctypes.windll.secur32.GetUserNameExW
@@ -47,23 +48,27 @@ def get_smart_display_name():
                 buffer = ctypes.create_unicode_buffer(size.value)
                 if GetUserNameExW(NameDisplay, buffer, ctypes.byref(size)) and buffer.value.strip():
                     return buffer.value.strip()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Handled exception: {e}")
             try:
                 username = os.getlogin()
                 generic_names = ['dell', 'hp', 'lenovo', 'user', 'admin', 'administrator', 'pc', 'com']
                 if username and username.lower().strip() not in generic_names:
                     return username.strip()
-            except Exception:
-                pass
-    except Exception:
-        pass
+            except Exception as e:
+                print(f"Handled exception: {e}")
+    except Exception as e:
+        print(f"Handled exception: {e}")
     return ""
+
+
 class MessageCheckWorker(qt2.QObject):
     finished = qt2.pyqtSignal()
+
     def __init__(self, parent_window):
         super().__init__()
         self.parent_window = parent_window
+
     def check_for_message(self):
         try:
             guiTools.messageHandler.check(self.parent_window)
@@ -71,13 +76,16 @@ class MessageCheckWorker(qt2.QObject):
             print(f"Error checking for message in thread: {e}")
         finally:
             self.finished.emit()
+
+
 class main(qt.QMainWindow):
     audio_sig = qt2.pyqtSignal()
     text_sig = qt2.pyqtSignal()
     toggle_sig = qt2.pyqtSignal()
+
     def __init__(self, startup_window_shown=False):
         super().__init__()
-        self.setWindowTitle(app.name + "الإصدار:" + str(app.version))        
+        self.setWindowTitle(app.name + "الإصدار:" + str(app.version))
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         self.setWindowFlags(qt2.Qt.WindowType.Window | qt2.Qt.WindowType.WindowCloseButtonHint | qt2.Qt.WindowType.CustomizeWindowHint)
         self.audio_sig.connect(self.random_audio_theker)
@@ -109,7 +117,6 @@ class main(qt.QMainWindow):
         content_layout = qt.QHBoxLayout()
         self.list_widget = guiTools.listBook()
         self.list_widget.currentItemChanged.connect(self.onToolChanged)
-        self.list_widget.setSpacing(3)
         self.quranPlayer = QuranPlayer()
         self.researcher = Albaheth()
         self.askAI = AskAI()
@@ -126,7 +133,7 @@ class main(qt.QMainWindow):
     (Athker(), "الأذكار والأدعية"),
     (sibha(), "السبحة الإلكترونية"),
     (NamesOfAllah(), "أسماء الله الحُسْنى"),
-    (ProphetStories(), "القصص الإسلامية المكتوبة"),    
+    (ProphetStories(), "القصص الإسلامية المكتوبة"),
     (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),
     (DateConverter(), "محول التاريخ"),
 ]
@@ -180,7 +187,7 @@ class main(qt.QMainWindow):
         action_whats_new = qt1.QAction("ما الجديد في آخر إصدار من البرنامج", self)
         action_whats_new.setShortcut("ctrl+w")
         action_whats_new.triggered.connect(self.whats_new_funktion)
-        self.moreOptionsMenu.addAction(action_whats_new)        
+        self.moreOptionsMenu.addAction(action_whats_new)
         action_viewLastMessage = qt1.QAction("إظهار آخر رسالة من المطور", self)
         action_viewLastMessage.setShortcut("ctrl+m")
         action_viewLastMessage.triggered.connect(self.onViewLastMessageButtonClicked)
@@ -204,9 +211,13 @@ class main(qt.QMainWindow):
         telegram_action=qt1.QAction("رابط القناة الرسمية للبرنامج على telegram", self)
         telegram_action.setShortcut("ctrl+shift+t")
         telegram_action.triggered.connect(lambda: webbrowser.open("https://t.me/moslem_tools"))
-        self.moreOptionsMenu.addAction(telegram_action)        
+        self.moreOptionsMenu.addAction(telegram_action)
+        action_error_log = qt1.QAction("فتح ملف سجل الأخطاء", self)
+        action_error_log.setShortcut("ctrl+alt+e")
+        action_error_log.triggered.connect(self.open_error_log_file)
+        self.moreOptionsMenu.addAction(action_error_log)
         action_delete_program_data = qt1.QAction("حذف بيانات البرنامج لإلغاء تثبيته", self)
-        action_delete_program_data .setShortcut("ctrl+shift+delete")
+        action_delete_program_data.setShortcut("ctrl+shift+delete")
         action_delete_program_data.triggered.connect(self.delete_program_data_with_confirmation)
         self.moreOptionsMenu.addAction(action_delete_program_data)
         self.more_options_button.setMenu(self.moreOptionsMenu)
@@ -222,12 +233,12 @@ class main(qt.QMainWindow):
         font = qt1.QFont()
         font.setBold(True)
         self.tray_menu.setAccessibleName("تم فتح قائمة moslem tools")
-        self.random_thecker_audio = qt1.QAction("تشغيل ذكر عشوائي")        
-        self.random_thecker_audio.triggered.connect(self.random_audio_theker)        
-        self.random_thecker_text = qt1.QAction("عرض ذكر عشوائي")        
-        self.random_thecker_text.triggered.connect(self.show_random_theker)        
-        self.show_action = qt1.QAction("إخفاء البرنامج")        
-        self.show_action.triggered.connect(self.toggle_visibility)        
+        self.random_thecker_audio = qt1.QAction("تشغيل ذكر عشوائي")
+        self.random_thecker_audio.triggered.connect(self.random_audio_theker)
+        self.random_thecker_text = qt1.QAction("عرض ذكر عشوائي")
+        self.random_thecker_text.triggered.connect(self.show_random_theker)
+        self.show_action = qt1.QAction("إخفاء البرنامج")
+        self.show_action.triggered.connect(self.toggle_visibility)
         self.close_action = qt1.QAction("إغلاق البرنامج")
         self.close_action.triggered.connect(lambda: qt.QApplication.quit())
         self.tray_menu.addAction(self.random_thecker_audio)
@@ -248,6 +259,7 @@ class main(qt.QMainWindow):
             self.play_random_basmala()
         if not startup_window_shown and settings_handler.get("g", "randomMessageAtStartup") == "True":
             self.show_random_message()
+
     def play_random_basmala(self):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
@@ -261,6 +273,7 @@ class main(qt.QMainWindow):
             file_path = os.path.abspath(os.path.join(folder_path, chosen_file))
             self.media_player.setSource(qt2.QUrl.fromLocalFile(file_path))
             self.media_player.play()
+
     def start_message_check_thread(self):
         self.message_worker = MessageCheckWorker(self)
         self.message_worker.finished.connect(self.message_worker.deleteLater)
@@ -268,6 +281,7 @@ class main(qt.QMainWindow):
         thread = threading.Thread(target=self.message_worker.check_for_message)
         thread.daemon = True
         thread.start()
+
     def showEvent(self, event):
         super().showEvent(event)
         MF_BYCOMMAND = 0x00000000
@@ -292,8 +306,10 @@ class main(qt.QMainWindow):
         new_style = WS_CAPTION | WS_SYSMENU
         SetWindowLong(hwnd, GWL_STYLE, new_style)
         user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0002 | 0x0001 | 0x0020)
+
     def _restore(self):
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
+
     def toggle_visibility(self):
         if self.isVisible():
             self.hide()
@@ -303,6 +319,7 @@ class main(qt.QMainWindow):
             self.activateWindow()
             self.raise_()
             self.show_action.setText("إخفاء البرنامج")
+
     def show_random_theker(self):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             qt2.QTimer.singleShot(60000, self.show_random_theker)
@@ -313,6 +330,7 @@ class main(qt.QMainWindow):
             data = json.load(f)
         random_theckr = random.choice(data)
         guiTools.SendNotification("ذكر عشوائي", random_theckr)
+
     def show_random_message(self):
         base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(base_dir, "data", "json", "QuotesMessages.json")
@@ -320,15 +338,18 @@ class main(qt.QMainWindow):
             data = json.load(f)
         random_message = random.choice(data)
         guiTools.TextViewer(self, "رسالة لك", random_message).exec()
+
     def notification_random_thecker(self):
         self.TIMER1.stop()
         duration = formatDuration("athkar", "text")
         if duration != 0:
             self.TIMER1.start(duration + 10000)
+
     def runAudioThkarTimer(self):
         self.timer.stop()
         if formatDuration("athkar", "voice") != 0:
             self.timer.start(formatDuration("athkar", "voice"))
+
     def closeEvent(self, event):
         if app.exit:
             if settings_handler.get("g", "exitDialog") == "True":
@@ -340,6 +361,7 @@ class main(qt.QMainWindow):
                 self.close()
         else:
             self.close()
+
     def random_audio_theker(self):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
@@ -354,9 +376,11 @@ class main(qt.QMainWindow):
             file_path = os.path.abspath(os.path.join(folder_path, chosen_file))
             self.media_player.setSource(qt2.QUrl.fromLocalFile(file_path))
             self.media_player.play()
+
     def open_developers_window(self):
         self.developers_window = AboutDeveloper()
         self.developers_window.exec()
+
     def viewInfoTextEdit(self):
         username1 = get_smart_display_name()
         ya_name = f" يا {username1}" if username1 else ""
@@ -404,10 +428,12 @@ class main(qt.QMainWindow):
         except Exception as e:
             print(f"حدث خطأ: {e}")
             self.info.setText("لا تَنْسوا ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم.")
+
     def onViewLastMessageButtonClicked(self):
         with open(os.path.join(os.getenv('appdata'), settings_handler.appName, "message.json"), "r", encoding="utf-8") as file:
             data = json.load(file)
         guiTools.TextViewer(self, "آخر رسالة من المطور", data["message"]).exec()
+
     def whats_new_funktion(self):
         try:
             r = requests.get(f"https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/{settings_handler.appName}/main/{app.appdirname}/update/app.json")
@@ -416,9 +442,11 @@ class main(qt.QMainWindow):
         except Exception as e:
             print(e)
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "فشلت عملية جلب المعلومات, الرجاء الإتصال بالإنترنت")
+
     def onToolChanged(self, current, previous):
-        self.quranPlayer.mp.pause()        
-        self.researcher.media_player.pause()    
+        self.quranPlayer.mp.pause()
+        self.researcher.media_player.pause()
+
     def delete_program_data_with_confirmation(self):
         confirm = guiTools.QQuestionMessageBox.view(self,"تأكيد الحذف النهائي لبيانات البرنامج","تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nالأفضل عمل نسخة احتياطية لجميع إعداداتك وملفاتك أولا قبل هذه العملية الخطيرة\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟","نعم، قم بحذف مجلد بيانات البرنامج","لا، إلغاء")
         if confirm == 0:
@@ -437,6 +465,22 @@ class main(qt.QMainWindow):
                 guiTools.MessageBox.error(self,"خطأ غير متوقع",f"حدث خطأ غير متوقع: {e}")
         else:
             return
+
+    def open_error_log_file(self):
+        log_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "error.log")
+        if not os.path.exists(log_path):
+            try:
+                os.makedirs(os.path.dirname(log_path), exist_ok=True)
+                with open(log_path, "w", encoding="utf-8") as f:
+                    f.write("سجل أخطاء البرنامج (Error Log)\n")
+            except Exception as e:
+                print(f"Handled exception: {e}")
+        try:
+            os.startfile(log_path)
+        except Exception as e:
+            guiTools.MessageBox.error(self, "خطأ", f"تعذر فتح ملف السجل: {e}")
+
+
 def run_startup_checks():
     shown = False
     if settings_handler.get("update", "autoCheck") == "True":
@@ -461,20 +505,37 @@ if __name__ == "__main__":
     App.setOrganizationName(app.creater)
     App.setWindowIcon(qt1.QIcon("data/icons/app_icon.ico"))
     App.setStyle('Fusion')
-    dark_palette = qt1.QPalette()
-    dark_palette.setColor(qt1.QPalette.ColorRole.Window, qt1.QColor("121212"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.WindowText, qt1.QColor("#E0E0E0"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.Base, qt1.QColor("#1E1E1E"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.AlternateBase, qt1.QColor("#2C2C2C"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.ToolTipBase, qt1.QColor("#2C2C2C"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.ToolTipText, qt1.QColor("#E0E0E0"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.Text, qt1.QColor("#E0E0E0"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.Button, qt1.QColor("#2C2C2C"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.ButtonText, qt1.QColor("#E0E0E0"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.BrightText, qt1.QColor("#FF0000"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.Highlight, qt1.QColor("#3A9FF5"))
-    dark_palette.setColor(qt1.QPalette.ColorRole.HighlightedText, qt1.QColor("#000000"))
-    App.setPalette(dark_palette)
+    current_theme = settings_handler.get("g", "theme") or "dark"
+    if current_theme == "light":
+        light_palette = qt1.QPalette()
+        light_palette.setColor(qt1.QPalette.ColorRole.Window, qt1.QColor("#F5F5F5"))
+        light_palette.setColor(qt1.QPalette.ColorRole.WindowText, qt1.QColor("#1E1E1E"))
+        light_palette.setColor(qt1.QPalette.ColorRole.Base, qt1.QColor("#FFFFFF"))
+        light_palette.setColor(qt1.QPalette.ColorRole.AlternateBase, qt1.QColor("#E5E5E5"))
+        light_palette.setColor(qt1.QPalette.ColorRole.ToolTipBase, qt1.QColor("#FFFFFF"))
+        light_palette.setColor(qt1.QPalette.ColorRole.ToolTipText, qt1.QColor("#1E1E1E"))
+        light_palette.setColor(qt1.QPalette.ColorRole.Text, qt1.QColor("#1E1E1E"))
+        light_palette.setColor(qt1.QPalette.ColorRole.Button, qt1.QColor("#E0E0E0"))
+        light_palette.setColor(qt1.QPalette.ColorRole.ButtonText, qt1.QColor("#1E1E1E"))
+        light_palette.setColor(qt1.QPalette.ColorRole.BrightText, qt1.QColor("#FF0000"))
+        light_palette.setColor(qt1.QPalette.ColorRole.Highlight, qt1.QColor("#0078D7"))
+        light_palette.setColor(qt1.QPalette.ColorRole.HighlightedText, qt1.QColor("#FFFFFF"))
+        App.setPalette(light_palette)
+    else:
+        dark_palette = qt1.QPalette()
+        dark_palette.setColor(qt1.QPalette.ColorRole.Window, qt1.QColor("121212"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.WindowText, qt1.QColor("#E0E0E0"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.Base, qt1.QColor("#1E1E1E"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.AlternateBase, qt1.QColor("#2C2C2C"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.ToolTipBase, qt1.QColor("#2C2C2C"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.ToolTipText, qt1.QColor("#E0E0E0"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.Text, qt1.QColor("#E0E0E0"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.Button, qt1.QColor("#2C2C2C"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.ButtonText, qt1.QColor("#E0E0E0"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.BrightText, qt1.QColor("#FF0000"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.Highlight, qt1.QColor("#3A9FF5"))
+        dark_palette.setColor(qt1.QPalette.ColorRole.HighlightedText, qt1.QColor("#000000"))
+        App.setPalette(dark_palette)
     shown = run_startup_checks()
     shared=qt2.QSharedMemory("com.MTC.moslemTools")
     window = main(shown)

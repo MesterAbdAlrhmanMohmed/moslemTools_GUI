@@ -5,6 +5,8 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
+
+
 class NamesOfAllah(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -37,6 +39,7 @@ class NamesOfAllah(qt.QWidget):
         qt1.QShortcut("ctrl+s", self).activated.connect(self.save_text_as_txt)
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
         self.update_font_size()
+
     def showEvent(self, event):
         super().showEvent(event)
         self.font_is_bold = settings_handler.get("font", "bold") == "True"
@@ -51,6 +54,7 @@ class NamesOfAllah(qt.QWidget):
             self.information.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
         if not self.is_loaded:
             self.load_data()
+
     def load_data(self):
         with open("data/json/namesOfAllah.json", "r", encoding="utf-8") as file:
             all_data = json.load(file)
@@ -62,6 +66,7 @@ class NamesOfAllah(qt.QWidget):
             formatted_text += f"{name}\n{meaning}\n"
         self.information.setText(formatted_text.strip())
         self.is_loaded = True
+
     def OnContextMenu(self):
         menu = qt.QMenu("الخيارات", self)
         bold_font = qt1.QFont()
@@ -82,16 +87,20 @@ class NamesOfAllah(qt.QWidget):
         copy_selected_text.setShortcut("ctrl+c")
         copy_selected_text.triggered.connect(self.copy_line)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
+
     def font_size_changed(self, value):
         self.font_size = value
         self.update_font_size()
         guiTools.speak(str(self.font_size))
+
     def increase_font_size(self):
         if self.show_font.value() < 100:
             self.show_font.setValue(self.show_font.value() + 1)
+
     def decrease_font_size(self):
         if self.show_font.value() > 1:
             self.show_font.setValue(self.show_font.value() - 1)
+
     def update_font_size(self):
         cursor = self.information.textCursor()
         self.information.selectAll()
@@ -100,6 +109,7 @@ class NamesOfAllah(qt.QWidget):
         font.setBold(self.font_is_bold)
         self.information.setCurrentFont(font)
         self.information.setTextCursor(cursor)
+
     def print_text(self):
         try:
             printer = QPrinter()
@@ -108,6 +118,7 @@ class NamesOfAllah(qt.QWidget):
                 self.information.print(printer)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def save_text_as_txt(self):
         try:
             file_dialog = qt.QFileDialog()
@@ -121,6 +132,7 @@ class NamesOfAllah(qt.QWidget):
                     file.write(text)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def copy_line(self):
         try:
             cursor = self.information.textCursor()
@@ -130,6 +142,7 @@ class NamesOfAllah(qt.QWidget):
                 winsound.Beep(1000, 100)
         except Exception as error:
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+
     def copy_text(self):
         try:
             text = self.information.toPlainText()
