@@ -137,6 +137,7 @@ class settings(qt.QDialog):
         original_use_name = settings_handler.get("g", "use_name_in_occasions")
         original_name_type = settings_handler.get("g", "name_type")
         original_user_name = settings_handler.get("g", "user_name")
+        original_user_gender = settings_handler.get("g", "user_gender")
         orig_qs_tashkeel = settings_handler.get("quran_search", "ignore_tashkeel")
         orig_qs_hamza = settings_handler.get("quran_search", "ignore_hamza")
         orig_qs_symbols = settings_handler.get("quran_search", "ignore_symbols")
@@ -169,6 +170,7 @@ class settings(qt.QDialog):
         settings_handler.set("g", "use_name_in_occasions", str(self.userNameSettings.use_name_checkbox.isChecked()))
         settings_handler.set("g", "name_type", self.userNameSettings.get_selected_name_type())
         settings_handler.set("g", "user_name", self.userNameSettings.custom_name_input.text().strip())
+        settings_handler.set("g", "user_gender", self.userNameSettings.get_gender())
         settings_handler.set("quran_search", "ignore_tashkeel", str(self.quranSearchSettings.tashkeel_checkbox.isChecked()))
         settings_handler.set("quran_search", "ignore_hamza", str(self.quranSearchSettings.hamza_checkbox.isChecked()))
         settings_handler.set("quran_search", "ignore_symbols", str(self.quranSearchSettings.symbols_checkbox.isChecked()))
@@ -219,7 +221,8 @@ class settings(qt.QDialog):
         new_use_name = str(self.userNameSettings.use_name_checkbox.isChecked())
         new_name_type = self.userNameSettings.get_selected_name_type()
         new_user_name = self.userNameSettings.custom_name_input.text().strip()
-        if original_use_name != new_use_name or original_name_type != new_name_type or original_user_name != new_user_name:
+        new_user_gender = self.userNameSettings.get_gender()
+        if original_use_name != new_use_name or original_name_type != new_name_type or original_user_name != new_user_name or original_user_gender != new_user_gender:
             restart_required = 1
         new_qs_tashkeel = str(self.quranSearchSettings.tashkeel_checkbox.isChecked())
         new_qs_hamza = str(self.quranSearchSettings.hamza_checkbox.isChecked())

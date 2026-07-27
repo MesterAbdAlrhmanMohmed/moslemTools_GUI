@@ -383,8 +383,15 @@ class main(qt.QMainWindow):
 
     def viewInfoTextEdit(self):
         username1 = get_smart_display_name()
+        gender = settings_handler.get("g", "user_gender") or "ذكر"
+        is_female = (gender == "أنثى")
         ya_name = f" يا {username1}" if username1 else ""
-        ya_prefix = f"يا {username1} " if username1 else ""
+        if is_female:
+            ya_prefix = f"يا {username1}، لا تَنْسِ، " if username1 else "لا تَنْسِ، "
+            default_dhikr = f"لا تَنْسِ يا {username1}، ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسِ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
+        else:
+            ya_prefix = f"يا {username1}، لا تَنْسَ، " if username1 else "لا تَنْسَ، "
+            default_dhikr = f"لا تَنْسَ يا {username1}، ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسَ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
@@ -392,7 +399,10 @@ class main(qt.QMainWindow):
                 self.info.setText(f"جمعة مباركة{ya_name}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 9:
                 if 21 <= hijri_date_obj.day <= 29:
-                    self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم، وجزاكم الله خيرا.")
+                    if is_female:
+                        self.info.setText("العشر الأواخر من رمضان، أسأل الله أن يرزقكِ فضل ليلة القدر، ولا تنسيني من صالح دعائكِ، وجزاكِ الله خيراً.")
+                    else:
+                        self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم، وجزاكم الله خيرا.")
                 else:
                     self.info.setText(f"رمضان كريم{ya_name}")
             elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1:
@@ -424,10 +434,10 @@ class main(qt.QMainWindow):
             elif hijri_date_obj.day in [13, 14, 15]:
                 self.info.setText(f"{ya_prefix}صيام الأيام القمرية، سنة عن النبي صلى الله عليه وسلم")
             else:
-                self.info.setText("لا تَنْسوا ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم")
+                self.info.setText(default_dhikr)
         except Exception as e:
             print(f"حدث خطأ: {e}")
-            self.info.setText("لا تَنْسوا ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم.")
+            self.info.setText(default_dhikr)
 
     def onViewLastMessageButtonClicked(self):
         with open(os.path.join(os.getenv('appdata'), settings_handler.appName, "message.json"), "r", encoding="utf-8") as file:

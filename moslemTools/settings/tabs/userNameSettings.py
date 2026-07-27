@@ -45,6 +45,23 @@ class UserNameSettings(qt.QWidget):
         self.custom_name_input.setAccessibleName("اسمك في التذكير بالمناسبات")
         self.custom_name_input.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         options_layout.addWidget(self.custom_name_input, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
+        gender_layout = qt.QHBoxLayout()
+        gender_label = qt.QLabel("اختر النوع:")
+        gender_label.setFont(font)
+        gender_layout.addWidget(gender_label)
+        self.gender_combo = qt.QComboBox()
+        self.gender_combo.setFont(font)
+        self.gender_combo.addItems(["ذكر", "أنثى"])
+        self.gender_combo.setAccessibleName("اختر النوع")
+        saved_gender = settings_handler.get("g", "user_gender") or "ذكر"
+        if saved_gender == "أنثى":
+            self.gender_combo.setCurrentText("أنثى")
+        else:
+            self.gender_combo.setCurrentText("ذكر")
+        gender_layout.addWidget(self.gender_combo)
+        options_layout.addLayout(gender_layout)
+
         layout.addWidget(self.name_options_widget, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addStretch(1)
         self.on_use_name_toggled()
@@ -68,3 +85,6 @@ class UserNameSettings(qt.QWidget):
         elif self.cb_personal_user.isChecked():
             return "personal_name"
         return "custom_name"
+
+    def get_gender(self):
+        return self.gender_combo.currentText()
