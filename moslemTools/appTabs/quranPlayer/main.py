@@ -469,7 +469,7 @@ class QuranPlayer(qt.QWidget):
         count = len(self.merge_list)
         is_merging_selected = count > 0
         if count > 0:
-            self.merge_feedback_label.setText(f"تم تحديد {count} سورة للدمج.")
+            self.merge_feedback_label.setText(f"تم تحديد {self.format_surah_count(count)} للدمج.")
             self.merge_feedback_label.setVisible(True)
         else:
             self.merge_feedback_label.setVisible(False)
@@ -514,7 +514,7 @@ class QuranPlayer(qt.QWidget):
         if len(self.merge_list) < 1:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم تحديد أي سور للدمج.")
             return
-        speak(f"سيتم دمج {len(self.merge_list)} سورة")
+        speak(f"سيتم دمج {self.format_surah_count(len(self.merge_list))}")
         self.prepare_merge(is_all=True)
 
     def set_as_download_start(self, target='app'):
@@ -603,7 +603,7 @@ class QuranPlayer(qt.QWidget):
                 urls_to_download.append(item["url"])
         num_files_to_download = len(urls_to_download)
         if num_files_to_download > 0:
-            confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} سورة غير موجودة.\nسيتم الآن تحميل ودمج الملفات المحددة على مرحلتين:\nمرحلة التحميل: سيتم تحميل الملفات تباعًا. في هذه الأثناء، لا يمكنك إلغاء تحميل أي سورة.\nمرحلة الدمج: بعد انتهاء التحميل، لن تتمكن من استخدام الواجهة إلا لإلغاء عملية الدمج بأكملها.\n\nهل تريد المتابعة؟")
+            confirm_message = (f"تنبيه: يتطلب الدمج تحميل {self.format_surah_count(num_files_to_download)} غير موجودة.\nسيتم الآن تحميل ودمج الملفات المحددة على مرحلتين:\nمرحلة التحميل: سيتم تحميل الملفات تباعًا. في هذه الأثناء، لا يمكنك إلغاء تحميل أي سورة.\nمرحلة الدمج: بعد انتهاء التحميل، لن تتمكن من استخدام الواجهة إلا لإلغاء عملية الدمج بأكملها.\n\nهل تريد المتابعة؟")
         else:
             confirm_message = ("جميع السور المحددة جاهزة للدمج.\nستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة باستثناء زر إلغاء الدمج.\n\nهل تريد المتابعة؟")
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
@@ -700,7 +700,7 @@ class QuranPlayer(qt.QWidget):
         self.set_ui_enabled(False)
         self.merge_feedback_label.setEnabled(True)
         count = len(self.merge_list)
-        self.merge_feedback_label.setText(f"جاري دمج {count} سور...")
+        self.merge_feedback_label.setText(f"جاري دمج {self.format_surah_count(count)}...")
         self.merge_feedback_label.setVisible(True)
         self.merge_action_button.setVisible(True)
         self.merge_action_button.setEnabled(True)
@@ -1629,8 +1629,12 @@ class QuranPlayer(qt.QWidget):
                     undo_action = qt1.QAction("التراجع عن تحديد سورة", self)
                     undo_action.triggered.connect(self.remove_from_merge_list)
                     merge_menu.addAction(undo_action)
-                    cancel_merge_action = qt1.QAction("إلغاء عملية الدمج الحالية", self)
-                    cancel_merge_action.triggered.connect(self.cancel_merge)
+                    cancel_merge_action = qt.QWidgetAction(self)
+                    btn_cm = guiTools.QPushButton("إلغاء عملية الدمج الحالية")
+                    btn_cm.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+                    btn_cm.clicked.connect(self.cancel_merge)
+                    btn_cm.clicked.connect(menu.close)
+                    cancel_merge_action.setDefaultWidget(btn_cm)
                     merge_menu.addAction(cancel_merge_action)
             merge_menu.addSeparator()
             if not self.merge_list:
@@ -1646,8 +1650,12 @@ class QuranPlayer(qt.QWidget):
                         merge_range_action = qt1.QAction("الدمج من البداية المحددة إلى هنا", self)
                         merge_range_action.triggered.connect(self.merge_from_start_to_here)
                         merge_menu.addAction(merge_range_action)
-                    cancel_start_action = qt1.QAction("إلغاء تحديد بداية الدمج", self)
-                    cancel_start_action.triggered.connect(self.cancel_merge_start)
+                    cancel_start_action = qt.QWidgetAction(self)
+                    btn_csm = guiTools.QPushButton("إلغاء تحديد بداية الدمج")
+                    btn_csm.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+                    btn_csm.clicked.connect(self.cancel_merge_start)
+                    btn_csm.clicked.connect(menu.close)
+                    cancel_start_action.setDefaultWidget(btn_csm)
                     merge_menu.addAction(cancel_start_action)
             menu.addSeparator()
         if not is_merging_active:
@@ -1665,8 +1673,12 @@ class QuranPlayer(qt.QWidget):
                         remove_dl_action = qt1.QAction("إزالة سورة من قائمة التحميل", self)
                         remove_dl_action.triggered.connect(self.remove_from_download_batch)
                         batch_download_app_menu.addAction(remove_dl_action)
-                        cancel_batch_dl_action = qt1.QAction("إلغاء التحميل المخصص", self)
-                        cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
+                        cancel_batch_dl_action = qt.QWidgetAction(self)
+                        btn_c_app = guiTools.QPushButton("إلغاء التحميل المخصص")
+                        btn_c_app.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+                        btn_c_app.clicked.connect(self.cancel_download_batch)
+                        btn_c_app.clicked.connect(menu.close)
+                        cancel_batch_dl_action.setDefaultWidget(btn_c_app)
                         batch_download_app_menu.addAction(cancel_batch_dl_action)
                 batch_download_app_menu.addSeparator()
                 if not self.download_batch_list:
@@ -1683,8 +1695,12 @@ class QuranPlayer(qt.QWidget):
                                 download_range_action = qt1.QAction("التحميل من البداية المحددة إلى هنا", self)
                                 download_range_action.triggered.connect(lambda: self.download_from_start_to_here('app'))
                                 batch_download_app_menu.addAction(download_range_action)
-                            cancel_start_dl_action = qt1.QAction("إلغاء تحديد بداية التحميل", self)
-                            cancel_start_dl_action.triggered.connect(self.cancel_download_start)
+                            cancel_start_dl_action = qt.QWidgetAction(self)
+                            btn_cs_app = guiTools.QPushButton("إلغاء تحديد بداية التحميل")
+                            btn_cs_app.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+                            btn_cs_app.clicked.connect(self.cancel_download_start)
+                            btn_cs_app.clicked.connect(menu.close)
+                            cancel_start_dl_action.setDefaultWidget(btn_cs_app)
                             batch_download_app_menu.addAction(cancel_start_dl_action)
             if not is_batch_download_active or self.batch_download_target == 'device':
                 batch_download_device_menu = menu.addMenu("تحميل مخصص في الجهاز")
@@ -1700,8 +1716,12 @@ class QuranPlayer(qt.QWidget):
                         remove_dl_action = qt1.QAction("إزالة سورة من قائمة التحميل", self)
                         remove_dl_action.triggered.connect(self.remove_from_download_batch)
                         batch_download_device_menu.addAction(remove_dl_action)
-                        cancel_batch_dl_action = qt1.QAction("إلغاء التحميل المخصص", self)
-                        cancel_batch_dl_action.triggered.connect(self.cancel_download_batch)
+                        cancel_batch_dl_action = qt.QWidgetAction(self)
+                        btn_c_dev = guiTools.QPushButton("إلغاء التحميل المخصص")
+                        btn_c_dev.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+                        btn_c_dev.clicked.connect(self.cancel_download_batch)
+                        btn_c_dev.clicked.connect(menu.close)
+                        cancel_batch_dl_action.setDefaultWidget(btn_c_dev)
                         batch_download_device_menu.addAction(cancel_batch_dl_action)
                 batch_download_device_menu.addSeparator()
                 if not self.download_batch_list:
@@ -1718,8 +1738,12 @@ class QuranPlayer(qt.QWidget):
                                 download_range_action = qt1.QAction("التحميل من البداية المحددة إلى هنا", self)
                                 download_range_action.triggered.connect(lambda: self.download_from_start_to_here('device'))
                                 batch_download_device_menu.addAction(download_range_action)
-                            cancel_start_dl_action = qt1.QAction("إلغاء تحديد بداية التحميل", self)
-                            cancel_start_dl_action.triggered.connect(self.cancel_download_start)
+                            cancel_start_dl_action = qt.QWidgetAction(self)
+                            btn_cs_dev = guiTools.QPushButton("إلغاء تحديد بداية التحميل")
+                            btn_cs_dev.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
+                            btn_cs_dev.clicked.connect(self.cancel_download_start)
+                            btn_cs_dev.clicked.connect(menu.close)
+                            cancel_start_dl_action.setDefaultWidget(btn_cs_dev)
                             batch_download_device_menu.addAction(cancel_start_dl_action)
             menu.addSeparator()
         if self.mp.duration() > 0:

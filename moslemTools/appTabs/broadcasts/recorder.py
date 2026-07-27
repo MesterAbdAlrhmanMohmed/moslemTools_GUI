@@ -36,40 +36,73 @@ class WasapiRecorder(qt2.QObject):
         self.device_id = None
         self._is_ready = False
         self._stop_requested = False
+        self.last_error = ""
+        self.init_device()
+
+    def init_device(self):
         if sd is None or sf is None or np is None:
-            self.error.emit("مكتبات التسجيل غير مثبتة.")
-            return
+            self._is_ready = False
+            self.last_error = "مكتبات التسجيل غير مثبتة."
+            return False
+
         try:
             devices = sd.query_devices()
+            hostapis = sd.query_hostapis()
             found_device = False
             target_names = ["stereo mix", "ستيريو", "what u hear"]
+
+            def is_valid_hostapi(dev):
+                host_idx = dev.get('hostapi', -1)
+                if 0 <= host_idx < len(hostapis):
+                    h_name = hostapis[host_idx].get('name', '').lower()
+                    if 'wdm' in h_name or 'kernel' in h_name:
+                        return False
+                return True
+
             for i, device in enumerate(devices):
-                device_name_lower = device['name'].lower()
-                if device['max_input_channels'] > 0:
+                if device['max_input_channels'] > 0 and is_valid_hostapi(device):
+                    device_name_lower = device['name'].lower()
                     if any(t in device_name_lower for t in target_names):
-                        self.device_id = i
-                        self.channels = device['max_input_channels']
-                        self.samplerate = int(device['default_samplerate'])
-                        self._is_ready = True
-                        found_device = True
-                        break
+                        sr = int(device['default_samplerate'])
+                        ch = min(device['max_input_channels'], 2)
+                        try:
+                            st = sd.InputStream(device=i, samplerate=sr, channels=ch)
+                            st.start()
+                            st.stop()
+                            st.close()
+                            self.device_id = i
+                            self.channels = ch
+                            self.samplerate = sr
+                            self._is_ready = True
+                            found_device = True
+                            break
+                        except Exception:
+                            continue
+
             if not found_device:
-                msg = "لم يتم العثور على جهاز 'Stereo Mix' أو 'ستيريو ميكس'.\n"
-                msg += "لحل هذه المشكلة وتفعيل التسجيل، يرجى اتباع الخطوات التالية بدقة:\n"
-                msg += "1. انتقل إلى لوحة التحكم (Control Panel) في نظام الويندوز.\n"
-                msg += "2. اختر أيقونة 'الصوت' (Sound).\n"
-                msg += "3. انتقل إلى التبويب المسمى 'تسجيل' (Recording) في الأعلى.\n"
-                msg += "4. انقر بزر الماوس الأيمن في أي مساحة فارغة داخل القائمة واختر 'إظهار الأجهزة المعطلة' (Show Disabled Devices).\n"
-                msg += "5. سيظهر لك خيار باسم 'Stereo Mix'، انقر عليه بزر الماوس الأيمن واختر 'تمكين' (Enable).\n"
-                msg += "6. يفضل النقر عليه مرة أخرى واختيار 'تعيين كجهاز افتراضي' (Set as Default Device).\n"
-                msg += "7. بعد ذلك، أعد تشغيل البرنامج وحاول التسجيل مرة أخرى."
-                self.error.emit(msg)
-                return
+                msg = (
+                    "لتفعيل Stereo Mix اتبع الخطوات الآتية:\n\n"
+                    "1. افتح قائمة Run بالضغط على (Windows + R) واكتب هذا الأمر: mmsys.cpl\n"
+                    "2. قم بتحديد تبويبة تسجيل الصوت (Recording).\n"
+                    "3. اضغط على (Ctrl + Space) لإلغاء تحديد جميع الأجهزة.\n"
+                    "4. اضغط زر التطبيقات (أو كليك أيمن) واضغط على إظهار الأجهزة المعطلة (Show Disabled Devices).\n"
+                    "5. اضغط زر التطبيقات (أو كليك أيمن) على جهاز Stereo Mix واضغط على تفعيل (Enable).\n"
+                    "6. اضغط عليه مجدداً ثم قم بتحديده كجهاز افتراضي."
+                )
+                self.last_error = msg
+                self._is_ready = False
+                return False
+
+            self.last_error = ""
+            return True
         except Exception as e:
-            self.error.emit(f"خطأ غير متوقع: {e}")
             self._is_ready = False
+            self.last_error = f"خطأ غير متوقع: {e}"
+            return False
 
     def is_ready(self):
+        if not self._is_ready:
+            self.init_device()
         return self._is_ready
 
     def _callback(self, indata, frames, time_info, status):
@@ -77,8 +110,8 @@ class WasapiRecorder(qt2.QObject):
             if self._running and not self._paused and self._sf_handle:
                 try:
                     self._sf_handle.write(indata.copy())
-                except Exception as e:
-                    print(f"Handled exception: {e}")
+                except Exception:
+                    pass
 
     def _run_stream(self):
         try:
@@ -88,7 +121,7 @@ class WasapiRecorder(qt2.QObject):
             self.error.emit(f"فشل إنشاء ملف WAV: {e}")
             return
         try:
-            with sd.InputStream(samplerate=self.samplerate, channels=self.channels, dtype='float32', blocksize=2048, callback=self._callback, device=self.device_id, latency='low') as self._stream:
+            with sd.InputStream(samplerate=self.samplerate, channels=self.channels, dtype='float32', blocksize=2048, callback=self._callback, device=self.device_id) as self._stream:
                 while self._running:
                     time.sleep(0.05)
         except Exception as e:
@@ -138,8 +171,8 @@ class WasapiRecorder(qt2.QObject):
             try:
                 if self._temp_wav_path and self._temp_wav_path.exists():
                     self._temp_wav_path.unlink(missing_ok=True)
-            except Exception as e:
-                print(f"Handled exception: {e}")
+            except Exception:
+                pass
             self.recording_stopped.emit("CLEANUP_ONLY", "")
 
     def convert_and_cleanup(self, temp_file_path, output_filename):
@@ -159,7 +192,7 @@ class WasapiRecorder(qt2.QObject):
             self.error.emit(str(e))
         finally:
             try: temp_file.unlink(missing_ok=True)
-            except: pass
+            except Exception: pass
 
 
 class SchedulingDialog(qt.QDialog):

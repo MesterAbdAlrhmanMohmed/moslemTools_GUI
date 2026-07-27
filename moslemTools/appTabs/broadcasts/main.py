@@ -145,7 +145,8 @@ class protcasts(qt.QWidget):
     def startRecording(self):
         if not self.check_is_playing(): return
         if not self.recorder.is_ready():
-             self.recorder.error.emit("خطأ في تهيئة المسجل.")
+             err = self.recorder.last_error if self.recorder.last_error else "خطأ في تهيئة المسجل."
+             guiTools.qMessageBox.MessageBox.error(self, "عفوا يبدو أن مايكروفون Stereo Mix ليس هو الجهاز الافتراضي", err)
              return
         if self.recorder._running:
              guiTools.qMessageBox.MessageBox.error(self, "خطأ", "التسجيل يعمل بالفعل.")
@@ -167,6 +168,10 @@ class protcasts(qt.QWidget):
             self.resetRecorderState()
             return
         if not self.check_is_playing(): return
+        if not self.recorder.is_ready():
+             err = self.recorder.last_error if self.recorder.last_error else "خطأ في تهيئة المسجل."
+             guiTools.qMessageBox.MessageBox.error(self, "عفوا يبدو أن مايكروفون Stereo Mix ليس هو الجهاز الافتراضي", err)
+             return
         dlg = SchedulingDialog(self)
         if dlg.exec() == qt.QDialog.DialogCode.Accepted:
             sh, sm, ss, dh, dm, ds = dlg.get_values()
@@ -208,8 +213,9 @@ class protcasts(qt.QWidget):
         else:
             self.countdown_timer.stop()
             if not self.recorder.is_ready():
-                self.handle_scheduled_recording_stop_due_to_radio()
-                self.recorder.error.emit("فشل بدء التسجيل المجدول: المسجل غير جاهز.")
+                err = self.recorder.last_error if self.recorder.last_error else "فشل بدء التسجيل المجدول: المسجل غير جاهز."
+                guiTools.qMessageBox.MessageBox.error(self, "عفوا يبدو أن مايكروفون Stereo Mix ليس هو الجهاز الافتراضي", err)
+                self.resetRecorderState()
                 return
             self.recorder.start()
             self.scheduleBtn.setText("جدولة التسجيل")
@@ -312,29 +318,27 @@ class protcasts(qt.QWidget):
         self.aud.setText("جاري إيقاف التسجيل...")
         self.current_status_text = "جاري إيقاف التسجيل..."
         self.recorder.stop(cleanup_only=False)
-    @qt2.pyqtSlot(str, str)
 
+    @qt2.pyqtSlot(str, str)
     def on_recording_stopped(self, status, path):
         self.restore_aud_text()
         if status == "STOPPED":
-            if hasattr(self, 'scheduled_stop_due_to_radio') and self.scheduled_stop_due_to_radio:
+            if self.scheduled_file_path:
+                target_path = self.scheduled_file_path
+                self.scheduled_file_path = ""
+                self.aud.setText("جاري تحويل الملف المجدول إلى MP3، يرجى الانتظار...")
+                self.current_status_text = "جاري تحويل الملف المجدول إلى MP3، يرجى الانتظار..."
+                self.convert_thread_worker = threading.Thread(target=self.recorder.convert_and_cleanup, args=(path, target_path), daemon=True)
+                self.convert_thread_worker.start()
+            elif hasattr(self, 'scheduled_stop_due_to_radio') and self.scheduled_stop_due_to_radio:
                 self.scheduled_stop_due_to_radio = False
-                if self.scheduled_file_path:
-                    self.aud.setText("جاري تحويل الملف إلى MP3، يرجى الانتظار...")
-                    self.current_status_text = "جاري تحويل الملف إلى MP3، يرجى الانتظار..."
-                    self.convert_thread_worker = threading.Thread(target=self.recorder.convert_and_cleanup, args=(path, self.scheduled_file_path), daemon=True)
-                    self.convert_thread_worker.start()
-                else:
-                    self.temp_wav_to_convert = path
-                    self.convert_and_save_prompt()
+                self.temp_wav_to_convert = path
+                self.convert_and_save_prompt()
             else:
                 self.temp_wav_to_convert = path
                 self.convert_and_save_prompt()
         elif status == "CONVERTED":
-            if hasattr(self, 'scheduled_stop_due_to_radio') and self.scheduled_stop_due_to_radio:
-                guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", "تم حفظ الملف بنجاح في المسار المحدد.")
-            else:
-                guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", "تم حفظ الملف بنجاح.")
+            guiTools.qMessageBox.MessageBox.view(self, "تم الحفظ", "تم حفظ الملف بنجاح.")
             self.resetRecorderState()
         elif status == "CLEANUP_ONLY":
             self.resetRecorderState()
@@ -360,13 +364,13 @@ class protcasts(qt.QWidget):
             else:
                 self.convert_and_save_prompt()
         self.temp_wav_to_convert = None
-    @qt2.pyqtSlot(str)
 
+    @qt2.pyqtSlot(str)
     def recordingError(self, error_msg):
         self.restore_aud_text()
         self.recorder.stop(cleanup_only=True)
-        if not self.startBtn.isEnabled() or self.countdown_timer.isActive():
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ في التسجيل", "يبدو أن جهاز تسجيل صوت الكمبيوتر stereo mix لا يعمل، لتشغيله اتبع الخطوات التالية\n\n1 فتح قائمة Run عن طريق الاختصار Windows + R ثم اكتب هذا الأمر:\nrundll32.exe shell32.dll,Control_RunDLL mmsys.cpl,,1\n2 اذهب إلى تبويبة التسجيل Recording واختر منها Stereo Mix ثم اضغط عليه بزر الفأرة الأيمن أو زر التطبيقات واختر Enable ثم اضغط OK.\nلمن واجه أي مشكلة يمكنه التواصل معي على حسابي في تليجرام من قسم (عن المطور) في قائمة المزيد من الخيارات.")
+        msg = error_msg if error_msg else "حدث خطأ غير متوقع أثناء التسجيل."
+        guiTools.qMessageBox.MessageBox.error(self, "عفوا يبدو أن مايكروفون Stereo Mix ليس هو الجهاز الافتراضي", msg)
         self.resetRecorderState()
 
     def resetRecorderState(self):
@@ -376,6 +380,8 @@ class protcasts(qt.QWidget):
             try: Path(self.temp_wav_to_convert).unlink(missing_ok=True)
             except: pass
             self.temp_wav_to_convert = None
+        self.scheduled_file_path = ""
+        self.is_scheduled_recording = False
         self.convert_thread_worker = None
         self.countdown_timer.stop()
         self.duration_timer.stop()
