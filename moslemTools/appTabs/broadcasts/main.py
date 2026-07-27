@@ -83,7 +83,7 @@ class protcasts(qt.QWidget):
         self.aud.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 
         self.fav_btn = guiTools.QPushButton("فتح قائمة المفضلة")
-        self.fav_btn.setStyleSheet("background-color: #0000AA; color: white;")
+        self.fav_btn.setStyleSheet("background-color: #0000AA; color: white; min-height: 48px; padding: 0 20px; font-weight: bold;")
         self.fav_btn.clicked.connect(self.toggle_favorites)
 
         info_fav_layout = qt.QHBoxLayout()

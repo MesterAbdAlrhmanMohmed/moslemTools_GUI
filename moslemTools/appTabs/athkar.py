@@ -46,7 +46,7 @@ class Athker(qt.QWidget):
         self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.fav_btn = guiTools.QPushButton("فتح قائمة المفضلة")
-        self.fav_btn.setStyleSheet("background-color: #0000AA; color: white;")
+        self.fav_btn.setStyleSheet("background-color: #0000AA; color: white; min-height: 50px; padding: 0 20px; font-weight: bold;")
         self.fav_btn.clicked.connect(self.toggle_favorites)
         search_layout.addWidget(self.search_bar)
         search_layout.addWidget(self.fav_btn)
