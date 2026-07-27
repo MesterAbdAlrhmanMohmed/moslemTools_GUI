@@ -330,6 +330,7 @@ class QuranPlayer(qt.QWidget):
         item = self.recitersListWidget.itemAt(pos)
         if not item: return
         name = item.text()
+        if name == "لا يوجد قراء في قائمة المفضلة": return
         menu = qt.QMenu(self)
         if name in self.favorites:
             act = qt1.QAction("إزالة من المفضلة", self)
@@ -1492,7 +1493,7 @@ class QuranPlayer(qt.QWidget):
         self.cancel_merge()
         self.cancel_download_batch()
         selected_reciter_item = self.recitersListWidget.currentItem()
-        if selected_reciter_item:
+        if selected_reciter_item and selected_reciter_item.text() != "لا يوجد قراء في قائمة المفضلة" and selected_reciter_item.text() in self.reciters_data:
             self.merge_all_from_start_button.setVisible(True)
             self.merge_all_from_end_button.setVisible(True)
             reciter = selected_reciter_item.text()
@@ -1511,7 +1512,10 @@ class QuranPlayer(qt.QWidget):
         self.recitersListWidget.clear()
         source = self.favorites if self.show_favorites_only else self.recitersList
         result = self.search(search_text, source)
-        self.recitersListWidget.addItems(result)
+        if self.show_favorites_only and not result:
+            self.recitersListWidget.addItem("لا يوجد قراء في قائمة المفضلة")
+        else:
+            self.recitersListWidget.addItems(result)
 
     def surah_onsearch(self):
         search_text = self.surahSearchEdit.text().lower()

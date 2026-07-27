@@ -13,7 +13,7 @@ class UserNameSettings(qt.QWidget):
         font = qt1.QFont()
         font.setBold(True)
         layout.addStretch(1)
-        self.use_name_checkbox = qt.QCheckBox("استخدام اسمك في التذكير بالمناسبات وصيام السنن")
+        self.use_name_checkbox = qt.QCheckBox("استخدام بياناتك في التذكير بالمناسبات وصيام السنن")
         self.use_name_checkbox.setFont(font)
         self.use_name_checkbox.setChecked(settings_handler.get("g", "use_name_in_occasions") != "False")
         self.use_name_checkbox.stateChanged.connect(self.on_use_name_toggled)

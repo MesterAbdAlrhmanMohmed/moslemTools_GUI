@@ -123,26 +123,38 @@ class IslamicBooks(qt.QWidget):
         try:
             if os.path.exists(self.fav_file_path):
                 with open(self.fav_file_path, "r", encoding="utf-8") as f:
-                    self.favorites = json.load(f)
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        self.favorites = data.get("favorites", [])
+                        self.show_favorites_only = data.get("show_favorites_only", False)
+                    else:
+                        self.favorites = data
+                        self.show_favorites_only = False
             else:
                 self.favorites = []
+                self.show_favorites_only = False
         except Exception:
             self.favorites = []
+            self.show_favorites_only = False
 
     def save_favorites(self):
         try:
             os.makedirs(os.path.dirname(self.fav_file_path), exist_ok=True)
             with open(self.fav_file_path, "w", encoding="utf-8") as f:
-                json.dump(self.favorites, f, ensure_ascii=False, indent=2)
+                json.dump({"favorites": self.favorites, "show_favorites_only": self.show_favorites_only}, f, ensure_ascii=False, indent=2)
         except Exception:
             pass
 
-    def toggle_favorites(self):
-        self.show_favorites_only = not self.show_favorites_only
+    def update_favorites_ui_state(self):
         if self.show_favorites_only:
             self.fav_btn.setText("عرض جميع الكتب")
         else:
             self.fav_btn.setText("فتح قائمة المفضلة")
+
+    def toggle_favorites(self):
+        self.show_favorites_only = not self.show_favorites_only
+        self.save_favorites()
+        self.update_favorites_ui_state()
         self.apply_filter()
 
     def showEvent(self, event):
@@ -160,6 +172,7 @@ class IslamicBooks(qt.QWidget):
 
     def on_data_loaded(self, book_list):
         self.is_loaded = True
+        self.update_favorites_ui_state()
         self.apply_filter()
 
     def start_threaded_refresh(self):
@@ -201,7 +214,7 @@ class IslamicBooks(qt.QWidget):
             return
         self.list_of_abook.setCurrentItem(item)
         book_name = item.text()
-        if book_name == "جاري تحميل قائمة الكتب...":
+        if book_name in ["جاري تحميل قائمة الكتب...", "لا توجد كتب في قائمة المفضلة"]:
             return
         menu = qt.QMenu(self)
         if book_name in self.favorites:
@@ -237,6 +250,8 @@ class IslamicBooks(qt.QWidget):
         selectedItem=self.list_of_abook.currentItem()
         if selectedItem:
             itemText=selectedItem.text()
+            if itemText in ["جاري تحميل قائمة الكتب...", "لا توجد كتب في قائمة المفضلة"]:
+                return
             if itemText=="حياة الصحابة":
                 guiTools.qMessageBox.MessageBox.error(self,"تنبيه","لا يمكنك حذف هذا الكتاب ")
             else:
@@ -245,10 +260,13 @@ class IslamicBooks(qt.QWidget):
                     self.start_threaded_delete(itemText)
 
     def open(self):
+        item = self.list_of_abook.currentItem()
+        if not item or item.text() in ["جاري تحميل قائمة الكتب...", "لا توجد كتب في قائمة المفضلة"]:
+            return
         try:
-            with open(os.path.join(os.getenv('appdata'),app.appName,"islamicBooks",functions.islamicBooks.books[self.list_of_abook.currentItem().text()]),"r",encoding="utf-8") as f:
+            with open(os.path.join(os.getenv('appdata'),app.appName,"islamicBooks",functions.islamicBooks.books[item.text()]),"r",encoding="utf-8") as f:
                 data=json.load(f)
-                bookName=functions.islamicBooks.books[self.list_of_abook.currentItem().text()]
+                bookName=functions.islamicBooks.books[item.text()]
                 if len(list(data.keys()))==1:
                     partName=list(data.keys())[0]
                     gui.islamicBooks.book_viewer(self,bookName,partName,data[partName]).exec()
@@ -287,4 +305,7 @@ class IslamicBooks(qt.QWidget):
                     continue
             filtered_books.append(book)
         self.list_of_abook.clear()
-        self.list_of_abook.addItems(filtered_books)
+        if self.show_favorites_only and not filtered_books:
+            self.list_of_abook.addItem("لا توجد كتب في قائمة المفضلة")
+        else:
+            self.list_of_abook.addItems(filtered_books)

@@ -73,26 +73,38 @@ class Athker(qt.QWidget):
         try:
             if os.path.exists(self.fav_file_path):
                 with open(self.fav_file_path, "r", encoding="utf-8") as f:
-                    self.favorites = json.load(f)
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        self.favorites = data.get("favorites", [])
+                        self.show_favorites_only = data.get("show_favorites_only", False)
+                    else:
+                        self.favorites = data
+                        self.show_favorites_only = False
             else:
                 self.favorites = []
+                self.show_favorites_only = False
         except Exception:
             self.favorites = []
+            self.show_favorites_only = False
 
     def save_favorites(self):
         try:
             os.makedirs(os.path.dirname(self.fav_file_path), exist_ok=True)
             with open(self.fav_file_path, "w", encoding="utf-8") as f:
-                json.dump(self.favorites, f, ensure_ascii=False, indent=2)
+                json.dump({"favorites": self.favorites, "show_favorites_only": self.show_favorites_only}, f, ensure_ascii=False, indent=2)
         except Exception:
             pass
 
-    def toggle_favorites(self):
-        self.show_favorites_only = not self.show_favorites_only
+    def update_favorites_ui_state(self):
         if self.show_favorites_only:
             self.fav_btn.setText("عرض جميع فئات الأذكار")
         else:
             self.fav_btn.setText("فتح قائمة المفضلة")
+
+    def toggle_favorites(self):
+        self.show_favorites_only = not self.show_favorites_only
+        self.save_favorites()
+        self.update_favorites_ui_state()
         self.apply_filter()
 
     def showEvent(self, event):
@@ -111,12 +123,13 @@ class Athker(qt.QWidget):
     def on_data_loaded(self, data):
         self.all_athkars_data = data
         self.is_loaded = True
+        self.update_favorites_ui_state()
         self.apply_filter()
 
     def on_item_clicked(self):
         item = self.athkerList.currentItem()
         row = self.athkerList.currentRow()
-        if item and self.data and 0 <= row < len(self.data):
+        if item and item.text() not in ["جاري تحميل الأذكار...", "لا توجد فئات أذكار في قائمة المفضلة"] and self.data and 0 <= row < len(self.data):
             gui.AthkerDialog(self, item.text(), self.data[row]["content"]).exec()
 
     def open_context_menu(self, pos):
@@ -127,6 +140,8 @@ class Athker(qt.QWidget):
             return
         self.athkerList.setCurrentItem(item)
         athkar_name = item.text()
+        if athkar_name in ["جاري تحميل الأذكار...", "لا توجد فئات أذكار في قائمة المفضلة"]:
+            return
         menu = qt.QMenu(self)
         if athkar_name in self.favorites:
             act = qt1.QAction("إزالة من المفضلة", self)
@@ -157,7 +172,7 @@ class Athker(qt.QWidget):
 
     def onDelete(self):
         itemText = self.athkerList.currentItem()
-        if itemText:
+        if itemText and itemText.text() not in ["جاري تحميل الأذكار...", "لا توجد فئات أذكار في قائمة المفضلة"]:
             athkar_name = itemText.text()
             path = os.path.join(os.getenv('appdata'), app.appName, "athkar", athkar_name)
             if os.path.exists(path):
@@ -202,8 +217,12 @@ class Athker(qt.QWidget):
             filtered_athkars.append(name)
             filtered_data_for_display.append(athker)
         self.athkerList.clear()
-        self.athkerList.addItems(filtered_athkars)
-        self.data = filtered_data_for_display
+        if self.show_favorites_only and not filtered_athkars:
+            self.athkerList.addItem("لا توجد فئات أذكار في قائمة المفضلة")
+            self.data = []
+        else:
+            self.athkerList.addItems(filtered_athkars)
+            self.data = filtered_data_for_display
 
     def refresh_athkar_list(self):
         self.is_loaded = False

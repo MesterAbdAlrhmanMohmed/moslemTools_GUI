@@ -382,16 +382,22 @@ class main(qt.QMainWindow):
         self.developers_window.exec()
 
     def viewInfoTextEdit(self):
-        username1 = get_smart_display_name()
+        use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") != "False")
+        username1 = get_smart_display_name() if use_name_enabled else ""
         gender = settings_handler.get("g", "user_gender") or "ذكر"
         is_female = (gender == "أنثى")
-        ya_name = f" يا {username1}" if username1 else ""
-        if is_female:
-            ya_prefix = f"يا {username1}، لا تَنْسِ، " if username1 else "لا تَنْسِ، "
-            default_dhikr = f"لا تَنْسِ يا {username1}، ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسِ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
+        if use_name_enabled:
+            ya_name = f" يا {username1}" if username1 else ""
+            if is_female:
+                ya_prefix = f"يا {username1}، لا تَنْسِ، " if username1 else "لا تَنْسِ، "
+                default_dhikr = f"لا تَنْسِ يا {username1}، ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسِ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
+            else:
+                ya_prefix = f"يا {username1}، لا تَنْسَ، " if username1 else "لا تَنْسَ، "
+                default_dhikr = f"لا تَنْسَ يا {username1}، ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسَ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
         else:
-            ya_prefix = f"يا {username1}، لا تَنْسَ، " if username1 else "لا تَنْسَ، "
-            default_dhikr = f"لا تَنْسَ يا {username1}، ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسَ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
+            ya_name = ""
+            ya_prefix = ""
+            default_dhikr = "ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
             current_gregorian_weekday = datetime.datetime.now().weekday()
@@ -399,7 +405,9 @@ class main(qt.QMainWindow):
                 self.info.setText(f"جمعة مباركة{ya_name}، تشغيل أو قراءة سورة الكهف في هذا اليوم سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 9:
                 if 21 <= hijri_date_obj.day <= 29:
-                    if is_female:
+                    if not use_name_enabled:
+                        self.info.setText("العشر الأواخر من رمضان، أسأل الله أن يرزق الجميع فضل ليلة القدر، ولا تنسونا من صالح الدعاء، وجزاكم الله خيرا.")
+                    elif is_female:
                         self.info.setText("العشر الأواخر من رمضان، أسأل الله أن يرزقكِ فضل ليلة القدر، ولا تنسيني من صالح دعائكِ، وجزاكِ الله خيراً.")
                     else:
                         self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم، وجزاكم الله خيرا.")
