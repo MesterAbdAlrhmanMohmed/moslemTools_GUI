@@ -72,7 +72,8 @@ settingsConfig={
         "voice":"0",
         "voiceVolume":"100",
         "text":"0",
-        "playAtStartup":"False"
+        "playAtStartup":"False",
+        "playBasmalaAtStartup":"False"
     },
     "prayerTimes":{
         "adaanReminder":"True",

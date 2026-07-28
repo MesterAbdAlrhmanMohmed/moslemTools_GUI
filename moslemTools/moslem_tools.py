@@ -321,9 +321,6 @@ class main(qt.QMainWindow):
             self.show_action.setText("إخفاء البرنامج")
 
     def show_random_theker(self):
-        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-            qt2.QTimer.singleShot(60000, self.show_random_theker)
-            return
         base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(base_dir, "data", "json", "text_athkar.json")
         with open(file_path, "r", encoding="utf_8") as f:
@@ -343,7 +340,7 @@ class main(qt.QMainWindow):
         self.TIMER1.stop()
         duration = formatDuration("athkar", "text")
         if duration != 0:
-            self.TIMER1.start(duration + 10000)
+            self.TIMER1.start(duration)
 
     def runAudioThkarTimer(self):
         self.timer.stop()
