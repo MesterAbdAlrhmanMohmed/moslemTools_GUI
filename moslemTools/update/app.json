@@ -1,7 +1,7 @@
 {
   "name": "moslem tools",
-  "version": 8.0,
-  "what is new": "الجديد للإصدار 8.0\nتم إضافة تبويبة لحساب الختمة القرآنية\nتم تحديث مكتبة qt وهذا قد يسبب بعض المشاكل، يرجى تنبيهي على الخاص فور اكتشاف أي مشكلة\nإصلاح الكثير من الأخطاء المهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_8.0/moslem_tools_version_8.0.exe",
-  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_8.0/moslem_tools_version_8.0.exe",
+  "version": 8.1,
+  "what is new": "الجديد للإصدار 8.1\nإصلاح مشكلة مهمة جدا، تحديث هذا الإصدار أمر مهم جدا\n\nالجديد للإصدار 8.1 لمن وصل له التحديث متأخرا\nتم إضافة تبويبة لحساب الختمة القرآنية\nتم تحديث مكتبة qt وهذا قد يسبب بعض المشاكل، يرجى تنبيهي على الخاص فور اكتشاف أي مشكلة\nإصلاح الكثير من الأخطاء المهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_8.1/moslem_tools_version_8.1.exe",
+  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_8.1/moslem_tools_version_8.1.exe",
   "is_beta": false
 }
