@@ -123,6 +123,7 @@ class main(qt.QMainWindow):
         tabs = [
     (prayer_times(self), "مواقيت الصلاة والتاريخ"),
     (Quran(), "القرآن الكريم مكتوب"),
+    (KhatmahTab(self), "متابع الختمة القرآنية"),
     (self.quranPlayer, "القرآن الكريم صوتي"),
     (hadeeth(), "الأحاديث النبوية والقدسية"),
     (self.researcher, "الباحث في القرآن والأحاديث"),

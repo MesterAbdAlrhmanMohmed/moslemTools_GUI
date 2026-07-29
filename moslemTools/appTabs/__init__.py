@@ -14,5 +14,8 @@ from .athkar import Athker
 from .islamicBooks import IslamicBooks
 from .prophetStories import ProphetStories
 from. notes import NotesDialog
-from. islamic_topics import IslamicTopicsTab
+from .islamic_topics import IslamicTopicsTab
 from .islamic_questions_game import IslamicQuestionsGame
+from .khatmah import KhatmahTab
+
+

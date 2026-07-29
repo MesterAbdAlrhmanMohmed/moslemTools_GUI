@@ -387,7 +387,11 @@ class QuranViewer(qt.QDialog):
         if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):
             if self.text.textCursor().blockNumber() < 2:
                 return True
+        current_line_text = self.text.textCursor().block().text().strip()
+        if not current_line_text or re.match(r'^صفحة \d+$', current_line_text):
+            return True
         return False
+
 
     def _handle_invalid_search_line_action(self):
         winsound.Beep(440, 200)
@@ -987,6 +991,7 @@ class QuranViewer(qt.QDialog):
 
     def oncontextMenu(self):
         if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
             return
         self.saved_cursor_position = self.text.textCursor().position()
         self.saved_ayah_index = self.getCurrentAyah()
