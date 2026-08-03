@@ -26,6 +26,7 @@ class TafaseerViewer(qt.QDialog):
         self.saved_cursor_position = None
         self.saved_selection_start = -1
         self.saved_selection_end = -1
+        self.setMinimumSize(700, 400)
         self.resize(1200, 600)
         self.text = guiTools.QReadOnlyTextEdit(viewer_name="tafaseerViewer")
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -45,7 +46,7 @@ class TafaseerViewer(qt.QDialog):
         self.changeTafaseer = qt.QPushButton("تغيير التفسير")
         self.changeTafaseer.setStyleSheet("background-color: #0000AA; color: white;")
         self.changeTafaseer.clicked.connect(self.on_change_tafaseer)
-        self.changeTafaseer.setFixedSize(150,40)
+        self.changeTafaseer.setMinimumSize(150,40)
         bottomLayout.addWidget(self.changeTafaseer)
         fontLayout = qt.QVBoxLayout()
         self.more_options_label = qt.QLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")

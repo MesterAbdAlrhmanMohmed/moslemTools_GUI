@@ -13,7 +13,8 @@ class book_marcks(qt.QDialog):
         font.setBold(True)
         self.setFont(font)
         self.setWindowTitle("العلامات المرجعية")
-        self.resize(800,450)
+        self.setMinimumSize(600, 350)
+        self.resize(800, 450)
         self.tabWidget = qt.QTabWidget()
         self.tabWidget.setStyleSheet("""
             QTabWidget::pane {

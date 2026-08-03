@@ -21,7 +21,8 @@ class NotesDialog(qt.QDialog):
         qt1.QShortcut(qt1.QKeySequence("Ctrl+G"), self).activated.connect(self.handle_goto)
         qt1.QShortcut(qt1.QKeySequence("Ctrl+E"), self).activated.connect(self.handle_edit)
         qt1.QShortcut(qt1.QKeySequence("Ctrl+O"), self).activated.connect(self.handle_view)
-        self.resize(800,450)
+        self.setMinimumSize(600, 350)
+        self.resize(800, 450)
         layout = qt.QVBoxLayout(self)
         self.tabWidget = qt.QTabWidget()
         self.tabWidget.setStyleSheet("""

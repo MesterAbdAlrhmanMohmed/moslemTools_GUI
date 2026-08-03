@@ -6,7 +6,8 @@ class PartSelection (qt.QDialog):
     def __init__(self,p,bookName:str,content:dict):
         super().__init__(p)
         self.setWindowTitle("اختر جزئ")
-        self.setFixedSize(500,300)
+        self.setMinimumSize(400,250)
+        self.resize(500,300)
         self.bookName=bookName
         self.content=content
         layout=qt.QVBoxLayout(self)

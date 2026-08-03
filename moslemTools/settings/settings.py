@@ -4,13 +4,15 @@ from . import settings_handler, app, tabs
 from .tabs import audioSettings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
+import PyQt6.QtCore as qt2
 from PyQt6.QtCore import Qt
 
 
 class settings(qt.QDialog):
     def __init__(self, p):
         super().__init__(p)
-        self.resize(960,480)
+        self.setMinimumSize(850, 480)
+        self.resize(960, 550)
         self.center()
         self.setWindowTitle("الإعدادات")
         self.p = p
@@ -23,9 +25,14 @@ class settings(qt.QDialog):
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر قسم")
         self.sectian.setFont(font)
-        self.sectian.setFixedWidth(350)
+        self.sectian.setMinimumWidth(220)
         h_layout.addWidget(self.sectian)
-        h_layout.addWidget(self.sectian.w)
+        scroll_area = qt.QScrollArea()
+        scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+        scroll_area.setWidget(self.sectian.w)
+        h_layout.addWidget(scroll_area)
         layout.addLayout(h_layout)
         self.update = tabs.Update(self)
         buttonsLayout = qt.QHBoxLayout()

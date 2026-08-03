@@ -157,10 +157,10 @@ class main(qt.QMainWindow):
         max_width = 0
         for i in range(self.list_widget.count()):
             item_text = self.list_widget.item(i).text()
-            text_width = fm.boundingRect(item_text).width()
+            text_width = fm.horizontalAdvance(item_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(item_text).width()
             if text_width > max_width:
                 max_width = text_width
-        max_width += 40
+        max_width += 19
         self.list_widget.setFixedWidth(max_width)
         content_layout.addWidget(self.list_widget)
         content_layout.addWidget(self.list_widget.w, 1)
@@ -170,7 +170,8 @@ class main(qt.QMainWindow):
         self.more_options_button.setAccessibleDescription("control plus o")
         self.more_options_button.setDefault(True)
         self.more_options_button.setStyleSheet("background-color: black; color: white;")
-        self.more_options_button.setFixedSize(150,40)
+        self.more_options_button.setFixedWidth(max_width)
+        self.more_options_button.setMinimumHeight(40)
         font = qt1.QFont()
         font.setBold(True)
         self.more_options_button.setFont(font)

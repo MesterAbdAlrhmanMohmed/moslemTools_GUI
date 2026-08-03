@@ -10,7 +10,8 @@ from PyQt6.QtCore import Qt
 class LimitInputDialog(qt.QDialog):
     def __init__(self, parent, title: str):
         super().__init__(parent)
-        self.resize(350, 200)
+        self.setMinimumSize(300, 180)
+        self.resize(350, 220)
         self.setWindowTitle(title)
         layout = qt.QVBoxLayout(self)
         self.name_label = qt.QLabel("أدخل اسم الحد")

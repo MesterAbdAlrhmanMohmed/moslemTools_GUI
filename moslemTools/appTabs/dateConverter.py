@@ -127,7 +127,7 @@ class DateConverter(qt.QWidget):
         self.clear_result = guiTools.QPushButton("حذف النتيجة")
         self.clear_result.setStyleSheet("background-color: #8B0000; color: white;")
         self.clear_result.clicked.connect(self.clear_action)
-        self.clear_result.setFixedWidth(180)
+        self.clear_result.setMinimumWidth(180)
         self.clear_result.setEnabled(False)
         self.clear_result.setVisible(False)
         clear_button_layout = qt.QHBoxLayout()

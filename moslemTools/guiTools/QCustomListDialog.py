@@ -4,7 +4,7 @@ from . import QPushButton
 
 
 class QCustomListDialog(qt.QDialog):
-	def __init__(self, parent, title: str, label: str, items: list):
+	def __init__(self, parent, title: str, label: str, items: list, ok_text: str = "إزالة", ok_style: str = None):
 		super().__init__(parent)
 		self.setWindowTitle(title)
 		self.selected_item = None
@@ -16,12 +16,15 @@ class QCustomListDialog(qt.QDialog):
 		self.list_widget.addItems(items)
 		self.list_widget.setAccessibleName(label)
 		layout.addWidget(self.list_widget)
-		self.ok_button = QPushButton("إزالة")
-		self.ok_button.setStyleSheet("background-color: #006400; color: white; padding: 5px;")
+		self.ok_button = QPushButton(ok_text)
+		if ok_style:
+			self.ok_button.setStyleSheet(ok_style)
+		else:
+			self.ok_button.setStyleSheet("background-color: #006400; color: white; padding: 5px;")
 		self.ok_button.setDefault(True)
 		self.ok_button.clicked.connect(self.on_ok)
 		self.cancel_button = QPushButton("إلغاء")
-		self.cancel_button.setStyleSheet("background-color: #8B0000; color: white; padding: 5px;")
+		self.cancel_button.setStyleSheet("background-color: #006400; color: white; padding: 5px;")
 		self.cancel_button.clicked.connect(self.reject)
 		buttons_layout = qt.QHBoxLayout()
 		buttons_layout.addWidget(self.ok_button)
@@ -35,8 +38,8 @@ class QCustomListDialog(qt.QDialog):
 			self.accept()
 
 	@staticmethod
-	def getItem(parent, title: str, label: str, items: list):
-		dialog = QCustomListDialog(parent, title, label, items)
+	def getItem(parent, title: str, label: str, items: list, ok_text: str = "إزالة", ok_style: str = None):
+		dialog = QCustomListDialog(parent, title, label, items, ok_text=ok_text, ok_style=ok_style)
 		result = dialog.exec()
 		if result == qt.QDialog.DialogCode.Accepted:
 			return dialog.selected_item, True

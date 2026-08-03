@@ -10,6 +10,7 @@ class QQuestionMessageBox(qt.QDialog):
     def __init__(self, parent, title: str, label: str, yesLabel: str, noLabel: str):
         super().__init__(parent)
         self.result = 1
+        self.setMinimumSize(500, 200)
         self.resize(900, 350)
         self.setWindowTitle(title)
         self.center()

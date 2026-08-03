@@ -13,7 +13,8 @@ class book_marcks(qt.QDialog):
         self.setFont(font)
         self.tabName=tabName
         self.p=p
-        self.resize(300,300)
+        self.setMinimumSize(300, 300)
+        self.resize(400, 400)
         self.setWindowTitle("العلامات المرجعية")
         self.results=guiTools.QListWidget()
         self.results.clicked.connect(self.onItemClicked)

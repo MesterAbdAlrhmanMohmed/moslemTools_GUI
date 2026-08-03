@@ -75,7 +75,8 @@ class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):
         super().__init__(parent)
         self.setWindowTitle("إعدادات نمط البحث")
-        self.setFixedSize(350, 200)
+        self.setMinimumSize(300, 180)
+        self.resize(350, 200)
         self.initial_ignore_tashkeel = ignore_tashkeel
         self.initial_ignore_hamza = ignore_hamza
         self.initial_ignore_symbols = ignore_symbols

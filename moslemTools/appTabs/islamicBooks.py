@@ -162,7 +162,9 @@ class IslamicBooks(qt.QWidget):
         layout.addLayout(search_layout)
 
         self.category_tabs = qt.QTabBar()
-        self.category_tabs.setStyleSheet("""QTabBar::tab { background: #2b2b2b; color: white; padding: 10px 20px; border: 1px solid #444; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; min-width: 100px; font-weight: bold; } QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } QTabBar::tab:hover { background: #3a3a3a; }""")
+        self.category_tabs.setElideMode(qt2.Qt.TextElideMode.ElideNone)
+        self.category_tabs.setExpanding(False)
+        self.category_tabs.setStyleSheet("""QTabBar::tab { background: #2b2b2b; color: white; padding: 10px 20px; border: 1px solid #444; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; font-weight: bold; } QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } QTabBar::tab:hover { background: #3a3a3a; }""")
         self.category_tabs.currentChanged.connect(self.on_tab_changed)
         layout.addWidget(self.category_tabs)
 
@@ -253,8 +255,10 @@ class IslamicBooks(qt.QWidget):
     def update_categories_ui(self):
         if len(self.categories) == 0:
             self.cat_btn.setText("إضافة فئة")
+            self.category_tabs.setVisible(False)
         else:
             self.cat_btn.setText("خيارات فئات الكتب")
+            self.category_tabs.setVisible(not self.show_favorites_only)
         self.category_tabs.blockSignals(True)
         while self.category_tabs.count() > 0:
             self.category_tabs.removeTab(0)
@@ -350,7 +354,7 @@ class IslamicBooks(qt.QWidget):
         else:
             self.fav_btn.setText("فتح قائمة المفضلة")
             if hasattr(self, 'category_tabs'):
-                self.category_tabs.setVisible(True)
+                self.category_tabs.setVisible(len(self.categories) > 0)
             if hasattr(self, 'cat_btn'):
                 self.cat_btn.setVisible(True)
 
@@ -611,7 +615,7 @@ class IslamicBooks(qt.QWidget):
         else:
             self.list_of_abook.addItems(filtered_books)
             if target_book and target_book not in ["جاري تحميل قائمة الكتب...", "لا توجد كتب في قائمة المفضلة", "لا توجد كتب في هذه الفئة"]:
-                items = self.list_of_abook.findItems(target_book, qt2.Qt.MatchFlag.MatchExact)
+                items = self.list_of_abook.findItems(target_book, qt2.Qt.MatchFlag.MatchExactly)
                 if items:
                     self.list_of_abook.setCurrentItem(items[0])
                     self.list_of_abook.scrollToItem(items[0])

@@ -6,6 +6,7 @@ from settings import *
 class ComboBook(qt.QComboBox):
     def __init__(self):
         super().__init__()
+        self.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.w=qt.QStackedWidget()
         self.currentIndexChanged.connect(self.changeI)
         qt1.QShortcut("ctrl+tab",self).activated.connect(self.Nexttab)

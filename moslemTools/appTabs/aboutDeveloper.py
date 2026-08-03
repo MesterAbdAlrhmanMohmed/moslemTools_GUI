@@ -8,7 +8,8 @@ import PyQt6.QtCore as qt2
 class AboutDeveloper(qt.QDialog):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(650,300)
+        self.setMinimumSize(500, 250)
+        self.resize(650, 320)
         self.center()
         self.setWindowTitle("عن المطور")
         self.info = guiTools.QListWidget()

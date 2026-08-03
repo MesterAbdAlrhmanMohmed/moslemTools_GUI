@@ -60,7 +60,7 @@ class FontSettings(qt.QWidget):
         self.font_size_spinbox = qt.QSpinBox()
         self.font_size_spinbox.setRange(1, 100)
         self.font_size_spinbox.setValue(int(settings_handler.get("font", "size") or 12))
-        self.font_size_spinbox.setFixedWidth(80)
+        self.font_size_spinbox.setMinimumWidth(80)
         self.font_size_spinbox.setAccessibleName("حجم الخط")
         self.font_size_spinbox.valueChanged.connect(self.on_font_size_changed)
 

@@ -10,6 +10,7 @@ import winsound
 class MessageBoxForGame(qt.QDialog):
     def __init__(self, parent, title: str, label: str):
         super().__init__(parent)
+        self.setMinimumSize(500, 200)
         self.resize(900, 350)
         self.setWindowTitle(title)
         self.center()

@@ -198,7 +198,8 @@ class WasapiRecorder(qt2.QObject):
 class SchedulingDialog(qt.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.resize(500, 250)
+        self.setMinimumSize(450, 220)
+        self.resize(500, 270)
         self.setWindowTitle("جدولة التسجيل")
         layout = qt.QVBoxLayout(self)
         main_h_layout = qt.QHBoxLayout()
