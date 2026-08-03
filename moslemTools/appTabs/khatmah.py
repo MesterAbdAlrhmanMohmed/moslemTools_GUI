@@ -183,10 +183,32 @@ class KhatmahTab(qt.QWidget):
         self.data["daily_pages"] = daily_target
         self.save_data()
 
-        self.progress_bar.setValue(completed_pages)
         percent = (completed_pages / total_pages) * 100
+        self.progress_bar.setValue(completed_pages)
 
         start_date_str = self.data.get("start_date", datetime.date.today().strftime("%Y-%m-%d"))
+        try:
+            start_date = datetime.datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        except Exception:
+            start_date = datetime.date.today()
+
+        today = datetime.date.today()
+        days_passed = max(0, (today - start_date).days)
+
+        if completed_pages >= total_pages:
+            rem_days = 0
+            expected_date_str = today.strftime("%Y-%m-%d")
+        else:
+            expected_daily_pace = total_pages / max(1, target_days)
+            if days_passed == 0:
+                actual_pace = expected_daily_pace
+            else:
+                actual_pace = completed_pages / days_passed if completed_pages > 0 else expected_daily_pace
+
+            rem_days = math.ceil(rem_pages / expected_daily_pace) if expected_daily_pace > 0 else 0
+            days_needed = math.ceil(rem_pages / actual_pace) if actual_pace > 0 else rem_days
+            expected_date = today + datetime.timedelta(days=days_needed)
+            expected_date_str = expected_date.strftime("%Y-%m-%d")
 
         if daily_target < 5:
             prayer_str = ""
@@ -209,6 +231,8 @@ class KhatmahTab(qt.QWidget):
             f"المدة المستهدفة: {format_days(target_days)}\n"
             f"الصفحات المكتملة: {format_pages(completed_pages)} من {format_pages(604)} ({percent:.1f}%)\n"
             f"الصفحات المتبقية: {format_pages(rem_pages)}\n"
+            f"الأيام المتبقية: {format_days(rem_days)}\n"
+            f"تاريخ الانتهاء المتوقع: {expected_date_str}\n"
             f"الورد اليومي المطلوب: {format_pages(daily_target)} تقريباً{prayer_str}\n"
             f"الصفحة الحالية لبدء الورد: صفحة {current_page}"
         )

@@ -123,8 +123,8 @@ class main(qt.QMainWindow):
         tabs = [
     (prayer_times(self), "مواقيت الصلاة والتاريخ"),
     (Quran(), "القرآن الكريم مكتوب"),
-    (KhatmahTab(self), "متابع الختمة القرآنية"),
     (self.quranPlayer, "القرآن الكريم صوتي"),
+    (KhatmahTab(self), "متابع الختمة القرآنية"),
     (hadeeth(), "الأحاديث النبوية والقدسية"),
     (self.researcher, "الباحث في القرآن والأحاديث"),
     (self.askAI, "اسأل الذكاء الاصطناعي"),
@@ -145,6 +145,14 @@ class main(qt.QMainWindow):
             font = item.font()
             font.setBold(True)
             item.setFont(font)
+        try:
+            start_tab = int(settings_handler.get("g", "startup_tab"))
+            if 0 <= start_tab < self.list_widget.count():
+                self.list_widget.setCurrentRow(start_tab)
+            else:
+                self.list_widget.setCurrentRow(0)
+        except Exception:
+            self.list_widget.setCurrentRow(0)
         fm = qt1.QFontMetrics(self.list_widget.font())
         max_width = 0
         for i in range(self.list_widget.count()):

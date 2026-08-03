@@ -57,7 +57,8 @@ class AIChatThread(qt2.QThread):
 class SourcesDialog(qt.QDialog):
     def __init__(self, parent, sources):
         super().__init__(parent)
-        self.resize(450, 180)
+        self.setMinimumWidth(450)
+        self.setMaximumWidth(750)
         self.setWindowTitle("المصادر والمراجع")
         lec = "اختر المصدر الذي تريد الذهاب إليه:"
         label = qt.QLabel(lec)
@@ -242,6 +243,14 @@ class AskAI(qt.QWidget):
         self.send_button = guiTools.QPushButton("إرسال الرسالة")
         self.send_button.setObjectName("sendButton")
         self.send_button.clicked.connect(self.on_send_clicked)
+
+        self.sources_button = guiTools.QPushButton("المصادر والمراجع")
+        self.sources_button.setObjectName("sourcesButton")
+        self.sources_button.setShortcut("ctrl+r")
+        self.sources_button.setAccessibleDescription("control plus R")
+        self.sources_button.setVisible(False)
+        self.sources_button.clicked.connect(self.show_sources_dialog)
+
         input_layout.addWidget(self.input_box)
         input_layout.addWidget(self.send_button)
         layout.addLayout(input_layout)
@@ -267,9 +276,14 @@ class AskAI(qt.QWidget):
         self.font_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.font_spin.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.font_spin.setAccessibleName("حجم الخط")
+        self.font_spin.setMaximumWidth(70)
         self.font_spin.valueChanged.connect(self.font_size_changed)
         font_layout.addWidget(self.font_label)
         font_layout.addWidget(self.font_spin)
+
+        self.more_options_label = qt.QLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
+        self.more_options_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.more_options_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 
         self.sources_button = guiTools.QPushButton("المصادر والمراجع")
         self.sources_button.setObjectName("sourcesButton")
@@ -281,6 +295,8 @@ class AskAI(qt.QWidget):
         bottom_layout.addWidget(self.clear_button)
         bottom_layout.addStretch(1)
         bottom_layout.addLayout(font_layout)
+        bottom_layout.addStretch(1)
+        bottom_layout.addWidget(self.more_options_label)
         bottom_layout.addStretch(1)
         bottom_layout.addWidget(self.sources_button)
         layout.addLayout(bottom_layout)
@@ -311,6 +327,9 @@ class AskAI(qt.QWidget):
         menu.exec(self.results.mapToGlobal(pos))
 
     def on_send_clicked(self):
+        if not self.send_button.isEnabled():
+            guiTools.speak("لا يمكنك إرسال رسالة جديدة حتى يكتمل إنشاء الرد الحالي")
+            return
         message = self.input_box.toPlainText().strip()
         if not message:
             guiTools.MessageBox.error(self, "تنبيه", "يرجى كتابة سؤال")
@@ -329,6 +348,28 @@ class AskAI(qt.QWidget):
         self.thread.finished.connect(self.on_ai_finished)
         self.thread.start()
         self.results.setFocus()
+
+    def is_valid_url(self, u):
+        if not u or not isinstance(u, str):
+            return False
+        u = u.strip()
+        if not u:
+            return False
+        if " " in u or "—" in u or "[" in u or "]" in u:
+            return False
+        try:
+            import urllib.parse
+            normalized = u if u.startswith("http") else "http://" + u
+            parsed = urllib.parse.urlparse(normalized)
+            netloc = parsed.netloc
+            if not netloc or "." not in netloc:
+                return False
+            domain_parts = netloc.split(".")
+            if len(domain_parts[-1]) < 2:
+                return False
+            return True
+        except Exception:
+            return False
 
     def extract_and_clean(self, text):
         text = text.replace("<quran_start>", "").replace("<quran_end>", "")
@@ -349,6 +390,8 @@ class AskAI(qt.QWidget):
         seen = set()
         for u in urls:
             normalized = u.strip()
+            if not self.is_valid_url(normalized):
+                continue
             if normalized.startswith("www."):
                 normalized = "http://" + normalized
             elif not normalized.startswith("http"):
@@ -376,7 +419,7 @@ class AskAI(qt.QWidget):
             def add_url(u):
                 if not u or not isinstance(u, str): return
                 u = u.strip()
-                if not u: return
+                if not u or not self.is_valid_url(u): return
                 normalized = u if u.startswith("http") else "http://" + u
                 if normalized not in seen:
                     final_urls.append(normalized)

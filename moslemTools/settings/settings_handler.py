@@ -46,7 +46,8 @@ settingsConfig={
         "user_name":"",
         "use_name_in_occasions":"True",
         "name_type":"custom_name",
-        "theme":"dark"
+        "theme":"dark",
+        "startup_tab":"0"
     },
     "quran_search":{
         "ignore_tashkeel":"True",

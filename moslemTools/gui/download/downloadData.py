@@ -138,6 +138,8 @@ class SelectItem(qt.QDialog):
 		self.onLoad()
 
 	def show_context_menu(self, position):
+		if self.item.count() == 0:
+			return
 		menu = qt.QMenu(self)
 
 		if self.start_selection_index is None:

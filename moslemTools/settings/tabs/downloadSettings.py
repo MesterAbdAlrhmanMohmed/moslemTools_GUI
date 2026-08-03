@@ -20,8 +20,11 @@ class Download(qt.QDialog):
         self.adminstration.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.adminstration.setText("تنبيه هام , لتثبيت موارد خارجية, يجب أولا منح صلاحيات المشرف للبرنامج")
         self.adminstration.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.admin_help = guiTools.QReadOnlyTextEdit()
+        self.admin_help.setText("طرق تشغيل البرنامج كمشرف (كمسؤول):\n\nالطريقة الأولى:\n1. افتح نافذة التشغيل Run بالضغط على اختصار Windows + R.\n2. اكتب الأمر mt في المربع.\n3. اضغط على اختصار Ctrl + Shift + Enter لتشغيل البرنامج كمشرف.\n\nالطريقة الثانية:\nاضغط بزر الفأرة الأيمن أو زر التطبيقات على أيقونة البرنامج أو اختصاره، ثم اختر تشغيل كمسؤول (Run as administrator).\n\nالطريقة الثالثة: تشغيل البرنامج كمسؤول دائما:\nاضغط بزر الفأرة الأيمن أو مفتاح التطبيقات على اختصار البرنامج ثم اختر خصائص (Properties)، وانتقل لتبويبة التوافق (Compatibility)، وقم بتفعيل خيار تشغيل هذا البرنامج كمسؤول (Run this program as an administrator)، ثم اضغط على موافق (OK).")        
         layout.addWidget(self.types)
         layout.addWidget(self.adminstration)
+        layout.addWidget(self.admin_help)
 
     def onItemClicked(self):
         index = self.types.currentRow()

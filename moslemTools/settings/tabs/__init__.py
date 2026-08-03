@@ -12,3 +12,5 @@ from .fanar_settings import FanarSettings
 from .searchSettings import SearchSettings
 from .quranDisplaySettings import QuranDisplaySettings
 from .userNameSettings import UserNameSettings
+from .startupTabSettings import StartupTabSettings
+
