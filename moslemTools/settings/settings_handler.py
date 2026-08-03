@@ -125,6 +125,13 @@ settingsConfig={
         "athkar": "Default",
         "random_athkar": "Default",
         "researcher": "Default"
+    },
+    "khatmah_reminder": {
+        "enabled": "True",
+        "hour": "8",
+        "minute": "0",
+        "period": "مساءً",
+        "missed_alert": "True"
     }
 }
 if not os.path.exists(cpath):
