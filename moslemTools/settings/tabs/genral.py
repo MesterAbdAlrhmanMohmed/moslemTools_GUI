@@ -24,7 +24,7 @@ class Genral(qt.QWidget):
         self.ExitDialog.setChecked(p.cbts(settings_handler.get("g", "exitDialog")))
         self.ExitDialog.setAccessibleDescription("في حالة إلغاء تحديد هذا المربع، سيقوم البرنامج بالإغلاق مباشرة دون عرض نافذة خيارات الخروج")
         main_layout.addWidget(self.ExitDialog)
-        self.exit_note = qt.QLabel("في حالة إلغاء تحديد هذا المربع، سيقوم البرنامج بالإغلاق مباشرة دون عرض نافذة خيارات الخروج")
+        self.exit_note = qt.QLabel("في حالة إلغاء تحديد المربع أعلاه، سيقوم البرنامج بالإغلاق مباشرة دون عرض نافذة خيارات الخروج")
         main_layout.addWidget(self.exit_note)
         main_layout.addSpacing(18)
         self.startup = qt.QCheckBox("بدء تشغيل البرنامج عند بدء تشغيل النظام")

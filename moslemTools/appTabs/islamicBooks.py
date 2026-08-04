@@ -54,6 +54,7 @@ class LoaderThread(qt2.QThread):
 
     def run(self):
         try:
+            functions.islamicBooks.load_books()
             book_list = list(functions.islamicBooks.books.keys())
             self.data_loaded.emit(book_list)
         except Exception as e:
@@ -266,7 +267,8 @@ class IslamicBooks(qt.QWidget):
         for cat in self.categories:
             self.category_tabs.addTab(cat)
         self.category_tabs.blockSignals(False)
-        self.apply_filter()
+        if self.is_loaded:
+            self.apply_filter()
 
     def on_tab_changed(self, index):
         self.apply_filter()
@@ -574,6 +576,8 @@ class IslamicBooks(qt.QWidget):
         self.apply_filter()
 
     def apply_filter(self, text=None):
+        if not self.is_loaded:
+            return
         all_books = list(functions.islamicBooks.books.keys())
         current_item = self.list_of_abook.currentItem()
         target_book = current_item.text() if current_item else None

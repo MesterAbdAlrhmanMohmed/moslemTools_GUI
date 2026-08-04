@@ -1,17 +1,23 @@
-import os,settings
+import os, settings
 import ujson as json
-_books=None
+
+_books = None
 
 
 def load_books():
     global _books
     if _books is None:
-        with open("data/json/files/all_islamic_books.json","r",encoding="utf-8") as file:
-            _books=json.load(file)
-        values=_books.copy().values()
-        for value in values:
-            if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"islamicBooks",value)):
-                del _books[getBookByIndex(value)]
+        try:
+            with open("data/json/files/all_islamic_books.json", "r", encoding="utf-8") as file:
+                data = json.load(file)
+            base_dir = os.path.join(os.getenv('appdata'), settings.app.appName, "islamicBooks")
+            _books = {}
+            for key, value in data.items():
+                if os.path.exists(os.path.join(base_dir, value)):
+                    _books[key] = value
+        except Exception as e:
+            print(f"Error loading islamic books: {e}")
+            _books = {}
 
 
 def reload_books():
@@ -27,9 +33,8 @@ def __getattr__(name):
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
-def getBookByIndex(index:str):
+def getBookByIndex(index: str):
     load_books()
-    rbooks={}
-    for key,value in _books.items():
-        rbooks[value]=key
-    return rbooks[index]
+    rbooks = {value: key for key, value in _books.items()}
+    return rbooks.get(index, "")
+

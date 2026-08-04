@@ -30,3 +30,17 @@ class ComboBook(qt.QComboBox):
             self.setCurrentIndex(self.count()-1)
         else:
             self.setCurrentIndex(self.currentIndex()-1)
+
+    def item(self, index):
+        class ItemWrapper:
+            def __init__(self, text):
+                self._text = text
+            def text(self):
+                return self._text
+        return ItemWrapper(self.itemText(index))
+
+    def currentRow(self):
+        return self.currentIndex()
+
+    def setCurrentRow(self, index):
+        self.setCurrentIndex(index)

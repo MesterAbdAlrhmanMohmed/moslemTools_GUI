@@ -114,9 +114,14 @@ class main(qt.QMainWindow):
         layout.addLayout(layout1)
         layout1.addLayout(layout2)
         self.viewInfoTextEdit()
-        content_layout = qt.QHBoxLayout()
-        self.list_widget = guiTools.listBook()
-        self.list_widget.currentItemChanged.connect(self.onToolChanged)
+        self.list_widget = guiTools.ComboBook()
+        self.list_widget.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.list_widget.setMinimumHeight(40)
+        font = qt1.QFont()
+        font.setBold(True)
+        self.list_widget.setFont(font)
+        self.list_widget.setAccessibleDescription("يمكنك التنقل بين التبويبات باستخدام control plus tab و control plus shift plus tab")
+        self.list_widget.currentIndexChanged.connect(lambda idx: self.onToolChanged(None, None))
         self.quranPlayer = QuranPlayer()
         self.researcher = Albaheth()
         self.askAI = AskAI()
@@ -140,40 +145,27 @@ class main(qt.QMainWindow):
 ]
         for widget_class, label in tabs:
             self.list_widget.add(label, widget_class)
-        for i in range(self.list_widget.count()):
-            item = self.list_widget.item(i)
-            font = item.font()
-            font.setBold(True)
-            item.setFont(font)
         try:
             start_tab = int(settings_handler.get("g", "startup_tab"))
             if 0 <= start_tab < self.list_widget.count():
-                self.list_widget.setCurrentRow(start_tab)
+                self.list_widget.setCurrentIndex(start_tab)
             else:
-                self.list_widget.setCurrentRow(0)
+                self.list_widget.setCurrentIndex(0)
         except Exception:
-            self.list_widget.setCurrentRow(0)
-        fm = qt1.QFontMetrics(self.list_widget.font())
-        max_width = 0
-        for i in range(self.list_widget.count()):
-            item_text = self.list_widget.item(i).text()
-            text_width = fm.horizontalAdvance(item_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(item_text).width()
-            if text_width > max_width:
-                max_width = text_width
-        max_width += 19
-        self.list_widget.setFixedWidth(max_width)
-        content_layout.addWidget(self.list_widget)
-        content_layout.addWidget(self.list_widget.w, 1)
-        layout.addLayout(content_layout)
+            self.list_widget.setCurrentIndex(0)
+        self.adjust_list_widget_width()
+        self.list_widget.currentIndexChanged.connect(self.adjust_list_widget_width)
+        layout.addWidget(self.list_widget.w, 1)
+        qt1.QShortcut("ctrl+0", self).activated.connect(lambda: (self.list_widget.setFocus(), self.list_widget.showPopup()))
         self.more_options_button = qt.QPushButton("المزيد من الخيارات")
         self.more_options_button.setShortcut("ctrl+o")
         self.more_options_button.setAccessibleDescription("control plus o")
         self.more_options_button.setDefault(True)
         self.more_options_button.setStyleSheet("background-color: black; color: white;")
-        self.more_options_button.setFixedWidth(max_width)
+        fm_opts = qt1.QFontMetrics(font)
+        opts_text_width = fm_opts.horizontalAdvance("المزيد من الخيارات") if hasattr(fm_opts, 'horizontalAdvance') else fm_opts.boundingRect("المزيد من الخيارات").width()
+        self.more_options_button.setFixedWidth(opts_text_width + 45)
         self.more_options_button.setMinimumHeight(40)
-        font = qt1.QFont()
-        font.setBold(True)
         self.more_options_button.setFont(font)
         self.moreOptionsMenu = qt.QMenu(self)
         self.moreOptionsMenu.setFont(font)
@@ -233,6 +225,7 @@ class main(qt.QMainWindow):
         self.more_options_button.setMenu(self.moreOptionsMenu)
         layout1.addWidget(self.more_options_button)
         layout1.addWidget(self.info)
+        layout1.addWidget(self.list_widget)
         w = qt.QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
@@ -517,6 +510,12 @@ class main(qt.QMainWindow):
     def onToolChanged(self, current, previous):
         self.quranPlayer.mp.pause()
         self.researcher.media_player.pause()
+
+    def adjust_list_widget_width(self, index=None):
+        fm = qt1.QFontMetrics(self.list_widget.font())
+        current_text = self.list_widget.currentText()
+        text_width = fm.horizontalAdvance(current_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(current_text).width()
+        self.list_widget.setFixedWidth(text_width + 65)
 
     def delete_program_data_with_confirmation(self):
         confirm = guiTools.QQuestionMessageBox.view(self,"تأكيد الحذف النهائي لبيانات البرنامج","تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nالأفضل عمل نسخة احتياطية لجميع إعداداتك وملفاتك أولا قبل هذه العملية الخطيرة\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟","نعم، قم بحذف مجلد بيانات البرنامج","لا، إلغاء")
