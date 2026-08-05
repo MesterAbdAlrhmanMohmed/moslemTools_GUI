@@ -77,7 +77,9 @@ class DataLoaderThread(qt2.QThread):
 class SelectItem(qt.QDialog):
 	def __init__(self, p, fileName: str, dirName):
 		super().__init__(p)
-		self.resize(900, 550)
+		self.setMinimumSize(1050, 500)
+		self.resize(1100, 560)
+		self.center()
 		self.data = {}
 		self.dirName = dirName
 		self.start_selection_index = None
@@ -86,7 +88,9 @@ class SelectItem(qt.QDialog):
 
 		layout = qt.QVBoxLayout(self)
 
-		search_label = qt.QLabel("بحث")
+		search_label = qt.QLineEdit("بحث")
+		search_label.setReadOnly(True)
+		search_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(search_label)
 
@@ -105,16 +109,16 @@ class SelectItem(qt.QDialog):
 		self.item.setFont(font)
 		layout.addWidget(self.item)
 
-		self.info_label = qt.QLabel("لمزيد من خيارات التحميل، قم بالضغط على عنصر من القائمة باستخدام زر التطبيقات أو click الأيمن")
-		self.info_label.setWordWrap(True)
+		self.info_label = qt.QLineEdit("لمزيد من خيارات التحميل، قم بالضغط على عنصر من القائمة باستخدام زر التطبيقات أو click الأيمن")
+		self.info_label.setReadOnly(True)
 		self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.info_label.setStyleSheet("color: white; font-weight: bold; font-size: 13px; margin: 5px;")
 		self.info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		self.info_label.setVisible(False)
 		layout.addWidget(self.info_label)
 
-		self.selection_status_label = qt.QLabel("")
-		self.selection_status_label.setWordWrap(True)
+		self.selection_status_label = qt.QLineEdit("")
+		self.selection_status_label.setReadOnly(True)
 		self.selection_status_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.selection_status_label.setStyleSheet("color: #008000; font-weight: bold; font-size: 12px;")
 		self.selection_status_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -129,13 +133,20 @@ class SelectItem(qt.QDialog):
 		self.shortcut_range = qt1.QShortcut(qt1.QKeySequence("Ctrl+D"), self)
 		self.shortcut_range.activated.connect(self.download_from_start_to_here)
 
-		self.loading_label = qt.QLabel("جاري تحميل البيانات، يرجى الانتظار...")
+		self.loading_label = qt.QLineEdit("جاري تحميل البيانات، يرجى الانتظار...")
+		self.loading_label.setReadOnly(True)
 		self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.loading_label)
 
 		self.item.setVisible(False)
 		self.onLoad()
+
+	def center(self):
+		frame_geometry = self.frameGeometry()
+		screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
+		frame_geometry.moveCenter(screen_center)
+		self.move(frame_geometry.topLeft())
 
 	def show_context_menu(self, position):
 		if self.item.count() == 0:
@@ -437,11 +448,14 @@ class StartDownloading(qt.QDialog):
 		self.successful_count = 0
 		self.thread = None
 
-		self.resize(480, 180)
+		self.setMinimumSize(1050, 500)
+		self.resize(1100, 560)
+		self.center()
 		self.setWindowTitle("جاري التحميل")
 		layout = qt.QVBoxLayout(self)
 
-		self.status_label = qt.QLabel("")
+		self.status_label = qt.QLineEdit("")
+		self.status_label.setReadOnly(True)
 		self.status_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.status_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		font = qt1.QFont()
@@ -473,6 +487,12 @@ class StartDownloading(qt.QDialog):
 
 		self.start_next_file()
 		qt1.QShortcut("escape", self).activated.connect(self.close)
+
+	def center(self):
+		frame_geometry = self.frameGeometry()
+		screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
+		frame_geometry.moveCenter(screen_center)
+		self.move(frame_geometry.topLeft())
 
 	def start_next_file(self):
 		if self.current_index < self.total_count:

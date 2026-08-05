@@ -10,9 +10,13 @@ import PyQt6.QtCore as qt2
 class SelectReciter(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
-        self.resize(900,500)
+        self.setMinimumSize(1050, 500)
+        self.resize(1100, 560)
+        self.center()
         layout=qt.QVBoxLayout(self)
-        serch=qt.QLabel("البحث عن قارئ")
+        serch=qt.QLineEdit("البحث عن قارئ")
+        serch.setReadOnly(True)
+        serch.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(serch)
         self.search_bar=qt.QLineEdit()
@@ -29,6 +33,12 @@ class SelectReciter(qt.QDialog):
         self.reciters.addItems(self.reciterData.keys())
         self.reciters.clicked.connect(lambda:DownloadReciter(self,self.reciterData[self.reciters.currentItem().text()]).exec())
         layout.addWidget(self.reciters)
+
+    def center(self):
+        frame_geometry = self.frameGeometry()
+        screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
+        frame_geometry.moveCenter(screen_center)
+        self.move(frame_geometry.topLeft())
 
     def search(self,pattern,text_list):
         tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
@@ -142,10 +152,14 @@ class downloadThread(qt2.QRunnable):
 class DownloadReciter(qt.QDialog):
     def __init__(self,p,url):
         super().__init__(p)
-        self.resize(350,150)
+        self.setMinimumSize(1050, 500)
+        self.resize(1100, 560)
+        self.center()
         self.setWindowTitle("جاري التحميل")
         qt1.QShortcut("escape",self).activated.connect(self.close)
-        self.lay=qt.QLabel("عدد الآيات التي تم تحميلها")
+        self.lay=qt.QLineEdit("عدد الآيات التي تم تحميلها")
+        self.lay.setReadOnly(True)
+        self.lay.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.lay.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.progress=qt.QProgressBar()
         self.downloaded=qt.QSpinBox()
@@ -174,6 +188,12 @@ class DownloadReciter(qt.QDialog):
         thread.start(self.run)
         self.pause.clicked.connect(self.toggle_pause)
         self.cancel.clicked.connect(self.close)
+
+    def center(self):
+        frame_geometry = self.frameGeometry()
+        screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
+        frame_geometry.moveCenter(screen_center)
+        self.move(frame_geometry.topLeft())
 
     def toggle_pause(self):
         if self.run.pause:

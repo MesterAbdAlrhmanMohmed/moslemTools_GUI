@@ -9,9 +9,13 @@ import PyQt6.QtCore as qt2
 class SelectAthkar(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
-        self.resize(900,500)
+        self.setMinimumSize(1050, 500)
+        self.resize(1100, 560)
+        self.center()
         layout=qt.QVBoxLayout(self)
-        serch=qt.QLabel("البحث عن فئة أذكار")
+        serch=qt.QLineEdit("البحث عن فئة أذكار")
+        serch.setReadOnly(True)
+        serch.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(serch)
         self.search_bar=qt.QLineEdit()
@@ -32,6 +36,12 @@ class SelectAthkar(qt.QDialog):
         self.reciters.clicked.connect(self.on_item_clicked)
         self.reciters.addItems(self.reciterData1)
         layout.addWidget(self.reciters)
+
+    def center(self):
+        frame_geometry = self.frameGeometry()
+        screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
+        frame_geometry.moveCenter(screen_center)
+        self.move(frame_geometry.topLeft())
 
     def on_item_clicked(self):
         item = self.reciters.currentItem()
@@ -139,7 +149,9 @@ class downloadThread(qt2.QRunnable):
 class DownloadReciter(qt.QDialog):
     def __init__(self,p,url,name):
         super().__init__(p)
-        self.resize(350,150)
+        self.setMinimumSize(1050, 500)
+        self.resize(1100, 560)
+        self.center()
         self.setWindowTitle("جاري التحميل")
         qt1.QShortcut("escape",self).activated.connect(self.close)
         self.progress=qt.QProgressBar()
@@ -153,7 +165,11 @@ class DownloadReciter(qt.QDialog):
         self.cancel.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
         layout=qt.QVBoxLayout(self)
         layout.addWidget(self.progress)
-        layout.addWidget(qt.QLabel("عدد الأذكار التي تم تحميلها"))
+        downloaded_label = qt.QLineEdit("عدد الأذكار التي تم تحميلها")
+        downloaded_label.setReadOnly(True)
+        downloaded_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        downloaded_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(downloaded_label)
         layout.addWidget(self.downloaded)
         btns_layout = qt.QHBoxLayout()
         btns_layout.addWidget(self.pause)
@@ -168,6 +184,12 @@ class DownloadReciter(qt.QDialog):
         thread.start(self.run)
         self.pause.clicked.connect(self.toggle_pause)
         self.cancel.clicked.connect(self.close)
+
+    def center(self):
+        frame_geometry = self.frameGeometry()
+        screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
+        frame_geometry.moveCenter(screen_center)
+        self.move(frame_geometry.topLeft())
 
     def toggle_pause(self):
         if self.run.pause:

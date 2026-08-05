@@ -18,7 +18,9 @@ def format_pages(n):
         return f"{n} صفحة"
 
 def format_days(n):
-    if n == 1:
+    if n == 0:
+        return "0 يوم"
+    elif n == 1:
         return "يوم واحد"
     elif n == 2:
         return "يومان"
@@ -226,15 +228,53 @@ class KhatmahTab(qt.QWidget):
             else:
                 prayer_str = f" ({base_str} بعد كل صلاة، وتتبقى {format_pages(rem_after_prayers)} تقرأها في أي وقت من اليوم)"
 
+        start_page = min(604, completed_pages + 1)
+        end_page = min(604, start_page + daily_target - 1)
+
+        if completed_pages >= total_pages:
+            khatmah_status = "مكتملة"
+            ward_today_str = "ورد اليوم: اكتملت الختمة"
+        else:
+            expected_days_passed = round(completed_pages * target_days / total_pages)
+            diff_days = expected_days_passed - days_passed
+            if diff_days == 0:
+                khatmah_status = "تسير حسب الخطة"
+            elif diff_days > 0:
+                if diff_days == 1:
+                    khatmah_status = "متقدم عن الخطة بيوم واحد"
+                elif diff_days == 2:
+                    khatmah_status = "متقدم عن الخطة بيومين"
+                elif 3 <= diff_days <= 10:
+                    khatmah_status = f"متقدم عن الخطة بـ {diff_days} أيام"
+                else:
+                    khatmah_status = f"متقدم عن الخطة بـ {diff_days} يوماً"
+            else:
+                abs_diff = abs(diff_days)
+                if abs_diff == 1:
+                    khatmah_status = "متأخر بيوم واحد"
+                elif abs_diff == 2:
+                    khatmah_status = "متأخر بيومين"
+                elif 3 <= abs_diff <= 10:
+                    khatmah_status = f"متأخر بـ {abs_diff} أيام"
+                else:
+                    khatmah_status = f"متأخر بـ {abs_diff} يوماً"
+
+            if start_page < end_page:
+                ward_today_str = f"ورد اليوم: من صفحة {start_page} إلى صفحة {end_page}"
+            else:
+                ward_today_str = f"ورد اليوم: صفحة {start_page}"
+
         info_str = (
-            f"تاريخ بدء الختمة: {start_date_str}\n"
-            f"المدة المستهدفة: {format_days(target_days)}\n"
+            f"حالة الختمة: {khatmah_status}\n"
+            f"{ward_today_str}\n"
+            f"الورد اليومي المطلوب: {format_pages(daily_target)} تقريباً{prayer_str}\n"
             f"الصفحات المكتملة: {format_pages(completed_pages)} من {format_pages(604)} ({percent:.1f}%)\n"
             f"الصفحات المتبقية: {format_pages(rem_pages)}\n"
+            f"عدد الأيام المنقضية: {format_days(days_passed)}\n"
             f"الأيام المتبقية: {format_days(rem_days)}\n"
-            f"تاريخ الانتهاء المتوقع: {expected_date_str}\n"
-            f"الورد اليومي المطلوب: {format_pages(daily_target)} تقريباً{prayer_str}\n"
-            f"الصفحة الحالية لبدء الورد: صفحة {current_page}"
+            f"المدة المستهدفة: {format_days(target_days)}\n"
+            f"تاريخ بدء الختمة: {start_date_str}\n"
+            f"تاريخ الانتهاء المتوقع: {expected_date_str}"
         )
 
         if completed_pages >= total_pages:
