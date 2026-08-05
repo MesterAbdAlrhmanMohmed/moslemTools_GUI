@@ -302,7 +302,17 @@ class main(qt.QMainWindow):
                     if data.get("is_completed", False):
                         return
 
-                msg = "تنبيه: لقد حان موعد الورد اليومي للختمة القرآنية."
+                use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") != "False")
+                username1 = get_smart_display_name() if use_name_enabled else ""
+                gender = settings_handler.get("g", "user_gender") or "ذكر"
+                is_female = (gender == "أنثى")
+                if not use_name_enabled:
+                    msg = "تنبيه: لقد حان موعد الورد اليومي للختمة القرآنية."
+                elif is_female:
+                    msg = f"تنبيه: لقد حان موعد وردكِ اليومي للختمة القرآنية يا {username1}." if username1 else "تنبيه: لقد حان موعد وردكِ اليومي للختمة القرآنية."
+                else:
+                    msg = f"تنبيه: لقد حان موعد وردك اليومي للختمة القرآنية يا {username1}." if username1 else "تنبيه: لقد حان موعد وردك اليومي للختمة القرآنية."
+
                 settings_handler.set("khatmah_reminder", "last_reminded_time", time_key)
                 settings_handler.set("khatmah_reminder", "last_reminded_date", today_str)
                 guiTools.SendNotification("تنبيه الورد القرآني", msg)
@@ -436,14 +446,23 @@ class main(qt.QMainWindow):
         if use_name_enabled:
             ya_name = f" يا {username1}" if username1 else ""
             if is_female:
-                ya_prefix = f"يا {username1}، لا تَنْسِ، " if username1 else "لا تَنْسِ، "
-                default_dhikr = f"لا تَنْسِ يا {username1}، ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسِ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
+                la_tansa_comma = f"يا {username1}، لا تَنْسِ، " if username1 else "لا تَنْسِ، "
+                la_tansa_no_comma = f"يا {username1} لا تَنْسِ، " if username1 else "لا تَنْسِ، "
+                la_tansa_direct = f"يا {username1}، لا تَنْسِ " if username1 else "لا تَنْسِ "
+                la_tansa_direct_no_comma = f"يا {username1} لا تَنْسِ " if username1 else "لا تَنْسِ "
+                default_dhikr = f"لا تَنْسِ يا {username1} ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسِ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
             else:
-                ya_prefix = f"يا {username1}، لا تَنْسَ، " if username1 else "لا تَنْسَ، "
-                default_dhikr = f"لا تَنْسَ يا {username1}، ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسَ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
+                la_tansa_comma = f"يا {username1}، لا تَنْسَ، " if username1 else "لا تَنْسَ، "
+                la_tansa_no_comma = f"يا {username1} لا تَنْسَ، " if username1 else "لا تَنْسَ، "
+                la_tansa_direct = f"يا {username1}، لا تَنْسَ " if username1 else "لا تَنْسَ "
+                la_tansa_direct_no_comma = f"يا {username1} لا تَنْسَ " if username1 else "لا تَنْسَ "
+                default_dhikr = f"لا تَنْسَ يا {username1} ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم" if username1 else "لا تَنْسَ ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
         else:
             ya_name = ""
-            ya_prefix = ""
+            la_tansa_comma = ""
+            la_tansa_no_comma = ""
+            la_tansa_direct = ""
+            la_tansa_direct_no_comma = ""
             default_dhikr = "ذِكْر الله، والصلاة على أشرف الخلق: النبي محمد صلى الله عليه وسلم"
         try:
             hijri_date_obj = Gregorian.today().to_hijri()
@@ -453,11 +472,14 @@ class main(qt.QMainWindow):
             elif hijri_date_obj.month == 9:
                 if 21 <= hijri_date_obj.day <= 29:
                     if not use_name_enabled:
-                        self.info.setText("العشر الأواخر من رمضان، أسأل الله أن يرزق الجميع فضل ليلة القدر، ولا تنسونا من صالح الدعاء، وجزاكم الله خيرا.")
+                        self.info.setText("العشر الأواخر من رمضان، أسأل الله أن يرزق الجميع فضل ليلة القدر، ولا تنسوني من صالح الدعاء، وجزاكم الله خيرا.")
                     elif is_female:
                         self.info.setText("العشر الأواخر من رمضان، أسأل الله أن يرزقكِ فضل ليلة القدر، ولا تنسيني من صالح دعائكِ، وجزاكِ الله خيراً.")
                     else:
-                        self.info.setText("العشر الأواخر من رمضان، الله يرزقكم فضل ليلة القدر، لا تنسوني من صالح دعاءكم، وجزاكم الله خيرا.")
+                        if username1:
+                            self.info.setText(f"العشر الأواخر من رمضان، الله يرزقك فضل ليلة القدر يا {username1}، لا تنساني من صالح دعاءك، وجزاك الله خيرا.")
+                        else:
+                            self.info.setText("العشر الأواخر من رمضان، أسأل الله أن يرزق الجميع فضل ليلة القدر، ولا تنسوني من صالح الدعاء، وجزاكم الله خيرا.")
                 else:
                     self.info.setText(f"رمضان كريم{ya_name}")
             elif hijri_date_obj.month == 10 and hijri_date_obj.day == 1:
@@ -467,27 +489,38 @@ class main(qt.QMainWindow):
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [11, 12, 13]:
                 self.info.setText("أيام التشريق، أيام أكل وشرب وذكر لله")
             elif current_gregorian_weekday == 0:
-                self.info.setText(f"{ya_prefix}صيام يوم الإثنين، سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{la_tansa_no_comma}صيام يوم الإثنين، سنة عن النبي صلى الله عليه وسلم")
             elif current_gregorian_weekday == 3:
-                self.info.setText(f"{ya_prefix}صيام يوم الخميس، سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{la_tansa_no_comma}صيام يوم الخميس، سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 1:
-                self.info.setText("كل عام وأنتم بخير بمناسبة رأس السنة الهجرية الجديدة")
+                if not use_name_enabled:
+                    self.info.setText("كل عام وأنتم بخير بمناسبة رأس السنة الهجرية الجديدة")
+                elif is_female:
+                    self.info.setText(f"كل عام وأنتِ بخير{ya_name} بمناسبة رأس السنة الهجرية الجديدة")
+                else:
+                    self.info.setText(f"كل عام وأنتَ بخير{ya_name} بمناسبة رأس السنة الهجرية الجديدة")
             elif hijri_date_obj.month == 1 and hijri_date_obj.day == 10:
-                self.info.setText(f"{ya_prefix}صيام عاشوراء، مستحب عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{la_tansa_no_comma}صيام عاشوراء، مستحب عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 7 and hijri_date_obj.day == 27:
                 self.info.setText("ذكرى الإسراء والمعراج")
             elif hijri_date_obj.month == 8 and hijri_date_obj.day == 15:
-                self.info.setText(f"{ya_prefix}ليلة النصف من شعبان، يستحب فيها الدعاء")
+                if is_female:
+                    self.info.setText(f"{la_tansa_comma}ليلة النصف من شعبان، يستحب فيها الدعاء")
+                else:
+                    self.info.setText(f"{la_tansa_no_comma}ليلة النصف من شعبان، يستحب فيها الدعاء")
             elif hijri_date_obj.month == 8:
-                self.info.setText(f"{ya_prefix}يستحب الصيام في شهر شعبان")
+                self.info.setText(f"{la_tansa_no_comma}يستحب الصيام في شهر شعبان")
             elif hijri_date_obj.month == 10:
-                self.info.setText(f"{ya_prefix}صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صلى الله عليه وسلم")
+                if is_female:
+                    self.info.setText(f"{la_tansa_direct}صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صلى الله عليه وسلم")
+                else:
+                    self.info.setText(f"{la_tansa_no_comma}صيام الست أيام البيض في شهر شوال، وهي سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day == 9:
-                self.info.setText(f"{ya_prefix}صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
+                self.info.setText(f"{la_tansa_direct_no_comma}صيام يوم عرفة، صيام يغفر ذنوب السنة الماضية والسنة القادمة")
             elif hijri_date_obj.month == 12 and hijri_date_obj.day in [1, 2, 3, 4, 5, 6, 7, 8]:
-                self.info.setText(f"{ya_prefix}صيام العشر الأوائل من ذي الحجة سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{la_tansa_comma}صيام العشر الأوائل من ذي الحجة سنة عن النبي صلى الله عليه وسلم")
             elif hijri_date_obj.day in [13, 14, 15]:
-                self.info.setText(f"{ya_prefix}صيام الأيام القمرية، سنة عن النبي صلى الله عليه وسلم")
+                self.info.setText(f"{la_tansa_comma}صيام الأيام القمرية، سنة عن النبي صلى الله عليه وسلم")
             else:
                 self.info.setText(default_dhikr)
         except Exception as e:
@@ -622,7 +655,17 @@ def check_missed_khatmah_alert(parent_window=None):
             expected_pages = min(604, days_passed * daily_pages)
 
         if completed_pages < expected_pages:
-            msg = "تنبيه: لقد فاتك موعد الورد اليومي للختمة القرآنية."
+            use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") != "False")
+            username1 = get_smart_display_name() if use_name_enabled else ""
+            gender = settings_handler.get("g", "user_gender") or "ذكر"
+            is_female = (gender == "أنثى")
+            if not use_name_enabled:
+                msg = "تنبيه: لقد فاتك موعد الورد اليومي للختمة القرآنية."
+            elif is_female:
+                msg = f"تنبيه: لقد فاتكِ موعد وردكِ اليومي للختمة القرآنية يا {username1}." if username1 else "تنبيه: لقد فاتكِ موعد وردكِ اليومي للختمة القرآنية."
+            else:
+                msg = f"تنبيه: لقد فاتك موعد وردك اليومي للختمة القرآنية يا {username1}." if username1 else "تنبيه: لقد فاتك موعد وردك اليومي للختمة القرآنية."
+
             guiTools.MessageBox.view(parent_window, "تنبيه فوات الورد القرآني", msg)
             data["last_missed_alert_key"] = missed_key
             data["last_missed_alert_date"] = today_str

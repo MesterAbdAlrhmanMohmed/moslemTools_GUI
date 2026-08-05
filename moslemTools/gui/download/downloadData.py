@@ -77,8 +77,8 @@ class DataLoaderThread(qt2.QThread):
 class SelectItem(qt.QDialog):
 	def __init__(self, p, fileName: str, dirName):
 		super().__init__(p)
-		self.setMinimumSize(1050, 500)
-		self.resize(1100, 560)
+		self.setMinimumSize(600, 400)
+		self.resize(950, 550)
 		self.center()
 		self.data = {}
 		self.dirName = dirName
@@ -448,8 +448,8 @@ class StartDownloading(qt.QDialog):
 		self.successful_count = 0
 		self.thread = None
 
-		self.setMinimumSize(1050, 500)
-		self.resize(1100, 560)
+		self.setMinimumSize(550, 250)
+		self.resize(750, 320)
 		self.center()
 		self.setWindowTitle("جاري التحميل")
 		layout = qt.QVBoxLayout(self)
@@ -469,17 +469,17 @@ class StartDownloading(qt.QDialog):
 
 		btns_layout = qt.QHBoxLayout()
 		self.pause_button = guiTools.QPushButton("إيقاف مؤقت")
-		self.pause_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
+		self.pause_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #0000CC;}")
 		self.pause_button.clicked.connect(self.toggle_pause)
 		btns_layout.addWidget(self.pause_button)
 
 		self.cancel = guiTools.QPushButton("إلغاء الملف الحالي")
-		self.cancel.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
+		self.cancel.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #A52A2A;}")
 		self.cancel.clicked.connect(self.cancel_current_file)
 		btns_layout.addWidget(self.cancel)
 
 		self.cancel_all_button = guiTools.QPushButton("إلغاء المتبقي")
-		self.cancel_all_button.setStyleSheet("QPushButton {background-color: #550000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #770000;}")
+		self.cancel_all_button.setStyleSheet("QPushButton {background-color: #550000; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #770000;}")
 		self.cancel_all_button.clicked.connect(self.cancel_all)
 		btns_layout.addWidget(self.cancel_all_button)
 

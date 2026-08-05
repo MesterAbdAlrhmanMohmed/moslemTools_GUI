@@ -10,8 +10,8 @@ import PyQt6.QtCore as qt2
 class SelectReciter(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
-        self.setMinimumSize(1050, 500)
-        self.resize(1100, 560)
+        self.setMinimumSize(600, 400)
+        self.resize(950, 550)
         self.center()
         layout=qt.QVBoxLayout(self)
         serch=qt.QLineEdit("البحث عن قارئ")
@@ -152,29 +152,46 @@ class downloadThread(qt2.QRunnable):
 class DownloadReciter(qt.QDialog):
     def __init__(self,p,url):
         super().__init__(p)
-        self.setMinimumSize(1050, 500)
-        self.resize(1100, 560)
+        self.setMinimumSize(550, 250)
+        self.resize(750, 320)
         self.center()
         self.setWindowTitle("جاري التحميل")
         qt1.QShortcut("escape",self).activated.connect(self.close)
-        self.lay=qt.QLineEdit("عدد الآيات التي تم تحميلها")
+
+        layout = qt.QVBoxLayout(self)
+
+        self.status_label = qt.QLineEdit("جاري تحميل تلاوات القارئ")
+        self.status_label.setReadOnly(True)
+        self.status_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.status_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        font = qt1.QFont()
+        font.setBold(True)
+        self.status_label.setFont(font)
+        layout.addWidget(self.status_label)
+
+        self.progress = qt.QProgressBar()
+        self.progress.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.progress.setAccessibleName("نسبة التحميل")
+        layout.addWidget(self.progress)
+
+        self.lay = qt.QLineEdit("عدد الآيات التي تم تحميلها")
         self.lay.setReadOnly(True)
         self.lay.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.lay.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.progress=qt.QProgressBar()
-        self.downloaded=qt.QSpinBox()
+        layout.addWidget(self.lay)
+
+        self.downloaded = qt.QSpinBox()
         self.downloaded.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.downloaded.setAccessibleName("عدد الآيات التي تم تحميلها")
-        self.downloaded.setRange(0,7000)
+        self.downloaded.setRange(0, 7000)
         self.downloaded.setReadOnly(True)
-        self.pause=guiTools.QPushButton("إيقاف مؤقت")
-        self.pause.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
-        self.cancel=guiTools.QPushButton("إلغاء")
-        self.cancel.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
-        layout=qt.QVBoxLayout(self)
-        layout.addWidget(self.progress)
-        layout.addWidget(self.lay)
         layout.addWidget(self.downloaded)
+
+        self.pause = guiTools.QPushButton("إيقاف مؤقت")
+        self.pause.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #0000CC;}")
+        self.cancel = guiTools.QPushButton("إلغاء")
+        self.cancel.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #A52A2A;}")
+
         btns_layout = qt.QHBoxLayout()
         btns_layout.addWidget(self.pause)
         btns_layout.addWidget(self.cancel)
@@ -207,9 +224,17 @@ class DownloadReciter(qt.QDialog):
         self.pause.setText("استئناف")
         guiTools.MessageBox.error(self, "انقطاع الاتصال", msg)
 
-    def closeEvent(self,event):
-        self.run.cancelled = True
-        self.run.pause = False
+    def closeEvent(self, event):
+        if not self.run.cancelled:
+            result = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل تريد إلغاء عملية تحميل تلاوات القارئ؟", "نعم", "لا")
+            if result == 0:
+                self.run.cancelled = True
+                self.run.pause = False
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.accept()
 
     def on(self,state):
         if state==True:
