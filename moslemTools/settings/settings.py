@@ -11,8 +11,8 @@ from PyQt6.QtCore import Qt
 class settings(qt.QDialog):
     def __init__(self, p):
         super().__init__(p)
-        self.setMinimumSize(850, 480)
-        self.resize(960, 550)
+        self.setMinimumSize(950, 500)
+        self.resize(1000, 560)
         self.center()
         self.setWindowTitle("الإعدادات")
         self.p = p
@@ -25,7 +25,7 @@ class settings(qt.QDialog):
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر قسم")
         self.sectian.setFont(font)
-        self.sectian.setMinimumWidth(220)
+        self.sectian.setMinimumWidth(310)
         h_layout.addWidget(self.sectian)
         scroll_area = qt.QScrollArea()
         scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)

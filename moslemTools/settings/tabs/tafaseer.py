@@ -64,12 +64,14 @@ class TafaseerSettings(qt.QWidget):
         self.selecttranslation.customContextMenuRequested.connect(self.onDelete1)
         self.selecttranslation.setAccessibleDescription("لحذف أيا من الترجمات قم باستخدام زر التطبيقات")
         main_layout.addWidget(group_box)
-        main_layout.addStretch()
-        self.info = qt.QLabel("لحذف أيا من التفاسير والترجمات, قم باستخدام زر التطبيقات أو click الأيمن")
+        main_layout.addSpacing(25)
+        self.info = qt.QLineEdit("لحذف أيا من التفاسير والترجمات, قم باستخدام زر التطبيقات أو click الأيمن")
+        self.info.setReadOnly(True)
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setStyleSheet("font-weight: bold;")
         main_layout.addWidget(self.info)
+        main_layout.addStretch(1)
 
     def onDelete1(self):
         selectedItem = self.selecttranslation.currentText()

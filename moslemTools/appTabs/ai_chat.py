@@ -225,7 +225,8 @@ class AskAI(qt.QWidget):
 
     def init_ui(self):
         layout = qt.QVBoxLayout(self)
-        self.disclaimer = qt.QLabel("تنبيه مهم: هذا ذكاء اصطناعي للمساعدة، ويرجى سؤال أهل العلم في المسائل الإسلامية المهمة.")
+        self.disclaimer = qt.QLineEdit("تنبيه مهم: هذا ذكاء اصطناعي للمساعدة، ويرجى سؤال أهل العلم في المسائل الإسلامية المهمة.")
+        self.disclaimer.setReadOnly(True)
         self.disclaimer.setStyleSheet("color: #ffcc00; font-weight: bold; font-size: 14px;")
         self.disclaimer.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.disclaimer.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -276,12 +277,12 @@ class AskAI(qt.QWidget):
         self.font_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.font_spin.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.font_spin.setAccessibleName("حجم الخط")
-        self.font_spin.setMaximumWidth(70)
         self.font_spin.valueChanged.connect(self.font_size_changed)
         font_layout.addWidget(self.font_label)
         font_layout.addWidget(self.font_spin)
 
-        self.more_options_label = qt.QLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
+        self.more_options_label = qt.QLineEdit("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
+        self.more_options_label.setReadOnly(True)
         self.more_options_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.more_options_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 
@@ -292,13 +293,14 @@ class AskAI(qt.QWidget):
         self.sources_button.setVisible(False)
         self.sources_button.clicked.connect(self.show_sources_dialog)
 
-        bottom_layout.addWidget(self.clear_button)
-        bottom_layout.addStretch(1)
-        bottom_layout.addLayout(font_layout)
-        bottom_layout.addStretch(1)
-        bottom_layout.addWidget(self.more_options_label)
-        bottom_layout.addStretch(1)
-        bottom_layout.addWidget(self.sources_button)
+        bottom_layout = qt.QHBoxLayout()
+        bottom_layout.addWidget(self.clear_button, 0)
+        bottom_layout.addSpacing(15)
+        bottom_layout.addLayout(font_layout, 1)
+        bottom_layout.addSpacing(20)
+        bottom_layout.addWidget(self.more_options_label, 1)
+        bottom_layout.addSpacing(15)
+        bottom_layout.addWidget(self.sources_button, 0)
         layout.addLayout(bottom_layout)
         self.update_font_size()
 
