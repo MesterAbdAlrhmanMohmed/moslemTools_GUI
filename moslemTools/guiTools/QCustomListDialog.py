@@ -1,6 +1,8 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
-from . import QPushButton
+from .QPushButton import QPushButton
+if not isinstance(QPushButton, type):
+    QPushButton = QPushButton.QPushButton
 
 
 class QCustomListDialog(qt.QDialog):

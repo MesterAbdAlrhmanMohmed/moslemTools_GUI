@@ -10,7 +10,7 @@ from . import messageHandler
 from .comboBook import ComboBook
 from .QInputDialog import QInputDialog
 from .qMessageBox import MessageBox
-from. qMessageBoxForGame import MessageBoxForGame
+from .qMessageBoxForGame import MessageBoxForGame
 from .QQuestionMessageBox import QQuestionMessageBox
 from .note_dialog import NoteDialog
 from .QCustomListDialog import QCustomListDialog

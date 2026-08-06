@@ -1,4 +1,6 @@
 from .QPushButton import QPushButton
+if not isinstance(QPushButton, type):
+    QPushButton = QPushButton.QPushButton
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from PyQt6.QtCore import Qt
