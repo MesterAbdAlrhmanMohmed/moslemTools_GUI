@@ -71,13 +71,11 @@ class protcasts(qt.QWidget):
         self.volume_down_shortcut_fav = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.fav_list_widget)
         self.volume_down_shortcut_fav.activated.connect(self.decrease_volume_fav)
 
-        self.fav_info_label = qt.QLineEdit("يمكنكم إضافة إذاعة إلى قائمة المفضلة أو إزالتها بالضغط على click الأيمن أو زر التطبيقات على الإذاعة المحددة")
-        self.fav_info_label.setReadOnly(True)
+        self.fav_info_label = guiTools.QNavigableLabel("يمكنكم إضافة إذاعة إلى قائمة المفضلة أو إزالتها بالضغط على click الأيمن أو زر التطبيقات على الإذاعة المحددة")
         self.fav_info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.fav_info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 
-        self.aud = qt.QLineEdit()
-        self.aud.setReadOnly(True)
+        self.aud = guiTools.QNavigableLabel()
         self.original_aud_text = "لرفع أو خفض الصوت: اضغط في القائمة ثم استخدم Shift + الأسهم، أعلى وأسفل"
         self.current_status_text = self.original_aud_text
         self.aud.setText(self.original_aud_text)

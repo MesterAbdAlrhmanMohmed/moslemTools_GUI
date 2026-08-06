@@ -1,3 +1,4 @@
+import guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -13,8 +14,7 @@ class SearchSettings(qt.QWidget):
         font = qt1.QFont()
         font.setBold(True)
         layout.addStretch(1)
-        self.quran_label = qt.QLineEdit("إعدادات البحث لعارض القرآن الكريم")
-        self.quran_label.setReadOnly(True)
+        self.quran_label = guiTools.QNavigableLabel("إعدادات البحث لعارض القرآن الكريم")
         self.quran_label.setFont(font)
         self.quran_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.quran_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -32,8 +32,7 @@ class SearchSettings(qt.QWidget):
         self.quran_symbols_checkbox.setChecked(settings_handler.get("quran_search", "ignore_symbols") != "False")
         layout.addWidget(self.quran_symbols_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(15)
-        self.researcher_label = qt.QLineEdit("إعدادات البحث لتبويبة الباحث في القرآن والأحاديث")
-        self.researcher_label.setReadOnly(True)
+        self.researcher_label = guiTools.QNavigableLabel("إعدادات البحث لتبويبة الباحث في القرآن والأحاديث")
         self.researcher_label.setFont(font)
         self.researcher_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.researcher_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)

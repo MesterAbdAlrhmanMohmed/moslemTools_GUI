@@ -1,4 +1,5 @@
 from settings import settings_handler
+import guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -79,16 +80,13 @@ class AthkarSettings(qt.QWidget):
         info_layout = qt.QVBoxLayout()
         info_layout.setSpacing(8)
         info_layout.setContentsMargins(0, 0, 0, 0)
-        self.info1 = qt.QLineEdit("لتشغيل ذكر عشوائي أو إيقافه, نستخدم الاختصار windows+alt+p")
-        self.info1.setReadOnly(True)
+        self.info1 = guiTools.QNavigableLabel("لتشغيل ذكر عشوائي أو إيقافه, نستخدم الاختصار windows+alt+p")
         self.info1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info1.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info2 = qt.QLineEdit("لعرض ذكر عشوائي, نستخدم الاختصار windows+alt+l")
-        self.info2.setReadOnly(True)
+        self.info2 = guiTools.QNavigableLabel("لعرض ذكر عشوائي, نستخدم الاختصار windows+alt+l")
         self.info2.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info2.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info = qt.QLineEdit("تنبيه هام, حتى تظل الأذكار تعمل في الخلفية, يجب إخفاء البرنامج, لا الخروج منه")
-        self.info.setReadOnly(True)
+        self.info = guiTools.QNavigableLabel("تنبيه هام, حتى تظل الأذكار تعمل في الخلفية, يجب إخفاء البرنامج, لا الخروج منه")
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setStyleSheet("font-weight: bold;")

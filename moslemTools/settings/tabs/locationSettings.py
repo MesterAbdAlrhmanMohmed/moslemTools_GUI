@@ -1,4 +1,5 @@
 from settings import settings_handler
+import guiTools
 from guiTools import speak
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
@@ -121,8 +122,7 @@ class LocationSettings(qt.QWidget):
         self.dl_app1.setVisible(p.cbts(settings_handler.get("location","autoDetect"))==False)
         layout.addWidget(self.dl_app1)
         layout.addSpacing(12)
-        self.info=qt.QLineEdit("تنبيه هام، عند تحديد الموقع الجغرافي يجب إعادة تحميل مواقيت الصلاة")
-        self.info.setReadOnly(True)
+        self.info=guiTools.QNavigableLabel("تنبيه هام، عند تحديد الموقع الجغرافي يجب إعادة تحميل مواقيت الصلاة")
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         layout.addWidget(self.info)

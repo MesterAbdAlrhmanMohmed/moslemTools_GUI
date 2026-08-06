@@ -17,10 +17,9 @@ class PrayerTimesSettings(qt.QWidget):
                 background-color: #0000AA;
                 color: #e0e0e0;
                 border: 1px solid #555;
-                padding: 8px 20px;
+                padding: 10px 24px;
                 border-radius: 4px;
                 font-size: 14px;
-            }
             }
             QComboBox {
                 padding: 4px;

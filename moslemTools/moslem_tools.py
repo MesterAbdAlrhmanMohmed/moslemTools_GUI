@@ -103,8 +103,7 @@ class main(qt.QMainWindow):
         self.timer = qt2.QTimer(self)
         self.timer.timeout.connect(self.random_audio_theker)
         layout = qt.QVBoxLayout()
-        self.info = qt.QLineEdit()
-        self.info.setReadOnly(True)
+        self.info = guiTools.QNavigableLabel()
         font1=qt1.QFont()
         font1.setBold(True)
         self.info.setFont(font1)
@@ -121,7 +120,7 @@ class main(qt.QMainWindow):
         font = qt1.QFont()
         font.setBold(True)
         self.list_widget.setFont(font)
-        self.list_widget.setAccessibleDescription("يمكنك التنقل بين التبويبات باستخدام control plus tab و control plus shift plus tab")
+        self.list_widget.setAccessibleDescription("يمكنكم التنقل بين التبويبات باستخدام control plus tab و control plus shift plus tab، ويمكنكم فتح قائمة التبويبات من أي مكان باستخدام الاختصار control plus 0")
         self.list_widget.currentIndexChanged.connect(lambda idx: self.onToolChanged(None, None))
         self.quranPlayer = QuranPlayer()
         self.researcher = Albaheth()
@@ -569,7 +568,7 @@ class main(qt.QMainWindow):
                 guiTools.MessageBox.error(self,"خطأ غير متوقع",f"حدث خطأ غير متوقع: {e}")
         else:
             return
-
+        
     def open_error_log_file(self):
         log_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "error.log")
         if not os.path.exists(log_path):

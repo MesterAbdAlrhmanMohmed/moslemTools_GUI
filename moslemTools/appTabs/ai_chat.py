@@ -225,8 +225,7 @@ class AskAI(qt.QWidget):
 
     def init_ui(self):
         layout = qt.QVBoxLayout(self)
-        self.disclaimer = qt.QLineEdit("تنبيه مهم: هذا ذكاء اصطناعي للمساعدة، ويرجى سؤال أهل العلم في المسائل الإسلامية المهمة.")
-        self.disclaimer.setReadOnly(True)
+        self.disclaimer = guiTools.QNavigableLabel("تنبيه مهم: هذا ذكاء اصطناعي للمساعدة، ويرجى سؤال أهل العلم في المسائل الإسلامية المهمة.")
         self.disclaimer.setStyleSheet("color: #ffcc00; font-weight: bold; font-size: 14px;")
         self.disclaimer.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.disclaimer.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -281,8 +280,7 @@ class AskAI(qt.QWidget):
         font_layout.addWidget(self.font_label)
         font_layout.addWidget(self.font_spin)
 
-        self.more_options_label = qt.QLineEdit("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
-        self.more_options_label.setReadOnly(True)
+        self.more_options_label = guiTools.QNavigableLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
         self.more_options_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.more_options_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 

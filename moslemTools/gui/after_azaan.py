@@ -36,7 +36,7 @@ class AfterAdaan(qt.QDialog):
         self.font_size = int(settings.settings_handler.get("font", "size"))
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.suplication.setText("اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ\nيُستحب إضافة: إِنَّكَ لَا تُخْلِفُ المِيعَادَ.\n\nثواب الدعاء بعد الأذان\nقال رسول الله صل الله عليه وسلم: مَنْ قَالَ حِينَ يَسْمَعُ النِّدَاءَ: اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ؛ حَلَّتْ لَهُ شَفَاعَتِي يَوْمُ القِيَامَةِ\nرواه البخاري في صحيحه.")
-        self.more_options_label = qt.QLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
+        self.more_options_label = guiTools.QNavigableLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
         self.more_options_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.more_options_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.font_laybol = qt.QLabel("حجم الخط")

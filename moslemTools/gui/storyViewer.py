@@ -46,7 +46,7 @@ class StoryViewer(qt.QDialog):
         self.show_font.setAccessibleDescription("حجم النص")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.valueChanged.connect(self.font_size_changed)
-        self.more_options_label = qt.QLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
+        self.more_options_label = guiTools.QNavigableLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
         self.more_options_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.more_options_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout = qt.QVBoxLayout(self)

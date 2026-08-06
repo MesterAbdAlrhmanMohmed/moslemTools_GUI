@@ -33,6 +33,7 @@ class Update(qt.QWidget):
         self.update_beta = qt.QCheckBox("تحميل التحديثات التجريبية")
         self.update_beta.setChecked(p.cbts(settings_handler.get("update", "beta")))
         UpdateLayout.addWidget(self.update_beta)
+        UpdateLayout.addSpacing(10)
         button_container = qt.QWidget()
         button_layout = qt.QHBoxLayout(button_container)
         button_layout.setContentsMargins(0, 0, 0, 0)
@@ -41,3 +42,4 @@ class Update(qt.QWidget):
         button_layout.addStretch()
         button_layout.addWidget(self.update_check)
         UpdateLayout.addWidget(button_container)
+        UpdateLayout.addStretch()

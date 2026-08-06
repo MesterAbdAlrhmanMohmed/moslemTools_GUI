@@ -29,11 +29,6 @@ class FontSettings(qt.QWidget):
     def __init__(self):
         super().__init__()
         self.setStyleSheet("""
-            QWidget {
-                background-color: #2b2b2b;
-                color: #e0e0e0;
-                font-family: Arial;
-            }
             QCheckBox, QLabel {
                 font-size: 14px;
             }

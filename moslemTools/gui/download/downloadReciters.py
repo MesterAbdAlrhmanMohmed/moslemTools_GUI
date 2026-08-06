@@ -14,8 +14,7 @@ class SelectReciter(qt.QDialog):
         self.resize(950, 550)
         self.center()
         layout=qt.QVBoxLayout(self)
-        serch=qt.QLineEdit("البحث عن قارئ")
-        serch.setReadOnly(True)
+        serch=guiTools.QNavigableLabel("البحث عن قارئ")
         serch.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(serch)
@@ -160,8 +159,7 @@ class DownloadReciter(qt.QDialog):
 
         layout = qt.QVBoxLayout(self)
 
-        self.status_label = qt.QLineEdit("جاري تحميل تلاوات القارئ")
-        self.status_label.setReadOnly(True)
+        self.status_label = guiTools.QNavigableLabel("جاري تحميل تلاوات القارئ")
         self.status_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.status_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         font = qt1.QFont()
@@ -174,8 +172,7 @@ class DownloadReciter(qt.QDialog):
         self.progress.setAccessibleName("نسبة التحميل")
         layout.addWidget(self.progress)
 
-        self.lay = qt.QLineEdit("عدد الآيات التي تم تحميلها")
-        self.lay.setReadOnly(True)
+        self.lay = guiTools.QNavigableLabel("عدد الآيات التي تم تحميلها")
         self.lay.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.lay.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.lay)

@@ -13,8 +13,7 @@ class SelectAthkar(qt.QDialog):
         self.resize(950, 550)
         self.center()
         layout=qt.QVBoxLayout(self)
-        serch=qt.QLineEdit("البحث عن فئة أذكار")
-        serch.setReadOnly(True)
+        serch=guiTools.QNavigableLabel("البحث عن فئة أذكار")
         serch.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(serch)
@@ -157,8 +156,7 @@ class DownloadReciter(qt.QDialog):
 
         layout = qt.QVBoxLayout(self)
 
-        self.status_label = qt.QLineEdit(f"جاري تحميل: {name}")
-        self.status_label.setReadOnly(True)
+        self.status_label = guiTools.QNavigableLabel(f"جاري تحميل: {name}")
         self.status_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.status_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         font = qt1.QFont()
@@ -171,8 +169,7 @@ class DownloadReciter(qt.QDialog):
         self.progress.setAccessibleName("نسبة التحميل")
         layout.addWidget(self.progress)
 
-        downloaded_label = qt.QLineEdit("عدد الأذكار التي تم تحميلها")
-        downloaded_label.setReadOnly(True)
+        downloaded_label = guiTools.QNavigableLabel("عدد الأذكار التي تم تحميلها")
         downloaded_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         downloaded_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(downloaded_label)

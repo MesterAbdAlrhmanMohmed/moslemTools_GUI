@@ -1,5 +1,5 @@
 import pyperclip, requests, geocoder, winsound, gui, os
-from guiTools import speak, QReadOnlyTextEdit
+from guiTools import speak, QReadOnlyTextEdit, QNavigableLabel
 from guiTools.qMessageBox import MessageBox
 from settings import settings_handler
 from hijridate import Gregorian, Hijri
@@ -113,20 +113,14 @@ class prayer_times(qt.QWidget):
         self.countdown_timer.timeout.connect(self.update_countdowns)
         self.information = qt.QListWidget()
         self.information.setSpacing(3)
-        self.worning = qt.QLineEdit()
-        self.worning.setReadOnly(True)
+        self.worning = QNavigableLabel("F5: لإعادة تحميل مواقيت الصلاة")
         self.worning.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.worning.setText("F5: لإعادة تحميل مواقيت الصلاة")
         self.worning.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.worning1 = qt.QLineEdit()
-        self.worning1.setReadOnly(True)
+        self.worning1 = QNavigableLabel("CTRL+A: لنسخ كل القائمة")
         self.worning1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.worning1.setText("CTRL+A: لنسخ كل القائمة")
         self.worning1.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.worning2 = qt.QLineEdit()
-        self.worning2.setReadOnly(True)
+        self.worning2 = QNavigableLabel("CTRL+C: لنسخ عنصر محدد من القائمة")
         self.worning2.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.worning2.setText("CTRL+C: لنسخ عنصر محدد من القائمة")
         self.worning2.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         font = qt1.QFont()
         font.setPointSize(12)
@@ -141,9 +135,7 @@ class prayer_times(qt.QWidget):
         self.worning0.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.worning0.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.worning0.setFont(font)
-        self.worning3 = qt.QLineEdit()
-        self.worning3.setReadOnly(True)
-        self.worning3.setText("معلومة هامة: لا يمكن تحديد مواقيت الصلاة باستخدام بيانات الهاتف المحمول")
+        self.worning3 = QNavigableLabel("معلومة هامة: لا يمكن تحديد مواقيت الصلاة باستخدام بيانات الهاتف المحمول")
         self.worning3.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.worning3.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.worning3.setFont(font)

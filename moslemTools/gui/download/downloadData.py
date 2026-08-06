@@ -88,8 +88,7 @@ class SelectItem(qt.QDialog):
 
 		layout = qt.QVBoxLayout(self)
 
-		search_label = qt.QLineEdit("بحث")
-		search_label.setReadOnly(True)
+		search_label = guiTools.QNavigableLabel("بحث")
 		search_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(search_label)
@@ -109,16 +108,14 @@ class SelectItem(qt.QDialog):
 		self.item.setFont(font)
 		layout.addWidget(self.item)
 
-		self.info_label = qt.QLineEdit("لمزيد من خيارات التحميل، قم بالضغط على عنصر من القائمة باستخدام زر التطبيقات أو click الأيمن")
-		self.info_label.setReadOnly(True)
+		self.info_label = guiTools.QNavigableLabel("لمزيد من خيارات التحميل، قم بالضغط على عنصر من القائمة باستخدام زر التطبيقات أو click الأيمن")
 		self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.info_label.setStyleSheet("color: white; font-weight: bold; font-size: 13px; margin: 5px;")
 		self.info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		self.info_label.setVisible(False)
 		layout.addWidget(self.info_label)
 
-		self.selection_status_label = qt.QLineEdit("")
-		self.selection_status_label.setReadOnly(True)
+		self.selection_status_label = guiTools.QNavigableLabel("")
 		self.selection_status_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.selection_status_label.setStyleSheet("color: #008000; font-weight: bold; font-size: 12px;")
 		self.selection_status_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -133,8 +130,7 @@ class SelectItem(qt.QDialog):
 		self.shortcut_range = qt1.QShortcut(qt1.QKeySequence("Ctrl+D"), self)
 		self.shortcut_range.activated.connect(self.download_from_start_to_here)
 
-		self.loading_label = qt.QLineEdit("جاري تحميل البيانات، يرجى الانتظار...")
-		self.loading_label.setReadOnly(True)
+		self.loading_label = guiTools.QNavigableLabel("جاري تحميل البيانات، يرجى الانتظار...")
 		self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.loading_label)
@@ -454,8 +450,7 @@ class StartDownloading(qt.QDialog):
 		self.setWindowTitle("جاري التحميل")
 		layout = qt.QVBoxLayout(self)
 
-		self.status_label = qt.QLineEdit("")
-		self.status_label.setReadOnly(True)
+		self.status_label = guiTools.QNavigableLabel("")
 		self.status_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.status_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		font = qt1.QFont()
