@@ -73,5 +73,12 @@ class StartupTabSettings(qt.QWidget):
         row = self.tab_list.currentRow()
         if row >= 0:
             tab_name = self.tab_list.item(row).text()
+            try:
+                current_saved = int(settings_handler.get("g", "startup_tab"))
+            except Exception:
+                current_saved = -1
+            if current_saved == row:
+                guiTools.MessageBox.view(self, "تنبيه", f"التبويبة ({tab_name}) محددة بالفعل.")
+                return
             settings_handler.set("g", "startup_tab", str(row))
             guiTools.MessageBox.view(self, "تم تحديد التبويبة", f"تم تحديد التبويبة ({tab_name}).\nهذه التبويبة هي التي سيتم فتح البرنامج عليها تلقائيًا عند تشغيله.")

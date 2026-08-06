@@ -1,7 +1,7 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
-from guiTools import QReadOnlyTextEdit
-from guiTools import qMessageBox
+from .QReadOnlyTextEdit import QReadOnlyTextEdit
+from . import qMessageBox
 
 
 class NoteDialog(qt.QDialog):
