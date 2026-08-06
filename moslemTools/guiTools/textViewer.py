@@ -1,4 +1,4 @@
-import guiTools, pyperclip, winsound, settings
+import guiTools, pyperclip, winsound, settings, functions
 import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
@@ -38,7 +38,8 @@ class TextViewer(qt.QDialog):
         self.show_font.setRange(1, 100)
         self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_font.setAccessibleDescription("حجم النص")
+        self.show_font.setAccessibleName("حجم النص")
+        self.show_font.setAccessibleDescription("للتحكم في حجم النص من أي مكان: نستخدم الاختصارات control plus equals للتكبير و control plus dash للتصغير")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.valueChanged.connect(self.font_size_changed)
         layout = qt.QVBoxLayout(self)
@@ -110,27 +111,10 @@ class TextViewer(qt.QDialog):
                 self.text.setTextCursor(cursor)
 
     def print_text(self):
-        try:
-            printer = QPrinter()
-            dialog = QPrintDialog(printer, self)
-            if dialog.exec() == QPrintDialog.DialogCode.Accepted:
-                self.text.print(printer)
-        except Exception as error:
-            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+        functions.text_actions.print_text_content(self, self.text)
 
     def save_text_as_txt(self):
-        try:
-            file_dialog = qt.QFileDialog()
-            file_dialog.setAcceptMode(qt.QFileDialog.AcceptMode.AcceptSave)
-            file_dialog.setNameFilter("Text Files (*.txt);;All Files (*)")
-            file_dialog.setDefaultSuffix("txt")
-            if file_dialog.exec() == qt.QFileDialog.DialogCode.Accepted:
-                file_name = file_dialog.selectedFiles()[0]
-                with open(file_name, 'w', encoding='utf-8') as file:
-                    text = self.text.toPlainText()
-                    file.write(text)
-        except Exception as error:
-            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+        functions.text_actions.save_text_file(self, self.text)
 
     def font_size_changed(self, value):
         self.font_size = value
@@ -138,12 +122,10 @@ class TextViewer(qt.QDialog):
         guiTools.speak(str(value))
 
     def increase_font_size(self):
-        if self.show_font.value() < 100:
-            self.show_font.setValue(self.show_font.value() + 1)
+        functions.text_actions.increase_font_size(self.show_font)
 
     def decrease_font_size(self):
-        if self.show_font.value() > 1:
-            self.show_font.setValue(self.show_font.value() - 1)
+        functions.text_actions.decrease_font_size(self.show_font)
 
     def update_font_size(self):
         cursor = self.text.textCursor()
@@ -172,12 +154,7 @@ class TextViewer(qt.QDialog):
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
 
     def copy_text(self):
-        try:
-            pyperclip.copy(self.saved_text)
-            winsound.Beep(1000, 100)
-            guiTools.speak("تم نسخ كل المحتوى بنجاح")
-        except Exception as error:
-            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+        functions.text_actions.copy_all_text(self, self.text)
 
     def _set_text_with_delay(self, full_text):
         self.saved_text = full_text
@@ -197,12 +174,4 @@ class TextViewer(qt.QDialog):
                 self.text.setTextCursor(cursor)
 
     def copy_current_selection(self):
-        try:
-            cursor = self.text.textCursor()
-            if cursor.hasSelection():
-                selected_text = cursor.selectedText()
-                pyperclip.copy(selected_text)
-                winsound.Beep(1000, 100)
-                guiTools.speak("تم نسخ النص المحدد بنجاح")
-        except Exception as error:
-            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(error))
+        functions.text_actions.copy_current_selection(self, self.text)

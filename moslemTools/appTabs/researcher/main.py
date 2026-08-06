@@ -274,7 +274,8 @@ class Albaheth(qt.QWidget):
         self.show_font.setValue(self.font_size)
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_font.setAccessibleDescription("حجم الخط")
+        self.show_font.setAccessibleName("حجم النص")
+        self.show_font.setAccessibleDescription("للتحكم في حجم النص من أي مكان: نستخدم الاختصارات control plus equals للتكبير و control plus dash للتصغير")
         self.show_font.valueChanged.connect(self.font_size_changed)
         self.clear_results_button = guiTools.QPushButton("حذف النتائج")
         self.clear_results_button.setShortcut("ctrl+del")
@@ -822,12 +823,10 @@ class Albaheth(qt.QWidget):
         guiTools.speak(str(self.font_size))
 
     def increase_font_size(self):
-        if self.show_font.value() < 100:
-            self.show_font.setValue(self.show_font.value() + 1)
+        functions.text_actions.increase_font_size(self.show_font)
 
     def decrease_font_size(self):
-        if self.show_font.value() > 1:
-            self.show_font.setValue(self.show_font.value() - 1)
+        functions.text_actions.decrease_font_size(self.show_font)
 
     def update_font_size(self):
         cursor = self.results.textCursor()

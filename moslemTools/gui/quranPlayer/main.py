@@ -82,7 +82,8 @@ class QuranPlayer(qt.QDialog):
         self.show_font.setRange(1, 100)
         self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_font.setAccessibleDescription("حجم النص")
+        self.show_font.setAccessibleName("حجم النص")
+        self.show_font.setAccessibleDescription("للتحكم في حجم النص من أي مكان: نستخدم الاختصارات control plus equals للتكبير و control plus dash للتصغير")
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font.valueChanged.connect(self.font_size_changed)
         self.N_aya=guiTools.QPushButton("الآيا التالية")
@@ -620,12 +621,10 @@ class QuranPlayer(qt.QDialog):
         guiTools.speak(str(value))
 
     def increase_font_size(self):
-        if self.show_font.value() < 100:
-            self.show_font.setValue(self.show_font.value() + 1)
+        functions.text_actions.increase_font_size(self.show_font)
 
     def decrease_font_size(self):
-        if self.show_font.value() > 1:
-            self.show_font.setValue(self.show_font.value() - 1)
+        functions.text_actions.decrease_font_size(self.show_font)
 
     def update_font_size(self):
         cursor=self.text.textCursor()

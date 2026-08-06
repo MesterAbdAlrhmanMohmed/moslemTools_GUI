@@ -2,7 +2,7 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
-import guiTools, requests, pyperclip, winsound, webbrowser, re
+import guiTools, requests, pyperclip, winsound, webbrowser, re, functions
 from settings import settings_handler
 
 
@@ -275,7 +275,8 @@ class AskAI(qt.QWidget):
         self.font_spin.setValue(self.font_size)
         self.font_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.font_spin.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.font_spin.setAccessibleName("حجم الخط")
+        self.font_spin.setAccessibleName("حجم النص")
+        self.font_spin.setAccessibleDescription("للتحكم في حجم النص من أي مكان: نستخدم الاختصارات control plus equals للتكبير و control plus dash للتصغير")
         self.font_spin.valueChanged.connect(self.font_size_changed)
         font_layout.addWidget(self.font_label)
         font_layout.addWidget(self.font_spin)
@@ -468,12 +469,10 @@ class AskAI(qt.QWidget):
         guiTools.speak(str(self.font_size))
 
     def increase_font_size(self):
-        if self.font_spin.value() < 100:
-            self.font_spin.setValue(self.font_spin.value() + 1)
+        functions.text_actions.increase_font_size(self.font_spin)
 
     def decrease_font_size(self):
-        if self.font_spin.value() > 1:
-            self.font_spin.setValue(self.font_spin.value() - 1)
+        functions.text_actions.decrease_font_size(self.font_spin)
 
     def update_font_size(self):
         cursor = self.results.textCursor()
@@ -498,36 +497,10 @@ class AskAI(qt.QWidget):
             guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
 
     def copy_all(self):
-        try:
-            pyperclip.copy(self.results.toPlainText())
-            winsound.Beep(1000, 100)
-            guiTools.speak("تم نسخ كل المحتوى بنجاح")
-        except Exception as e:
-            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
+        functions.text_actions.copy_all_text(self, self.results)
 
     def save_as_txt(self):
-        if not self.results.toPlainText():
-            return
-        try:
-            file_dialog = qt.QFileDialog()
-            file_dialog.setAcceptMode(qt.QFileDialog.AcceptMode.AcceptSave)
-            file_dialog.setNameFilter("Text Files (*.txt);;All Files (*)")
-            file_dialog.setDefaultSuffix("txt")
-            if file_dialog.exec() == qt.QFileDialog.DialogCode.Accepted:
-                file_name = file_dialog.selectedFiles()[0]
-                with open(file_name, 'w', encoding='utf-8') as file:
-                    file.write(self.results.toPlainText())
-                guiTools.speak("تم الحفظ بنجاح")
-        except Exception as e:
-            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
+        functions.text_actions.save_text_file(self, self.results)
 
     def print_results(self):
-        if not self.results.toPlainText():
-            return
-        try:
-            printer = QPrinter()
-            dialog = QPrintDialog(printer, self)
-            if dialog.exec() == QPrintDialog.DialogCode.Accepted:
-                self.results.print(printer)
-        except Exception as e:
-            guiTools.MessageBox.error(self, "تنبيه حدث خطأ", str(e))
+        functions.text_actions.print_text_content(self, self.results)

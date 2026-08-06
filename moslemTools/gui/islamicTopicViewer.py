@@ -40,9 +40,10 @@ class IslamicTopicViewer(qt.QDialog):
         self.show_font.setValue(self.font_size)
         self.show_font.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.show_font.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.show_font.setAccessibleDescription("حجم النص")
+        self.show_font.setAccessibleName("حجم النص")
+        self.show_font.setAccessibleDescription("للتحكم في حجم النص من أي مكان: نستخدم الاختصارات control plus equals للتكبير و control plus dash للتصغير")
         self.show_font.valueChanged.connect(self.font_size_changed)
-        self.more_options_label = qt.QLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
+        self.more_options_label = guiTools.QNavigableLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
         self.more_options_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.more_options_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info = qt.QLabel(self.current_title)
@@ -270,37 +271,19 @@ class IslamicTopicViewer(qt.QDialog):
             self.show_font.blockSignals(False)
 
     def increase_font_size(self):
-        if self.show_font.value() < 100:
-            self.show_font.setValue(self.show_font.value() + 1)
+        functions.text_actions.increase_font_size(self.show_font)
 
     def decrease_font_size(self):
-        if self.show_font.value() > 1:
-            self.show_font.setValue(self.show_font.value() - 1)
+        functions.text_actions.decrease_font_size(self.show_font)
 
     def copy_text(self):
-        pyperclip.copy(self.text.toPlainText())
-        winsound.Beep(1000, 100)
-        guiTools.speak("تم نسخ كل المحتوى")
+        functions.text_actions.copy_all_text(self, self.text)
 
     def copy_current_selection(self):
-        cursor = self.text.textCursor()
-        if cursor.hasSelection():
-            pyperclip.copy(cursor.selectedText())
-            winsound.Beep(1000, 100)
-            guiTools.speak("تم نسخ النص المحدد")
+        functions.text_actions.copy_current_selection(self, self.text)
 
     def save_text_as_txt(self):
-        file_name, _ = qt.QFileDialog.getSaveFileName(self, "حفظ الملف", "", "Text Files (*.txt);;All Files (*)")
-        if file_name:
-            try:
-                with open(file_name, 'w', encoding='utf-8') as file:
-                    file.write(self.text.toPlainText())
-                guiTools.speak("تم حفظ الملف")
-            except Exception as e:
-                guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"لم يتم حفظ الملف: {e}")
+        functions.text_actions.save_text_file(self, self.text)
 
     def print_text(self):
-        printer = QPrinter()
-        dialog = QPrintDialog(printer, self)
-        if dialog.exec() == QPrintDialog.DialogCode.Accepted:
-            self.text.print(printer)
+        functions.text_actions.print_text_content(self, self.text)

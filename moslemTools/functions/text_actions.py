@@ -1,0 +1,88 @@
+import os
+import pyperclip
+import winsound
+import guiTools
+from PyQt6 import QtWidgets as qt
+from PyQt6 import QtGui as qt1
+from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
+
+def increase_font_size(spinbox):
+    if spinbox.value() < 100:
+        spinbox.setValue(spinbox.value() + 1)
+
+def decrease_font_size(spinbox):
+    if spinbox.value() > 1:
+        spinbox.setValue(spinbox.value() - 1)
+
+def copy_current_selection(parent, widget, fallback_func=None):
+    try:
+        if hasattr(widget, 'textCursor'):
+            cursor = widget.textCursor()
+            if cursor.hasSelection():
+                pyperclip.copy(cursor.selectedText())
+                winsound.Beep(1000, 100)
+                guiTools.speak("تم نسخ النص المحدد")
+                return True
+        if fallback_func:
+            fallback_func()
+            return True
+        return False
+    except Exception as error:
+        guiTools.MessageBox.error(parent, "تنبيه حدث خطأ", str(error))
+        return False
+
+def copy_all_text(parent, text_or_widget, message="تم نسخ كل المحتوى بنجاح", header_text=None):
+    try:
+        if hasattr(text_or_widget, 'toPlainText'):
+            body = text_or_widget.toPlainText()
+        else:
+            body = str(text_or_widget)
+        full_text = f"{header_text}\n\n{body}" if header_text else body
+        pyperclip.copy(full_text)
+        winsound.Beep(1000, 100)
+        guiTools.speak(message)
+    except Exception as error:
+        guiTools.MessageBox.error(parent, "تنبيه حدث خطأ", str(error))
+
+def print_text_content(parent, widget_or_text, header_text=None):
+    try:
+        printer = QPrinter()
+        dialog = QPrintDialog(printer, parent)
+        if dialog.exec() == QPrintDialog.DialogCode.Accepted:
+            if header_text:
+                doc = qt1.QTextDocument()
+                if hasattr(widget_or_text, 'toPlainText'):
+                    body = widget_or_text.toPlainText()
+                    doc.setDefaultFont(widget_or_text.font())
+                else:
+                    body = str(widget_or_text)
+                doc.setPlainText(f"{header_text}\n\n{body}")
+                doc.print(printer)
+            else:
+                if hasattr(widget_or_text, 'print'):
+                    widget_or_text.print(printer)
+                else:
+                    doc = qt1.QTextDocument(str(widget_or_text))
+                    doc.print(printer)
+    except Exception as error:
+        guiTools.MessageBox.error(parent, "تنبيه حدث خطأ", str(error))
+
+def save_text_file(parent, widget_or_text, default_filename="مستند نصي.txt", header_text=None):
+    try:
+        file_dialog = qt.QFileDialog(parent)
+        file_dialog.setAcceptMode(qt.QFileDialog.AcceptMode.AcceptSave)
+        file_dialog.setNameFilter("Text Files (*.txt);;All Files (*)")
+        file_dialog.setDefaultSuffix("txt")
+        if file_dialog.exec() == qt.QFileDialog.DialogCode.Accepted:
+            selected_files = file_dialog.selectedFiles()
+            if selected_files:
+                file_name = selected_files[0]
+                if hasattr(widget_or_text, 'toPlainText'):
+                    body = widget_or_text.toPlainText()
+                else:
+                    body = str(widget_or_text)
+                full_text = f"{header_text}\n\n{body}" if header_text else body
+                with open(file_name, 'w', encoding='utf-8') as f:
+                    f.write(full_text)
+    except Exception as error:
+        guiTools.MessageBox.error(parent, "تنبيه حدث خطأ", str(error))

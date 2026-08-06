@@ -218,10 +218,6 @@ class main(qt.QMainWindow):
         action_error_log.setShortcut("ctrl+alt+e")
         action_error_log.triggered.connect(self.open_error_log_file)
         self.moreOptionsMenu.addAction(action_error_log)
-        action_delete_program_data = qt1.QAction("حذف بيانات البرنامج لإلغاء تثبيته", self)
-        action_delete_program_data.setShortcut("ctrl+shift+delete")
-        action_delete_program_data.triggered.connect(self.delete_program_data_with_confirmation)
-        self.moreOptionsMenu.addAction(action_delete_program_data)
         self.more_options_button.setMenu(self.moreOptionsMenu)
         layout1.addWidget(self.more_options_button)
         layout1.addWidget(self.info)
@@ -550,25 +546,6 @@ class main(qt.QMainWindow):
         text_width = fm.horizontalAdvance(current_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(current_text).width()
         self.list_widget.setFixedWidth(text_width + 65)
 
-    def delete_program_data_with_confirmation(self):
-        confirm = guiTools.QQuestionMessageBox.view(self,"تأكيد الحذف النهائي لبيانات البرنامج","تحذير هام:\nأنت على وشك حذف جميع بيانات برنامج moslem tools نهائيًا من جهازك بما في ذلك الإعدادات وكل شيئ متعلق بالبرنامج\nهذه العملية لا يمكن التراجع عنها وستؤدي إلى فقدان دائم لجميع البيانات\nالأفضل عمل نسخة احتياطية لجميع إعداداتك وملفاتك أولا قبل هذه العملية الخطيرة\nهل أنت متأكد تمامًا أنك تريد المتابعة وحذف مجلد البرنامج بالكامل؟","نعم، قم بحذف مجلد بيانات البرنامج","لا، إلغاء")
-        if confirm == 0:
-            try:
-                roaming_path = os.path.join(os.getenv('appdata'))
-                target_folder_path = os.path.join(roaming_path, 'moslemTools_GUI')
-                if os.path.exists(target_folder_path) and os.path.isdir(target_folder_path):
-                    shutil.rmtree(target_folder_path)
-                    guiTools.MessageBox.view(self,"تم الحذف بنجاح","تم حذف مجلد moslemTools_GUI وجميع بيانات البرنامج بنجاح\nالآن يمكنك إلغاء تثبيت البرنامج")
-                    qt.QApplication.quit()
-                else:
-                    guiTools.MessageBox.view(self,"المجلد غير موجود",f"المجلد '{target_folder_path}' غير موجود أو ليس مجلدًا. لا توجد بيانات لحذفها.")
-            except OSError as e:
-                guiTools.MessageBox.error(self,"خطأ في الحذف",f"حدث خطأ أثناء محاولة حذف المجلد: {e}\n\nيرجى التأكد من أن البرنامج ليس قيد التشغيل في الخلفية أو أن لديك الأذونات اللازمة.")
-            except Exception as e:
-                guiTools.MessageBox.error(self,"خطأ غير متوقع",f"حدث خطأ غير متوقع: {e}")
-        else:
-            return
-        
     def open_error_log_file(self):
         log_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "error.log")
         if not os.path.exists(log_path):
