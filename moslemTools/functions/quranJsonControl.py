@@ -1,13 +1,34 @@
 import re
 import ujson as json
 _data = None
+_surah_name_map = {}
+_text_to_ayah_map = {}
 
 
 def _load_data():
-    global _data
+    global _data, _surah_name_map, _text_to_ayah_map
     if _data is None:
         with open("data/json/quran.json","r",encoding="utf-8-sig") as file:
             _data=json.load(file)
+        _surah_name_map = {}
+        _text_to_ayah_map = {}
+        for s_key, surah_data in _data.items():
+            name_clean = surah_data["name"].strip()
+            _surah_map_key = name_clean[5:].strip() if name_clean.startswith("سورة ") else name_clean
+            _surah_name_map[_surah_map_key] = s_key
+            _surah_name_map[name_clean] = s_key
+            _surah_name_map[str(surah_data["number"])] = s_key
+            for ayah in surah_data["ayahs"]:
+                ayah_key = f"{ayah['text']} ({ayah['numberInSurah']})"
+                result_tuple = (
+                    ayah["numberInSurah"],
+                    s_key,
+                    [ayah["juz"], surah_data["name"], ayah["hizbQuarter"], ayah["sajda"], ayah.get("asbab_alnozole", False)],
+                    ayah["page"],
+                    ayah["number"]
+                )
+                if ayah_key not in _text_to_ayah_map:
+                    _text_to_ayah_map[ayah_key] = result_tuple
 
 
 def __getattr__(name):
@@ -113,19 +134,19 @@ def getAyah(text, category=None, type=None):
     _load_data()
     if type is not None and category is not None:
         if type == 0:
-            match = re.match(r"(\d+)", str(category))
+            match = re.match(r"^(\d+)", str(category))
+            s_key = None
             if match:
                 s_key = match.group(1)
-                if s_key in _data:
-                    for ayah in _data[s_key]["ayahs"]:
-                        if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
-                            return ayah["numberInSurah"], s_key, [ayah["juz"], _data[s_key]["name"], ayah["hizbQuarter"], ayah["sajda"], ayah.get("asbab_alnozole", False)], ayah["page"], ayah["number"]
-            clean_cat = re.sub(r'^\d+[\s\.\-]*', '', str(category)).strip()
-            for s_key, surah_data in _data.items():
-                if surah_data["name"] == clean_cat:
-                    for ayah in surah_data["ayahs"]:
-                        if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
-                            return ayah["numberInSurah"], s_key, [ayah["juz"], surah_data["name"], ayah["hizbQuarter"], ayah["sajda"], ayah.get("asbab_alnozole", False)], ayah["page"], ayah["number"]
+            else:
+                clean_cat = re.sub(r'^\d+[\s\.\-]*', '', str(category)).strip()
+                if clean_cat.startswith("سورة "):
+                    clean_cat = clean_cat[5:].strip()
+                s_key = _surah_name_map.get(clean_cat)
+            if s_key and s_key in _data:
+                for ayah in _data[s_key]["ayahs"]:
+                    if f"{ayah['text']} ({ayah['numberInSurah']})" == text:
+                        return ayah["numberInSurah"], s_key, [ayah["juz"], _data[s_key]["name"], ayah["hizbQuarter"], ayah["sajda"], ayah.get("asbab_alnozole", False)], ayah["page"], ayah["number"]
         else:
             cat_str = str(category)
             for key, value in _data.items():
@@ -136,11 +157,14 @@ def getAyah(text, category=None, type=None):
                     elif type == 3 and str(ayah["hizbQuarter"]) == cat_str: found = True
                     elif type == 4 and str((ayah["hizbQuarter"]-1)//4+1) == cat_str: found = True
                     if found:
-                        if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
+                        if f"{ayah['text']} ({ayah['numberInSurah']})" == text:
                             return ayah["numberInSurah"], key, [ayah["juz"], value["name"], ayah["hizbQuarter"], ayah["sajda"], ayah.get("asbab_alnozole", False)], ayah["page"], ayah["number"]
+    cached_res = _text_to_ayah_map.get(text)
+    if cached_res:
+        return cached_res
     for key, value in _data.items():
         for ayah in value["ayahs"]:
-            if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
+            if f"{ayah['text']} ({ayah['numberInSurah']})" == text:
                 return ayah["numberInSurah"], key, [ayah["juz"], value["name"], ayah["hizbQuarter"], ayah["sajda"], ayah.get("asbab_alnozole", False)], ayah["page"], ayah["number"]
     return 1, "1", ["1", "", "", False], "1", 1
 

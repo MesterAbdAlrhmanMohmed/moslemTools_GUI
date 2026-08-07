@@ -179,13 +179,13 @@ class QuranViewer(qt.QDialog):
         layout.addWidget(self.permanent_stabilizer_bar)
         layout.addWidget(self.text)
         layout.addLayout(progress_time_layout)
-        self.merge_feedback_label = qt.QLabel()
+        self.merge_feedback_label = guiTools.QNavigableLabel()
         self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.merge_progress_bar = qt.QProgressBar()
         self.merge_action_button = guiTools.QPushButton("إلغاء العملية")
         self.merge_action_button.setAutoDefault(False)
-        self.merge_action_button.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
+        self.merge_action_button.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 8px 18px; border-radius: 5px; font-weight: bold;} QPushButton:hover {background-color: #A52A2A;}")
         self.merge_action_button.clicked.connect(self.handle_merge_action)
         self.resume_download_button = guiTools.QPushButton("استئناف")
         self.resume_download_button.setAutoDefault(False)
@@ -291,6 +291,11 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+shift+t", self).activated.connect(self.getTafaseerForSurah)
         qt1.QShortcut("ctrl+shift+i", self).activated.connect(self.getIArabForSurah)
         qt1.QShortcut("ctrl+shift+l", self).activated.connect(self.getTranslationForSurah)
+        qt1.QShortcut("shift+alt+t", self).activated.connect(self.getTafaseerFromAyahToEnd)
+        qt1.QShortcut("shift+alt+l", self).activated.connect(self.getTranslationFromAyahToEnd)
+        qt1.QShortcut("shift+alt+i", self).activated.connect(self.getIArabFromAyahToEnd)
+        qt1.QShortcut("shift+alt+d", self).activated.connect(self.mergeFromAyahToEnd)
+        qt1.QShortcut("shift+alt+h", self).activated.connect(self.saveFromAyahToEnd)
         qt1.QShortcut("ctrl+shift+f", self).activated.connect(self.onSurahInfo)
         qt1.QShortcut("ctrl+alt+f", self).activated.connect(self.show_current_surah_info)
         qt1.QShortcut("ctrl+alt+t", self).activated.connect(self.TafseerFromVersToVers)
@@ -513,8 +518,13 @@ class QuranViewer(qt.QDialog):
         self._set_text_with_delay(display_text)
 
     def handle_merge_action(self):
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل أنت متأكد أنك تريد إلغاء العملية الحالية؟", "نعم", "لا")
+        if reply != 0:
+            return
         if self.is_merging and self.merge_phase == 'merging':
-            self.confirm_and_cancel_merge()
+            self.cancellation_requested = True
+            if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
+                self.merge_thread.stop()
         elif self.is_merging and self.merge_phase == 'preparing':
             self.cancellation_requested = True
             if hasattr(self, 'pre_merge_thread') and self.pre_merge_thread.isRunning():
@@ -652,6 +662,54 @@ class QuranViewer(qt.QDialog):
         self.pre_merge_thread.error.connect(lambda msg: self.on_save_finished(False, msg))
         self.pre_merge_thread.start()
 
+    def mergeFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        if not os.path.exists(self.ffmpeg_path):
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على أداة الدمج FFmpeg.")
+            self.resume_after_action()
+            return
+        current_ayah_index = self.getCurrentAyah()
+        if current_ayah_index < 0:
+            self.resume_after_action()
+            return
+        total_ayahs = len(self.original_quran_text.split("\n"))
+        self.save_mode = False
+        self.set_ui_for_merge(True)
+        self.merge_feedback_label.setText("جاري التحقق من الآيات تمهيداً لدمجها...")
+        self.merge_action_button.setText("إلغاء العملية")
+        self.merge_action_button.show()
+        self.merge_phase = 'preparing'
+        self.cancellation_requested = False
+        self.pre_merge_thread = PreMergeCheckThread(current_ayah_index, total_ayahs, self.original_quran_text, self.category, self.type, self.currentReciter, reciters)
+        self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished)
+        self.pre_merge_thread.error.connect(lambda msg: self.on_merge_finished(False, msg))
+        self.pre_merge_thread.start()
+
+    def saveFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        current_ayah_index = self.getCurrentAyah()
+        if current_ayah_index < 0:
+            self.resume_after_action()
+            return
+        total_ayahs = len(self.original_quran_text.split("\n"))
+        self.save_mode = True
+        self.set_ui_for_merge(True)
+        self.merge_feedback_label.setText("جاري التحقق من الآيات تمهيداً لحفظها...")
+        self.merge_action_button.setText("إلغاء العملية")
+        self.merge_action_button.show()
+        self.merge_phase = 'preparing'
+        self.cancellation_requested = False
+        self.pre_merge_thread = PreMergeCheckThread(current_ayah_index, total_ayahs, self.original_quran_text, self.category, self.type, self.currentReciter, reciters)
+        self.pre_merge_thread.finished.connect(self.on_pre_merge_check_finished_for_save)
+        self.pre_merge_thread.error.connect(lambda msg: self.on_save_finished(False, msg))
+        self.pre_merge_thread.start()
+
     def on_pre_merge_check_finished(self, merge_list, ayahs_to_download):
         if self.cancellation_requested: return
         self.merge_list = merge_list
@@ -764,6 +822,8 @@ class QuranViewer(qt.QDialog):
         else:
             self.merge_progress_bar.hide()
             self.resume_download_button.setVisible(False)
+            if not self.save_mode:
+                self.finalize_and_execute_merge()
 
     def on_download_network_error(self, msg):
         self.resume_download_button.setVisible(True)
@@ -863,11 +923,8 @@ class QuranViewer(qt.QDialog):
         if is_active:
             self.merge_feedback_label.setText("جاري التحضير للعملية...")
             self.merge_action_button.setText("إلغاء العملية")
-            self.merge_action_button.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
             self.merge_progress_bar.hide()
             self.merge_progress_bar.setValue(0)
-        else:
-            self.merge_action_button.setStyleSheet("")
 
     def toggle_search_bar(self):
         if self.search_widget.isVisible():
@@ -1121,6 +1178,8 @@ class QuranViewer(qt.QDialog):
         tashkeel_action_text = ""
         save_audio_category_text = ""
         merge_audio_category_text = ""
+        save_audio_to_end_text = ""
+        merge_audio_to_end_text = ""
         tafseer_to_end_text = ""
         translation_to_end_text = ""
         iarab_to_end_text = ""
@@ -1138,6 +1197,8 @@ class QuranViewer(qt.QDialog):
             play_to_end_text = "التشغيل من الآية المحددة إلى نهاية العرض المخصص"
             save_audio_category_text = "حفظ جميع الآيات في الجهاز"
             merge_audio_category_text = "دمج جميع الآيات في ملف واحد"
+            save_audio_to_end_text = "الحفظ من الآية المحددة إلى نهاية العرض المخصص"
+            merge_audio_to_end_text = "الدمج من الآية المحددة إلى نهاية العرض المخصص"
             tafseer_to_end_text = "التفسير من الآية المحددة إلى نهاية العرض المخصص"
             translation_to_end_text = "الترجمة من الآية المحددة إلى نهاية العرض المخصص"
             iarab_to_end_text = "الإعراب من الآية المحددة إلى نهاية العرض المخصص"
@@ -1172,6 +1233,8 @@ class QuranViewer(qt.QDialog):
             iarab_to_end_text = f"الإعراب من الآية المحددة إلى نهاية {cat_target_label}"
             save_audio_category_text = f"حفظ آيات {cat_target_label} في الجهاز"
             merge_audio_category_text = f"دمج آيات {cat_target_label} في ملف واحد"
+            save_audio_to_end_text = f"الحفظ من الآية المحددة إلى نهاية {cat_target_label}"
+            merge_audio_to_end_text = f"الدمج من الآية المحددة إلى نهاية {cat_target_label}"
             if self.remove_tashkeel:
                 tashkeel_action_text = f"إظهار التشكيل ل{category_name_al}"
             else:
@@ -1226,6 +1289,7 @@ class QuranViewer(qt.QDialog):
                 tafaseerSurahAction.triggered.connect(self.getTafaseerForSurah)
             if tafseer_to_end_text:
                 tafseerFromAyahToEndAction = qt1.QAction(tafseer_to_end_text, self)
+                tafseerFromAyahToEndAction.setShortcut("shift+alt+t")
                 tafseer_menu.addAction(tafseerFromAyahToEndAction)
                 tafseerFromAyahToEndAction.triggered.connect(self.getTafaseerFromAyahToEnd)
             tafseerFromVersToVersAction = qt1.QAction("التفسير من آية إلى آية", self)
@@ -1241,6 +1305,7 @@ class QuranViewer(qt.QDialog):
                 translationSurahAction.triggered.connect(self.getTranslationForSurah)
             if translation_to_end_text:
                 translationFromAyahToEndAction = qt1.QAction(translation_to_end_text, self)
+                translationFromAyahToEndAction.setShortcut("shift+alt+l")
                 translation_menu.addAction(translationFromAyahToEndAction)
                 translationFromAyahToEndAction.triggered.connect(self.getTranslationFromAyahToEnd)
             translateFromVersToVersAction = qt1.QAction("الترجمة من آية إلى آية", self)
@@ -1256,6 +1321,7 @@ class QuranViewer(qt.QDialog):
                 IArabSurah.triggered.connect(self.getIArabForSurah)
             if iarab_to_end_text:
                 iarabFromAyahToEndAction = qt1.QAction(iarab_to_end_text, self)
+                iarabFromAyahToEndAction.setShortcut("shift+alt+i")
                 iarab_menu.addAction(iarabFromAyahToEndAction)
                 iarabFromAyahToEndAction.triggered.connect(self.getIArabFromAyahToEnd)
             IArabFromVersToVersAction = qt1.QAction("الإعراب من آية إلى آية", self)
@@ -1269,6 +1335,11 @@ class QuranViewer(qt.QDialog):
                 mergeAllAction.setShortcut("ctrl+shift+d")
                 merge_menu.addAction(mergeAllAction)
                 mergeAllAction.triggered.connect(self.mergeCategoryAyahs)
+            if merge_audio_to_end_text:
+                mergeFromAyahToEndAction = qt1.QAction(merge_audio_to_end_text, self)
+                mergeFromAyahToEndAction.setShortcut("shift+alt+d")
+                merge_menu.addAction(mergeFromAyahToEndAction)
+                mergeFromAyahToEndAction.triggered.connect(self.mergeFromAyahToEnd)
             mergeRangeAction = qt1.QAction("الدمج من آية إلى آية", self)
             mergeRangeAction.setShortcut("ctrl+alt+d")
             merge_menu.addAction(mergeRangeAction)
@@ -1280,6 +1351,11 @@ class QuranViewer(qt.QDialog):
                 saveAudioCategoryAction.setShortcut("ctrl+shift+h")
                 save_menu.addAction(saveAudioCategoryAction)
                 saveAudioCategoryAction.triggered.connect(self.saveCategoryAyahs)
+            if save_audio_to_end_text:
+                saveAudioFromAyahToEndAction = qt1.QAction(save_audio_to_end_text, self)
+                saveAudioFromAyahToEndAction.setShortcut("shift+alt+h")
+                save_menu.addAction(saveAudioFromAyahToEndAction)
+                saveAudioFromAyahToEndAction.triggered.connect(self.saveFromAyahToEnd)
             saveAudioRangeAction = qt1.QAction("حفظ من آية إلى آية في الجهاز", self)
             saveAudioRangeAction.setShortcut("ctrl+alt+h")
             save_menu.addAction(saveAudioRangeAction)

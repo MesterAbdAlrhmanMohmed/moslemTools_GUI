@@ -132,7 +132,7 @@ class PreMergeCheckThread(qt2.QThread):
 
     def _create_ayah_filename(self, ayah_text):
         try:
-            Ayah, surah, _, _, _ = functions.quranJsonControl.getAyah(ayah_text, self.category, self.type_index)
+            Ayah, surah, _, _, _ = functions.quranJsonControl.getAyah(ayah_text)
             surah_str = str(surah).zfill(3)
             ayah_str = str(Ayah).zfill(3)
             return f"{surah_str}{ayah_str}.mp3"

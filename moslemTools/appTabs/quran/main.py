@@ -115,14 +115,14 @@ class Quran(qt.QWidget):
         self.info.itemActivated.connect(self.onItemTriggered)
         self.on_view_mode_changed(self.view_mode_combo.currentIndex())
         layout.addWidget(self.info)
-        self.merge_feedback_label = qt.QLabel()
+        self.merge_feedback_label = guiTools.QNavigableLabel()
         self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.merge_progress_bar = qt.QProgressBar()
         self.merge_action_button = guiTools.QPushButton("إلغاء العملية")
         self.merge_action_button.setObjectName("cancelMergeButton")
         self.merge_action_button.setAutoDefault(False)
-        self.merge_action_button.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #A52A2A;}")
+        self.merge_action_button.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 8px 18px; border-radius: 5px; font-weight: bold;} QPushButton:hover {background-color: #A52A2A;}")
         self.merge_action_button.clicked.connect(self.handle_merge_action)
         self.resume_download_button = guiTools.QPushButton("استئناف")
         self.resume_download_button.setAutoDefault(False)
@@ -526,8 +526,13 @@ class Quran(qt.QWidget):
         return f"{surah_str}{ayah_str}.mp3"
 
     def handle_merge_action(self):
+        reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل أنت متأكد أنك تريد إلغاء العملية الحالية؟", "نعم", "لا")
+        if reply != 0:
+            return
         if getattr(self, 'is_merging', False) and self.merge_phase == 'merging':
-            self.confirm_and_cancel_merge()
+            self.cancellation_requested = True
+            if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
+                self.merge_thread.stop()
         elif getattr(self, 'is_merging', False) and self.merge_phase == 'preparing':
             self.cancellation_requested = True
             if hasattr(self, 'pre_merge_thread') and self.pre_merge_thread.isRunning():
