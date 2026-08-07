@@ -206,7 +206,7 @@ class IslamicQuestionsGame(qt.QWidget):
     def show_game_stats_widget(self):
         self.stats_text_viewer.setText(self.build_all_stats_text())
         self.stacked_widget.setCurrentIndex(4)
-        qt2.QTimer.singleShot(10, self.stats_back_btn.setFocus)
+        qt2.QTimer.singleShot(10, self.stats_text_viewer.setFocus)
 
     def confirm_and_delete_stats(self):
         if guiTools.QQuestionMessageBox.view(self, "تأكيد حذف الإحصائيات", "هل أنت متأكد من حذف جميع إحصائيات اللعبة؟", "نعم", "لا") == 0:
