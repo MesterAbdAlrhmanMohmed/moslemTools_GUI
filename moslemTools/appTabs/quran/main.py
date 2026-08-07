@@ -43,9 +43,9 @@ class Quran(qt.QWidget):
         layout.setSpacing(15)
         current_theme = settings_handler.get("g", "theme") or "dark"
         if current_theme == "light":
-            self.setStyleSheet("QWidget{color:#1e1e1e;}QLineEdit{background-color:#ffffff;color:#1e1e1e;border:1px solid #cccccc;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #cccccc;border-radius:5px;padding:5px;color:#1e1e1e;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#8B0000;color:white;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#A52A2A;}QListWidget{background-color:#ffffff;color:#1e1e1e;border:1px solid #cccccc;border-radius:5px;padding:5px;}QListWidget::item{padding:6px 10px;margin:3px;border-radius:5px;color:#1e1e1e;}QListWidget::item:hover{background-color:#e5e5e5;color:#1e1e1e;}QListWidget::item:selected{background-color:red;color:#ffffff;}QMenu{background-color:#ffffff;color:#1e1e1e;}QMenu::item:selected{background-color:#0078d7;color:#ffffff;}")
+            self.setStyleSheet("QWidget{color:#1e1e1e;}QLineEdit{background-color:#ffffff;color:#1e1e1e;border:1px solid #cccccc;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #cccccc;border-radius:5px;padding:5px;color:#1e1e1e;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;padding:16px 18px;border-radius:6px;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#8B0000;color:white;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#A52A2A;}QListWidget{background-color:#ffffff;color:#1e1e1e;border:1px solid #cccccc;border-radius:5px;padding:5px;}QListWidget::item{padding:6px 10px;margin:3px;border-radius:5px;color:#1e1e1e;}QListWidget::item:hover{background-color:#e5e5e5;color:#1e1e1e;}QListWidget::item:selected{background-color:red;color:#ffffff;}QMenu{background-color:#ffffff;color:#1e1e1e;}QMenu::item:selected{background-color:#0078d7;color:#ffffff;}")
         else:
-            self.setStyleSheet("QWidget{color:#f0f0f0;}QLineEdit{background-color:#3e3e3e;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#8B0000;color:white;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#A52A2A;}QListWidget{background-color:#000000;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QListWidget::item{padding:6px 10px;margin:3px;border-radius:5px;color:#f0f0f0;}QListWidget::item:hover{background-color:#333333;color:#f0f0f0;}QListWidget::item:selected{background-color:red;color:#ffffff;}QMenu{background-color:#3e3e3e;color:#f0f0f0;}QMenu::item:selected{background-color:#0078d7;}")
+            self.setStyleSheet("QWidget{color:#f0f0f0;}QLineEdit{background-color:#3e3e3e;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;padding:16px 18px;border-radius:6px;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#8B0000;color:white;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#A52A2A;}QListWidget{background-color:#000000;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QListWidget::item{padding:6px 10px;margin:3px;border-radius:5px;color:#f0f0f0;}QListWidget::item:hover{background-color:#333333;color:#f0f0f0;}QListWidget::item:selected{background-color:red;color:#ffffff;}QMenu{background-color:#3e3e3e;color:#f0f0f0;}QMenu::item:selected{background-color:#0078d7;}")
         browse_layout = qt.QHBoxLayout()
         browse_layout.addSpacing(85)
         layout1=qt.QVBoxLayout()
@@ -61,14 +61,20 @@ class Quran(qt.QWidget):
         self.type.currentIndexChanged.connect(self.onTypeChanged)
         layout1.addWidget(self.type)
         self.custom = guiTools.QPushButton("التصفح المخصص")
-        self.custom.setMinimumHeight(35)
-        self.custom.setMaximumWidth(150)
+        self.custom.setMinimumHeight(52)
+        self.custom.setMinimumWidth(160)
+        self.custom.setMaximumWidth(180)
         self.custom.setObjectName("customButton")
         self.custom.setShortcut("ctrl+c")
         self.custom.setAccessibleDescription("control plus c")
         self.custom.clicked.connect(self.onCostumBTNClicked)
         font = qt1.QFont()
         font.setBold(True)
+        self.show_surah_number_cb = qt.QCheckBox("عرض رقم السورة")
+        self.show_surah_number_cb.setFont(font)
+        show_surah_num_enabled = settings_handler.get("quran", "show_surah_number") != "False"
+        self.show_surah_number_cb.setChecked(show_surah_num_enabled)
+        self.show_surah_number_cb.stateChanged.connect(self.on_surah_number_toggled)
         view_mode_layout = qt.QVBoxLayout()
         self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
         self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -83,12 +89,15 @@ class Quran(qt.QWidget):
         self.view_mode_combo.setCurrentIndex(1 if grid_enabled else 0)
         self.view_mode_combo.currentIndexChanged.connect(self.on_view_mode_changed)
         view_mode_layout.addWidget(self.view_mode_combo)
+        browse_layout.addSpacing(30)
         browse_layout.addLayout(layout1)
         browse_layout.addStretch(1)
         browse_layout.addWidget(self.custom, 0, qt2.Qt.AlignmentFlag.AlignCenter)
         browse_layout.addStretch(1)
+        browse_layout.addWidget(self.show_surah_number_cb, 0, qt2.Qt.AlignmentFlag.AlignCenter)
+        browse_layout.addStretch(1)
         browse_layout.addLayout(view_mode_layout)
-        browse_layout.addSpacing(85)
+        browse_layout.addSpacing(30)
         layout.addLayout(browse_layout)
         self.serch = qt.QLabel("البحث عن محتوى فئة")
         self.serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -187,44 +196,63 @@ class Quran(qt.QWidget):
         elif index == 4:
             result = functions.quranJsonControl.getHizb()
         selected_item_text = self.info.currentItem().text()
+        correct_index = self.info.currentRow()
+        if index == 0:
+            surah_keys = list(result.keys())
+            if correct_index < len(surah_keys):
+                raw_key = surah_keys[correct_index]
+                gui.QuranViewer(self, result[raw_key][1], index, selected_item_text, enableNextPreviouseButtons=True, typeResult=result, CurrentIndex=correct_index).exec()
+                return
         try:
             correct_index = list(result.keys()).index(selected_item_text)
         except ValueError:
             correct_index = self.info.currentRow()
         gui.QuranViewer(self, result[selected_item_text][1], index, selected_item_text, enableNextPreviouseButtons=True, typeResult=result, CurrentIndex=correct_index).exec()
 
+    def on_surah_number_toggled(self, state=None):
+        is_checked = self.show_surah_number_cb.isChecked()
+        settings_handler.set("quran", "show_surah_number", "True" if is_checked else "False")
+        self.onTypeChanged(self.type.currentIndex())
+
     def onTypeChanged(self, index: int):
         self.info.clear()
         self.infoData = []
         if index == 0:
-            self.infoData = list(functions.quranJsonControl.getSurahs().keys())
+            self.show_surah_number_cb.setVisible(True)
+            surah_keys = list(functions.quranJsonControl.getSurahs().keys())
+            if not self.show_surah_number_cb.isChecked():
+                self.infoData = [re.sub(r'^\d+[\s\.\-]*', '', key) for key in surah_keys]
+            else:
+                self.infoData = surah_keys
             self.search_bar.setPlaceholderText("البحث عن سورة")
             self.search_bar.setAccessibleName("البحث عن سورة")
             self.info1.setText("لخيارات السورة المحددة، نستخدم مفتاح التطبيقات أو click الأيمن")
-        elif index == 1:
-            for i in range(1, 605):
-                self.infoData.append(str(i))
-            self.search_bar.setPlaceholderText("البحث عن صفحة")
-            self.search_bar.setAccessibleName("البحث عن صفحة")
-            self.info1.setText("لخيارات الصفحة المحددة، نستخدم مفتاح التطبيقات أو click الأيمن")
-        elif index == 2:
-            for i in range(1, 31):
-                self.infoData.append(str(i))
-            self.search_bar.setPlaceholderText("البحث عن جزء")
-            self.search_bar.setAccessibleName("البحث عن جزء")
-            self.info1.setText("لخيارات الجزء المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
-        elif index == 3:
-            for i in range(1, 241):
-                self.infoData.append(str(i))
-            self.search_bar.setPlaceholderText("البحث عن ربع")
-            self.search_bar.setAccessibleName("البحث عن ربع")
-            self.info1.setText("لخيارات الربع المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
-        elif index == 4:
-            for i in range(1, 61):
-                self.infoData.append(str(i))
-            self.search_bar.setPlaceholderText("البحث عن حزب")
-            self.search_bar.setAccessibleName("البحث عن حزب")
-            self.info1.setText("لخيارات الحزب المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
+        else:
+            self.show_surah_number_cb.setVisible(False)
+            if index == 1:
+                for i in range(1, 605):
+                    self.infoData.append(str(i))
+                self.search_bar.setPlaceholderText("البحث عن صفحة")
+                self.search_bar.setAccessibleName("البحث عن صفحة")
+                self.info1.setText("لخيارات الصفحة المحددة، نستخدم مفتاح التطبيقات أو click الأيمن")
+            elif index == 2:
+                for i in range(1, 31):
+                    self.infoData.append(str(i))
+                self.search_bar.setPlaceholderText("البحث عن جزء")
+                self.search_bar.setAccessibleName("البحث عن جزء")
+                self.info1.setText("لخيارات الجزء المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
+            elif index == 3:
+                for i in range(1, 241):
+                    self.infoData.append(str(i))
+                self.search_bar.setPlaceholderText("البحث عن ربع")
+                self.search_bar.setAccessibleName("البحث عن ربع")
+                self.info1.setText("لخيارات الربع المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
+            elif index == 4:
+                for i in range(1, 61):
+                    self.infoData.append(str(i))
+                self.search_bar.setPlaceholderText("البحث عن حزب")
+                self.search_bar.setAccessibleName("البحث عن حزب")
+                self.info1.setText("لخيارات الحزب المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.info.addItems(self.infoData)
 
     def on_view_mode_changed(self, index):
@@ -248,6 +276,10 @@ class Quran(qt.QWidget):
         index = self.type.currentIndex()
         if index == 0:
             result = functions.quranJsonControl.getSurahs()
+            item_text = self.info.currentItem().text()
+            for key in result.keys():
+                if key == item_text or re.sub(r'^\d+[\s\.\-]*', '', key) == re.sub(r'^\d+[\s\.\-]*', '', item_text):
+                    return result[key][1]
         elif index == 1:
             result = functions.quranJsonControl.getPage()
         elif index == 2:
@@ -282,8 +314,13 @@ class Quran(qt.QWidget):
         iarabAction.triggered.connect(self.onIarabActionTriggered)
         current_item = self.info.currentItem()
         if current_item:
-            cat_map = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
-            info_action_text = f"معلومات {cat_map.get(self.type.currentIndex(), '')}"
+            category_idx = self.type.currentIndex()
+            if category_idx == 0:
+                clean_name = re.sub(r'^\d+[\s\.\-]*', '', current_item.text())
+                info_action_text = f"معلومات سورة: {clean_name}"
+            else:
+                cat_map = {1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
+                info_action_text = f"معلومات {cat_map.get(category_idx, '')}"
             infoAction = qt1.QAction(info_action_text, self)
             infoAction.setShortcut("ctrl+f")
             infoAction.triggered.connect(self.onCategoryInfoTriggered)

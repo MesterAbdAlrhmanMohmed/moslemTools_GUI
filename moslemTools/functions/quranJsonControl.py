@@ -24,7 +24,7 @@ def getSurahs():
         ayahs={}
         for ayah in value["ayahs"]:
             ayahs["{} ({})".format(ayah["text"],str(ayah["numberInSurah"]))]=ayah["numberInSurah"]
-        surahs[str(value["number"])+value["name"]]=[key,"\n".join(ayahs),key]
+        surahs[str(value["number"])+". "+value["name"]]=[key,"\n".join(ayahs),key]
     return surahs
 
 
@@ -120,6 +120,12 @@ def getAyah(text, category=None, type=None):
                     for ayah in _data[s_key]["ayahs"]:
                         if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
                             return ayah["numberInSurah"], s_key, [ayah["juz"], _data[s_key]["name"], ayah["hizbQuarter"], ayah["sajda"], ayah.get("asbab_alnozole", False)], ayah["page"], ayah["number"]
+            clean_cat = re.sub(r'^\d+[\s\.\-]*', '', str(category)).strip()
+            for s_key, surah_data in _data.items():
+                if surah_data["name"] == clean_cat:
+                    for ayah in surah_data["ayahs"]:
+                        if "{} ({})".format(ayah["text"], str(ayah["numberInSurah"])) == text:
+                            return ayah["numberInSurah"], s_key, [ayah["juz"], surah_data["name"], ayah["hizbQuarter"], ayah["sajda"], ayah.get("asbab_alnozole", False)], ayah["page"], ayah["number"]
         else:
             cat_str = str(category)
             for key, value in _data.items():

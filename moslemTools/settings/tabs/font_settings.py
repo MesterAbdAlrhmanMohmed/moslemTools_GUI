@@ -57,8 +57,7 @@ class FontSettings(qt.QWidget):
         self.font_size_spinbox.setRange(1, 100)
         self.font_size_spinbox.setValue(int(settings_handler.get("font", "size") or 12))
         self.font_size_spinbox.setMinimumWidth(80)
-        self.font_size_spinbox.setAccessibleName("حجم النص")
-        self.font_size_spinbox.setAccessibleDescription("للتحكم في حجم النص من أي مكان: نستخدم الاختصارات control plus equals للتكبير و control plus dash للتصغير")
+        self.font_size_spinbox.setAccessibleName("حجم النص")        
         self.font_size_spinbox.valueChanged.connect(self.on_font_size_changed)
 
         top_controls_layout.addWidget(self.bold_checkbox)

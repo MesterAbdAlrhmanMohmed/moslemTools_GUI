@@ -1121,6 +1121,9 @@ class QuranViewer(qt.QDialog):
         tashkeel_action_text = ""
         save_audio_category_text = ""
         merge_audio_category_text = ""
+        tafseer_to_end_text = ""
+        translation_to_end_text = ""
+        iarab_to_end_text = ""
         if self.is_search_view:
             category_menu_title = "خيارات نتائج البحث"
             copy_action_text = "نسخ نتائج البحث"
@@ -1132,27 +1135,43 @@ class QuranViewer(qt.QDialog):
             copy_action_text = "نسخ الآيات"
             save_action_text = "حفظ الآيات كملف نصي"
             print_action_text = "طباعة الآيات"
-            play_to_end_text = "التشغيل من الآية المحددة إلى النهاية"
+            play_to_end_text = "التشغيل من الآية المحددة إلى نهاية العرض المخصص"
             save_audio_category_text = "حفظ جميع الآيات في الجهاز"
             merge_audio_category_text = "دمج جميع الآيات في ملف واحد"
+            tafseer_to_end_text = "التفسير من الآية المحددة إلى نهاية العرض المخصص"
+            translation_to_end_text = "الترجمة من الآية المحددة إلى نهاية العرض المخصص"
+            iarab_to_end_text = "الإعراب من الآية المحددة إلى نهاية العرض المخصص"
         else:
             cat_map_al = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
             cat_map_no_al = {0: "سورة", 1: "صفحة", 2: "جزء", 3: "ربع", 4: "حزب"}
             category_name_al = cat_map_al.get(self.type, "الفئة")
             category_name_no_al = cat_map_no_al.get(self.type, "فئة")
-            cat_name_dyn = ("سورة" if self.type == 0 else "صفحة") if self.type in [0, 1] else category_name_al
+            if self.type == 0:
+                surah_name_clean = re.sub(r'^\d+[\s\.\-]*', '', str(self.category))
+                cat_target_label = f"سورة {surah_name_clean}"
+                info_action_text = f"معلومات سورة: {surah_name_clean}"
+                category_menu_title = f"خيارات سورة {surah_name_clean}"
+                tafseer_action_text = f"تفسير سورة {surah_name_clean}"
+                iarab_action_text = f"إعراب سورة {surah_name_clean}"
+                translation_action_text = f"ترجمة سورة {surah_name_clean}"
+            else:
+                cat_name_dyn = "صفحة" if self.type == 1 else category_name_al
+                cat_target_label = f"{cat_name_dyn} {self.category}"
+                info_action_text = f"معلومات {category_name_al}: {self.category}"
+                category_menu_title = f"خيارات {category_name_al}"
+                tafseer_action_text = f"تفسير {category_name_al}"
+                iarab_action_text = f"إعراب {category_name_al}"
+                translation_action_text = f"ترجمة {category_name_al}"
             go_to_action_text = f"الذهاب إلى {category_name_no_al}"
-            category_menu_title = f"خيارات {category_name_al}"
             copy_action_text = f"نسخ {category_name_al}"
             save_action_text = f"حفظ {category_name_al} كملف نصي"
             print_action_text = f"طباعة {category_name_al}"
-            info_action_text = f"معلومات {category_name_al}: {self.category}"
-            play_to_end_text = f"التشغيل من الآية المحددة إلى نهاية {category_name_al}"
-            tafseer_action_text = f"تفسير {category_name_al}"
-            iarab_action_text = f"إعراب {category_name_al}"
-            translation_action_text = f"ترجمة {category_name_al}"
-            save_audio_category_text = f"حفظ آيات {cat_name_dyn} {self.category} في الجهاز"
-            merge_audio_category_text = f"دمج آيات {cat_name_dyn} {self.category} في ملف واحد"
+            play_to_end_text = f"التشغيل من الآية المحددة إلى نهاية {cat_target_label}"
+            tafseer_to_end_text = f"التفسير من الآية المحددة إلى نهاية {cat_target_label}"
+            translation_to_end_text = f"الترجمة من الآية المحددة إلى نهاية {cat_target_label}"
+            iarab_to_end_text = f"الإعراب من الآية المحددة إلى نهاية {cat_target_label}"
+            save_audio_category_text = f"حفظ آيات {cat_target_label} في الجهاز"
+            merge_audio_category_text = f"دمج آيات {cat_target_label} في ملف واحد"
             if self.remove_tashkeel:
                 tashkeel_action_text = f"إظهار التشكيل ل{category_name_al}"
             else:
@@ -1187,64 +1206,88 @@ class QuranViewer(qt.QDialog):
             currentSurahInfoAction.setShortcut("ctrl+alt+f")
             currentSurahInfoAction.triggered.connect(self.show_current_surah_info)
             surahOption.addAction(currentSurahInfoAction)
+        play_menu = surahOption.addMenu("التشغيل")
+        play_menu.setFont(font)
         playSurahToEnd = qt1.QAction(play_to_end_text, self)
         playSurahToEnd.setShortcut("ctrl+shift+p")
-        surahOption.addAction(playSurahToEnd)
+        play_menu.addAction(playSurahToEnd)
         playSurahToEnd.triggered.connect(self.onPlayToEnd)
         if not self.is_search_view:
+            playFromVersToVersAction = qt1.QAction("التشغيل من آية إلى آية", self)
+            playFromVersToVersAction.setShortcut("ctrl+alt+p")
+            play_menu.addAction(playFromVersToVersAction)
+            playFromVersToVersAction.triggered.connect(self.playFromVersToVers)
+            tafseer_menu = surahOption.addMenu("التفسير")
+            tafseer_menu.setFont(font)
             if self.type != 5:
                 tafaseerSurahAction = qt1.QAction(tafseer_action_text, self)
                 tafaseerSurahAction.setShortcut("ctrl+shift+t")
-                surahOption.addAction(tafaseerSurahAction)
+                tafseer_menu.addAction(tafaseerSurahAction)
                 tafaseerSurahAction.triggered.connect(self.getTafaseerForSurah)
-                IArabSurah = qt1.QAction(iarab_action_text, self)
-                IArabSurah.setShortcut("ctrl+shift+i")
-                surahOption.addAction(IArabSurah)
-                IArabSurah.triggered.connect(self.getIArabForSurah)
-                translationSurahAction = qt1.QAction(translation_action_text, self)
-                translationSurahAction.setShortcut("ctrl+shift+l")
-                surahOption.addAction(translationSurahAction)
-                translationSurahAction.triggered.connect(self.getTranslationForSurah)
-            surahOption.addSeparator()
-            playFromVersToVersAction = qt1.QAction("التشغيل من آية إلى آية", self)
-            playFromVersToVersAction.setShortcut("ctrl+alt+p")
-            surahOption.addAction(playFromVersToVersAction)
-            playFromVersToVersAction.triggered.connect(self.playFromVersToVers)
+            if tafseer_to_end_text:
+                tafseerFromAyahToEndAction = qt1.QAction(tafseer_to_end_text, self)
+                tafseer_menu.addAction(tafseerFromAyahToEndAction)
+                tafseerFromAyahToEndAction.triggered.connect(self.getTafaseerFromAyahToEnd)
             tafseerFromVersToVersAction = qt1.QAction("التفسير من آية إلى آية", self)
             tafseerFromVersToVersAction.setShortcut("ctrl+alt+t")
-            surahOption.addAction(tafseerFromVersToVersAction)
+            tafseer_menu.addAction(tafseerFromVersToVersAction)
             tafseerFromVersToVersAction.triggered.connect(self.TafseerFromVersToVers)
+            translation_menu = surahOption.addMenu("الترجمة")
+            translation_menu.setFont(font)
+            if self.type != 5:
+                translationSurahAction = qt1.QAction(translation_action_text, self)
+                translationSurahAction.setShortcut("ctrl+shift+l")
+                translation_menu.addAction(translationSurahAction)
+                translationSurahAction.triggered.connect(self.getTranslationForSurah)
+            if translation_to_end_text:
+                translationFromAyahToEndAction = qt1.QAction(translation_to_end_text, self)
+                translation_menu.addAction(translationFromAyahToEndAction)
+                translationFromAyahToEndAction.triggered.connect(self.getTranslationFromAyahToEnd)
             translateFromVersToVersAction = qt1.QAction("الترجمة من آية إلى آية", self)
             translateFromVersToVersAction.setShortcut("ctrl+alt+l")
-            surahOption.addAction(translateFromVersToVersAction)
+            translation_menu.addAction(translateFromVersToVersAction)
             translateFromVersToVersAction.triggered.connect(self.translateFromVersToVers)
+            iarab_menu = surahOption.addMenu("الإعراب")
+            iarab_menu.setFont(font)
+            if self.type != 5:
+                IArabSurah = qt1.QAction(iarab_action_text, self)
+                IArabSurah.setShortcut("ctrl+shift+i")
+                iarab_menu.addAction(IArabSurah)
+                IArabSurah.triggered.connect(self.getIArabForSurah)
+            if iarab_to_end_text:
+                iarabFromAyahToEndAction = qt1.QAction(iarab_to_end_text, self)
+                iarab_menu.addAction(iarabFromAyahToEndAction)
+                iarabFromAyahToEndAction.triggered.connect(self.getIArabFromAyahToEnd)
             IArabFromVersToVersAction = qt1.QAction("الإعراب من آية إلى آية", self)
             IArabFromVersToVersAction.setShortcut("ctrl+alt+i")
-            surahOption.addAction(IArabFromVersToVersAction)
+            iarab_menu.addAction(IArabFromVersToVersAction)
             IArabFromVersToVersAction.triggered.connect(self.IArabFromVersToVers)
+            merge_menu = surahOption.addMenu("الدمج")
+            merge_menu.setFont(font)
+            if merge_audio_category_text:
+                mergeAllAction = qt1.QAction(merge_audio_category_text, self)
+                mergeAllAction.setShortcut("ctrl+shift+d")
+                merge_menu.addAction(mergeAllAction)
+                mergeAllAction.triggered.connect(self.mergeCategoryAyahs)
+            mergeRangeAction = qt1.QAction("الدمج من آية إلى آية", self)
+            mergeRangeAction.setShortcut("ctrl+alt+d")
+            merge_menu.addAction(mergeRangeAction)
+            mergeRangeAction.triggered.connect(self.mergeAyahs)
+            save_menu = surahOption.addMenu("الحفظ")
+            save_menu.setFont(font)
+            if save_audio_category_text:
+                saveAudioCategoryAction = qt1.QAction(save_audio_category_text, self)
+                saveAudioCategoryAction.setShortcut("ctrl+shift+h")
+                save_menu.addAction(saveAudioCategoryAction)
+                saveAudioCategoryAction.triggered.connect(self.saveCategoryAyahs)
+            saveAudioRangeAction = qt1.QAction("حفظ من آية إلى آية في الجهاز", self)
+            saveAudioRangeAction.setShortcut("ctrl+alt+h")
+            save_menu.addAction(saveAudioRangeAction)
+            saveAudioRangeAction.triggered.connect(self.saveFromVersToVers)
             copyFromVersToVersAction = qt1.QAction("نسخ من آية إلى آية", self)
             copyFromVersToVersAction.setShortcut("ctrl+alt+c")
             surahOption.addAction(copyFromVersToVersAction)
             copyFromVersToVersAction.triggered.connect(self.copyFromVersToVers)
-            mergeRangeAction = qt1.QAction("الدمج من آية إلى آية", self)
-            mergeRangeAction.setShortcut("ctrl+alt+d")
-            surahOption.addAction(mergeRangeAction)
-            mergeRangeAction.triggered.connect(self.mergeAyahs)
-            saveAudioRangeAction = qt1.QAction("حفظ من آية إلى آية في الجهاز", self)
-            saveAudioRangeAction.setShortcut("ctrl+alt+h")
-            surahOption.addAction(saveAudioRangeAction)
-            saveAudioRangeAction.triggered.connect(self.saveFromVersToVers)
-            surahOption.addSeparator()
-            if merge_audio_category_text:
-                mergeAllAction = qt1.QAction(merge_audio_category_text, self)
-                mergeAllAction.setShortcut("ctrl+shift+d")
-                surahOption.addAction(mergeAllAction)
-                mergeAllAction.triggered.connect(self.mergeCategoryAyahs)
-            if save_audio_category_text:
-                saveAudioCategoryAction = qt1.QAction(save_audio_category_text, self)
-                saveAudioCategoryAction.setShortcut("ctrl+shift+h")
-                surahOption.addAction(saveAudioCategoryAction)
-                saveAudioCategoryAction.triggered.connect(self.saveCategoryAyahs)
             if tashkeel_action_text:
                 removeTashkeelCategoryAction = qt1.QAction(tashkeel_action_text, self)
                 removeTashkeelCategoryAction.setShortcut("ctrl+shift+x")
@@ -1620,6 +1663,22 @@ class QuranViewer(qt.QDialog):
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 
+    def getTafaseerFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        current_index = self.getCurrentAyah()
+        if current_index < 0 or current_index >= len(ayahList):
+            current_index = 0
+        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[current_index], self.category, self.type)
+        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        TafaseerViewer(self, AyahNumber1, AyahNumber2).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
     def show_current_surah_info(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1922,6 +1981,23 @@ class QuranViewer(qt.QDialog):
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 
+    def getIArabFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        current_index = self.getCurrentAyah()
+        if current_index < 0 or current_index >= len(ayahList):
+            current_index = 0
+        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[current_index], self.category, self.type)
+        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
+        result = functions.iarab.getIarab(AyahNumber1, AyahNumber2)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "إعراب", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
     def getCurrentAyahTanzel(self):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
@@ -1985,6 +2061,22 @@ class QuranViewer(qt.QDialog):
         Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
         self.text.setUpdatesEnabled(False)
         translationViewer(self,AyahNumber1,AyahNumber2).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getTranslationFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        current_index = self.getCurrentAyah()
+        if current_index < 0 or current_index >= len(ayahList):
+            current_index = 0
+        Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[current_index], self.category, self.type)
+        Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        translationViewer(self, AyahNumber1, AyahNumber2).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 
