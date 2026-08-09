@@ -9,6 +9,7 @@ class QNavigableLabel(QLineEdit):
         self.setFrame(False)
         self.setAcceptDrops(False)
         self.setCursorPosition(0)
+        self.setCursorMoveStyle(Qt.CursorMoveStyle.VisualMoveStyle)
 
         self.setStyleSheet("""
             QLineEdit {
