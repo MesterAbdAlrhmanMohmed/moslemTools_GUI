@@ -284,6 +284,17 @@ class QuranViewer(qt.QDialog):
         qt1.QShortcut("ctrl+p", self).activated.connect(self.print_text)
         qt1.QShortcut("ctrl+t", self).activated.connect(self.getCurentAyahTafseer)
         qt1.QShortcut("ctrl+i", self).activated.connect(self.getCurentAyahIArab)
+        qt1.QShortcut("ctrl+u", self).activated.connect(self.getCurentAyahMeanings)
+        qt1.QShortcut("ctrl+k", self).activated.connect(self.getCurentAyahSarf)
+        qt1.QShortcut("ctrl+shift+alt+i", self).activated.connect(self.getDetailedIArabForSurah)
+        qt1.QShortcut("shift+alt+e", self).activated.connect(self.getDetailedIArabFromAyahToEnd)
+        qt1.QShortcut("ctrl+alt+e", self).activated.connect(self.DetailedIArabFromVersToVers)
+        qt1.QShortcut("ctrl+shift+u", self).activated.connect(self.getMeaningsForSurah)
+        qt1.QShortcut("shift+alt+u", self).activated.connect(self.getMeaningsFromAyahToEnd)
+        qt1.QShortcut("ctrl+alt+u", self).activated.connect(self.MeaningsFromVersToVers)
+        qt1.QShortcut("ctrl+shift+k", self).activated.connect(self.getSarfForSurah)
+        qt1.QShortcut("shift+alt+k", self).activated.connect(self.getSarfFromAyahToEnd)
+        qt1.QShortcut("ctrl+shift+alt+k", self).activated.connect(self.SarfFromVersToVers)
         qt1.QShortcut("ctrl+r", self).activated.connect(self.getCurrentAyahTanzel)
         qt1.QShortcut("ctrl+l", self).activated.connect(self.getCurentAyahTranslation)
         qt1.QShortcut("ctrl+f", self).activated.connect(self.getAyahInfo)
@@ -1100,10 +1111,22 @@ class QuranViewer(qt.QDialog):
         tafaserCurrentAyahAction.setShortcut("ctrl+t")
         ayahOptions.addAction(tafaserCurrentAyahAction)
         tafaserCurrentAyahAction.triggered.connect(self.getCurentAyahTafseer)
-        IArabCurrentAyah = qt1.QAction("إعراب الآية", self)
-        IArabCurrentAyah.setShortcut("ctrl+i")
-        ayahOptions.addAction(IArabCurrentAyah)
-        IArabCurrentAyah.triggered.connect(self.getCurentAyahIArab)
+        iarabCurrentMenu = ayahOptions.addMenu("إعراب الآية: Ctrl+I")
+        iarabCurrentMenu.setFont(font)
+        simplifiedCurrentAction = qt1.QAction("إعراب مبسط", self)
+        simplifiedCurrentAction.triggered.connect(self.getCurentAyahSimplifiedIArab)
+        iarabCurrentMenu.addAction(simplifiedCurrentAction)
+        detailedCurrentAction = qt1.QAction("إعراب مفصل", self)
+        detailedCurrentAction.triggered.connect(self.getCurentAyahDetailedIArab)
+        iarabCurrentMenu.addAction(detailedCurrentAction)
+        meaningsCurrentAction = qt1.QAction("معاني كلمات الآية", self)
+        meaningsCurrentAction.setShortcut("ctrl+u")
+        ayahOptions.addAction(meaningsCurrentAction)
+        meaningsCurrentAction.triggered.connect(self.getCurentAyahMeanings)
+        sarfCurrentAction = qt1.QAction("صرف كلمات الآية", self)
+        sarfCurrentAction.setShortcut("ctrl+k")
+        ayahOptions.addAction(sarfCurrentAction)
+        sarfCurrentAction.triggered.connect(self.getCurentAyahSarf)
         tanzelCurrentAyahAction = qt1.QAction("أسباب نزول الآية", self)
         tanzelCurrentAyahAction.setShortcut("ctrl+r")
         ayahOptions.addAction(tanzelCurrentAyahAction)
@@ -1314,20 +1337,67 @@ class QuranViewer(qt.QDialog):
             translateFromVersToVersAction.triggered.connect(self.translateFromVersToVers)
             iarab_menu = surahOption.addMenu("الإعراب")
             iarab_menu.setFont(font)
+            simplified_iarab_menu = iarab_menu.addMenu("إعراب مبسط")
+            simplified_iarab_menu.setFont(font)
             if self.type != 5:
                 IArabSurah = qt1.QAction(iarab_action_text, self)
                 IArabSurah.setShortcut("ctrl+shift+i")
-                iarab_menu.addAction(IArabSurah)
+                simplified_iarab_menu.addAction(IArabSurah)
                 IArabSurah.triggered.connect(self.getIArabForSurah)
             if iarab_to_end_text:
                 iarabFromAyahToEndAction = qt1.QAction(iarab_to_end_text, self)
                 iarabFromAyahToEndAction.setShortcut("shift+alt+i")
-                iarab_menu.addAction(iarabFromAyahToEndAction)
+                simplified_iarab_menu.addAction(iarabFromAyahToEndAction)
                 iarabFromAyahToEndAction.triggered.connect(self.getIArabFromAyahToEnd)
-            IArabFromVersToVersAction = qt1.QAction("الإعراب من آية إلى آية", self)
-            IArabFromVersToVersAction.setShortcut("ctrl+alt+i")
-            iarab_menu.addAction(IArabFromVersToVersAction)
-            IArabFromVersToVersAction.triggered.connect(self.IArabFromVersToVers)
+            IArabFromVersToVersAction = qt1.QAction("الإعراب المبسط من آية إلى آية", self)
+            simplified_iarab_menu.addAction(IArabFromVersToVersAction)
+            IArabFromVersToVersAction.triggered.connect(self.SimplifiedIArabFromVersToVers)
+            detailed_iarab_menu = iarab_menu.addMenu("إعراب مفصل")
+            detailed_iarab_menu.setFont(font)
+            if self.type != 5:
+                DetailedIArabSurah = qt1.QAction(f"إعراب مفصل لـ {cat_target_label}", self)
+                DetailedIArabSurah.setShortcut("ctrl+shift+alt+i")
+                detailed_iarab_menu.addAction(DetailedIArabSurah)
+                DetailedIArabSurah.triggered.connect(self.getDetailedIArabForSurah)
+            if iarab_to_end_text:
+                detailedIArabFromAyahToEndAction = qt1.QAction(f"الإعراب المفصل من الآية المحددة إلى نهاية {cat_target_label}", self)
+                detailedIArabFromAyahToEndAction.setShortcut("shift+alt+e")
+                detailed_iarab_menu.addAction(detailedIArabFromAyahToEndAction)
+                detailedIArabFromAyahToEndAction.triggered.connect(self.getDetailedIArabFromAyahToEnd)
+            DetailedIArabFromVersToVersAction = qt1.QAction("الإعراب المفصل من آية إلى آية", self)
+            DetailedIArabFromVersToVersAction.setShortcut("ctrl+alt+e")
+            detailed_iarab_menu.addAction(DetailedIArabFromVersToVersAction)
+            DetailedIArabFromVersToVersAction.triggered.connect(self.DetailedIArabFromVersToVers)
+            meanings_menu = surahOption.addMenu("معاني كلمات الآيات")
+            meanings_menu.setFont(font)
+            if self.type != 5:
+                meaningsSurahAction = qt1.QAction(f"معاني كلمات آيات {cat_target_label}", self)
+                meaningsSurahAction.setShortcut("ctrl+shift+u")
+                meanings_menu.addAction(meaningsSurahAction)
+                meaningsSurahAction.triggered.connect(self.getMeaningsForSurah)
+            meaningsFromAyahToEndAction = qt1.QAction(f"معاني الكلمات من الآية المحددة إلى نهاية {cat_target_label}", self)
+            meaningsFromAyahToEndAction.setShortcut("shift+alt+u")
+            meanings_menu.addAction(meaningsFromAyahToEndAction)
+            meaningsFromAyahToEndAction.triggered.connect(self.getMeaningsFromAyahToEnd)
+            meaningsFromVersToVersAction = qt1.QAction("معاني الكلمات من آية إلى آية", self)
+            meaningsFromVersToVersAction.setShortcut("ctrl+alt+u")
+            meanings_menu.addAction(meaningsFromVersToVersAction)
+            meaningsFromVersToVersAction.triggered.connect(self.MeaningsFromVersToVers)
+            sarf_menu = surahOption.addMenu("صرف كلمات الآيات")
+            sarf_menu.setFont(font)
+            if self.type != 5:
+                sarfSurahAction = qt1.QAction(f"صرف كلمات آيات {cat_target_label}", self)
+                sarfSurahAction.setShortcut("ctrl+shift+k")
+                sarf_menu.addAction(sarfSurahAction)
+                sarfSurahAction.triggered.connect(self.getSarfForSurah)
+            sarfFromAyahToEndAction = qt1.QAction(f"صرف الكلمات من الآية المحددة إلى نهاية {cat_target_label}", self)
+            sarfFromAyahToEndAction.setShortcut("shift+alt+k")
+            sarf_menu.addAction(sarfFromAyahToEndAction)
+            sarfFromAyahToEndAction.triggered.connect(self.getSarfFromAyahToEnd)
+            sarfFromVersToVersAction = qt1.QAction("صرف الكلمات من آية إلى آية", self)
+            sarfFromVersToVersAction.setShortcut("ctrl+shift+alt+k")
+            sarf_menu.addAction(sarfFromVersToVersAction)
+            sarfFromVersToVersAction.triggered.connect(self.SarfFromVersToVers)
             merge_menu = surahOption.addMenu("الدمج")
             merge_menu.setFont(font)
             if merge_audio_category_text:
@@ -2030,6 +2100,22 @@ class QuranViewer(qt.QDialog):
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
             return
+        menu = qt.QMenu("اختر نوع الإعراب", self)
+        font = qt1.QFont()
+        font.setBold(True)
+        menu.setFont(font)
+        simplifiedAction = qt1.QAction("إعراب مبسط", self)
+        simplifiedAction.triggered.connect(self.getCurentAyahSimplifiedIArab)
+        menu.addAction(simplifiedAction)
+        detailedAction = qt1.QAction("إعراب مفصل", self)
+        detailedAction.triggered.connect(self.getCurentAyahDetailedIArab)
+        menu.addAction(detailedAction)
+        menu.exec(self.mapToGlobal(self.cursor().pos()))
+
+    def getCurentAyahSimplifiedIArab(self):
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
         self.pause_for_action()
         current_ayah_index = self.getCurrentAyah()
         current_line = self._get_line_text_for_action(current_ayah_index)
@@ -2039,7 +2125,58 @@ class QuranViewer(qt.QDialog):
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
         result=functions.iarab.getIarab(AyahNumber,AyahNumber)
         self.text.setUpdatesEnabled(False)
-        guiTools.TextViewer(self,"إعراب",result).exec()
+        guiTools.TextViewer(self,"إعراب مبسط",result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getCurentAyahDetailedIArab(self):
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
+        self.pause_for_action()
+        current_ayah_index = self.getCurrentAyah()
+        current_line = self._get_line_text_for_action(current_ayah_index)
+        if not current_line:
+            self.resume_after_action()
+            return
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
+        result=functions.quran_details.get_single_ayah_detailed_irab(surah, Ayah)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self,"إعراب مفصل",result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getCurentAyahMeanings(self):
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
+        self.pause_for_action()
+        current_ayah_index = self.getCurrentAyah()
+        current_line = self._get_line_text_for_action(current_ayah_index)
+        if not current_line:
+            self.resume_after_action()
+            return
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
+        result=functions.quran_details.get_single_ayah_meanings(surah, Ayah, ayah_text=current_line)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self,"معاني كلمات الآية",result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getCurentAyahSarf(self):
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
+        self.pause_for_action()
+        current_ayah_index = self.getCurrentAyah()
+        current_line = self._get_line_text_for_action(current_ayah_index)
+        if not current_line:
+            self.resume_after_action()
+            return
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
+        result=functions.quran_details.get_single_ayah_sarf(surah, Ayah, ayah_text=current_line)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self,"صرف كلمات الآية",result).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 
@@ -2053,7 +2190,7 @@ class QuranViewer(qt.QDialog):
         Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
         result=functions.iarab.getIarab(AyahNumber1,AyahNumber2)
         self.text.setUpdatesEnabled(False)
-        guiTools.TextViewer(self,"إعراب",result).exec()
+        guiTools.TextViewer(self,"إعراب مبسط",result).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 
@@ -2070,7 +2207,7 @@ class QuranViewer(qt.QDialog):
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], self.category, self.type)
         result = functions.iarab.getIarab(AyahNumber1, AyahNumber2)
         self.text.setUpdatesEnabled(False)
-        guiTools.TextViewer(self, "إعراب", result).exec()
+        guiTools.TextViewer(self, "إعراب مبسط", result).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 
@@ -2231,17 +2368,168 @@ class QuranViewer(qt.QDialog):
         if self.is_search_view:
             self._handle_search_view_restriction()
             return
+        menu = qt.QMenu("اختر نوع الإعراب (من آية إلى آية)", self)
+        font = qt1.QFont()
+        font.setBold(True)
+        menu.setFont(font)
+        simplifiedAction = qt1.QAction("إعراب مبسط", self)
+        simplifiedAction.triggered.connect(self.SimplifiedIArabFromVersToVers)
+        menu.addAction(simplifiedAction)
+        detailedAction = qt1.QAction("إعراب مفصل", self)
+        detailedAction.triggered.connect(self.DetailedIArabFromVersToVers)
+        menu.addAction(detailedAction)
+        menu.exec(self.mapToGlobal(self.cursor().pos()))
+
+    def SimplifiedIArabFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
         self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","الإعراب من",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
+        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","الإعراب المبسط من",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","الإعراب إلى",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
+            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","الإعراب المبسط إلى",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
             if ok:
                 ayahList=self.original_quran_text.split("\n")
                 Ayah,surah,juz,page,AyahNumber1=functions.quranJsonControl.getAyah(ayahList[FromVers-1], self.category, self.type)
                 Ayah,surah,juz,page,AyahNumber2=functions.quranJsonControl.getAyah(ayahList[toVers-1], self.category, self.type)
                 self.text.setUpdatesEnabled(False)
                 result=functions.iarab.getIarab(AyahNumber1,AyahNumber2)
-                guiTools.TextViewer(self,"إعراب",result).exec()
+                guiTools.TextViewer(self,"إعراب مبسط",result).exec()
+                self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getDetailedIArabForSurah(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        result = functions.quran_details.get_range_detailed_irab(ayahList, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "إعراب مفصل", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getDetailedIArabFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        current_index = self.getCurrentAyah()
+        if current_index < 0 or current_index >= len(ayahList):
+            current_index = 0
+        target_list = ayahList[current_index:]
+        result = functions.quran_details.get_range_detailed_irab(target_list, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "إعراب مفصل", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def DetailedIArabFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        FromVers, ok = guiTools.QInputDialog.getInt(self, "من الآية", "الإعراب المفصل من", self.getCurrentAyah() + 1, 1, len(ayahList))
+        if ok:
+            toVers, ok = guiTools.QInputDialog.getInt(self, "إلى الآية", "الإعراب المفصل إلى", len(ayahList), FromVers, len(ayahList))
+            if ok:
+                target_list = ayahList[FromVers - 1:toVers]
+                self.text.setUpdatesEnabled(False)
+                result = functions.quran_details.get_range_detailed_irab(target_list, self.category, self.type)
+                guiTools.TextViewer(self, "إعراب مفصل", result).exec()
+                self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getMeaningsForSurah(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        result = functions.quran_details.get_range_meanings(ayahList, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "معاني كلمات الآيات", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getMeaningsFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        current_index = self.getCurrentAyah()
+        if current_index < 0 or current_index >= len(ayahList):
+            current_index = 0
+        target_list = ayahList[current_index:]
+        result = functions.quran_details.get_range_meanings(target_list, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "معاني كلمات الآيات", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def MeaningsFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        FromVers, ok = guiTools.QInputDialog.getInt(self, "من الآية", "معاني الكلمات من", self.getCurrentAyah() + 1, 1, len(ayahList))
+        if ok:
+            toVers, ok = guiTools.QInputDialog.getInt(self, "إلى الآية", "معاني الكلمات إلى", len(ayahList), FromVers, len(ayahList))
+            if ok:
+                target_list = ayahList[FromVers - 1:toVers]
+                self.text.setUpdatesEnabled(False)
+                result = functions.quran_details.get_range_meanings(target_list, self.category, self.type)
+                guiTools.TextViewer(self, "معاني كلمات الآيات", result).exec()
+                self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getSarfForSurah(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        result = functions.quran_details.get_range_sarf(ayahList, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "صرف كلمات الآيات", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getSarfFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        current_index = self.getCurrentAyah()
+        if current_index < 0 or current_index >= len(ayahList):
+            current_index = 0
+        target_list = ayahList[current_index:]
+        result = functions.quran_details.get_range_sarf(target_list, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "صرف كلمات الآيات", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def SarfFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        FromVers, ok = guiTools.QInputDialog.getInt(self, "من الآية", "صرف الكلمات من", self.getCurrentAyah() + 1, 1, len(ayahList))
+        if ok:
+            toVers, ok = guiTools.QInputDialog.getInt(self, "إلى الآية", "صرف الكلمات إلى", len(ayahList), FromVers, len(ayahList))
+            if ok:
+                target_list = ayahList[FromVers - 1:toVers]
+                self.text.setUpdatesEnabled(False)
+                result = functions.quran_details.get_range_sarf(target_list, self.category, self.type)
+                guiTools.TextViewer(self, "صرف كلمات الآيات", result).exec()
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 

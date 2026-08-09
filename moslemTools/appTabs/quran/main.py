@@ -19,6 +19,8 @@ class Quran(qt.QWidget):
         qt1.QShortcut("ctrl+t",self).activated.connect(self.onTafseerActionTriggered)
         qt1.QShortcut("ctrl+l",self).activated.connect(self.onTranslationActionTriggered)
         qt1.QShortcut("ctrl+i",self).activated.connect(self.onIarabActionTriggered)
+        qt1.QShortcut("ctrl+u",self).activated.connect(self.onMeaningsActionTriggered)
+        qt1.QShortcut("ctrl+k",self).activated.connect(self.onSarfActionTriggered)
         qt1.QShortcut("ctrl+f",self).activated.connect(self.onCategoryInfoTriggered)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.onMergeActionTriggered)
         qt1.QShortcut("ctrl+h", self).activated.connect(self.onSaveActionTriggered)
@@ -47,8 +49,9 @@ class Quran(qt.QWidget):
         else:
             self.setStyleSheet("QWidget{color:#f0f0f0;}QLineEdit{background-color:#3e3e3e;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;padding:16px 18px;border-radius:6px;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#8B0000;color:white;border:2px solid #B22222;border-radius:5px;padding:6px 12px;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#A52A2A;border-color:#FF4D4D;}QListWidget{background-color:#000000;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QListWidget::item{padding:6px 10px;margin:3px;border-radius:5px;color:#f0f0f0;}QListWidget::item:hover{background-color:#333333;color:#f0f0f0;}QListWidget::item:selected{background-color:red;color:#ffffff;}QMenu{background-color:#3e3e3e;color:#f0f0f0;}QMenu::item:selected{background-color:#0078d7;}")
         browse_layout = qt.QHBoxLayout()
-        browse_layout.addSpacing(85)
-        layout1=qt.QVBoxLayout()
+        browse_layout.setContentsMargins(15, 0, 15, 0)
+        left_layout = qt.QHBoxLayout()
+        layout1 = qt.QVBoxLayout()
         self.by = qt.QLabel("التصفح ب")
         self.by.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout1.addWidget(self.by)
@@ -60,6 +63,9 @@ class Quran(qt.QWidget):
         self.type.addItems(["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"])
         self.type.currentIndexChanged.connect(self.onTypeChanged)
         layout1.addWidget(self.type)
+        left_layout.addLayout(layout1)
+        left_layout.addStretch(1)
+
         self.custom = guiTools.QPushButton("التصفح المخصص")
         self.custom.setMinimumHeight(52)
         self.custom.setMinimumWidth(160)
@@ -68,6 +74,9 @@ class Quran(qt.QWidget):
         self.custom.setShortcut("ctrl+c")
         self.custom.setAccessibleDescription("control plus c")
         self.custom.clicked.connect(self.onCostumBTNClicked)
+
+        right_layout = qt.QHBoxLayout()
+        right_layout.addStretch(1)
         font = qt1.QFont()
         font.setBold(True)
         self.show_surah_number_cb = qt.QCheckBox("عرض رقم السورة")
@@ -75,6 +84,9 @@ class Quran(qt.QWidget):
         show_surah_num_enabled = settings_handler.get("quran", "show_surah_number") != "False"
         self.show_surah_number_cb.setChecked(show_surah_num_enabled)
         self.show_surah_number_cb.stateChanged.connect(self.on_surah_number_toggled)
+        right_layout.addWidget(self.show_surah_number_cb, 0, qt2.Qt.AlignmentFlag.AlignCenter)
+        right_layout.addStretch(1)
+
         view_mode_layout = qt.QVBoxLayout()
         self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
         self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -89,15 +101,11 @@ class Quran(qt.QWidget):
         self.view_mode_combo.setCurrentIndex(1 if grid_enabled else 0)
         self.view_mode_combo.currentIndexChanged.connect(self.on_view_mode_changed)
         view_mode_layout.addWidget(self.view_mode_combo)
-        browse_layout.addSpacing(30)
-        browse_layout.addLayout(layout1)
-        browse_layout.addStretch(1)
+        right_layout.addLayout(view_mode_layout)
+
+        browse_layout.addLayout(left_layout, 1)
         browse_layout.addWidget(self.custom, 0, qt2.Qt.AlignmentFlag.AlignCenter)
-        browse_layout.addStretch(1)
-        browse_layout.addWidget(self.show_surah_number_cb, 0, qt2.Qt.AlignmentFlag.AlignCenter)
-        browse_layout.addStretch(1)
-        browse_layout.addLayout(view_mode_layout)
-        browse_layout.addSpacing(30)
+        browse_layout.addLayout(right_layout, 1)
         layout.addLayout(browse_layout)
         self.serch = qt.QLabel("البحث عن محتوى فئة")
         self.serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -311,10 +319,21 @@ class Quran(qt.QWidget):
         translationAction.setShortcut("ctrl+l")
         menu.addAction(translationAction)
         translationAction.triggered.connect(self.onTranslationActionTriggered)
-        iarabAction = qt1.QAction("إعراب", self)
-        iarabAction.setShortcut("ctrl+i")
-        menu.addAction(iarabAction)
-        iarabAction.triggered.connect(self.onIarabActionTriggered)
+        iarab_menu = menu.addMenu("إعراب: Ctrl+I")
+        simplifiedAction = qt1.QAction("إعراب مبسط", self)
+        simplifiedAction.triggered.connect(self.onSimplifiedIarabActionTriggered)
+        iarab_menu.addAction(simplifiedAction)
+        detailedAction = qt1.QAction("إعراب مفصل", self)
+        detailedAction.triggered.connect(self.onDetailedIarabActionTriggered)
+        iarab_menu.addAction(detailedAction)
+        meaningsAction = qt1.QAction("معاني كلمات الآيات", self)
+        meaningsAction.setShortcut("ctrl+u")
+        menu.addAction(meaningsAction)
+        meaningsAction.triggered.connect(self.onMeaningsActionTriggered)
+        sarfAction = qt1.QAction("صرف كلمات الآيات", self)
+        sarfAction.setShortcut("ctrl+k")
+        menu.addAction(sarfAction)
+        sarfAction.triggered.connect(self.onSarfActionTriggered)
         current_item = self.info.currentItem()
         if current_item:
             category_idx = self.type.currentIndex()
@@ -488,13 +507,52 @@ class Quran(qt.QWidget):
     def onIarabActionTriggered(self):
         if not self.info.currentItem():
             return
+        menu = qt.QMenu("اختر نوع الإعراب", self)
+        simplified_action = qt1.QAction("إعراب مبسط", self)
+        simplified_action.triggered.connect(self.onSimplifiedIarabActionTriggered)
+        menu.addAction(simplified_action)
+        detailed_action = qt1.QAction("إعراب مفصل", self)
+        detailed_action.triggered.connect(self.onDetailedIarabActionTriggered)
+        menu.addAction(detailed_action)
+        menu.exec(qt1.QCursor.pos())
+
+    def onSimplifiedIarabActionTriggered(self):
+        if not self.info.currentItem():
+            return
         ayahList = self.getResult().split("\n")
         category = self.info.currentItem().text()
         type = self.type.currentIndex()
         Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0], category, type)
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1], category, type)
         result = functions.iarab.getIarab(AyahNumber1, AyahNumber2)
-        guiTools.TextViewer(self, "إعراب", result).exec()
+        guiTools.TextViewer(self, "إعراب مبسط", result).exec()
+
+    def onDetailedIarabActionTriggered(self):
+        if not self.info.currentItem():
+            return
+        ayahList = self.getResult().split("\n")
+        category = self.info.currentItem().text()
+        type = self.type.currentIndex()
+        result = functions.quran_details.get_range_detailed_irab(ayahList, category, type)
+        guiTools.TextViewer(self, "إعراب مفصل", result).exec()
+
+    def onMeaningsActionTriggered(self):
+        if not self.info.currentItem():
+            return
+        ayahList = self.getResult().split("\n")
+        category = self.info.currentItem().text()
+        type = self.type.currentIndex()
+        result = functions.quran_details.get_range_meanings(ayahList, category, type)
+        guiTools.TextViewer(self, "معاني كلمات الآيات", result).exec()
+
+    def onSarfActionTriggered(self):
+        if not self.info.currentItem():
+            return
+        ayahList = self.getResult().split("\n")
+        category = self.info.currentItem().text()
+        type = self.type.currentIndex()
+        result = functions.quran_details.get_range_sarf(ayahList, category, type)
+        guiTools.TextViewer(self, "صرف كلمات الآيات", result).exec()
 
     def onCostumBTNClicked(self):
         categories=["من سورة إلى سورة", "من صفحة إلى صفحة", "من جزء إلى جزء", "من ربع إلى ربع", "من حزب إلى حزب"]

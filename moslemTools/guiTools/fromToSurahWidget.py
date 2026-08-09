@@ -297,6 +297,8 @@ class FromToSurahWidget(qt.QDialog):
         qt1.QShortcut("ctrl+t", self).activated.connect(self.onTafseerActionTriggered)
         qt1.QShortcut("ctrl+l", self).activated.connect(self.onTranslationActionTriggered)
         qt1.QShortcut("ctrl+i", self).activated.connect(self.onIarabActionTriggered)
+        qt1.QShortcut("ctrl+u", self).activated.connect(self.onMeaningsActionTriggered)
+        qt1.QShortcut("ctrl+k", self).activated.connect(self.onSarfActionTriggered)
         qt1.QShortcut("ctrl+d", self).activated.connect(self.onMergeActionTriggered)
         qt1.QShortcut("ctrl+h", self).activated.connect(self.onSaveActionTriggered)
         qt1.QShortcut("escape", self).activated.connect(self.close)
@@ -391,10 +393,22 @@ class FromToSurahWidget(qt.QDialog):
         translationAction.setShortcut("ctrl+l")
         translationAction.triggered.connect(self.onTranslationActionTriggered)
         menu.addAction(translationAction)
-        iarabAction = qt1.QAction("إعراب", self)
-        iarabAction.setShortcut("ctrl+i")
-        iarabAction.triggered.connect(self.onIarabActionTriggered)
-        menu.addAction(iarabAction)
+        iarab_menu = menu.addMenu("إعراب: Ctrl+I")
+        iarab_menu.setFont(font)
+        simplifiedAction = qt1.QAction("إعراب مبسط", self)
+        simplifiedAction.triggered.connect(self.onSimplifiedIarabActionTriggered)
+        iarab_menu.addAction(simplifiedAction)
+        detailedAction = qt1.QAction("إعراب مفصل", self)
+        detailedAction.triggered.connect(self.onDetailedIarabActionTriggered)
+        iarab_menu.addAction(detailedAction)
+        meaningsAction = qt1.QAction("معاني كلمات الآيات", self)
+        meaningsAction.setShortcut("ctrl+u")
+        meaningsAction.triggered.connect(self.onMeaningsActionTriggered)
+        menu.addAction(meaningsAction)
+        sarfAction = qt1.QAction("صرف كلمات الآيات", self)
+        sarfAction.setShortcut("ctrl+k")
+        sarfAction.triggered.connect(self.onSarfActionTriggered)
+        menu.addAction(sarfAction)
         menu.addSeparator()
         mergeAction = qt1.QAction("دمج الآيات", self)
         mergeAction.setShortcut("ctrl+d")
@@ -434,10 +448,51 @@ class FromToSurahWidget(qt.QDialog):
         if not ayahList:
             guiTools.qMessageBox.MessageBox.warning(self, "تحذير", "لا توجد آيات في النطاق المحدد لعرض الإعراب.")
             return
+        menu = qt.QMenu("اختر نوع الإعراب", self)
+        font = qt1.QFont()
+        font.setBold(True)
+        menu.setFont(font)
+        simplified_action = qt1.QAction("إعراب مبسط", self)
+        simplified_action.triggered.connect(self.onSimplifiedIarabActionTriggered)
+        menu.addAction(simplified_action)
+        detailed_action = qt1.QAction("إعراب مفصل", self)
+        detailed_action.triggered.connect(self.onDetailedIarabActionTriggered)
+        menu.addAction(detailed_action)
+        menu.exec(qt1.QCursor.pos())
+
+    def onSimplifiedIarabActionTriggered(self):
+        ayahList = self._get_selected_ayahs()
+        if not ayahList:
+            guiTools.qMessageBox.MessageBox.warning(self, "تحذير", "لا توجد آيات في النطاق المحدد لعرض الإعراب.")
+            return
         Ayah, surah, juz, page, AyahNumber1 = functions.quranJsonControl.getAyah(ayahList[0])
         Ayah, surah, juz, page, AyahNumber2 = functions.quranJsonControl.getAyah(ayahList[-1])
         result = functions.iarab.getIarab(AyahNumber1, AyahNumber2)
-        guiTools.TextViewer(self.p, "إعراب", result).exec()
+        guiTools.TextViewer(self.p, "إعراب مبسط", result).exec()
+
+    def onDetailedIarabActionTriggered(self):
+        ayahList = self._get_selected_ayahs()
+        if not ayahList:
+            guiTools.qMessageBox.MessageBox.warning(self, "تحذير", "لا توجد آيات في النطاق المحدد لعرض الإعراب المفصل.")
+            return
+        result = functions.quran_details.get_range_detailed_irab(ayahList)
+        guiTools.TextViewer(self.p, "إعراب مفصل", result).exec()
+
+    def onMeaningsActionTriggered(self):
+        ayahList = self._get_selected_ayahs()
+        if not ayahList:
+            guiTools.qMessageBox.MessageBox.warning(self, "تحذير", "لا توجد آيات في النطاق المحدد لعرض معاني الكلمات.")
+            return
+        result = functions.quran_details.get_range_meanings(ayahList)
+        guiTools.TextViewer(self.p, "معاني كلمات الآيات", result).exec()
+
+    def onSarfActionTriggered(self):
+        ayahList = self._get_selected_ayahs()
+        if not ayahList:
+            guiTools.qMessageBox.MessageBox.warning(self, "تحذير", "لا توجد آيات في النطاق المحدد لعرض صرف الكلمات.")
+            return
+        result = functions.quran_details.get_range_sarf(ayahList)
+        guiTools.TextViewer(self.p, "صرف كلمات الآيات", result).exec()
 
     def _get_current_reciter_name(self):
         return list(reciters.keys())[self.currentReciter]

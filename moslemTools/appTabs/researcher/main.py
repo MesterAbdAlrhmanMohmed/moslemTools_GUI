@@ -40,6 +40,8 @@ class Albaheth(qt.QWidget):
         qt1.QShortcut("Ctrl+T", self).activated.connect(self.on_tafseer_shortcut)
         qt1.QShortcut("Ctrl+L", self).activated.connect(self.on_translation_shortcut)
         qt1.QShortcut("Ctrl+I", self).activated.connect(self.on_iarab_shortcut)
+        qt1.QShortcut("Ctrl+U", self).activated.connect(self.on_meanings_shortcut)
+        qt1.QShortcut("Ctrl+K", self).activated.connect(self.on_sarf_shortcut)
         qt1.QShortcut("Ctrl+R", self).activated.connect(self.on_tanzil_shortcut)
         qt1.QShortcut("Ctrl+G", self).activated.connect(self.on_goto_surah_shortcut)
         qt1.QShortcut("Ctrl+F", self).activated.connect(self.on_ayah_info_shortcut)
@@ -149,6 +151,12 @@ class Albaheth(qt.QWidget):
 
     def on_iarab_shortcut(self):
         self.on_shortcut_activated(self.show_iarab)
+
+    def on_meanings_shortcut(self):
+        self.on_shortcut_activated(self.show_meanings)
+
+    def on_sarf_shortcut(self):
+        self.on_shortcut_activated(self.show_sarf)
 
     def on_tanzil_shortcut(self):
         self.on_shortcut_activated(self.show_tanzil)
@@ -598,7 +606,8 @@ class Albaheth(qt.QWidget):
                 surah_name = self.quran_data[str(surah_number)]["name"]
                 ayah_data = self.quran_data[str(surah_number)]['ayahs'][ayah_number_in_surah - 1]
                 overall_ayah_number = ayah_data['number']
-                return {"surah_number": surah_number,"surah_name": surah_name,"ayah_number_in_surah": ayah_number_in_surah,"overall_ayah_number": overall_ayah_number}
+                clean_ayah_text = f"{ayah_data['text']} ({ayah_number_in_surah})"
+                return {"surah_number": surah_number,"surah_name": surah_name,"ayah_number_in_surah": ayah_number_in_surah,"overall_ayah_number": overall_ayah_number, "clean_ayah_text": clean_ayah_text}
             except (KeyError, IndexError):
                 return None
         return None
@@ -708,10 +717,22 @@ class Albaheth(qt.QWidget):
                 translation_action.setShortcut("Ctrl+L")
                 translation_action.triggered.connect(lambda: self.show_translation(metadata))
                 ayah_menu.addAction(translation_action)
-                iarab_action = qt1.QAction("إعراب الآية", self)
-                iarab_action.setShortcut("Ctrl+I")
-                iarab_action.triggered.connect(lambda: self.show_iarab(metadata))
-                ayah_menu.addAction(iarab_action)
+                iarab_menu = ayah_menu.addMenu("إعراب الآية: Ctrl+I")
+                iarab_menu.setFont(bold_font)
+                simplified_iarab_action = qt1.QAction("إعراب مبسط", self)
+                simplified_iarab_action.triggered.connect(lambda: self.show_simplified_iarab(metadata))
+                iarab_menu.addAction(simplified_iarab_action)
+                detailed_iarab_action = qt1.QAction("إعراب مفصل", self)
+                detailed_iarab_action.triggered.connect(lambda: self.show_detailed_iarab(metadata))
+                iarab_menu.addAction(detailed_iarab_action)
+                meanings_action = qt1.QAction("معاني كلمات الآية", self)
+                meanings_action.setShortcut("Ctrl+U")
+                meanings_action.triggered.connect(lambda: self.show_meanings(metadata))
+                ayah_menu.addAction(meanings_action)
+                sarf_action = qt1.QAction("صرف كلمات الآية", self)
+                sarf_action.setShortcut("Ctrl+K")
+                sarf_action.triggered.connect(lambda: self.show_sarf(metadata))
+                ayah_menu.addAction(sarf_action)
                 tanzil_action = qt1.QAction("أسباب نزول الآية", self)
                 tanzil_action.setShortcut("Ctrl+R")
                 tanzil_action.triggered.connect(lambda: self.show_tanzil(metadata))
@@ -838,10 +859,55 @@ class Albaheth(qt.QWidget):
         self.resume_after_action()
 
     def show_iarab(self, metadata):
+        menu = qt.QMenu("اختر نوع الإعراب", self)
+        font = qt1.QFont()
+        font.setBold(True)
+        menu.setFont(font)
+        simplified_action = qt1.QAction("إعراب مبسط", self)
+        simplified_action.triggered.connect(lambda: self.show_simplified_iarab(metadata))
+        menu.addAction(simplified_action)
+        detailed_action = qt1.QAction("إعراب مفصل", self)
+        detailed_action.triggered.connect(lambda: self.show_detailed_iarab(metadata))
+        menu.addAction(detailed_action)
+        menu.exec(qt1.QCursor.pos())
+
+    def show_simplified_iarab(self, metadata):
         self.pause_for_action()
         ayah_num = metadata["overall_ayah_number"]
         result = functions.iarab.getIarab(ayah_num, ayah_num)
-        guiTools.TextViewer(self, "إعراب", result).exec()
+        guiTools.TextViewer(self, "إعراب مبسط", result).exec()
+        self.resume_after_action()
+
+    def show_detailed_iarab(self, metadata):
+        self.pause_for_action()
+        surah_number = metadata["surah_number"]
+        ayah_number_in_surah = metadata["ayah_number_in_surah"]
+        result = functions.quran_details.get_single_ayah_detailed_irab(surah_number, ayah_number_in_surah)
+        guiTools.TextViewer(self, "إعراب مفصل", result).exec()
+        self.resume_after_action()
+
+    def show_meanings(self, metadata):
+        self.pause_for_action()
+        surah_number = metadata["surah_number"]
+        ayah_number_in_surah = metadata["ayah_number_in_surah"]
+        line_text = metadata.get("clean_ayah_text")
+        if not line_text:
+            cursor = self.results.textCursor()
+            line_text = re.sub(r'^\d+\s*', '', cursor.block().text())
+        result = functions.quran_details.get_single_ayah_meanings(surah_number, ayah_number_in_surah, ayah_text=line_text)
+        guiTools.TextViewer(self, "معاني كلمات الآية", result).exec()
+        self.resume_after_action()
+
+    def show_sarf(self, metadata):
+        self.pause_for_action()
+        surah_number = metadata["surah_number"]
+        ayah_number_in_surah = metadata["ayah_number_in_surah"]
+        line_text = metadata.get("clean_ayah_text")
+        if not line_text:
+            cursor = self.results.textCursor()
+            line_text = re.sub(r'^\d+\s*', '', cursor.block().text())
+        result = functions.quran_details.get_single_ayah_sarf(surah_number, ayah_number_in_surah, ayah_text=line_text)
+        guiTools.TextViewer(self, "صرف كلمات الآية", result).exec()
         self.resume_after_action()
 
     def show_tanzil(self, metadata):
