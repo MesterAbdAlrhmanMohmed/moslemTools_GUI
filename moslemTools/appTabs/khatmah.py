@@ -90,7 +90,7 @@ class KhatmahTab(qt.QWidget):
         config_layout = qt.QVBoxLayout(config_group)
         config_layout.setSpacing(8)
 
-        self.days_label = qt.QLabel("المدة المستهدفة بالأيام:")
+        self.days_label = qt.QLabel("أكتب المدة المستهدفة بالأيام (من 1 إلى 365)")
         self.days_label.setFont(font_bold)
         self.days_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 
@@ -99,7 +99,7 @@ class KhatmahTab(qt.QWidget):
         self.days_spin.setRange(1, 365)
         self.days_spin.setValue(self.data.get("target_days", 30))
         self.days_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.days_spin.setAccessibleName("المدة المستهدفة بالأيام")
+        self.days_spin.setAccessibleName("أكتب المدة المستهدفة بالأيام (من 1 إلى 365)")
         self.days_spin.setMinimumWidth(180)
 
         self.btn_start = guiTools.QPushButton("بدء ختمة جديدة")
@@ -131,7 +131,9 @@ class KhatmahTab(qt.QWidget):
 
         main_layout.addWidget(self.status_group)
 
-        actions_layout = qt.QHBoxLayout()
+        self.actions_widget = qt.QWidget()
+        actions_layout = qt.QHBoxLayout(self.actions_widget)
+        actions_layout.setContentsMargins(0, 0, 0, 0)
 
         self.btn_read_today = guiTools.QPushButton("قراءة ورد اليوم")
         self.btn_read_today.setFont(font_bold)
@@ -156,20 +158,36 @@ class KhatmahTab(qt.QWidget):
 
         self.btn_reset = guiTools.QPushButton("إعادة تعيين الختمة")
         self.btn_reset.setFont(font_bold)
-        self.btn_reset.setStyleSheet("background-color: #8B0000; color: white;")
+        self.btn_reset.setStyleSheet("background-color: #8E2405; color: white;")
         self.btn_reset.setShortcut("ctrl+delete")
         self.btn_reset.setAccessibleDescription("control plus delete")
         self.btn_reset.clicked.connect(self.reset_khatmah)
+
+        self.btn_stop = guiTools.QPushButton("إيقاف الختمة")
+        self.btn_stop.setFont(font_bold)
+        self.btn_stop.setStyleSheet("background-color: #8B0000; color: white;")
+        self.btn_stop.setShortcut("ctrl+f")
+        self.btn_stop.setAccessibleDescription("control plus f")
+        self.btn_stop.clicked.connect(self.stop_khatmah)
 
         actions_layout.addWidget(self.btn_read_today)
         actions_layout.addWidget(self.btn_mark_today)
         actions_layout.addWidget(self.btn_manual_page)
         actions_layout.addWidget(self.btn_reset)
+        actions_layout.addWidget(self.btn_stop)
 
-        main_layout.addLayout(actions_layout)
+        main_layout.addWidget(self.actions_widget)
         self.update_ui_state()
 
     def update_ui_state(self):
+        has_khatmah = self.data.get("has_khatmah", False)
+        self.actions_widget.setVisible(has_khatmah)
+        self.progress_bar.setVisible(has_khatmah)
+        if not has_khatmah:
+            self.progress_bar.setValue(0)
+            self.info_text.setText("لا توجد ختمة قائمة حالياً.")
+            return
+
         completed_pages = self.data.get("completed_pages", 0)
         target_days = self.data.get("target_days", 30)
         total_pages = 604
@@ -368,3 +386,11 @@ class KhatmahTab(qt.QWidget):
             self.save_data()
             self.update_ui_state()
             guiTools.MessageBox.view(self, "تم", "تم إعادة تعيين الختمة.")
+
+    def stop_khatmah(self):
+        confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الإيقاف", "هل أنت متأكد من إيقاف الختمة الحالية؟", "نعم", "لا")
+        if confirm == 0:
+            self.data["has_khatmah"] = False
+            self.save_data()
+            self.update_ui_state()
+            guiTools.MessageBox.view(self, "تم", "تم إيقاف الختمة.")

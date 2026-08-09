@@ -230,6 +230,10 @@ class IslamicQuestionsGame(qt.QWidget):
         self.stacked_widget.addWidget(self.stats_widget)
 
     def show_game_stats_widget(self):
+        stats = self.load_game_stats()
+        if stats.get("total_games", 0) == 0 or stats.get("total_answered", 0) == 0:
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا يوجد إحصائيات حتى الآن.")
+            return
         self.stats_text_viewer.setText(self.build_all_stats_text())
         self.stacked_widget.setCurrentWidget(self.stats_widget)
         qt2.QTimer.singleShot(10, self.stats_text_viewer.setFocus)
