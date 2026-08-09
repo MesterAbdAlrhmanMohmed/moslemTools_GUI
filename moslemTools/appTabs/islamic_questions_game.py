@@ -24,7 +24,7 @@ class IslamicQuestionsGame(qt.QWidget):
             with open(self.game_settings_file, "r", encoding="utf-8") as f: self.game_settings = json.load(f)
         except Exception as e:
             log_error_to_file(traceback.format_exc())
-            self.game_settings = {"sound_enabled": True}
+            self.game_settings = {"sound_enabled": True, "stats_enabled": True}
         self.categories_info = {
             "tafseer": {"name": "التفسير", "color": "#1B5E20", "file": "tafseer.json"},
             "figh": {"name": "الفقه", "color": "#0D47A1", "file": "figh.json"},
@@ -73,6 +73,11 @@ class IslamicQuestionsGame(qt.QWidget):
         self.sound_checkbox.setChecked(self.game_settings.get("sound_enabled", True))
         self.sound_checkbox.stateChanged.connect(self.save_game_settings)
         categories_layout.addWidget(self.sound_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        self.stats_checkbox = qt.QCheckBox("تفعيل إحصائيات اللعبة")
+        self.stats_checkbox.setChecked(self.game_settings.get("stats_enabled", True))
+        self.stats_checkbox.stateChanged.connect(self.save_game_settings)
+        self.stats_checkbox.stateChanged.connect(self.toggle_stats_button)
+        categories_layout.addWidget(self.stats_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         categories_layout.addSpacing(20)
         self.categories_grid = qt.QGridLayout()
         self.categories_grid.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -90,6 +95,7 @@ class IslamicQuestionsGame(qt.QWidget):
         self.stats_btn.setMinimumSize(330, 50)
         self.stats_btn.setStyleSheet("QPushButton{background-color: #0000AA; color: white; font-weight: bold; font-size: 16px; border-radius: 10px; border: none; padding: 10px;}QPushButton:hover{background-color: #0000CC;}")
         self.stats_btn.clicked.connect(self.show_game_stats_widget)
+        self.stats_btn.setVisible(self.stats_checkbox.isChecked())
         categories_layout.addSpacing(15)
         categories_layout.addWidget(self.stats_btn, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         categories_layout.addStretch()
@@ -228,6 +234,9 @@ class IslamicQuestionsGame(qt.QWidget):
         stats_outer_layout.addWidget(stats_container, 10)
         stats_outer_layout.addStretch(1)
         self.stacked_widget.addWidget(self.stats_widget)
+
+    def toggle_stats_button(self):
+        self.stats_btn.setVisible(self.stats_checkbox.isChecked())
 
     def show_game_stats_widget(self):
         stats = self.load_game_stats()
@@ -608,23 +617,24 @@ class IslamicQuestionsGame(qt.QWidget):
                 except Exception as e:
                     log_error_to_file(traceback.format_exc())
 
-            stats = self.load_game_stats()
-            stats["total_games"] = stats.get("total_games", 0) + 1
-            cat_counts = stats.get("categories_count", {})
-            if self.current_category:
-                cat_counts[self.current_category] = cat_counts.get(self.current_category, 0) + 1
-            stats["categories_count"] = cat_counts
+            if self.stats_checkbox.isChecked():
+                stats = self.load_game_stats()
+                stats["total_games"] = stats.get("total_games", 0) + 1
+                cat_counts = stats.get("categories_count", {})
+                if self.current_category:
+                    cat_counts[self.current_category] = cat_counts.get(self.current_category, 0) + 1
+                stats["categories_count"] = cat_counts
 
-            lvl_counts = stats.get("levels_count", {})
-            if level == "all":
-                stats["all_levels_games_count"] = stats.get("all_levels_games_count", 0) + 1
-            else:
-                lvl_key = str(level)
-                lvl_counts[lvl_key] = lvl_counts.get(lvl_key, 0) + 1
-            stats["levels_count"] = lvl_counts
+                lvl_counts = stats.get("levels_count", {})
+                if level == "all":
+                    stats["all_levels_games_count"] = stats.get("all_levels_games_count", 0) + 1
+                else:
+                    lvl_key = str(level)
+                    lvl_counts[lvl_key] = lvl_counts.get(lvl_key, 0) + 1
+                stats["levels_count"] = lvl_counts
 
-            stats["last_played"] = self.format_now_last_played()
-            self.save_game_stats(stats)
+                stats["last_played"] = self.format_now_last_played()
+                self.save_game_stats(stats)
             self.show_question()
             self.stacked_widget.setCurrentWidget(self.game_widget)
             qt2.QTimer.singleShot(10, self.question_edit.setFocus)
@@ -658,15 +668,16 @@ class IslamicQuestionsGame(qt.QWidget):
         level_map = {1: "السهل", 2: "المتوسط", 3: "الصعب", "all": "كل المستويات"}
         level_name = level_map.get(self.current_level, "")
         if self.current_question_index >= self.total_questions:
-            stats = self.load_game_stats()
-            hs = stats.get("highest_score", {"score": 0, "total": 0})
-            prev_score = hs.get("score", 0)
-            prev_total = hs.get("total", 0)
-            prev_ratio = (prev_score / prev_total) if prev_total > 0 else -1.0
-            curr_ratio = (self.solved_count / self.total_questions) if self.total_questions > 0 else 0.0
-            if curr_ratio > prev_ratio or (abs(curr_ratio - prev_ratio) < 1e-5 and self.total_questions > prev_total):
-                stats["highest_score"] = {"score": self.solved_count, "total": self.total_questions}
-                self.save_game_stats(stats)
+            if self.stats_checkbox.isChecked():
+                stats = self.load_game_stats()
+                hs = stats.get("highest_score", {"score": 0, "total": 0})
+                prev_score = hs.get("score", 0)
+                prev_total = hs.get("total", 0)
+                prev_ratio = (prev_score / prev_total) if prev_total > 0 else -1.0
+                curr_ratio = (self.solved_count / self.total_questions) if self.total_questions > 0 else 0.0
+                if curr_ratio > prev_ratio or (abs(curr_ratio - prev_ratio) < 1e-5 and self.total_questions > prev_total):
+                    stats["highest_score"] = {"score": self.solved_count, "total": self.total_questions}
+                    self.save_game_stats(stats)
             solved_text = self.get_arabic_count_text(self.solved_count)
             total_text = self.get_arabic_count_text(self.total_questions)
             if self.current_level == "all":
@@ -727,49 +738,53 @@ class IslamicQuestionsGame(qt.QWidget):
 
     def check_answer(self, selected_answer):
         sound_enabled = self.sound_checkbox.isChecked()
-        stats = self.load_game_stats()
-        stats["total_answered"] = stats.get("total_answered", 0) + 1
+        stats_enabled = self.stats_checkbox.isChecked()
         q_data = self.questions[self.current_question_index]
         q_text = q_data.get("q", "")
         q_lvl = str(q_data.get("_level", 1))
 
-        unique = set(stats.get("unique_answered", []))
-        if q_text and q_text.strip():
-            unique.add(q_text.strip())
-        stats["unique_answered"] = list(unique)
+        if stats_enabled:
+            stats = self.load_game_stats()
+            stats["total_answered"] = stats.get("total_answered", 0) + 1
 
-        cat_tot = stats.get("category_total", {})
-        if self.current_category:
-            cat_tot[self.current_category] = cat_tot.get(self.current_category, 0) + 1
-        stats["category_total"] = cat_tot
+            unique = set(stats.get("unique_answered", []))
+            if q_text and q_text.strip():
+                unique.add(q_text.strip())
+            stats["unique_answered"] = list(unique)
 
-        level_tot = stats.get("level_total", {})
-        level_tot[q_lvl] = level_tot.get(q_lvl, 0) + 1
-        stats["level_total"] = level_tot
+            cat_tot = stats.get("category_total", {})
+            if self.current_category:
+                cat_tot[self.current_category] = cat_tot.get(self.current_category, 0) + 1
+            stats["category_total"] = cat_tot
 
-        if self.current_level == "all":
-            all_tot = stats.get("all_levels_total", {})
-            all_tot[q_lvl] = all_tot.get(q_lvl, 0) + 1
-            stats["all_levels_total"] = all_tot
+            level_tot = stats.get("level_total", {})
+            level_tot[q_lvl] = level_tot.get(q_lvl, 0) + 1
+            stats["level_total"] = level_tot
+
+            if self.current_level == "all":
+                all_tot = stats.get("all_levels_total", {})
+                all_tot[q_lvl] = all_tot.get(q_lvl, 0) + 1
+                stats["all_levels_total"] = all_tot
 
         if selected_answer["t"] == 1:
             if sound_enabled: winsound.PlaySound(r"data\sounds\game\true.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
             self.solved_count += 1
-            stats["correct_answers"] = stats.get("correct_answers", 0) + 1
+            if stats_enabled:
+                stats["correct_answers"] = stats.get("correct_answers", 0) + 1
 
-            cat_cor = stats.get("category_correct", {})
-            if self.current_category:
-                cat_cor[self.current_category] = cat_cor.get(self.current_category, 0) + 1
-            stats["category_correct"] = cat_cor
+                cat_cor = stats.get("category_correct", {})
+                if self.current_category:
+                    cat_cor[self.current_category] = cat_cor.get(self.current_category, 0) + 1
+                stats["category_correct"] = cat_cor
 
-            level_cor = stats.get("level_correct", {})
-            level_cor[q_lvl] = level_cor.get(q_lvl, 0) + 1
-            stats["level_correct"] = level_cor
+                level_cor = stats.get("level_correct", {})
+                level_cor[q_lvl] = level_cor.get(q_lvl, 0) + 1
+                stats["level_correct"] = level_cor
 
-            if self.current_level == "all":
-                all_cor = stats.get("all_levels_correct", {})
-                all_cor[q_lvl] = all_cor.get(q_lvl, 0) + 1
-                stats["all_levels_correct"] = all_cor
+                if self.current_level == "all":
+                    all_cor = stats.get("all_levels_correct", {})
+                    all_cor[q_lvl] = all_cor.get(q_lvl, 0) + 1
+                    stats["all_levels_correct"] = all_cor
 
             try:
                 int_l = int(q_lvl)
@@ -784,14 +799,16 @@ class IslamicQuestionsGame(qt.QWidget):
                     correct_text = ans["answer"]
                     break
             self.incorrect_questions.append({"q": q_data.get("q"), "correct": correct_text})
-            stats["incorrect_answers"] = stats.get("incorrect_answers", 0) + 1
-            q_err = stats.get("question_errors", {})
-            if q_text and q_text.strip():
-                q_err[q_text.strip()] = q_err.get(q_text.strip(), 0) + 1
-            stats["question_errors"] = q_err
+            if stats_enabled:
+                stats["incorrect_answers"] = stats.get("incorrect_answers", 0) + 1
+                q_err = stats.get("question_errors", {})
+                if q_text and q_text.strip():
+                    q_err[q_text.strip()] = q_err.get(q_text.strip(), 0) + 1
+                stats["question_errors"] = q_err
             guiTools.MessageBoxForGame.error(self, "إجابة خاطئة", f"للأسف الإجابة خاطئة.\nالإجابة الصحيحة هي: {correct_text}", sound_enabled=sound_enabled)
 
-        self.save_game_stats(stats)
+        if stats_enabled:
+            self.save_game_stats(stats)
         self.current_question_index += 1
         self.show_question()
         if self.current_question_index < self.total_questions:
@@ -799,6 +816,7 @@ class IslamicQuestionsGame(qt.QWidget):
 
     def save_game_settings(self):
         self.game_settings["sound_enabled"] = self.sound_checkbox.isChecked()
+        self.game_settings["stats_enabled"] = self.stats_checkbox.isChecked()
         try:
             os.makedirs(os.path.dirname(self.game_settings_file), exist_ok=True)
             with open(self.game_settings_file, "w", encoding="utf-8") as f: json.dump(self.game_settings, f, ensure_ascii=False)
