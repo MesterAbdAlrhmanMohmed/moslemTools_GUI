@@ -44,7 +44,7 @@ settingsConfig={
         "exitdialog":"True",
         "reciter":"0",
         "user_name":"",
-        "use_name_in_occasions":"True",
+        "use_name_in_occasions":"False",
         "name_type":"custom_name",
         "theme":"dark",
         "startup_tab":"0"

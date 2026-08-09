@@ -7,8 +7,29 @@ def log_error_to_file(error_msg):
             os.makedirs(app_dir)
         log_file = os.path.join(app_dir, "error.log")
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        error_count = 0
+        file_exists = os.path.exists(log_file) and os.path.getsize(log_file) > 0
+        if file_exists:
+            try:
+                with open(log_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    import re
+                    matches = re.findall(r'^الخطأ\s+(\d+):', content, re.MULTILINE)
+                    if matches:
+                        error_count = max(int(m) for m in matches)
+                    else:
+                        error_count = len(re.findall(r'^\d{4}-\d{2}-\d{2}', content, re.MULTILINE))
+            except Exception:
+                error_count = 0
+
+        current_error_num = error_count + 1
+
         with open(log_file, "a", encoding="utf-8") as f:
-            f.write(f"[{timestamp}]\n{error_msg}\n{'-'*50}\n")
+            if file_exists:
+                f.write(f"\n\n\nالخطأ {current_error_num}:\n[{timestamp}]\n{error_msg}\n")
+            else:
+                f.write(f"الخطأ {current_error_num}:\n[{timestamp}]\n{error_msg}\n")
     except Exception:
         pass
 

@@ -184,7 +184,6 @@ class Albaheth(qt.QWidget):
         self.serch.addItem("الأحاديث")
         self.serch.setFont(font_combo)
         self.serch.setAccessibleName("ابحث في")
-        self.serch.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
         self.ahadeeth_laibol = qt.QLabel("اختيار الكتاب")
         self.ahadeeth_laibol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.ahadeeth = qt.QComboBox()
@@ -192,26 +191,27 @@ class Albaheth(qt.QWidget):
         self.ahadeeth.addItems(ahadeeth_items)
         self.ahadeeth.setFont(font_combo)
         self.ahadeeth.setAccessibleName("اختيار الكتاب")
-        self.ahadeeth.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
         self.surahsList = functions.quranJsonControl.getSurahs()
         self.surahs_laybol = qt.QLabel("ابحث في")
         self.surahs_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.surahs = qt.QComboBox()
         self.surahs.addItems(["كل القرآن", "سور", "صفحات", "أجزاء", "أرباع", "أحزاب"])
         self.surahs.setFont(font_combo)
-        self.surahs.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
         self.surahs.setAccessibleName("ابحث في")
         self.surahs.activated.connect(self.on_scope_changed)
         self.specific_scope_label = qt.QLabel("اختر")
         self.specific_scope_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.specific_scope_combo = qt.QComboBox()
         self.specific_scope_combo.setFont(font_combo)
-        self.specific_scope_combo.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
         self.specific_scope_combo.setAccessibleName("اختر القيمة")
         self.specific_scope_label.setVisible(False)
         self.specific_scope_combo.setVisible(False)
         self.current_scope = None
         self.serch.currentIndexChanged.connect(self.toggle_ahadeeth_visibility)
+        self.serch.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.serch))
+        self.ahadeeth.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.ahadeeth))
+        self.surahs.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.surahs))
+        self.specific_scope_combo.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.specific_scope_combo))
         self.serch_laibol_content = qt.QLabel("أكتب محتوى البحث")
         self.serch_laibol_content.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.serch_input = qt.QLineEdit()
@@ -288,22 +288,37 @@ class Albaheth(qt.QWidget):
         self.more_options_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         main_layout = qt.QVBoxLayout(self)
         top_combo_layout = qt.QHBoxLayout()
+        top_combo_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        top_combo_layout.setSpacing(20)
+
         search_layout_top = qt.QVBoxLayout()
-        search_layout_top.addWidget(self.serch_laibol)
-        search_layout_top.addWidget(self.serch)
+        search_layout_top.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        search_layout_top.addWidget(self.serch_laibol, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        search_layout_top.addWidget(self.serch, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
         ahadeeth_layout_top = qt.QVBoxLayout()
-        ahadeeth_layout_top.addWidget(self.ahadeeth_laibol)
-        ahadeeth_layout_top.addWidget(self.ahadeeth)
+        ahadeeth_layout_top.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        ahadeeth_layout_top.addWidget(self.ahadeeth_laibol, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        ahadeeth_layout_top.addWidget(self.ahadeeth, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
         quran_scope_layout = qt.QHBoxLayout()
+        quran_scope_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        quran_scope_layout.setSpacing(15)
+
         surahs_vbox = qt.QVBoxLayout()
-        surahs_vbox.addWidget(self.surahs_laybol)
-        surahs_vbox.addWidget(self.surahs)
+        surahs_vbox.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        surahs_vbox.addWidget(self.surahs_laybol, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        surahs_vbox.addWidget(self.surahs, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
         specific_vbox = qt.QVBoxLayout()
-        specific_vbox.addWidget(self.specific_scope_label)
-        specific_vbox.addWidget(self.specific_scope_combo)
+        specific_vbox.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        specific_vbox.addWidget(self.specific_scope_label, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        specific_vbox.addWidget(self.specific_scope_combo, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
         quran_scope_layout.addLayout(surahs_vbox)
         quran_scope_layout.addLayout(specific_vbox)
         ahadeeth_layout_top.addLayout(quran_scope_layout)
+
         top_combo_layout.addLayout(search_layout_top)
         top_combo_layout.addLayout(ahadeeth_layout_top)
         main_layout.addLayout(top_combo_layout)
@@ -329,6 +344,7 @@ class Albaheth(qt.QWidget):
         self.ahadeeth_laibol.hide()
         self.ahadeeth.hide()
         self.update_font_size()
+        self.adjust_all_combos_width()
 
     def pause_for_action(self):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -526,6 +542,7 @@ class Albaheth(qt.QWidget):
             self.specific_scope_label.setText(label)
             self.specific_scope_combo.setAccessibleName(label)
             self.specific_scope_combo.addItems(items)
+            self.adjust_combo_width(self.specific_scope_combo)
 
     def onSearchClicked(self):
         if not self.serch_input.text():
@@ -614,6 +631,26 @@ class Albaheth(qt.QWidget):
             if self.surahs.currentIndex() != 0:
                 self.specific_scope_label.show()
                 self.specific_scope_combo.show()
+        self.adjust_all_combos_width()
+
+    def adjust_combo_width(self, combo, extra_padding=65):
+        if not combo or combo.count() == 0:
+            return
+        fm = qt1.QFontMetrics(combo.font())
+        current_text = combo.currentText()
+        if not current_text:
+            return
+        text_width = fm.horizontalAdvance(current_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(current_text).width()
+        combo.setFixedWidth(text_width + extra_padding)
+
+    def adjust_all_combos_width(self):
+        for combo in (self.serch, self.ahadeeth, self.surahs, self.specific_scope_combo):
+            if combo.count() > 0:
+                self.adjust_combo_width(combo)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.adjust_all_combos_width()
 
     def OnContextMenu(self):
         self.pause_for_action()
@@ -836,6 +873,7 @@ class Albaheth(qt.QWidget):
         font.setBold(self.font_is_bold)
         self.results.setCurrentFont(font)
         self.results.setTextCursor(cursor)
+        self.adjust_all_combos_width()
 
     def copy_line(self):
         try:

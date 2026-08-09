@@ -1,10 +1,11 @@
-import os,guiTools,random,re,winsound,functions
+import os,guiTools,random,re,winsound,functions,traceback
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from datetime import datetime
 from settings import settings_handler
+from custom_errors import log_error_to_file
 
 
 class IslamicQuestionsGame(qt.QWidget):
@@ -16,10 +17,14 @@ class IslamicQuestionsGame(qt.QWidget):
         self.stats_file = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "game_stats.json")
         try:
             with open(self.asked_file, "r", encoding="utf-8") as f: self.asked_questions = set(json.load(f))
-        except: self.asked_questions = set()
+        except Exception as e:
+            log_error_to_file(traceback.format_exc())
+            self.asked_questions = set()
         try:
             with open(self.game_settings_file, "r", encoding="utf-8") as f: self.game_settings = json.load(f)
-        except: self.game_settings = {"sound_enabled": True}
+        except Exception as e:
+            log_error_to_file(traceback.format_exc())
+            self.game_settings = {"sound_enabled": True}
         self.categories_info = {
             "tafseer": {"name": "التفسير", "color": "#1B5E20", "file": "tafseer.json"},
             "figh": {"name": "الفقه", "color": "#0D47A1", "file": "figh.json"},
@@ -35,7 +40,6 @@ class IslamicQuestionsGame(qt.QWidget):
         self.incorrect_questions = []
         self.solved_count = 0
         self.total_questions = 0
-        self.grand_total = 0
         self.current_question_index = -1
         self.filtered_topics_data = []
         self.font_size = int(settings_handler.get("font", "size") or 18)
@@ -45,13 +49,15 @@ class IslamicQuestionsGame(qt.QWidget):
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
 
     def handle_escape(self):
-        current_index = self.stacked_widget.currentIndex()
-        if current_index == 1 or current_index == 4:
-            self.stacked_widget.setCurrentIndex(0)
+        current_widget = self.stacked_widget.currentWidget()
+        if current_widget in (self.topics_widget, self.stats_widget):
+            self.stacked_widget.setCurrentWidget(self.categories_widget)
             qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
-        elif current_index == 2:
-            self.stacked_widget.setCurrentIndex(1)
-        elif current_index == 3:
+        elif current_widget == self.levels_widget:
+            self.stacked_widget.setCurrentWidget(self.topics_widget)
+        elif hasattr(self, 'all_levels_options_widget') and current_widget == self.all_levels_options_widget:
+            self.stacked_widget.setCurrentWidget(self.levels_widget)
+        elif current_widget == self.game_widget:
             self.confirm_exit_game()
 
     def setup_ui(self):
@@ -106,7 +112,7 @@ class IslamicQuestionsGame(qt.QWidget):
         topics_back_btn.setAccessibleDescription("Escape")
         topics_back_btn.setMinimumSize(120, 35)
         topics_back_btn.setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold; border-radius: 5px;")
-        topics_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
+        topics_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.categories_widget))
         topics_layout.addWidget(topics_back_btn, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         self.stacked_widget.addWidget(self.topics_widget)
         self.levels_widget = qt.QWidget()
@@ -124,17 +130,37 @@ class IslamicQuestionsGame(qt.QWidget):
         self.all_levels_btn = guiTools.QPushButton("كل المستويات")
         self.all_levels_btn.setMinimumSize(220, 50)
         self.all_levels_btn.setStyleSheet("background-color: #0056b3; color: white; font-weight: bold; font-size: 18px; border-radius: 8px;")
-        self.all_levels_btn.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.all_levels_btn.customContextMenuRequested.connect(self.show_all_levels_menu)
-        self.all_levels_btn.clicked.connect(self.show_all_levels_menu_at_pos)
+        self.all_levels_btn.clicked.connect(self.show_all_levels_options)
         levels_layout.addWidget(self.all_levels_btn, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         levels_back_btn = guiTools.QPushButton("رجوع")
         levels_back_btn.setAccessibleDescription("Escape")
         levels_back_btn.setMinimumSize(220, 40)
         levels_back_btn.setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold; border-radius: 8px;")
-        levels_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
+        levels_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.topics_widget))
         levels_layout.addWidget(levels_back_btn, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         self.stacked_widget.addWidget(self.levels_widget)
+
+        self.all_levels_options_widget = qt.QWidget()
+        all_levels_layout = qt.QVBoxLayout(self.all_levels_options_widget)
+        all_levels_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        all_levels_layout.setSpacing(15)
+        self.random_mode_btn = guiTools.QPushButton("لعب بعشوائية")
+        self.random_mode_btn.setMinimumSize(220, 50)
+        self.random_mode_btn.clicked.connect(lambda: self.start_game("all", mode="random"))
+        all_levels_layout.addWidget(self.random_mode_btn, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
+        self.sequential_mode_btn = guiTools.QPushButton("من السهل إلى الصعب")
+        self.sequential_mode_btn.setMinimumSize(220, 50)
+        self.sequential_mode_btn.clicked.connect(lambda: self.start_game("all", mode="sequential"))
+        all_levels_layout.addWidget(self.sequential_mode_btn, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
+        self.all_levels_back_btn = guiTools.QPushButton("رجوع")
+        self.all_levels_back_btn.setAccessibleDescription("Escape")
+        self.all_levels_back_btn.setMinimumSize(220, 40)
+        self.all_levels_back_btn.setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold; border-radius: 8px;")
+        self.all_levels_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.levels_widget))
+        all_levels_layout.addWidget(self.all_levels_back_btn, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        self.stacked_widget.addWidget(self.all_levels_options_widget)
         self.game_widget = qt.QWidget()
         game_layout = qt.QVBoxLayout(self.game_widget)
         top_layout = qt.QHBoxLayout()
@@ -188,7 +214,7 @@ class IslamicQuestionsGame(qt.QWidget):
         self.stats_back_btn.setAccessibleDescription("Escape")
         self.stats_back_btn.setMinimumSize(120, 38)
         self.stats_back_btn.setStyleSheet("QPushButton{background-color: #0000AA; color: white; font-weight: bold; border-radius: 5px; font-size: 15px;}QPushButton:hover{background-color: #0000CC;}")
-        self.stats_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
+        self.stats_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.categories_widget))
         stats_btns_layout.addWidget(self.stats_back_btn)
         stats_btns_layout.addStretch()
         self.stats_delete_btn = guiTools.QPushButton("حذف الإحصائيات")
@@ -205,7 +231,7 @@ class IslamicQuestionsGame(qt.QWidget):
 
     def show_game_stats_widget(self):
         self.stats_text_viewer.setText(self.build_all_stats_text())
-        self.stacked_widget.setCurrentIndex(4)
+        self.stacked_widget.setCurrentWidget(self.stats_widget)
         qt2.QTimer.singleShot(10, self.stats_text_viewer.setFocus)
 
     def confirm_and_delete_stats(self):
@@ -244,7 +270,7 @@ class IslamicQuestionsGame(qt.QWidget):
                 data = json.load(f)
             self.topics_data = data.get("DataArray", [])
             self.on_topic_search()
-            self.stacked_widget.setCurrentIndex(1)
+            self.stacked_widget.setCurrentWidget(self.topics_widget)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"فشل تحميل البيانات: {e}")
 
@@ -252,62 +278,87 @@ class IslamicQuestionsGame(qt.QWidget):
         row = self.topics_list.currentRow()
         if row < 0: return
         self.current_topic = self.filtered_topics_data[row]
-        self.stacked_widget.setCurrentIndex(2)
+        self.stacked_widget.setCurrentWidget(self.levels_widget)
 
-    def show_all_levels_menu_at_pos(self):
-        self.show_all_levels_menu(qt2.Qt.AlignmentFlag.AlignCenter)
-
-    def show_all_levels_menu(self, pos):
-        menu = qt.QMenu(self)
-        random_action = menu.addAction("لعب بعشوائية")
-        sequential_action = menu.addAction("من السهل إلى الصعب")
-        action = menu.exec(qt1.QCursor.pos())
-        if action == random_action:
-            self.start_game("all", mode="random")
-        elif action == sequential_action:
-            self.start_game("all", mode="sequential")
+    def show_all_levels_options(self):
+        cat_color = self.categories_info[self.current_category]["color"] if self.current_category in self.categories_info else "#0056b3"
+        btn_style = f"background-color: {cat_color}; color: white; font-weight: bold; font-size: 18px; border-radius: 8px;"
+        self.random_mode_btn.setStyleSheet(btn_style)
+        self.sequential_mode_btn.setStyleSheet(btn_style)
+        self.stacked_widget.setCurrentWidget(self.all_levels_options_widget)
+        qt2.QTimer.singleShot(10, self.random_mode_btn.setFocus)
 
     def show_game_stats_dialog(self):
-        dlg = GameStatsDialog(self)
-        dlg.exec()
+        self.show_game_stats_widget()
 
     def load_game_stats(self):
+        defaults = {
+            "total_games": 0,
+            "total_answered": 0,
+            "correct_answers": 0,
+            "incorrect_answers": 0,
+            "unique_answered": [],
+            "categories_count": {},
+            "levels_count": {},
+            "category_correct": {},
+            "category_total": {},
+            "highest_score": {"score": 0, "total": 0},
+            "last_played": "",
+            "question_errors": {},
+            "level_total": {},
+            "level_correct": {},
+            "all_levels_games_count": 0,
+            "all_levels_total": {},
+            "all_levels_correct": {}
+        }
         try:
             with open(self.stats_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return {
-                "total_games": 0,
-                "total_answered": 0,
-                "correct_answers": 0,
-                "incorrect_answers": 0,
-                "unique_answered": [],
-                "categories_count": {},
-                "levels_count": {},
-                "category_correct": {},
-                "category_total": {},
-                "highest_score": {"score": 0, "total": 0},
-                "last_played": "",
-                "question_errors": {}
-            }
+                data = json.load(f)
+                if isinstance(data, dict):
+                    defaults.update(data)
+                    return defaults
+        except Exception:
+            pass
+        return defaults
 
     def save_game_stats(self, stats):
         try:
             os.makedirs(os.path.dirname(self.stats_file), exist_ok=True)
             with open(self.stats_file, "w", encoding="utf-8") as f:
                 json.dump(stats, f, ensure_ascii=False, indent=2)
-        except:
-            pass
+        except Exception as e:
+            log_error_to_file(traceback.format_exc())
 
     def reset_game_stats(self):
         if os.path.exists(self.stats_file):
             try:
                 os.remove(self.stats_file)
-            except:
-                pass
+            except Exception as e:
+                log_error_to_file(traceback.format_exc())
 
     def get_total_database_questions_count(self):
         total_unique = set()
+        def _extract_from_obj(obj):
+            if isinstance(obj, list):
+                for item in obj:
+                    _extract_from_obj(item)
+            elif isinstance(obj, dict):
+                if "q" in obj and isinstance(obj["q"], str) and obj["q"].strip():
+                    total_unique.add(obj["q"].strip())
+                if "DataArray" in obj:
+                    _extract_from_obj(obj["DataArray"])
+                if "files" in obj and isinstance(obj["files"], list):
+                    for f_info in obj["files"]:
+                        if isinstance(f_info, dict) and "path" in f_info:
+                            rel_path = f_info["path"].replace("/database/", "").replace("/", os.sep)
+                            f_full = os.path.join(self.base_path, rel_path)
+                            if os.path.exists(f_full):
+                                try:
+                                    with open(f_full, "r", encoding="utf-8-sig") as f2:
+                                        _extract_from_obj(json.load(f2))
+                                except Exception:
+                                    pass
+
         try:
             for root, dirs, files in os.walk(self.base_path):
                 for file in files:
@@ -315,27 +366,12 @@ class IslamicQuestionsGame(qt.QWidget):
                         full_path = os.path.join(root, file)
                         try:
                             with open(full_path, "r", encoding="utf-8-sig") as f:
-                                content = json.load(f)
-                                items = content.get("DataArray", []) if isinstance(content, dict) else content
-                                if isinstance(items, list):
-                                    for item in items:
-                                        if isinstance(item, dict) and "q" in item:
-                                            total_unique.add(item["q"])
-                                        elif isinstance(item, dict) and "files" in item:
-                                            for f_info in item.get("files", []):
-                                                rel_path = f_info["path"].replace("/database/", "").replace("/", os.sep)
-                                                f_full = os.path.join(self.base_path, rel_path)
-                                                if os.path.exists(f_full):
-                                                    with open(f_full, "r", encoding="utf-8-sig") as f2:
-                                                        q_list = json.load(f2)
-                                                        for q_item in q_list:
-                                                            if isinstance(q_item, dict) and "q" in q_item:
-                                                                total_unique.add(q_item["q"])
-                        except:
+                                _extract_from_obj(json.load(f))
+                        except Exception:
                             pass
-        except:
+        except Exception:
             pass
-        return len(total_unique) if total_unique else 5820
+        return len(total_unique) if total_unique else None
 
     def format_now_last_played(self):
         now = datetime.now()
@@ -355,9 +391,14 @@ class IslamicQuestionsGame(qt.QWidget):
             return "لا يوجد إحصائيات حتى الآن."
         correct = stats.get("correct_answers", 0)
         incorrect = stats.get("incorrect_answers", 0)
-        success_rate = (correct / total_ans * 100) if total_ans > 0 else 0.0
+        success_rate = min(100.0, max(0.0, (correct / total_ans * 100))) if total_ans > 0 else 0.0
         unique_ans = len(stats.get("unique_answered", []))
         total_db_q = self.get_total_database_questions_count()
+        if total_db_q and total_db_q > 0:
+            unique_ratio = min(100.0, max(0.0, (unique_ans / total_db_q) * 100))
+            unique_text = f"عدد الأسئلة الفريدة التي تمت الإجابة عنها: {unique_ans} من {total_db_q} سؤالاً (بنسبة {unique_ratio:.1f}%)."
+        else:
+            unique_text = f"عدد الأسئلة الفريدة التي تمت الإجابة عنها: {unique_ans} سؤالاً."
         hs = stats.get("highest_score", {"score": 0, "total": 0})
         hs_text = f"{hs.get('score', 0)} من {hs.get('total', 0)}" if hs.get("total", 0) > 0 else "0 من 0"
         lp = stats.get("last_played", "")
@@ -382,33 +423,35 @@ class IslamicQuestionsGame(qt.QWidget):
         top_cat_key = max(cats_count, key=cats_count.get) if cats_count else None
         top_cat_name = self.categories_info[top_cat_key]["name"] if top_cat_key in self.categories_info else "لا يوجد"
         levels_count = stats.get("levels_count", {})
-        level_map = {1: "سهل", 2: "متوسط", 3: "صعب", "all": "كل المستويات", "1": "سهل", "2": "متوسط", "3": "صعب"}
-        top_lvl_key = max(levels_count, key=levels_count.get) if levels_count else None
-        top_lvl_name = level_map.get(top_lvl_key, str(top_lvl_key)) if top_lvl_key is not None else "لا يوجد"
+        filtered_levels = {k: v for k, v in levels_count.items() if str(k) not in ("all", "all_levels")}
+        level_map = {"1": "السهل", "2": "المتوسط", "3": "الصعب", 1: "السهل", 2: "المتوسط", 3: "الصعب"}
+        top_lvl_key = max(filtered_levels, key=filtered_levels.get) if filtered_levels else None
+        top_lvl_name = level_map.get(top_lvl_key, "لا يوجد") if top_lvl_key is not None else "لا يوجد"
         cat_correct = stats.get("category_correct", {})
         cat_total = stats.get("category_total", {})
-        cat_rates = {}
+        eligible_cat_rates = {}
         for cat_key, cat_info in self.categories_info.items():
             tot = cat_total.get(cat_key, 0)
             cor = cat_correct.get(cat_key, 0)
-            if tot > 0:
-                cat_rates[cat_key] = (cor / tot) * 100
-        if len(cat_rates) == 0:
-            strongest_text = "لا يوجد"
-            weakest_text = "لا يوجد"
-        elif len(cat_rates) == 1:
-            only_key = list(cat_rates.keys())[0]
-            strongest_text = f"{self.categories_info[only_key]['name']} (نسبة الإتقان: {cat_rates[only_key]:.1f}%)"
-            weakest_text = "يتطلب لعب المزيد من الأقسام لتحديد القسم الأضعف"
+            if tot >= 10:
+                rate = min(100.0, max(0.0, (cor / tot) * 100))
+                eligible_cat_rates[cat_key] = rate
+        if len(eligible_cat_rates) == 0:
+            strongest_text = "لا توجد بيانات كافية لتحديد الأقوى والأضعف."
+            weakest_text = "لا توجد بيانات كافية لتحديد الأقوى والأضعف."
+        elif len(eligible_cat_rates) == 1:
+            only_key = list(eligible_cat_rates.keys())[0]
+            strongest_text = f"{self.categories_info[only_key]['name']} (نسبة الإتقان: {eligible_cat_rates[only_key]:.1f}%)"
+            weakest_text = "يتطلب لعب المزيد من الفئات لتحديد الفئة الأضعف"
         else:
-            max_rate = max(cat_rates.values())
-            min_rate = min(cat_rates.values())
-            strongest_keys = [k for k, v in cat_rates.items() if v == max_rate]
-            weakest_keys = [k for k, v in cat_rates.items() if v == min_rate]
+            max_rate = max(eligible_cat_rates.values())
+            min_rate = min(eligible_cat_rates.values())
+            strongest_keys = [k for k, v in eligible_cat_rates.items() if v == max_rate]
+            weakest_keys = [k for k, v in eligible_cat_rates.items() if v == min_rate]
             strongest_cat_key = strongest_keys[0]
             strongest_text = f"{self.categories_info[strongest_cat_key]['name']} (نسبة الإتقان: {max_rate:.1f}%)"
             if min_rate == max_rate:
-                weakest_text = "لا يوجد قسم ضعيف (نسب الإتقان متساوية)"
+                weakest_text = "لا توجد فئة ضعيفة (نسب الإتقان متساوية)"
             else:
                 weakest_cat_key = weakest_keys[0]
                 weakest_text = f"{self.categories_info[weakest_cat_key]['name']} (نسبة الإتقان: {min_rate:.1f}%)"
@@ -425,7 +468,7 @@ class IslamicQuestionsGame(qt.QWidget):
             tot = cat_total.get(cat_key, 0)
             cor = cat_correct.get(cat_key, 0)
             if tot > 0:
-                rate = (cor / tot) * 100
+                rate = min(100.0, max(0.0, (cor / tot) * 100))
                 played_mastery_lines.append(f"{cat_info['name']}: {rate:.1f}%")
             else:
                 unplayed_cat_lines.append(f"{cat_info['name']}")
@@ -433,11 +476,39 @@ class IslamicQuestionsGame(qt.QWidget):
         if played_mastery_lines:
             mastery_section.extend(played_mastery_lines)
         else:
-            mastery_section.append("لم يتم لعب أي قسم بعد")
+            mastery_section.append("لم يتم لعب أي فئة بعد")
         if unplayed_cat_lines:
             mastery_section.append("")
-            mastery_section.append("الأقسام التي لم يتم لعبها بعد:")
+            mastery_section.append("الفئات التي لم يتم لعبها بعد:")
             mastery_section.extend(unplayed_cat_lines)
+
+        level_total = stats.get("level_total", {})
+        level_correct = stats.get("level_correct", {})
+        level_lines = []
+        for lvl_id, lvl_name in [("1", "المستوى السهل"), ("2", "المستوى المتوسط"), ("3", "المستوى الصعب")]:
+            tot = level_total.get(lvl_id, 0)
+            cor = level_correct.get(lvl_id, 0)
+            if tot > 0:
+                rate = min(100.0, max(0.0, (cor / tot) * 100))
+                level_lines.append(f"{lvl_name}: {cor} إجابة صحيحة من {tot} (نسبة الإتقان: {rate:.1f}%)")
+            else:
+                level_lines.append(f"{lvl_name}: لم تلعب أسئلة من هذا المستوى بعد")
+
+        all_levels_games = stats.get("all_levels_games_count", 0)
+        all_levels_total = stats.get("all_levels_total", {})
+        all_levels_correct = stats.get("all_levels_correct", {})
+        all_levels_section = []
+        if all_levels_games > 0 or any(v > 0 for v in all_levels_total.values()):
+            all_levels_section.append(f"لقد لعبت خيار (كل المستويات) بعدد {all_levels_games} مرة، وكانت التقسيمات كالتالي (من السهل إلى الصعب):")
+            for lvl_id, lvl_name in [("1", "المستوى السهل"), ("2", "المستوى المتوسط"), ("3", "المستوى الصعب")]:
+                tot = all_levels_total.get(lvl_id, 0)
+                cor = all_levels_correct.get(lvl_id, 0)
+                if tot > 0:
+                    rate = min(100.0, max(0.0, (cor / tot) * 100))
+                    all_levels_section.append(f"{lvl_name}: {cor} صحيحة من {tot} (نسبة الإتقان: {rate:.1f}%)")
+                else:
+                    all_levels_section.append(f"{lvl_name}: 0 أسئلة")
+
         lines = [
             "الإحصائيات العامة",
             "",
@@ -446,8 +517,8 @@ class IslamicQuestionsGame(qt.QWidget):
             f"إجمالي الإجابات الصحيحة: {correct}",
             f"إجمالي الإجابات الخاطئة: {incorrect}",
             f"نسبة النجاح العامة: {success_rate:.1f}%",
-            f"عدد الأسئلة الفريدة التي تمت الإجابة عنها: {unique_ans} من {total_db_q} سؤالاً.",
-            f"أفضل نتيجة في اختبار واحد: {hs_text}",
+            unique_text,
+            f"أفضل أداء في اختبار واحد: {hs_text}",
             "آخر مرة لعبت فيها:",
             f"التاريخ: {lp_date}",
             f"الساعة: {lp_time}",
@@ -455,35 +526,43 @@ class IslamicQuestionsGame(qt.QWidget):
             "",
             "تحليل الأداء",
             "",
-            f"أكثر قسم لعبت فيه: {top_cat_name}",
+            f"أكثر فئة لعبت فيها: {top_cat_name}",
             f"أكثر مستوى لعبت فيه: {top_lvl_name}",
-            f"أكثر قسم قوي فيه: {strongest_text}",
-            f"أكثر قسم ضعيف فيه: {weakest_text}",
+            f"أقوى فئة لديك: {strongest_text}",
+            f"أضعف فئة لديك: {weakest_text}",
+            "",
+            "الإتقان مقارنة بين المستويات (من السهل إلى الصعب):",
+            ""
+        ]
+        lines.extend(level_lines)
+        if all_levels_section:
+            lines.extend(["", "إحصائيات خيار كل المستويات:"])
+            lines.extend(all_levels_section)
+        lines.extend([
             "",
             wrong_q_formatted,
             "",
             "",
-            "الإتقان حسب القسم",
+            "الإتقان حسب الفئة",
             ""
-        ]
+        ])
         lines.extend(mastery_section)
         return "\n".join(lines)
 
     def start_game(self, level, mode=None):
         self.current_level = level
         self.questions = []
+        self.round_level_solved = {1: 0, 2: 0, 3: 0}
+        self.round_level_total = {1: 0, 2: 0, 3: 0}
         try:
             if level == "all":
-                all_files = []
-                for f_info in self.current_topic.get("files", []):
-                    all_files.append(f_info["path"])
                 if mode == "sequential":
                     sorted_files = sorted(self.current_topic.get("files", []), key=lambda x: x["level"])
                     for f_info in sorted_files:
-                        self.load_questions_from_path(f_info["path"])
+                        self.load_questions_from_path(f_info["path"], lvl=f_info["level"])
                 else:
-                    for path in all_files:
-                        self.load_questions_from_path(path)
+                    for f_info in self.current_topic.get("files", []):
+                        self.load_questions_from_path(f_info["path"], lvl=f_info["level"])
                     random.shuffle(self.questions)
             else:
                 target_path = None
@@ -492,7 +571,7 @@ class IslamicQuestionsGame(qt.QWidget):
                         target_path = f_info["path"]
                         break
                 if target_path:
-                    self.load_questions_from_path(target_path)
+                    self.load_questions_from_path(target_path, lvl=level)
                     random.shuffle(self.questions)
             if not self.questions:
                 guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا توجد أسئلة متاحة لهذا القسم.")
@@ -503,42 +582,63 @@ class IslamicQuestionsGame(qt.QWidget):
                     u_qs.append(q)
                     seen.add(q.get("q"))
             self.questions = u_qs
-            self.grand_total = len(self.questions)
             temp_qs = [q for q in self.questions if q.get("q") not in self.asked_questions]
             if temp_qs: self.questions = temp_qs
             else:
                 for q in self.questions: self.asked_questions.discard(q.get("q"))
                 try:
                     with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
-                except: pass
+                except Exception as e:
+                    log_error_to_file(traceback.format_exc())
             self.solved_count = 0
             self.incorrect_questions = []
             self.total_questions = len(self.questions)
             self.current_question_index = 0
+
+            for q in self.questions:
+                l_val = q.get("_level", 1 if level != "all" else 1)
+                try:
+                    l_int = int(l_val)
+                    if l_int in self.round_level_total:
+                        self.round_level_total[l_int] += 1
+                except Exception as e:
+                    log_error_to_file(traceback.format_exc())
+
             stats = self.load_game_stats()
             stats["total_games"] = stats.get("total_games", 0) + 1
             cat_counts = stats.get("categories_count", {})
             if self.current_category:
                 cat_counts[self.current_category] = cat_counts.get(self.current_category, 0) + 1
             stats["categories_count"] = cat_counts
+
             lvl_counts = stats.get("levels_count", {})
-            lvl_key = str(level)
-            lvl_counts[lvl_key] = lvl_counts.get(lvl_key, 0) + 1
+            if level == "all":
+                stats["all_levels_games_count"] = stats.get("all_levels_games_count", 0) + 1
+            else:
+                lvl_key = str(level)
+                lvl_counts[lvl_key] = lvl_counts.get(lvl_key, 0) + 1
             stats["levels_count"] = lvl_counts
+
             stats["last_played"] = self.format_now_last_played()
             self.save_game_stats(stats)
             self.show_question()
-            self.stacked_widget.setCurrentIndex(3)
+            self.stacked_widget.setCurrentWidget(self.game_widget)
             qt2.QTimer.singleShot(10, self.question_edit.setFocus)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"فشل تحميل الأسئلة: {e}")
 
-    def load_questions_from_path(self, json_path):
+    def load_questions_from_path(self, json_path, lvl=None):
         relative_path = json_path.replace("/database/", "").replace("/", os.sep)
         full_path = os.path.join(self.base_path, relative_path)
         if os.path.exists(full_path):
             with open(full_path, "r", encoding="utf-8-sig") as f:
-                self.questions.extend(json.load(f))
+                items = json.load(f)
+                if isinstance(items, list):
+                    if lvl is not None:
+                        for q in items:
+                            if isinstance(q, dict):
+                                q["_level"] = lvl
+                    self.questions.extend(items)
 
     def get_arabic_count_text(self, n):
         if n == 0: return "صفر سؤال"
@@ -565,14 +665,28 @@ class IslamicQuestionsGame(qt.QWidget):
                 self.save_game_stats(stats)
             solved_text = self.get_arabic_count_text(self.solved_count)
             total_text = self.get_arabic_count_text(self.total_questions)
-            msg = f"أحسنت! لقد انتهى الاختبار.\nلقد قمت بحل {solved_text} من {total_text} في {cat_name} في فئة {topic_name}، المستوى {level_name}."
+            if self.current_level == "all":
+                s1 = self.get_arabic_count_text(self.round_level_solved.get(1, 0))
+                t1 = self.get_arabic_count_text(self.round_level_total.get(1, 0))
+                s2 = self.get_arabic_count_text(self.round_level_solved.get(2, 0))
+                t2 = self.get_arabic_count_text(self.round_level_total.get(2, 0))
+                s3 = self.get_arabic_count_text(self.round_level_solved.get(3, 0))
+                t3 = self.get_arabic_count_text(self.round_level_total.get(3, 0))
+                msg = (f"أحسنت! لقد انتهى الاختبار.\n"
+                       f"لقد قمت بحل {solved_text} من {total_text} في {cat_name} في فئة {topic_name} (لعب كل المستويات).\n\n"
+                       f"التقسيمات حسب المستويات (من السهل إلى الصعب):\n"
+                       f"المستوى السهل: {s1} من {t1}\n"
+                       f"المستوى المتوسط: {s2} من {t2}\n"
+                       f"المستوى الصعب: {s3} من {t3}")
+            else:
+                msg = f"أحسنت! لقد انتهى الاختبار.\nلقد قمت بحل {solved_text} من {total_text} في {cat_name} في فئة {topic_name}، المستوى {level_name}."
             if self.incorrect_questions:
                 incorrect_text = self.get_arabic_count_text(len(self.incorrect_questions))
                 msg += f"\n\nالأسئلة التي تم حلها بشكل خاطئ: {incorrect_text}\n\n"
                 msg += "\n\n".join([f"{item['q']}\nالإجابة الصحيحة: {item['correct']}" for item in self.incorrect_questions])
             guiTools.qMessageBox.MessageBox.view(self, "انتهى الاختبار", msg)
             self.clear_asked_questions()
-            self.stacked_widget.setCurrentIndex(0)
+            self.stacked_widget.setCurrentWidget(self.categories_widget)
             qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
             return
         q_data = self.questions[self.current_question_index]
@@ -580,7 +694,8 @@ class IslamicQuestionsGame(qt.QWidget):
             self.asked_questions.add(q_data.get("q"))
             try:
                 with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
-            except: pass
+            except Exception as e:
+                log_error_to_file(traceback.format_exc())
         self.question_edit.setText(q_data.get("q", ""))
         self.update_question_font()
         solved_text = self.get_arabic_count_text(self.solved_count)
@@ -612,22 +727,52 @@ class IslamicQuestionsGame(qt.QWidget):
         stats["total_answered"] = stats.get("total_answered", 0) + 1
         q_data = self.questions[self.current_question_index]
         q_text = q_data.get("q", "")
+        q_lvl = str(q_data.get("_level", 1))
+
         unique = set(stats.get("unique_answered", []))
-        if q_text:
-            unique.add(q_text)
+        if q_text and q_text.strip():
+            unique.add(q_text.strip())
         stats["unique_answered"] = list(unique)
+
         cat_tot = stats.get("category_total", {})
         if self.current_category:
             cat_tot[self.current_category] = cat_tot.get(self.current_category, 0) + 1
         stats["category_total"] = cat_tot
+
+        level_tot = stats.get("level_total", {})
+        level_tot[q_lvl] = level_tot.get(q_lvl, 0) + 1
+        stats["level_total"] = level_tot
+
+        if self.current_level == "all":
+            all_tot = stats.get("all_levels_total", {})
+            all_tot[q_lvl] = all_tot.get(q_lvl, 0) + 1
+            stats["all_levels_total"] = all_tot
+
         if selected_answer["t"] == 1:
             if sound_enabled: winsound.PlaySound(r"data\sounds\game\true.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
             self.solved_count += 1
             stats["correct_answers"] = stats.get("correct_answers", 0) + 1
+
             cat_cor = stats.get("category_correct", {})
             if self.current_category:
                 cat_cor[self.current_category] = cat_cor.get(self.current_category, 0) + 1
             stats["category_correct"] = cat_cor
+
+            level_cor = stats.get("level_correct", {})
+            level_cor[q_lvl] = level_cor.get(q_lvl, 0) + 1
+            stats["level_correct"] = level_cor
+
+            if self.current_level == "all":
+                all_cor = stats.get("all_levels_correct", {})
+                all_cor[q_lvl] = all_cor.get(q_lvl, 0) + 1
+                stats["all_levels_correct"] = all_cor
+
+            try:
+                int_l = int(q_lvl)
+                if int_l in self.round_level_solved:
+                    self.round_level_solved[int_l] += 1
+            except Exception as e:
+                log_error_to_file(traceback.format_exc())
         else:
             correct_text = ""
             for ans in q_data.get("answers", []):
@@ -637,10 +782,11 @@ class IslamicQuestionsGame(qt.QWidget):
             self.incorrect_questions.append({"q": q_data.get("q"), "correct": correct_text})
             stats["incorrect_answers"] = stats.get("incorrect_answers", 0) + 1
             q_err = stats.get("question_errors", {})
-            if q_text:
-                q_err[q_text] = q_err.get(q_text, 0) + 1
+            if q_text and q_text.strip():
+                q_err[q_text.strip()] = q_err.get(q_text.strip(), 0) + 1
             stats["question_errors"] = q_err
             guiTools.MessageBoxForGame.error(self, "إجابة خاطئة", f"للأسف الإجابة خاطئة.\nالإجابة الصحيحة هي: {correct_text}", sound_enabled=sound_enabled)
+
         self.save_game_stats(stats)
         self.current_question_index += 1
         self.show_question()
@@ -652,18 +798,19 @@ class IslamicQuestionsGame(qt.QWidget):
         try:
             os.makedirs(os.path.dirname(self.game_settings_file), exist_ok=True)
             with open(self.game_settings_file, "w", encoding="utf-8") as f: json.dump(self.game_settings, f, ensure_ascii=False)
-        except: pass
+        except Exception as e:
+            log_error_to_file(traceback.format_exc())
 
     def clear_asked_questions(self):
         self.asked_questions.clear()
         if os.path.exists(self.asked_file):
             try: os.remove(self.asked_file)
-            except: pass
+            except Exception as e: log_error_to_file(traceback.format_exc())
 
     def confirm_exit_game(self):
         if guiTools.QQuestionMessageBox.view(self, "تأكيد الخروج", "هل أنت متأكد من الخروج من الجولة؟", "نعم", "لا") == 0:
             self.clear_asked_questions()
-            self.stacked_widget.setCurrentIndex(0)
+            self.stacked_widget.setCurrentWidget(self.categories_widget)
             qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
 
     def font_size_changed(self, value):

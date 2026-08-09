@@ -26,7 +26,7 @@ except Exception as e:
 
 def get_smart_display_name():
     try:
-        if settings_handler.get("g", "use_name_in_occasions") == "False":
+        if settings_handler.get("g", "use_name_in_occasions") != "True":
             return ""
         name_type = settings_handler.get("g", "name_type") or "custom_name"
         if name_type == "custom_name":
@@ -297,7 +297,7 @@ class main(qt.QMainWindow):
                     if data.get("is_completed", False):
                         return
 
-                use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") != "False")
+                use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") == "True")
                 username1 = get_smart_display_name() if use_name_enabled else ""
                 gender = settings_handler.get("g", "user_gender") or "ذكر"
                 is_female = (gender == "أنثى")
@@ -434,7 +434,7 @@ class main(qt.QMainWindow):
         self.developers_window.exec()
 
     def viewInfoTextEdit(self):
-        use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") != "False")
+        use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") == "True")
         username1 = get_smart_display_name() if use_name_enabled else ""
         gender = settings_handler.get("g", "user_gender") or "ذكر"
         is_female = (gender == "أنثى")
@@ -552,7 +552,7 @@ class main(qt.QMainWindow):
             try:
                 os.makedirs(os.path.dirname(log_path), exist_ok=True)
                 with open(log_path, "w", encoding="utf-8") as f:
-                    f.write("سجل أخطاء البرنامج (Error Log)\n")
+                    f.write("")
             except Exception as e:
                 print(f"Handled exception: {e}")
         try:
@@ -631,7 +631,7 @@ def check_missed_khatmah_alert(parent_window=None):
             expected_pages = min(604, days_passed * daily_pages)
 
         if completed_pages < expected_pages:
-            use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") != "False")
+            use_name_enabled = (settings_handler.get("g", "use_name_in_occasions") == "True")
             username1 = get_smart_display_name() if use_name_enabled else ""
             gender = settings_handler.get("g", "user_gender") or "ذكر"
             is_female = (gender == "أنثى")
