@@ -1,7 +1,7 @@
 {
   "name": "moslem tools",
-  "version": 8.6,
-  "what is new": "الجديد للإصدار 8.6\nإتاحة إخفاء أرقام السور في تبويبة القرآن الكريم مكتوب\nإضافة إحصائيات للعبة الأسئلة الإسلامية\nتقسيم الخيارات في قائمة خيارات الفئة في عارض القرآن الكريم\nتم تحديث مكتبة qt وهذا قد يسبب بعض المشاكل، يرجى تنبيهي على الخاص فور اكتشاف أي مشكلة\nإصلاح الكثير من الأخطاء المهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_8.6/moslem_tools_version_8.6.exe",
-  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_8.6/moslem_tools_version_8.6.exe",
+  "version": 9.0,
+  "what is new": "الجديد للإصدار 9.0\nتم إضافة إعراب مفصل للقرآن الكريم\nتم إضافة معاني كلمات الآيات\nتم إضافة صرف كلمات الآيات\nتم تحسين مظهر البرنامج\n\nتم تحديث مكتبة qt وهذا قد يسبب بعض المشاكل، يرجى تنبيهي على الخاص فور اكتشاف أي مشكلة\nإصلاح الكثير من الأخطاء المهمة في البرنامج\nلا تجعل البرنامج يقف عندك، شارك البرنامج مع أكبر فئة من الناس، وإن شاء الله رابط البرنامج في نهاية رسالة التحديث هذه\nشكر خاص لجابر محمد جابر على اختباره للبرنامج وتنسيقه لبعض ملفات قواعد البيانات\nوالسلام عليكم ورحمة الله وبركاته\nhttps://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_9.0/moslem_tools_version_9.0.exe",
+  "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_9.0/moslem_tools_version_9.0.exe",
   "is_beta": false
 }
