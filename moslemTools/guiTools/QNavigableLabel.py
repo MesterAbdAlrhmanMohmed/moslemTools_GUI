@@ -1,13 +1,11 @@
 from PyQt6.QtWidgets import QLineEdit
 from PyQt6.QtCore import Qt
 
-
 class QNavigableLabel(QLineEdit):
     def __init__(self, text="", parent=None):
         super().__init__(text, parent)
 
         self.setText(text)
-
         self.setFrame(False)
         self.setAcceptDrops(False)
         self.setCursorPosition(0)
@@ -19,6 +17,8 @@ class QNavigableLabel(QLineEdit):
                 padding: 0px;
             }
         """)
+        
+        self.selectionChanged.connect(self.deselect)
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
@@ -28,6 +28,10 @@ class QNavigableLabel(QLineEdit):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             event.ignore()
+            return
+
+        if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
+            event.accept()
             return
 
         navigation_keys = {
@@ -57,14 +61,16 @@ class QNavigableLabel(QLineEdit):
         if event.button() == Qt.MouseButton.MiddleButton:
             event.accept()
             return
-
         super().mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        event.accept()
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
-        super().mouseMoveEvent(event)
+        event.accept()
 
     def dragEnterEvent(self, event):
         event.accept()
