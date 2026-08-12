@@ -6,7 +6,7 @@ from guiTools import speak
 import guiTools, os, tempfile, shutil, subprocess, threading, time, uuid
 import ujson as json
 from pathlib import Path
-from settings import app
+from settings import settings_handler, app
 from functions import audio_manager
 from .recorder import WasapiRecorder, SchedulingDialog
 from .stations import (
@@ -57,6 +57,23 @@ class protcasts(qt.QWidget):
         self.brotcasts_tab.addTab(brotcasts_of_suplications(global_audio_output, self), "إذاعات الأذكار والأدعية")
         self.brotcasts_tab.addTab(other_brotcasts(global_audio_output, self), "إذاعات إسلامية أخرى")
         self.brotcasts_tab.setStyleSheet("""QTabWidget::pane { border: 1px solid #444; border-radius: 6px; background-color: #1e1e1e; } QTabBar::tab { background: #2b2b2b; color: white; padding: 10px 20px; border: 1px solid #444; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; min-width: 100px; font-weight: bold; } QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } QTabBar::tab:hover { background: #3a3a3a; }""")
+
+        view_mode_v_layout = qt.QVBoxLayout()
+        view_mode_v_layout.setContentsMargins(5, 0, 5, 0)
+        self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
+        self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.view_mode_combo = qt.QComboBox()
+        self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.view_mode_combo.setAccessibleName("طريقة عرض العناصر")
+        self.view_mode_combo.addItems(["عمودي", "شبكي"])
+        grid_enabled = settings_handler.get("broadcasts", "grid_view") == "True"
+        self.view_mode_combo.setCurrentIndex(1 if grid_enabled else 0)
+        self.view_mode_combo.currentIndexChanged.connect(self.on_view_mode_changed)
+        view_mode_v_layout.addWidget(self.view_mode_label)
+        view_mode_v_layout.addWidget(self.view_mode_combo)
+        view_mode_container = qt.QWidget()
+        view_mode_container.setLayout(view_mode_v_layout)
+        self.brotcasts_tab.setCornerWidget(view_mode_container, qt2.Qt.Corner.TopRightCorner)
 
         self.fav_list_widget = qt.QListWidget()
         self.fav_list_widget.setSpacing(3)
@@ -138,6 +155,7 @@ class protcasts(qt.QWidget):
             player.playbackStateChanged.connect(self.on_radio_state_changed)
 
         self.update_favorites_ui_state()
+        self.on_view_mode_changed(self.view_mode_combo.currentIndex())
 
     def load_favorites(self):
         try:
@@ -171,6 +189,8 @@ class protcasts(qt.QWidget):
             self.fav_list_widget.addItems(self.favorites)
         else:
             self.fav_list_widget.addItem("لا توجد إذاعات في قائمة المفضلة")
+        if hasattr(self, 'view_mode_combo') and self.view_mode_combo.currentIndex() == 1:
+            self.update_grid_size_for_widget(self.fav_list_widget)
 
     def update_favorites_ui_state(self):
         self.update_favorites_list_widget()
@@ -187,6 +207,74 @@ class protcasts(qt.QWidget):
         self.show_favorites_only = not self.show_favorites_only
         self.save_favorites()
         self.update_favorites_ui_state()
+
+    def update_grid_size_for_widget(self, list_widget):
+        if self.view_mode_combo.currentIndex() != 1:
+            return
+        fm = list_widget.fontMetrics()
+        max_w = 0
+        for i in range(list_widget.count()):
+            txt = list_widget.item(i).text()
+            w = fm.horizontalAdvance(txt) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(txt).width()
+            if w > max_w:
+                max_w = w
+        cell_w = max(200, max_w + 60)
+        cell_h = max(60, fm.height() * 2 + 20)
+        list_widget.setGridSize(qt2.QSize(cell_w, cell_h))
+
+    def get_all_list_widgets(self):
+        widgets = []
+        for i in range(self.brotcasts_tab.count()):
+            tab_widget = self.brotcasts_tab.widget(i)
+            if hasattr(tab_widget, 'list_of_quran_brotcasts'):
+                widgets.append(tab_widget.list_of_quran_brotcasts)
+            elif hasattr(tab_widget, 'list_of_reciters'):
+                widgets.append(tab_widget.list_of_reciters)
+            elif hasattr(tab_widget, 'list_of_tafseer'):
+                widgets.append(tab_widget.list_of_tafseer)
+            elif hasattr(tab_widget, 'list_of_adhkar'):
+                widgets.append(tab_widget.list_of_adhkar)
+            elif hasattr(tab_widget, 'list_of_other'):
+                widgets.append(tab_widget.list_of_other)
+        if hasattr(self, 'fav_list_widget'):
+            widgets.append(self.fav_list_widget)
+        return widgets
+
+    def on_view_mode_changed(self, index):
+        is_grid = (index == 1)
+        settings_handler.set("broadcasts", "grid_view", "True" if is_grid else "False")
+        if is_grid:
+            grid_style = """
+                QListWidget::item {
+                    padding: 10px 18px;
+                    margin: 4px;
+                    border-radius: 6px;
+                }
+                QListWidget::item:selected {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+                QListWidget::item:focus {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+            """
+            for lw in self.get_all_list_widgets():
+                lw.setStyleSheet(grid_style)
+                lw.setViewMode(qt.QListView.ViewMode.IconMode)
+                lw.setResizeMode(qt.QListView.ResizeMode.Adjust)
+                self.update_grid_size_for_widget(lw)
+                lw.setSpacing(6)
+        else:
+            list_style = "QListWidget::item { font-weight: bold; font-size: 12pt; }"
+            for lw in self.get_all_list_widgets():
+                lw.setStyleSheet(list_style)
+                lw.setViewMode(qt.QListView.ViewMode.ListMode)
+                lw.setResizeMode(qt.QListView.ResizeMode.Fixed)
+                lw.setGridSize(qt2.QSize())
+                lw.setSpacing(3)
 
     def toggle_station_favorite(self, station_name):
         if station_name == "لا توجد إذاعات في قائمة المفضلة":
