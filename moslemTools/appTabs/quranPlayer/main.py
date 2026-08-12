@@ -1877,7 +1877,7 @@ class QuranPlayer(qt.QWidget):
         self.Slider.setValue(0)
         self.Slider.blockSignals(False)
         if not self.volume_timer.isActive():
-            self.duration.setText("00:00:00")
+            self.duration.setText("0 ثانية")
         speak("تم إيقاف المقطع")
 
     def restore_duration_text(self):
@@ -1952,26 +1952,27 @@ class QuranPlayer(qt.QWidget):
             except ZeroDivisionError:
                 self.Slider.setValue(0)
                 if not self.volume_timer.isActive():
-                    self.duration.setText("00:00:00")
+                    self.duration.setText("0 ثانية")
         else:
             self.Slider.setValue(0)
             if not self.volume_timer.isActive():
-                self.duration.setText("00:00:00")
+                self.duration.setText("0 ثانية")
 
     def time_VA(self):
         if self.volume_timer.isActive():
             return
         position = self.mp.position()
         duration = self.mp.duration()
-        remaining = duration - position
-        position_str = qt2.QTime(0, 0, 0).addMSecs(position).toString("HH:mm:ss")
-        duration_str = qt2.QTime(0, 0, 0).addMSecs(duration).toString("HH:mm:ss")
-        remaining_str = qt2.QTime(0, 0, 0).addMSecs(remaining).toString("HH:mm:ss")
-        info_text = "الوقت المنقضي: " + position_str + "، الوقت المتبقي: " + remaining_str + "، مدة المقطع: " + duration_str
+        remaining = max(0, duration - position)
+        position_str = functions.text_actions.format_arabic_time(position)
+        remaining_str = functions.text_actions.format_arabic_time(remaining)
         if self.startingPosition is not None and self.endingPosition is not None:
-            start_str = qt2.QTime(0, 0, 0).addMSecs(self.startingPosition).toString("HH:mm:ss")
-            end_str = qt2.QTime(0, 0, 0).addMSecs(self.endingPosition).toString("HH:mm:ss")
-            info_text += f"، يتم التشغيل من {start_str} إلى {end_str}"
+            start_str = functions.text_actions.format_arabic_time(self.startingPosition)
+            end_str = functions.text_actions.format_arabic_time(self.endingPosition)
+            info_text = f"يتم التشغيل من {start_str} إلى {end_str}"
+        else:
+            duration_str = functions.text_actions.format_arabic_time(duration)
+            info_text = f"الوقت المنقضي: {position_str}، الوقت المتبقي: {remaining_str}، مدة المقطع: {duration_str}"
         self.duration.setText(info_text)
     @staticmethod
 

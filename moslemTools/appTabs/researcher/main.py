@@ -268,7 +268,7 @@ class Albaheth(qt.QWidget):
         self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.media_progress.setRange(0, 100)
         self.media_progress.valueChanged.connect(self.set_media_position)
-        self.time_label = guiTools.QNavigableLabel("00:00 / 00:00")
+        self.time_label = guiTools.QNavigableLabel("0 ثانية")
         self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.time_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.time_label.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Preferred)
@@ -798,12 +798,9 @@ class Albaheth(qt.QWidget):
         if duration > 0:
             progress_value = int((position * 100) / duration)
             self.media_progress.setValue(progress_value)
-            position_sec = position // 1000
-            duration_sec = duration // 1000
-            remaining_sec = duration_sec - position_sec
-            position_str = f"{position_sec // 60}:{position_sec % 60:02d}"
-            duration_str = f"{duration_sec // 60}:{duration_sec % 60:02d}"
-            remaining_str = f"{remaining_sec // 60}:{remaining_sec % 60:02d}"
+            position_str = functions.text_actions.format_arabic_time(position)
+            duration_str = functions.text_actions.format_arabic_time(duration)
+            remaining_str = functions.text_actions.format_arabic_time(max(0, duration - position))
             self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
         self.media_progress.blockSignals(False)
 

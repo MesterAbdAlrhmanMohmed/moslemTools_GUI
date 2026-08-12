@@ -86,3 +86,29 @@ def save_text_file(parent, widget_or_text, default_filename="مستند نصي.t
                     f.write(full_text)
     except Exception as error:
         guiTools.MessageBox.error(parent, "تنبيه حدث خطأ", str(error))
+
+def format_arabic_time_unit(number, singular, dual, plural, singular_acc):
+    if number == 0:
+        return ""
+    if number == 1:
+        return singular
+    elif number == 2:
+        return dual
+    elif 3 <= number <= 10:
+        return f"{number} {plural}"
+    else:
+        return f"{number} {singular_acc}"
+
+def format_arabic_time(ms_or_sec, is_ms=True):
+    total_seconds = int(ms_or_sec // 1000) if is_ms else int(ms_or_sec)
+    if total_seconds <= 0:
+        return "0 ثانية"
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+    h_str = format_arabic_time_unit(hours, "ساعة", "ساعتين", "ساعات", "ساعة")
+    m_str = format_arabic_time_unit(minutes, "دقيقة", "دقيقتين", "دقائق", "دقيقة")
+    s_str = format_arabic_time_unit(seconds, "ثانية", "ثانيتين", "ثواني", "ثانية")
+    parts = [p for p in [h_str, m_str, s_str] if p]
+    return " و ".join(parts) if parts else "0 ثانية"
+

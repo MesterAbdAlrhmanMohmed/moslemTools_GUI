@@ -2742,12 +2742,9 @@ class QuranViewer(qt.QDialog):
             print(f"Handled exception: {e}")
 
     def update_time_label(self, position, duration):
-        position_sec = position // 1000
-        duration_sec = duration // 1000
-        remaining_sec = duration_sec - position_sec
-        position_str = f"{position_sec // 60}:{position_sec % 60:02d}"
-        duration_str = f"{duration_sec // 60}:{duration_sec % 60:02d}"
-        remaining_str = f"{remaining_sec // 60}:{remaining_sec % 60:02d}"
+        position_str = functions.text_actions.format_arabic_time(position)
+        duration_str = functions.text_actions.format_arabic_time(duration)
+        remaining_str = functions.text_actions.format_arabic_time(max(0, duration - position))
         self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
 
     def on_state(self,state):

@@ -846,9 +846,10 @@ class QuranPlayer(qt.QDialog):
         except: pass
 
     def update_time_label(self, position, duration):
-        p_sec, d_sec = position // 1000, duration // 1000
-        r_sec = d_sec - p_sec
-        self.time_label.setText(f"الوقت المنقضي: {p_sec // 60}:{p_sec % 60:02d} | الوقت المتبقي: {r_sec // 60}:{r_sec % 60:02d} | مدة الآية: {d_sec // 60}:{d_sec % 60:02d}")
+        position_str = functions.text_actions.format_arabic_time(position)
+        duration_str = functions.text_actions.format_arabic_time(duration)
+        remaining_str = functions.text_actions.format_arabic_time(max(0, duration - position))
+        self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
 
     def onChangeRecitersContextMenuRequested(self):
         self.pause_for_action()
