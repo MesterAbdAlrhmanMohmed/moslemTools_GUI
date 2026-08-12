@@ -2,6 +2,7 @@ import pyperclip, winsound,guiTools
 from settings import *
 from hijridate import Gregorian, Hijri
 import PyQt6.QtWidgets as qt
+import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 
 
@@ -150,12 +151,20 @@ class DateConverter(qt.QWidget):
         main_layout.addLayout(content_layout)
         self.setLayout(main_layout)
         self.update_month_combo()
+        self.adjust_converter_combo_width()
         self.year.textChanged.connect(self._reset_result_state)
         self.day.textChanged.connect(self._reset_result_state)
         self.month_combo.currentIndexChanged.connect(self._reset_result_state)
         self.Converter_combo.currentIndexChanged.connect(self._reset_result_state)
         self.Converter_combo.currentIndexChanged.connect(self.update_month_combo)
         self.Converter_combo.currentIndexChanged.connect(self.update_button_text)
+        self.Converter_combo.currentIndexChanged.connect(self.adjust_converter_combo_width)
+
+    def adjust_converter_combo_width(self, index=None):
+        fm = qt1.QFontMetrics(self.Converter_combo.font())
+        current_text = self.Converter_combo.currentText()
+        text_width = fm.horizontalAdvance(current_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(current_text).width()
+        self.Converter_combo.setFixedWidth(text_width + 65)
 
     def clear_action(self):
         self._reset_result_state()

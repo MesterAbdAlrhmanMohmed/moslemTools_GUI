@@ -86,7 +86,7 @@ def get_range_meanings(ayah_text_list, category=None, type=None):
             output_blocks.append(meanings)
         except Exception:
             output_blocks.append(f"{line}:\nتعذر جلب معاني الكلمات.")
-    return "\n\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."
+    return "\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."
 
 
 def get_single_ayah_sarf(surah_no, ayah_no, ayah_text=None):

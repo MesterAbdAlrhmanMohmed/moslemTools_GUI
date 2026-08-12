@@ -1,6 +1,6 @@
 import gui,guiTools,os,re,shutil,threading
 import ujson as json
-from settings import *
+from settings import settings_handler, app
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -48,8 +48,23 @@ class Athker(qt.QWidget):
         self.fav_btn = guiTools.QPushButton("فتح قائمة المفضلة")
         self.fav_btn.setStyleSheet("background-color: #0000AA; color: white; min-height: 50px; padding: 0 20px; font-weight: bold;")
         self.fav_btn.clicked.connect(self.toggle_favorites)
-        search_layout.addWidget(self.search_bar)
+
+        view_mode_v_layout = qt.QVBoxLayout()
+        self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
+        self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.view_mode_combo = qt.QComboBox()
+        self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.view_mode_combo.setAccessibleName("طريقة عرض العناصر")
+        self.view_mode_combo.addItems(["عمودي", "شبكي"])
+        grid_enabled = settings_handler.get("athkar", "grid_view") == "True"
+        self.view_mode_combo.setCurrentIndex(1 if grid_enabled else 0)
+        self.view_mode_combo.currentIndexChanged.connect(self.on_view_mode_changed)
+        view_mode_v_layout.addWidget(self.view_mode_label)
+        view_mode_v_layout.addWidget(self.view_mode_combo)
+
+        search_layout.addWidget(self.search_bar, 1)
         search_layout.addWidget(self.fav_btn)
+        search_layout.addLayout(view_mode_v_layout)
         layout.addWidget(self.SL)
         layout.addLayout(search_layout)
         self.athkerList = guiTools.QListWidget()
@@ -71,6 +86,7 @@ class Athker(qt.QWidget):
         bottom_layout.addSpacing(15)
         bottom_layout.addWidget(self.info2, 1)
         layout.addWidget(bottom_widget)
+        self.on_view_mode_changed(self.view_mode_combo.currentIndex())
 
     def load_favorites(self):
         try:
@@ -109,6 +125,52 @@ class Athker(qt.QWidget):
         self.save_favorites()
         self.update_favorites_ui_state()
         self.apply_filter()
+
+    def update_grid_size(self):
+        if self.view_mode_combo.currentIndex() != 1:
+            return
+        fm = self.athkerList.fontMetrics()
+        max_w = 0
+        for i in range(self.athkerList.count()):
+            txt = self.athkerList.item(i).text()
+            w = fm.horizontalAdvance(txt) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(txt).width()
+            if w > max_w:
+                max_w = w
+        cell_w = max(200, max_w + 60)
+        cell_h = max(60, fm.height() * 2 + 20)
+        self.athkerList.setGridSize(qt2.QSize(cell_w, cell_h))
+
+    def on_view_mode_changed(self, index):
+        is_grid = (index == 1)
+        settings_handler.set("athkar", "grid_view", "True" if is_grid else "False")
+        if is_grid:
+            self.athkerList.setStyleSheet("""
+                QListWidget::item {
+                    padding: 10px 18px;
+                    margin: 4px;
+                    border-radius: 6px;
+                }
+                QListWidget::item:selected {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+                QListWidget::item:focus {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+            """)
+            self.athkerList.setViewMode(qt.QListView.ViewMode.IconMode)
+            self.athkerList.setResizeMode(qt.QListView.ResizeMode.Adjust)
+            self.update_grid_size()
+            self.athkerList.setSpacing(6)
+        else:
+            self.athkerList.setStyleSheet("")
+            self.athkerList.setViewMode(qt.QListView.ViewMode.ListMode)
+            self.athkerList.setResizeMode(qt.QListView.ResizeMode.Fixed)
+            self.athkerList.setGridSize(qt2.QSize())
+            self.athkerList.setSpacing(3)
 
     def showEvent(self, event):
         if event:
@@ -226,6 +288,7 @@ class Athker(qt.QWidget):
         else:
             self.athkerList.addItems(filtered_athkars)
             self.data = filtered_data_for_display
+        self.update_grid_size()
 
     def refresh_athkar_list(self):
         self.is_loaded = False

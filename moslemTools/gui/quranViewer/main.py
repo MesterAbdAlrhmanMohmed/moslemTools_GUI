@@ -4,7 +4,8 @@ from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
 from ..tafaseerViewer import TafaseerViewer
 from ..quranPlayer import QuranPlayer
-import time, winsound, pyperclip, os, re, requests, subprocess, shutil
+import time, winsound, pyperclip, os, re, requests, subprocess, shutil, traceback
+from custom_errors import log_error_to_file
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -113,9 +114,9 @@ class QuranViewer(qt.QDialog):
         self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.time_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.time_label.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Preferred)
-        progress_time_layout = qt.QHBoxLayout()
-        progress_time_layout.addWidget(self.media_progress, 3)
-        progress_time_layout.addWidget(self.time_label, 1)
+        progress_time_layout = qt.QVBoxLayout()
+        progress_time_layout.addWidget(self.media_progress)
+        progress_time_layout.addWidget(self.time_label)
         self.media.durationChanged.connect(self.update_slider)
         self.media.positionChanged.connect(self.update_slider)
         self.font_laybol=qt.QLabel("حجم الخط")
@@ -183,9 +184,14 @@ class QuranViewer(qt.QDialog):
         self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.merge_progress_bar = qt.QProgressBar()
+        self.merge_progress_bar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.merge_action_button = guiTools.QPushButton("إلغاء العملية")
+        self.merge_action_button.setObjectName("cancelMergeButton")
         self.merge_action_button.setAutoDefault(False)
-        self.merge_action_button.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 8px 18px; border-radius: 5px; font-weight: bold;} QPushButton:hover {background-color: #A52A2A;}")
+        self.merge_action_button.setMinimumHeight(35)
+        self.merge_action_button.setMinimumWidth(160)
+        self.merge_action_button.setMaximumWidth(210)
+        self.merge_action_button.setStyleSheet("QPushButton#cancelMergeButton {background-color: #8B0000; color: white; border: 2px solid #B22222; padding: 6px 12px; border-radius: 5px; font-weight: bold;} QPushButton#cancelMergeButton:hover {background-color: #A52A2A; border-color: #FF4D4D;}")
         self.merge_action_button.clicked.connect(self.handle_merge_action)
         self.resume_download_button = guiTools.QPushButton("استئناف")
         self.resume_download_button.setAutoDefault(False)
@@ -804,16 +810,38 @@ class QuranViewer(qt.QDialog):
         self.resume_after_action()
         self.save_mode = False
 
+    def update_download_progress(self, file_percent):
+        total = len(self.merge_list)
+        if total > 1:
+            done = len(self.completed_merge_downloads)
+            overall = int(((done + (file_percent / 100.0)) / total) * 100)
+            self.merge_progress_bar.setValue(min(100, overall))
+            self.merge_feedback_label.setText(f"جاري تحميل الآيات: تم تحميل {done} من {total} ({overall}%)...")
+        else:
+            self.merge_progress_bar.setValue(file_percent)
+            self.merge_feedback_label.setText(f"جاري تحميل الآية المطلوبة ({file_percent}%)...")
+
     def process_next_in_merge_queue(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية من قبل المستخدم.")
             return
         next_item_to_download = next((item for item in self.merge_list if not os.path.exists(item["local_path"]) and item["url"] not in self.completed_merge_downloads), None)
         if next_item_to_download:
+            self.is_merging = True
             self.merge_phase = 'downloading'
             self.merge_action_button.hide()
-            msg_dl = "جاري تحميل الآية المطلوبة..." if len(self.merge_list) == 1 else "جاري تحميل الآيات المطلوبة..."
-            self.merge_feedback_label.setText(msg_dl)
+            total = len(self.merge_list)
+            done = len(self.completed_merge_downloads)
+            if total > 1:
+                overall = int((done / total) * 100)
+                self.merge_progress_bar.setValue(min(100, overall))
+                if done > 0:
+                    self.merge_feedback_label.setText(f"جاري تحميل الآيات: تم تحميل {done} من {total} ({overall}%)...")
+                else:
+                    self.merge_feedback_label.setText("جاري تحميل الآيات المطلوبة...")
+            else:
+                self.merge_progress_bar.setValue(0)
+                self.merge_feedback_label.setText("جاري تحميل الآية المطلوبة...")
             self.merge_progress_bar.show()
             if self.save_mode:
                 output_dir = self.current_merge_output_path
@@ -824,7 +852,7 @@ class QuranViewer(qt.QDialog):
                 download_path = os.path.join(output_dir, f"temp_{safe_filename}")
             self.current_download_url = next_item_to_download['url']
             self.download_thread = DownloadThread(self.current_download_url, download_path)
-            self.download_thread.progress.connect(self.merge_progress_bar.setValue)
+            self.download_thread.progress.connect(self.update_download_progress)
             self.download_thread.finished.connect(self.on_single_merge_download_finished)
             self.download_thread.cancelled.connect(lambda: self.on_merge_finished(False, "حدث خطأ أثناء التحميل."))
             self.download_thread.network_error.connect(self.on_download_network_error)
@@ -835,6 +863,8 @@ class QuranViewer(qt.QDialog):
             self.resume_download_button.setVisible(False)
             if not self.save_mode:
                 self.finalize_and_execute_merge()
+            else:
+                self.on_merge_finished(True, "تم حفظ الآيات بنجاح.")
 
     def on_download_network_error(self, msg):
         self.resume_download_button.setVisible(True)
@@ -2061,30 +2091,26 @@ class QuranViewer(qt.QDialog):
             self.text.setTextCursor(cursor)
             self.text.setFocus()
 
+    def reject(self):
+        if getattr(self, 'is_merging', False):
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء العملية الجارية.")
+            return
+        super().reject()
+
     def keyPressEvent(self, event):
         if event.key() == qt2.Qt.Key.Key_Escape:
+            if getattr(self, 'is_merging', False):
+                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء العملية الجارية.")
+                return
             self.close()
+            return
         super().keyPressEvent(event)
 
     def closeEvent(self, event):
         if getattr(self, 'is_merging', False):
-            if getattr(self, 'save_mode', False):
-                event.ignore()
-                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء عملية الحفظ.")
-                return
-            else:
-                reply = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "عملية الدمج قيد التشغيل. هل أنت متأكد أنك تريد إلغاء العملية والخروج؟", "نعم", "لا")
-                if reply == 0:
-                    self.cancellation_requested = True
-                    if hasattr(self, 'merge_thread') and self.merge_thread.isRunning():
-                        self.merge_thread.stop()
-                    if hasattr(self, 'download_thread') and self.download_thread.isRunning():
-                        self.download_thread.cancel()
-                    if hasattr(self, 'pre_merge_thread') and self.pre_merge_thread.isRunning():
-                        self.pre_merge_thread.terminate()
-                else:
-                    event.ignore()
-                    return
+            event.ignore()
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء العملية الجارية.")
+            return
         if getattr(self, 'is_counting_sajdas', False):
             self.is_counting_sajdas = False
             if hasattr(self, 'sajda_thread') and self.sajda_thread.isRunning():

@@ -1,7 +1,8 @@
 from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
 from ..tafaseerViewer import TafaseerViewer
-import time,os,requests,subprocess,shutil,re
+import time,os,requests,subprocess,shutil,re,traceback
+from custom_errors import log_error_to_file
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -73,9 +74,9 @@ class QuranPlayer(qt.QDialog):
         self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.time_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.time_label.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Preferred)
-        progress_time_layout = qt.QHBoxLayout()
-        progress_time_layout.addWidget(self.media_progress, 3)
-        progress_time_layout.addWidget(self.time_label, 1)
+        progress_time_layout = qt.QVBoxLayout()
+        progress_time_layout.addWidget(self.media_progress)
+        progress_time_layout.addWidget(self.time_label)
         self.font_laybol=qt.QLabel("حجم الخط")
         self.font_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_font = qt.QSpinBox()

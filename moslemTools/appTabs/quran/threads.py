@@ -176,7 +176,9 @@ class SaveThread(qt2.QThread):
             prefix = str(idx + 1).zfill(4) + "_"
             new_filename = prefix + original_filename
             dest_path = os.path.join(self.target_dir, new_filename)
-            self.status.emit(f"جاري حفظ {new_filename}")
+            overall = int((idx / total) * 100)
+            self.progress.emit(overall)
+            self.status.emit(f"جاري حفظ الآيات: تم حفظ {idx} من {total} ({overall}%)...")
             if os.path.exists(local_path):
                 try:
                     shutil.copy2(local_path, dest_path)
@@ -186,6 +188,8 @@ class SaveThread(qt2.QThread):
             else:
                 try:
                     response = requests.get(url, stream=True)
+                    total_size = int(response.headers.get('content-length', 0))
+                    downloaded = 0
                     with open(dest_path, 'wb') as f:
                         for chunk in response.iter_content(chunk_size=1024):
                             if self.cancelled:
@@ -193,10 +197,13 @@ class SaveThread(qt2.QThread):
                                 return
                             if chunk:
                                 f.write(chunk)
+                                downloaded += len(chunk)
+                                if total_size > 0:
+                                    self.progress.emit(int((idx + downloaded / total_size) * 100 / total))
                 except Exception as e:
                     self.finished.emit(False, f"فشل تحميل {original_filename}: {str(e)}")
                     return
-            self.progress.emit(idx + 1)
+            self.progress.emit(int((idx + 1) * 100 / total))
         self.finished.emit(True, f"تم حفظ {total} آية بنجاح")
 
     def cancel(self):

@@ -1,7 +1,8 @@
 from custom_errors import *
-import sys
+import sys, traceback, threading
 sys.excepthook = my_excepthook
-import update,guiTools,random,os,shutil,datetime,webbrowser,requests,pyperclip,winsound,ctypes,threading
+threading.excepthook = lambda args: log_error_to_file("".join(traceback.format_exception(args.exc_type, args.exc_value, args.exc_traceback)))
+import update,guiTools,random,os,shutil,datetime,webbrowser,requests,pyperclip,winsound,ctypes
 from ctypes import wintypes
 import ujson as json
 from pynput import keyboard as p_key
@@ -139,12 +140,19 @@ class main(qt.QMainWindow):
     (Athker(), "الأذكار والأدعية"),
     (sibha(), "السبحة الإلكترونية"),
     (NamesOfAllah(), "أسماء الله الحُسْنى"),
-    (ProphetStories(), "القصص الإسلامية المكتوبة"),
+    (ProphetStories(), "القصص الإسلامية"),
     (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),
     (DateConverter(), "محول التاريخ"),
 ]
         for widget_class, label in tabs:
-            self.list_widget.add(label, widget_class)
+            scroll = qt.QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(qt.QFrame.Shape.NoFrame)
+            scroll.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+            scroll.horizontalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+            scroll.verticalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+            scroll.setWidget(widget_class)
+            self.list_widget.add(label, scroll)
         try:
             start_tab = int(settings_handler.get("g", "startup_tab"))
             if 0 <= start_tab < self.list_widget.count():

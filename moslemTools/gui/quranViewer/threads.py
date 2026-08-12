@@ -40,11 +40,12 @@ class DownloadThread(qt2.QThread):
             try:
                 response = requests.get(self.url, stream=True, timeout=15, headers=headers)
                 if response.status_code in (200, 206):
+                    header_len = response.headers.get('content-length')
                     content_range = response.headers.get('content-range')
                     if content_range:
                         total_size = int(content_range.split('/')[-1])
-                    elif 'content-length' in response.headers:
-                        total_size = downloaded_size + int(response.headers['content-length'])
+                    elif header_len:
+                        total_size = downloaded_size + int(header_len)
                     else:
                         total_size = 0
                     mode = 'ab' if (downloaded_size > 0 and response.status_code == 206) else 'wb'
@@ -61,8 +62,11 @@ class DownloadThread(qt2.QThread):
                                 f.write(chunk)
                                 downloaded_size += len(chunk)
                                 if total_size > 0:
-                                    progress_percent = int((downloaded_size / total_size) * 100)
-                                    self.progress.emit(progress_percent)
+                                    progress_percent = min(100, int((downloaded_size / total_size) * 100))
+                                else:
+                                    progress_percent = min(99, int(downloaded_size / 3000))
+                                self.progress.emit(progress_percent)
+                    self.progress.emit(100)
                     self.finished.emit()
                     return
                 else:

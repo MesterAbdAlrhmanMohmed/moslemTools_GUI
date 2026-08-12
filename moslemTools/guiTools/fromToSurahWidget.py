@@ -611,6 +611,17 @@ class FromToSurahWidget(qt.QDialog):
             self.completed_merge_downloads.clear()
             self.process_next_in_merge_queue()
 
+    def update_download_progress(self, file_percent):
+        total = len(self.merge_list)
+        if total > 1:
+            done = len(self.completed_merge_downloads)
+            overall = int(((done + (file_percent / 100.0)) / total) * 100)
+            self.merge_progress_bar.setValue(min(100, overall))
+            self.merge_feedback_label.setText(f"جاري تحميل الآيات: تم تحميل {done} من {total} ({overall}%)...")
+        else:
+            self.merge_progress_bar.setValue(file_percent)
+            self.merge_feedback_label.setText(f"جاري تحميل الآية المطلوبة ({file_percent}%)...")
+
     def process_next_in_merge_queue(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية من قبل المستخدم.")
@@ -619,8 +630,18 @@ class FromToSurahWidget(qt.QDialog):
         if next_item_to_download:
             self.merge_phase = 'downloading'
             self.merge_action_button.hide()
-            msg_dl = "جاري تحميل الآية المطلوبة..." if len(self.merge_list) == 1 else "جاري تحميل الآيات المطلوبة..."
-            self.merge_feedback_label.setText(msg_dl)
+            total = len(self.merge_list)
+            done = len(self.completed_merge_downloads)
+            if total > 1:
+                overall = int((done / total) * 100)
+                self.merge_progress_bar.setValue(min(100, overall))
+                if done > 0:
+                    self.merge_feedback_label.setText(f"جاري تحميل الآيات: تم تحميل {done} من {total} ({overall}%)...")
+                else:
+                    self.merge_feedback_label.setText("جاري تحميل الآيات المطلوبة...")
+            else:
+                self.merge_progress_bar.setValue(0)
+                self.merge_feedback_label.setText("جاري تحميل الآية المطلوبة...")
             self.merge_progress_bar.show()
             if self.save_mode:
                 output_dir = self.current_merge_output_path
@@ -633,7 +654,7 @@ class FromToSurahWidget(qt.QDialog):
                 download_path = os.path.join(output_dir, f"temp_{safe_filename}")
             self.current_download_url = next_item_to_download['url']
             self.download_thread = DownloadThread(self.current_download_url, download_path)
-            self.download_thread.progress.connect(self.merge_progress_bar.setValue)
+            self.download_thread.progress.connect(self.update_download_progress)
             self.download_thread.finished.connect(self.on_single_merge_download_finished)
             self.download_thread.cancelled.connect(lambda: self.on_merge_finished(False, "حدث خطأ أثناء التحميل."))
             self.download_thread.start()

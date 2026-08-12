@@ -1,5 +1,5 @@
 import gui,guiTools,functions,os,re
-from settings import *
+from settings import settings_handler, app
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -32,14 +32,36 @@ class hadeeth(qt.QWidget):
         self.list_of_ahadeeth.setFont(font)
         self.list_of_ahadeeth.itemClicked.connect(self.open)
         layout=qt.QVBoxLayout(self)
+
+        top_layout = qt.QHBoxLayout()
+
+        search_v_layout = qt.QVBoxLayout()
         serch=qt.QLabel("البحث عن كتاب حديث")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(serch)
         self.search_bar=qt.QLineEdit()
         self.search_bar.setPlaceholderText("البحث عن كتاب حديث")
         self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.search_bar)
+        search_v_layout.addWidget(serch)
+        search_v_layout.addWidget(self.search_bar)
+
+        view_mode_v_layout = qt.QVBoxLayout()
+        self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
+        self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.view_mode_combo = qt.QComboBox()
+        self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.view_mode_combo.setAccessibleName("طريقة عرض العناصر")
+        self.view_mode_combo.addItems(["عمودي", "شبكي"])
+        grid_enabled = settings_handler.get("ahadeeth", "grid_view") == "True"
+        self.view_mode_combo.setCurrentIndex(1 if grid_enabled else 0)
+        self.view_mode_combo.currentIndexChanged.connect(self.on_view_mode_changed)
+        view_mode_v_layout.addWidget(self.view_mode_label)
+        view_mode_v_layout.addWidget(self.view_mode_combo)
+
+        top_layout.addLayout(search_v_layout, 1)
+        top_layout.addLayout(view_mode_v_layout)
+        layout.addLayout(top_layout)
+
         layout.addWidget(self.list_of_ahadeeth)
         bottom_widget = qt.QWidget()
         bottom_widget.setLayoutDirection(qt2.Qt.LayoutDirection.RightToLeft)
@@ -67,6 +89,53 @@ class hadeeth(qt.QWidget):
         qt1.QShortcut("delete",self).activated.connect(self.onDelete)
         self.is_loaded = False
         self.loader_thread = None
+        self.on_view_mode_changed(self.view_mode_combo.currentIndex())
+
+    def update_grid_size(self):
+        if self.view_mode_combo.currentIndex() != 1:
+            return
+        fm = self.list_of_ahadeeth.fontMetrics()
+        max_w = 0
+        for i in range(self.list_of_ahadeeth.count()):
+            txt = self.list_of_ahadeeth.item(i).text()
+            w = fm.horizontalAdvance(txt) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(txt).width()
+            if w > max_w:
+                max_w = w
+        cell_w = max(200, max_w + 60)
+        cell_h = max(60, fm.height() * 2 + 20)
+        self.list_of_ahadeeth.setGridSize(qt2.QSize(cell_w, cell_h))
+
+    def on_view_mode_changed(self, index):
+        is_grid = (index == 1)
+        settings_handler.set("ahadeeth", "grid_view", "True" if is_grid else "False")
+        if is_grid:
+            self.list_of_ahadeeth.setStyleSheet("""
+                QListWidget::item {
+                    padding: 10px 18px;
+                    margin: 4px;
+                    border-radius: 6px;
+                }
+                QListWidget::item:selected {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+                QListWidget::item:focus {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+            """)
+            self.list_of_ahadeeth.setViewMode(qt.QListView.ViewMode.IconMode)
+            self.list_of_ahadeeth.setResizeMode(qt.QListView.ResizeMode.Adjust)
+            self.update_grid_size()
+            self.list_of_ahadeeth.setSpacing(6)
+        else:
+            self.list_of_ahadeeth.setStyleSheet("")
+            self.list_of_ahadeeth.setViewMode(qt.QListView.ViewMode.ListMode)
+            self.list_of_ahadeeth.setResizeMode(qt.QListView.ResizeMode.Fixed)
+            self.list_of_ahadeeth.setGridSize(qt2.QSize())
+            self.list_of_ahadeeth.setSpacing(3)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -84,6 +153,7 @@ class hadeeth(qt.QWidget):
         self.list_of_ahadeeth.clear()
         self.list_of_ahadeeth.addItems(book_list)
         self.is_loaded = True
+        self.update_grid_size()
 
     def onDelete(self):
         selectedItem=self.list_of_ahadeeth.currentItem()
@@ -99,6 +169,7 @@ class hadeeth(qt.QWidget):
                     functions.ahadeeth.reload_ahadeeths()
                     self.list_of_ahadeeth.clear()
                     self.list_of_ahadeeth.addItems(functions.ahadeeth.ahadeeths.keys())
+                    self.update_grid_size()
                     guiTools.speak("تم الحذف")
 
     def open(self):
@@ -108,6 +179,7 @@ class hadeeth(qt.QWidget):
         functions.ahadeeth.reload_ahadeeths()
         self.list_of_ahadeeth.clear()
         self.list_of_ahadeeth.addItems(functions.ahadeeth.ahadeeths.keys())
+        self.update_grid_size()
 
     def search(self,pattern,text_list):
         tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
@@ -123,3 +195,4 @@ class hadeeth(qt.QWidget):
         self.list_of_ahadeeth.clear()
         result=self.search(search_text,list(functions.ahadeeth.ahadeeths.keys()))
         self.list_of_ahadeeth.addItems(result)
+        self.update_grid_size()

@@ -1,5 +1,6 @@
 import gui.translationViewer
-import gui, guiTools, functions, re, os, requests, subprocess, shutil
+import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
+from custom_errors import log_error_to_file
 import ujson as json
 from settings.app import appName
 from settings import settings_handler
@@ -127,6 +128,7 @@ class Quran(qt.QWidget):
         self.merge_feedback_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.merge_feedback_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.merge_progress_bar = qt.QProgressBar()
+        self.merge_progress_bar.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.merge_action_button = guiTools.QPushButton("إلغاء العملية")
         self.merge_action_button.setObjectName("cancelMergeButton")
         self.merge_action_button.setAutoDefault(False)
@@ -198,6 +200,16 @@ class Quran(qt.QWidget):
         index = self.type.currentIndex()
         if index == 0:
             result = functions.quranJsonControl.getSurahs()
+            selected_item_text = self.info.currentItem().text()
+            matched_key = None
+            for key in result.keys():
+                if key == selected_item_text or re.sub(r'^\d+[\s\.\-]*', '', key) == re.sub(r'^\d+[\s\.\-]*', '', selected_item_text):
+                    matched_key = key
+                    break
+            if matched_key:
+                correct_index = list(result.keys()).index(matched_key)
+                gui.QuranViewer(self, result[matched_key][1], index, selected_item_text, enableNextPreviouseButtons=True, typeResult=result, CurrentIndex=correct_index).exec()
+            return
         elif index == 1:
             result = functions.quranJsonControl.getPage()
         elif index == 2:
@@ -207,13 +219,6 @@ class Quran(qt.QWidget):
         elif index == 4:
             result = functions.quranJsonControl.getHizb()
         selected_item_text = self.info.currentItem().text()
-        correct_index = self.info.currentRow()
-        if index == 0:
-            surah_keys = list(result.keys())
-            if correct_index < len(surah_keys):
-                raw_key = surah_keys[correct_index]
-                gui.QuranViewer(self, result[raw_key][1], index, selected_item_text, enableNextPreviouseButtons=True, typeResult=result, CurrentIndex=correct_index).exec()
-                return
         try:
             correct_index = list(result.keys()).index(selected_item_text)
         except ValueError:
@@ -659,6 +664,17 @@ class Quran(qt.QWidget):
         self.cancellation_requested = False
         self.process_next_in_merge_queue()
 
+    def update_download_progress(self, file_percent):
+        total = len(self.merge_list)
+        if total > 1:
+            done = len(self.completed_merge_downloads)
+            overall = int(((done + (file_percent / 100.0)) / total) * 100)
+            self.merge_progress_bar.setValue(min(100, overall))
+            self.merge_feedback_label.setText(f"جاري تحميل الآيات: تم تحميل {done} من {total} ({overall}%)...")
+        else:
+            self.merge_progress_bar.setValue(file_percent)
+            self.merge_feedback_label.setText(f"جاري تحميل الآية المطلوبة ({file_percent}%)...")
+
     def process_next_in_merge_queue(self):
         if self.cancellation_requested:
             self.on_merge_finished(False, "تم إلغاء العملية من قبل المستخدم.")
@@ -672,14 +688,25 @@ class Quran(qt.QWidget):
         if next_item_to_download:
             self.merge_phase = 'downloading'
             self.merge_action_button.hide()
-            self.merge_feedback_label.setText("جاري تحميل الآيات المطلوبة...")
+            total = len(self.merge_list)
+            done = len(self.completed_merge_downloads)
+            if total > 1:
+                overall = int((done / total) * 100)
+                self.merge_progress_bar.setValue(min(100, overall))
+                if done > 0:
+                    self.merge_feedback_label.setText(f"جاري تحميل الآيات: تم تحميل {done} من {total} ({overall}%)...")
+                else:
+                    self.merge_feedback_label.setText("جاري تحميل الآيات المطلوبة...")
+            else:
+                self.merge_progress_bar.setValue(0)
+                self.merge_feedback_label.setText("جاري تحميل الآية المطلوبة...")
             self.merge_progress_bar.show()
             url = next_item_to_download['url']
             safe_filename = "".join(c for c in next_item_to_download['filename'] if c.isalnum() or c in ('.', '_')).rstrip()
             download_path = os.path.join(output_dir, f"temp_{safe_filename}")
             self.current_download_url = url
             self.download_thread = DownloadThread(url, download_path)
-            self.download_thread.progress.connect(self.merge_progress_bar.setValue)
+            self.download_thread.progress.connect(self.update_download_progress)
             self.download_thread.finished.connect(self.on_single_merge_download_finished)
             self.download_thread.cancelled.connect(lambda: self.on_merge_finished(False, "حدث خطأ أثناء التحميل."))
             self.download_thread.network_error.connect(self.on_download_network_error)
@@ -808,7 +835,8 @@ class Quran(qt.QWidget):
             self.merge_phase = 'idle'
             return
         self.merge_action_button.hide()
-        self.merge_progress_bar.setMaximum(len(merge_list))
+        self.merge_progress_bar.setMaximum(100)
+        self.merge_progress_bar.setValue(0)
         self.merge_progress_bar.show()
         self.save_thread = SaveThread(merge_list, target_dir)
         self.save_thread.progress.connect(self.merge_progress_bar.setValue)

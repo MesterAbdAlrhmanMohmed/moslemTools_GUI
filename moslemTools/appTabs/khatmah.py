@@ -53,7 +53,10 @@ class KhatmahTab(qt.QWidget):
             return default_data
         try:
             with open(self.khatmah_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                if "has_khatmah" not in data:
+                    data["has_khatmah"] = False
+                return data
         except Exception:
             default_data = {
                 "has_khatmah": False,
