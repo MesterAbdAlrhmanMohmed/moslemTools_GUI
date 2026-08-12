@@ -157,9 +157,23 @@ class IslamicBooks(qt.QWidget):
         self.cat_btn.setStyleSheet("background-color: #8E2405; color: white; min-height: 50px; padding: 0 20px; font-weight: bold;")
         self.cat_btn.clicked.connect(self.on_cat_btn_clicked)
 
-        search_layout.addWidget(self.search_bar)
+        view_mode_v_layout = qt.QVBoxLayout()
+        self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
+        self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.view_mode_combo = qt.QComboBox()
+        self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.view_mode_combo.setAccessibleName("طريقة عرض العناصر")
+        self.view_mode_combo.addItems(["عمودي", "شبكي"])
+        grid_enabled = settings_handler.get("islamic_books", "grid_view") == "True"
+        self.view_mode_combo.setCurrentIndex(1 if grid_enabled else 0)
+        self.view_mode_combo.currentIndexChanged.connect(self.on_view_mode_changed)
+        view_mode_v_layout.addWidget(self.view_mode_label)
+        view_mode_v_layout.addWidget(self.view_mode_combo)
+
+        search_layout.addWidget(self.search_bar, 1)
         search_layout.addWidget(self.fav_btn)
         search_layout.addWidget(self.cat_btn)
+        search_layout.addLayout(view_mode_v_layout)
         layout.addLayout(search_layout)
 
         self.category_tabs = qt.QTabBar()
@@ -216,6 +230,53 @@ class IslamicBooks(qt.QWidget):
         qt1.QShortcut("delete",self).activated.connect(self.onDelete)
         self.is_loaded = False
         self.update_categories_ui()
+        self.on_view_mode_changed(self.view_mode_combo.currentIndex())
+
+    def update_grid_size(self):
+        if self.view_mode_combo.currentIndex() != 1:
+            return
+        fm = self.list_of_abook.fontMetrics()
+        max_w = 0
+        for i in range(self.list_of_abook.count()):
+            txt = self.list_of_abook.item(i).text()
+            w = fm.horizontalAdvance(txt) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(txt).width()
+            if w > max_w:
+                max_w = w
+        cell_w = max(200, max_w + 60)
+        cell_h = max(60, fm.height() * 2 + 20)
+        self.list_of_abook.setGridSize(qt2.QSize(cell_w, cell_h))
+
+    def on_view_mode_changed(self, index):
+        is_grid = (index == 1)
+        settings_handler.set("islamic_books", "grid_view", "True" if is_grid else "False")
+        if is_grid:
+            self.list_of_abook.setStyleSheet("""
+                QListWidget::item {
+                    padding: 10px 18px;
+                    margin: 4px;
+                    border-radius: 6px;
+                }
+                QListWidget::item:selected {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+                QListWidget::item:focus {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+            """)
+            self.list_of_abook.setViewMode(qt.QListView.ViewMode.IconMode)
+            self.list_of_abook.setResizeMode(qt.QListView.ResizeMode.Adjust)
+            self.update_grid_size()
+            self.list_of_abook.setSpacing(6)
+        else:
+            self.list_of_abook.setStyleSheet("")
+            self.list_of_abook.setViewMode(qt.QListView.ViewMode.ListMode)
+            self.list_of_abook.setResizeMode(qt.QListView.ResizeMode.Fixed)
+            self.list_of_abook.setGridSize(qt2.QSize())
+            self.list_of_abook.setSpacing(3)
 
     def load_favorites(self):
         try:
@@ -639,3 +700,4 @@ class IslamicBooks(qt.QWidget):
                     self.list_of_abook.setCurrentRow(0)
             elif self.list_of_abook.count() > 0:
                 self.list_of_abook.setCurrentRow(0)
+        self.update_grid_size()

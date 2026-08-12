@@ -305,10 +305,14 @@ class KhatmahTab(qt.QWidget):
 
     def start_new_khatmah(self):
         target_days = self.days_spin.value()
+        if self.data.get("has_khatmah", False):
+            msg = f"هل تريد بدء ختمة جديدة لمدة {format_days(target_days)} وإعادة ضبط التقدم؟"
+        else:
+            msg = f"هل تريد بدء ختمة جديدة لمدة {format_days(target_days)}؟"
         confirm = guiTools.QQuestionMessageBox.view(
             self,
             "تأكيد بدء ختمة جديدة",
-            f"هل تريد بدء ختمة جديدة لمدة {format_days(target_days)} وإعادة ضبط التقدم؟",
+            msg,
             "نعم",
             "لا"
         )
@@ -376,13 +380,14 @@ class KhatmahTab(qt.QWidget):
     def reset_khatmah(self):
         confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل أنت متأكد من إعادة تعيين الختمة الحالية بجميع بياناتها؟", "نعم", "لا")
         if confirm == 0:
+            target_days = self.data.get("target_days", 30)
             self.data = {
-                "has_khatmah": False,
-                "target_days": 30,
+                "has_khatmah": True,
+                "target_days": target_days,
                 "start_date": datetime.date.today().strftime("%Y-%m-%d"),
                 "current_page": 1,
                 "total_pages": 604,
-                "daily_pages": 20,
+                "daily_pages": math.ceil(604 / target_days) if target_days > 0 else 20,
                 "completed_pages": 0,
                 "is_completed": False
             }
