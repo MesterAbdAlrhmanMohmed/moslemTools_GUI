@@ -77,9 +77,9 @@ class TafaseerSettings(qt.QWidget):
         if selectedItem:
             itemText = selectedItem
             if itemText == "English by Talal Itani":
-                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكنك حذف هذا الكتاب ")
+                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكنك حذف هذه الترجمة")
             else:
-                question = guiTools.QQuestionMessageBox.view(self, "تنبيه", "هل تريد حذف هذا الكتاب","نعم","لا")
+                question = guiTools.QQuestionMessageBox.view(self, "تنبيه", f"هل تريد حذف الترجمة {itemText}","نعم","لا")
                 if question == 0:
                     name = translater.translations[itemText]
                     os.remove(os.path.join(os.getenv('appdata'), app.appName, "Quran Translations", name))
@@ -96,9 +96,9 @@ class TafaseerSettings(qt.QWidget):
         if selectedItem:
             itemText = selectedItem
             if itemText == "الميصر":
-                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكنك حذف هذا الكتاب ")
+                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكنك حذف هذا التفسير")
             else:
-                question = guiTools.QQuestionMessageBox.view(self, "تنبيه", "هل تريد حذف هذا الكتاب","نعم","لا")
+                question = guiTools.QQuestionMessageBox.view(self, "تنبيه", f"هل تريد حذف تفسير {itemText}","نعم","لا")
                 if question == 0:
                     name = tafseer.tafaseers[itemText]
                     os.remove(os.path.join(os.getenv('appdata'), app.appName, "tafaseer", name))

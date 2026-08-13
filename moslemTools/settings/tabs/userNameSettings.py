@@ -47,10 +47,12 @@ class UserNameSettings(qt.QWidget):
         options_layout.addWidget(self.custom_name_input, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
         gender_layout = qt.QHBoxLayout()
+        gender_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        gender_layout.setSpacing(5)
         gender_label = qt.QLabel("اختر النوع:")
         gender_label.setFont(font)
-        gender_layout.addWidget(gender_label)
         self.gender_combo = qt.QComboBox()
+        self.gender_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.gender_combo.setFont(font)
         self.gender_combo.addItems(["ذكر", "أنثى"])
         self.gender_combo.setAccessibleName("اختر النوع")
@@ -59,13 +61,22 @@ class UserNameSettings(qt.QWidget):
             self.gender_combo.setCurrentText("أنثى")
         else:
             self.gender_combo.setCurrentText("ذكر")
+        self.gender_combo.currentIndexChanged.connect(self.adjust_gender_combo_width)
+        self.adjust_gender_combo_width()
         gender_layout.addWidget(self.gender_combo)
+        gender_layout.addWidget(gender_label)
         options_layout.addLayout(gender_layout)
 
         layout.addWidget(self.name_options_widget, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addStretch(1)
         self.on_use_name_toggled()
         self.custom_name_input.setVisible(self.cb_custom_user.isChecked())
+
+    def adjust_gender_combo_width(self, index=None):
+        fm = qt1.QFontMetrics(self.gender_combo.font())
+        current_text = self.gender_combo.currentText()
+        text_width = fm.horizontalAdvance(current_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(current_text).width()
+        self.gender_combo.setFixedWidth(text_width + 65)
 
     def on_use_name_toggled(self):
         self.name_options_widget.setVisible(self.use_name_checkbox.isChecked())
