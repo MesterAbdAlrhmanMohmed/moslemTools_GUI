@@ -153,6 +153,9 @@ class settings(qt.QDialog):
         orig_rs_tashkeel = settings_handler.get("researcher_search", "ignore_tashkeel")
         orig_rs_hamza = settings_handler.get("researcher_search", "ignore_hamza")
         orig_rs_symbols = settings_handler.get("researcher_search", "ignore_symbols")
+        orig_ibs_tashkeel = settings_handler.get("islamic_books_search", "ignore_tashkeel")
+        orig_ibs_hamza = settings_handler.get("islamic_books_search", "ignore_hamza")
+        orig_ibs_symbols = settings_handler.get("islamic_books_search", "ignore_symbols")
         def get_audio_val(text):
             if text == "افتراضي": return "Default"
             if text == "مخصص": return "Custom"
@@ -187,6 +190,9 @@ class settings(qt.QDialog):
         settings_handler.set("researcher_search", "ignore_tashkeel", str(self.searchSettings.researcher_tashkeel_checkbox.isChecked()))
         settings_handler.set("researcher_search", "ignore_hamza", str(self.searchSettings.researcher_hamza_checkbox.isChecked()))
         settings_handler.set("researcher_search", "ignore_symbols", str(self.searchSettings.researcher_symbols_checkbox.isChecked()))
+        settings_handler.set("islamic_books_search", "ignore_tashkeel", str(self.searchSettings.islamic_books_tashkeel_checkbox.isChecked()))
+        settings_handler.set("islamic_books_search", "ignore_hamza", str(self.searchSettings.islamic_books_hamza_checkbox.isChecked()))
+        settings_handler.set("islamic_books_search", "ignore_symbols", str(self.searchSettings.islamic_books_symbols_checkbox.isChecked()))
         settings_handler.set("quran_display", "verse_numbering_mode", self.quranDisplaySettings.get_selected_mode())
         settings_handler.set("quran_display", "remove_tashkeel", str(self.quranDisplaySettings.remove_tashkeel_checkbox.isChecked()))
         if self.layout1.reciter.count() > 0:
@@ -247,8 +253,12 @@ class settings(qt.QDialog):
         new_rs_tashkeel = str(self.searchSettings.researcher_tashkeel_checkbox.isChecked())
         new_rs_hamza = str(self.searchSettings.researcher_hamza_checkbox.isChecked())
         new_rs_symbols = str(self.searchSettings.researcher_symbols_checkbox.isChecked())
+        new_ibs_tashkeel = str(self.searchSettings.islamic_books_tashkeel_checkbox.isChecked())
+        new_ibs_hamza = str(self.searchSettings.islamic_books_hamza_checkbox.isChecked())
+        new_ibs_symbols = str(self.searchSettings.islamic_books_symbols_checkbox.isChecked())
         if (orig_qs_tashkeel != new_qs_tashkeel or orig_qs_hamza != new_qs_hamza or orig_qs_symbols != new_qs_symbols or
-            orig_rs_tashkeel != new_rs_tashkeel or orig_rs_hamza != new_rs_hamza or orig_rs_symbols != new_rs_symbols):
+            orig_rs_tashkeel != new_rs_tashkeel or orig_rs_hamza != new_rs_hamza or orig_rs_symbols != new_rs_symbols or
+            orig_ibs_tashkeel != new_ibs_tashkeel or orig_ibs_hamza != new_ibs_hamza or orig_ibs_symbols != new_ibs_symbols):
             restart_required = 1
         self.p.viewInfoTextEdit()
         self.p.runAudioThkarTimer()

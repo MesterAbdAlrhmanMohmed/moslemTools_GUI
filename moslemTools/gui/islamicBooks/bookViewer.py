@@ -6,6 +6,8 @@ from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
 from docx import Document
+import re
+from gui.quranViewer.threads import SearchModeDialog
 
 
 class book_viewer(qt.QDialog):
@@ -18,6 +20,11 @@ class book_viewer(qt.QDialog):
         self.index = index
         self.bookName = book_name
         self.part = partName
+        self.is_search_view = False
+        self.search_line_map = {}
+        self.ignore_tashkeel = settings.settings_handler.get("islamic_books_search", "ignore_tashkeel") != "False"
+        self.ignore_hamza = settings.settings_handler.get("islamic_books_search", "ignore_hamza") != "False"
+        self.ignore_symbols = settings.settings_handler.get("islamic_books_search", "ignore_symbols") != "False"
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_line)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+=", self).activated.connect(self.increase_font_size)
@@ -34,7 +41,51 @@ class book_viewer(qt.QDialog):
         qt1.QShortcut("ctrl+alt+c", self).activated.connect(self.copy_page_range)
         qt1.QShortcut("ctrl+alt+s", self).activated.connect(self.save_page_range_as_txt)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.save_page_range_as_docx)
+        qt1.QShortcut("ctrl+shift+q", self).activated.connect(self.toggle_search_bar)
+        qt1.QShortcut("ctrl+delete", self).activated.connect(self.clear_search_results)
+        qt1.QShortcut("ctrl+q", self).activated.connect(self.show_search_mode_dialog)
+        self.setStyleSheet("""
+            QPushButton#startButton, QPushButton#applySearchModeChangesButton {
+                background-color: #28a745; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-weight: bold;
+            }
+            QPushButton#startButton:hover, QPushButton#applySearchModeChangesButton:hover { background-color: #218838; }
+            QPushButton#startButton:pressed, QPushButton#applySearchModeChangesButton:pressed { background-color: #218838; }
+            QPushButton#searchModeButton {
+                background-color: #0056b3; color: white; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold;
+            }
+            QPushButton#searchModeButton:hover { background-color: #003d80; }
+            QPushButton#searchModeButton:pressed { background-color: #003d80; }
+            QPushButton#clearResultsButton, QPushButton#cancelButton {
+                background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-weight: bold;
+            }
+            QPushButton#clearResultsButton:hover, QPushButton#cancelButton:hover { background-color: #c82333; }
+            QPushButton#clearResultsButton:pressed, QPushButton#cancelButton:pressed { background-color: #bd2130; }
+        """)
         self.resize(1200, 600)
+        self.search_widget = qt.QWidget()
+        search_layout = qt.QHBoxLayout(self.search_widget)
+        search_layout.setContentsMargins(0, 5, 0, 5)
+        self.search_input = qt.QLineEdit()
+        self.search_input.setPlaceholderText("أكتب محتوى البحث هنا...")
+        self.search_input.returnPressed.connect(self.perform_search)
+        self.search_button = guiTools.QPushButton("البحث")
+        self.search_button.setObjectName("startButton")
+        self.search_button.setAutoDefault(False)
+        self.search_button.clicked.connect(self.perform_search)
+        self.search_mode_button = guiTools.QPushButton("نمط البحث")
+        self.search_mode_button.setObjectName("searchModeButton")
+        self.search_mode_button.clicked.connect(self.show_search_mode_dialog)
+        self.search_mode_button.setAccessibleDescription("control plus q")
+        self.search_mode_button.setAutoDefault(False)
+        self.clear_results_button = guiTools.QPushButton("حذف المحتوى والعودة إلى العرض الأصلي")
+        self.clear_results_button.setObjectName("clearResultsButton")
+        self.clear_results_button.clicked.connect(self.clear_search_results)
+        self.clear_results_button.setAccessibleDescription("control plus delete")
+        self.clear_results_button.setAutoDefault(False)
+        search_layout.addWidget(self.clear_results_button)
+        search_layout.addWidget(self.search_input)
+        search_layout.addWidget(self.search_button)
+        search_layout.addWidget(self.search_mode_button)
         self.text = guiTools.QReadOnlyTextEdit(viewer_name="bookViewer")
         self.text.setText(self.data[self.index])
         self.text.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -62,6 +113,11 @@ class book_viewer(qt.QDialog):
         self.P_book.clicked.connect(self.previous_book)
         self.P_book.setStyleSheet("background-color: #0000AA; color: white;")
         self.P_book.setAutoDefault(False)
+        self.toggle_search_button = guiTools.QPushButton("البحث في المحتوى المعروض")
+        self.toggle_search_button.setAutoDefault(False)
+        self.toggle_search_button.setStyleSheet("background-color: #0000AA; color: white;")
+        self.toggle_search_button.clicked.connect(self.toggle_search_bar)
+        self.toggle_search_button.setAccessibleDescription("control plus shift plus q")
         self.book_number_laybol = qt.QLabel("رقم الصفحة")
         self.book_number_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_book_number = guiTools.QNavigableLabel()
@@ -70,6 +126,9 @@ class book_viewer(qt.QDialog):
         self.show_book_number.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         layout = qt.QVBoxLayout(self)
+        layout.addWidget(self.search_widget)
+        self.search_widget.hide()
+        self.clear_results_button.hide()
         layout.addWidget(self.text)
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
@@ -78,11 +137,219 @@ class book_viewer(qt.QDialog):
         layout.addWidget(self.show_book_number)
         layout1 = qt.QHBoxLayout()
         layout1.addWidget(self.P_book)
+        layout1.addWidget(self.toggle_search_button)
         layout1.addWidget(self.N_book)
         layout.addLayout(layout1)
         self.update_font_size()
 
+    def toggle_search_bar(self):
+        if self.search_widget.isVisible():
+            self.search_widget.hide()
+            self.toggle_search_button.setText("البحث في المحتوى المعروض")
+            guiTools.speak("تم إخفاء شريط البحث")
+            self.text.setFocus()
+        else:
+            self.search_widget.show()
+            self.toggle_search_button.setText("إخفاء شريط البحث")
+            self.search_input.setFocus()
+
+    def show_search_mode_dialog(self):
+        dialog = SearchModeDialog(self, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
+        dialog.setStyleSheet("""
+            QPushButton#applySearchModeChangesButton {
+                background-color: #28a745; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-weight: bold;
+            }
+            QPushButton#applySearchModeChangesButton:hover { background-color: #218838; }
+            QPushButton#applySearchModeChangesButton:pressed { background-color: #218838; }
+            QPushButton#cancelButton {
+                background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-weight: bold;
+            }
+            QPushButton#cancelButton:hover { background-color: #c82333; }
+            QPushButton#cancelButton:pressed { background-color: #bd2130; }
+        """)
+        if dialog.exec() == qt.QDialog.DialogCode.Accepted:
+            settings_values = dialog.get_settings()
+            self.ignore_tashkeel = settings_values["ignore_tashkeel"]
+            self.ignore_hamza = settings_values["ignore_hamza"]
+            self.ignore_symbols = settings_values["ignore_symbols"]
+            guiTools.speak("تم تطبيق إعدادات البحث بنجاح")
+        else:
+            guiTools.speak("تم إلغاء التغييرات")
+
+    def format_arabic_count(self, count, singular, dual, plural_3_10, plural_11_plus):
+        if count == 1:
+            return singular
+        elif count == 2:
+            return dual
+        elif 3 <= count % 100 <= 10:
+            return f"{count} {plural_3_10}"
+        else:
+            return f"{count} {plural_11_plus}"
+
+    def perform_search(self):
+        search_term = self.search_input.text().strip()
+        if not search_term:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "يرجى كتابة محتوى للبحث")
+            return
+
+        def remove_tashkeel(text):
+            return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
+
+        def normalize_hamza(text):
+            return re.sub(r'[أإآ]', 'ا', text)
+
+        def remove_symbols(text):
+            return re.sub(r'[^\w\s]', '', text)
+
+        def normalize(text):
+            normalized_text = text
+            if self.ignore_tashkeel:
+                normalized_text = remove_tashkeel(normalized_text)
+            if self.ignore_hamza:
+                normalized_text = normalize_hamza(normalized_text)
+            if self.ignore_symbols:
+                normalized_text = remove_symbols(normalized_text)
+            return normalized_text
+
+        normalized_pattern = normalize(search_term)
+        results_by_page = {}
+        total_results = 0
+
+        for page_idx, page_content in enumerate(self.data):
+            lines = page_content.splitlines()
+            page_matches = []
+            for line_idx, line in enumerate(lines):
+                if not line.strip():
+                    continue
+                if normalized_pattern in normalize(line):
+                    page_matches.append((line_idx, line))
+            if page_matches:
+                results_by_page[page_idx] = page_matches
+                total_results += len(page_matches)
+
+        if not results_by_page:
+            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على نتائج")
+            return
+
+        self.is_search_view = True
+        self.P_book.hide()
+        self.N_book.hide()
+        self.toggle_search_button.hide()
+        self.book_number_laybol.hide()
+        self.show_book_number.hide()
+        self.clear_results_button.show()
+
+        res_str = self.format_arabic_count(total_results, "نتيجة واحدة", "نتيجتين", "نتائج", "نتيجة")
+        pages_str = self.format_arabic_count(len(results_by_page), "صفحة واحدة", "صفحتين", "صفحات", "صفحة")
+        header = f"عدد نتائج البحث {res_str} في {pages_str}"
+
+        display_lines = [header, ""]
+        self.search_line_map = {}
+
+        is_first_page = True
+        for page_idx, page_matches in results_by_page.items():
+            if not is_first_page:
+                display_lines.append("")
+            is_first_page = False
+            page_res_count_str = self.format_arabic_count(len(page_matches), "نتيجة واحدة", "نتيجتين", "نتائج", "نتيجة")
+            display_lines.append(f"الصفحة {page_idx + 1}: {page_res_count_str}")
+            for res_idx, (line_idx, line_text) in enumerate(page_matches, start=1):
+                result_title_line_idx = len(display_lines)
+                display_lines.append(f"النتيجة رقم {res_idx}")
+                self.search_line_map[result_title_line_idx] = (page_idx, line_idx, line_text)
+
+                result_content_line_idx = len(display_lines)
+                display_lines.append(line_text)
+                self.search_line_map[result_content_line_idx] = (page_idx, line_idx, line_text)
+
+        guiTools.speak(header)
+        self.text.setText("\n".join(display_lines))
+        self.update_font_size()
+
+    def clear_search_results(self):
+        if not self.is_search_view:
+            return
+        self.is_search_view = False
+        self.search_line_map = {}
+        self.clear_results_button.hide()
+        self.search_input.clear()
+        self.P_book.show()
+        self.N_book.show()
+        self.toggle_search_button.show()
+        self.book_number_laybol.show()
+        self.show_book_number.show()
+        self.text.setText(self.data[self.index])
+        self.update_font_size()
+        self.text.setFocus()
+        guiTools.speak("تمت العودة إلى العرض الأصلي")
+
+    def go_to_search_result_target(self, target_data):
+        page_idx, line_idx, line_text = target_data
+        self.clear_search_results()
+        self.index = page_idx
+        self.text.setText(self.data[self.index])
+        self.update_font_size()
+        self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
+
+        doc = self.text.document()
+        block = doc.findBlockByNumber(line_idx)
+        if block.isValid():
+            cursor = qt1.QTextCursor(block)
+            self.text.setTextCursor(cursor)
+            self.text.ensureCursorVisible()
+
+        winsound.PlaySound("data/sounds/next_page.wav", 1)
+        guiTools.speak(f"الصفحة {self.index + 1}")
+
     def OnContextMenu(self):
+        if self.is_search_view:
+            menu = qt.QMenu("الخيارات", self)
+            boldFont = menu.font()
+            boldFont.setBold(True)
+            menu.setFont(boldFont)
+            menu.setAccessibleName("الخيارات")
+
+            cursor = self.text.textCursor()
+            current_line_idx = cursor.blockNumber()
+
+            if current_line_idx in self.search_line_map:
+                target_data = self.search_line_map[current_line_idx]
+                go_action = menu.addAction("الذهاب إلى الصفحة والنتيجة")
+                go_action.setShortcut("ctrl+g")
+                go_action.triggered.connect(lambda: self.go_to_search_result_target(target_data))
+
+                text_options_menu = qt.QMenu("خيارات النص", self)
+                text_options_menu.setFont(boldFont)
+                save_action = text_options_menu.addAction("حفظ كملف نصي")
+                save_action.setShortcut("ctrl+s")
+                save_action.triggered.connect(self.save_text_as_txt)
+                print_action = text_options_menu.addAction("طباعة")
+                print_action.setShortcut("ctrl+p")
+                print_action.triggered.connect(self.print_text)
+                copy_all_action = text_options_menu.addAction("نسخ النص كاملاً")
+                copy_all_action.setShortcut("ctrl+a")
+                copy_all_action.triggered.connect(self.copy_text)
+                copy_selected_action = text_options_menu.addAction("نسخ النص المحدد")
+                copy_selected_action.setShortcut("ctrl+c")
+                copy_selected_action.triggered.connect(self.copy_line)
+                menu.addMenu(text_options_menu)
+            else:
+                save_action = menu.addAction("حفظ كملف نصي")
+                save_action.setShortcut("ctrl+s")
+                save_action.triggered.connect(self.save_text_as_txt)
+                print_action = menu.addAction("طباعة")
+                print_action.setShortcut("ctrl+p")
+                print_action.triggered.connect(self.print_text)
+                copy_all_action = menu.addAction("نسخ النص كاملاً")
+                copy_all_action.setShortcut("ctrl+a")
+                copy_all_action.triggered.connect(self.copy_text)
+                copy_selected_action = menu.addAction("نسخ النص المحدد")
+                copy_selected_action.setShortcut("ctrl+c")
+                copy_selected_action.triggered.connect(self.copy_line)
+
+            menu.exec(self.mapToGlobal(self.cursor().pos()))
+            return
+
         menu = qt.QMenu("الخيارات", self)
         boldFont = menu.font()
         boldFont.setBold(True)
@@ -353,6 +620,8 @@ class book_viewer(qt.QDialog):
             self.onAddBookMark()
 
     def next_book(self):
+        if self.is_search_view:
+            return
         self.index = 0 if self.index == len(self.data) - 1 else self.index + 1
         self.text.setText(self.data[self.index])
         self.update_font_size()
@@ -361,6 +630,8 @@ class book_viewer(qt.QDialog):
         winsound.PlaySound("data/sounds/next_page.wav", 1)
 
     def previous_book(self):
+        if self.is_search_view:
+            return
         self.index = len(self.data) - 1 if self.index == 0 else self.index - 1
         self.text.setText(self.data[self.index])
         self.update_font_size()
@@ -369,12 +640,22 @@ class book_viewer(qt.QDialog):
         winsound.PlaySound("data/sounds/previous_page.wav", 1)
 
     def go_to_book(self):
-        book, OK = guiTools.QInputDialog.getInt(self, "الذهاب إلى صفحة", "أكتب رقم الصفحة", self.index + 1, 1, len(self.data))
-        if OK:
-            self.index = book - 1
-            self.text.setText(self.data[self.index])
-            self.update_font_size()
-            self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
+        if self.is_search_view:
+            cursor = self.text.textCursor()
+            current_line_idx = cursor.blockNumber()
+            if current_line_idx in self.search_line_map:
+                target_data = self.search_line_map[current_line_idx]
+                self.go_to_search_result_target(target_data)
+            else:
+                winsound.Beep(440, 200)
+                guiTools.speak("قم بالتركيز على نتيجة أولا")
+        else:
+            book, OK = guiTools.QInputDialog.getInt(self, "الذهاب إلى صفحة", "أكتب رقم الصفحة", self.index + 1, 1, len(self.data))
+            if OK:
+                self.index = book - 1
+                self.text.setText(self.data[self.index])
+                self.update_font_size()
+                self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
 
     def onDeleteNoteShortcut(self):
         position_data = {"bookName": self.bookName, "partName": self.part, "pageNumber": self.index}
