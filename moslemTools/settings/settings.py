@@ -55,7 +55,7 @@ class settings(qt.QDialog):
         self.fontSettings = tabs.FontSettings()
         self.sectian.add("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings)
         self.khatmahReminderSettings = tabs.KhatmahReminderSettings(self)
-        self.sectian.add("إعدادات التذكير بالورد القرآني", self.khatmahReminderSettings)
+        self.sectian.add("إعدادات التذكير بالورد اليومي", self.khatmahReminderSettings)
         self.tafaseerSettings = tabs.TafaseerSettings()
         self.sectian.add("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings)
         self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
