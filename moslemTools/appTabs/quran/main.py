@@ -51,11 +51,11 @@ class Quran(qt.QWidget):
             self.setStyleSheet("QWidget{color:#f0f0f0;}QLineEdit{background-color:#3e3e3e;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QComboBox,QLabel{border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QLineEdit:focus{border:1px solid #0078d7;}QComboBox QAbstractItemView::item:selected{background-color:blue;color:white;}QPushButton{background-color:#0056b3;color:white;border:none;border-radius:5px;padding:5px;}QPushButton:hover{background-color:#003d80;}QPushButton#customButton{background-color:#008000;color:white;border:none;padding:16px 18px;border-radius:6px;}QPushButton#customButton:hover{background-color:#006600;}QPushButton#cancelMergeButton{background-color:#8B0000;color:white;border:2px solid #B22222;border-radius:5px;padding:6px 12px;font-weight:bold;}QPushButton#cancelMergeButton:hover{background-color:#A52A2A;border-color:#FF4D4D;}QListWidget{background-color:#000000;border:1px solid #5a5a5a;border-radius:5px;padding:5px;}QListWidget::item{padding:6px 10px;margin:3px;border-radius:5px;color:#f0f0f0;}QListWidget::item:hover{background-color:#333333;color:#f0f0f0;}QListWidget::item:selected{background-color:red;color:#ffffff;}QMenu{background-color:#3e3e3e;color:#f0f0f0;}QMenu::item:selected{background-color:#0078d7;}")
         browse_layout = qt.QHBoxLayout()
         browse_layout.setContentsMargins(15, 0, 15, 0)
-        left_layout = qt.QHBoxLayout()
-        layout1 = qt.QVBoxLayout()
+
+        left_layout = qt.QVBoxLayout()
         self.by = qt.QLabel("التصفح ب")
         self.by.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout1.addWidget(self.by)
+        left_layout.addWidget(self.by)
         self.type = qt.QComboBox()
         self.type.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.type.setMinimumWidth(100)
@@ -63,9 +63,11 @@ class Quran(qt.QWidget):
         self.type.setAccessibleName("التصفح ب")
         self.type.addItems(["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"])
         self.type.currentIndexChanged.connect(self.onTypeChanged)
-        layout1.addWidget(self.type)
-        left_layout.addLayout(layout1)
-        left_layout.addStretch(1)
+        left_layout.addWidget(self.type)
+
+        browse_layout.addStretch(1)
+        browse_layout.addLayout(left_layout)
+        browse_layout.addStretch(2)
 
         self.custom = guiTools.QPushButton("التصفح المخصص")
         self.custom.setMinimumHeight(52)
@@ -75,9 +77,10 @@ class Quran(qt.QWidget):
         self.custom.setShortcut("ctrl+c")
         self.custom.setAccessibleDescription("control plus c")
         self.custom.clicked.connect(self.onCostumBTNClicked)
+        browse_layout.addWidget(self.custom, 0, qt2.Qt.AlignmentFlag.AlignCenter)
 
-        right_layout = qt.QHBoxLayout()
-        right_layout.addStretch(1)
+        browse_layout.addStretch(1)
+
         font = qt1.QFont()
         font.setBold(True)
         self.show_surah_number_cb = qt.QCheckBox("عرض رقم السورة")
@@ -85,13 +88,14 @@ class Quran(qt.QWidget):
         show_surah_num_enabled = settings_handler.get("quran", "show_surah_number") != "False"
         self.show_surah_number_cb.setChecked(show_surah_num_enabled)
         self.show_surah_number_cb.stateChanged.connect(self.on_surah_number_toggled)
-        right_layout.addWidget(self.show_surah_number_cb, 0, qt2.Qt.AlignmentFlag.AlignCenter)
-        right_layout.addStretch(1)
+        browse_layout.addWidget(self.show_surah_number_cb, 0, qt2.Qt.AlignmentFlag.AlignCenter)
 
-        view_mode_layout = qt.QVBoxLayout()
+        browse_layout.addStretch(2)
+
+        right_layout = qt.QVBoxLayout()
         self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
         self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        view_mode_layout.addWidget(self.view_mode_label)
+        right_layout.addWidget(self.view_mode_label)
         self.view_mode_combo = qt.QComboBox()
         self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.view_mode_combo.setMinimumWidth(100)
@@ -101,12 +105,10 @@ class Quran(qt.QWidget):
         grid_enabled = settings_handler.get("quran", "grid_view") == "True"
         self.view_mode_combo.setCurrentIndex(1 if grid_enabled else 0)
         self.view_mode_combo.currentIndexChanged.connect(self.on_view_mode_changed)
-        view_mode_layout.addWidget(self.view_mode_combo)
-        right_layout.addLayout(view_mode_layout)
+        right_layout.addWidget(self.view_mode_combo)
 
-        browse_layout.addLayout(left_layout, 1)
-        browse_layout.addWidget(self.custom, 0, qt2.Qt.AlignmentFlag.AlignCenter)
-        browse_layout.addLayout(right_layout, 1)
+        browse_layout.addLayout(right_layout)
+        browse_layout.addStretch(1)
         layout.addLayout(browse_layout)
         self.serch = qt.QLabel("البحث عن محتوى فئة")
         self.serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)

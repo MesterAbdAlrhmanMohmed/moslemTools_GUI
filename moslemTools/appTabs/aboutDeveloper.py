@@ -9,7 +9,7 @@ class AboutDeveloper(qt.QDialog):
     def __init__(self):
         super().__init__()
         self.setMinimumSize(950, 450)
-        self.resize(1100, 520)
+        self.resize(800, 520)
         self.center()
         self.setWindowTitle("عن المطور")
         self.info = guiTools.QListWidget()
