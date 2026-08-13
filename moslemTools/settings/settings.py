@@ -209,6 +209,7 @@ class settings(qt.QDialog):
             print(f"Handled exception: {e}")
         settings_handler.set("athkar", "voice", str(self.athkar.voiceSelection.currentIndex()))
         settings_handler.set("athkar", "text", str(self.athkar.textSelection.currentIndex()))
+        settings_handler.set("athkar", "text_type", str(self.athkar.textTypeSelection.currentIndex()))
         settings_handler.set("athkar", "playAtStartup", str(self.athkar.playAtStartup.isChecked()))
         settings_handler.set("athkar", "playBasmalaAtStartup", str(self.athkar.playBasmalaAtStartup.isChecked()))
         settings_handler.set("quranPlayer", "times", str(self.quranPlayerTimes.times.value()))

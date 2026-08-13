@@ -73,6 +73,7 @@ settingsConfig={
         "voice":"0",
         "voiceVolume":"100",
         "text":"0",
+        "text_type":"0",
         "playAtStartup":"False",
         "playBasmalaAtStartup":"False"
     },

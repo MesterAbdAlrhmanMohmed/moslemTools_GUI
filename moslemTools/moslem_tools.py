@@ -389,7 +389,10 @@ class main(qt.QMainWindow):
         with open(file_path, "r", encoding="utf_8") as f:
             data = json.load(f)
         random_theckr = random.choice(data)
-        guiTools.SendNotification("ذكر عشوائي", random_theckr)
+        if settings_handler.get("athkar", "text_type") == "1":
+            guiTools.MessageBox.view(self, "ذكر عشوائي", random_theckr)
+        else:
+            guiTools.SendNotification("ذكر عشوائي", random_theckr)
 
     def show_random_message(self):
         base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
