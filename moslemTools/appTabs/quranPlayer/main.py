@@ -1967,9 +1967,13 @@ class QuranPlayer(qt.QWidget):
         position_str = functions.text_actions.format_arabic_time(position)
         remaining_str = functions.text_actions.format_arabic_time(remaining)
         if self.startingPosition is not None and self.endingPosition is not None:
-            start_str = functions.text_actions.format_arabic_time(self.startingPosition)
-            end_str = functions.text_actions.format_arabic_time(self.endingPosition)
-            info_text = f"يتم التشغيل من {start_str} إلى {end_str}"
+            start_sec = self.startingPosition // 1000
+            start_m = start_sec // 60
+            start_s = start_sec % 60
+            end_sec = self.endingPosition // 1000
+            end_m = end_sec // 60
+            end_s = end_sec % 60
+            info_text = f"يتم التشغيل من الدقيقة {start_m} والثانية {start_s} إلى الدقيقة {end_m} والثانية {end_s}"
         else:
             duration_str = functions.text_actions.format_arabic_time(duration)
             info_text = f"الوقت المنقضي: {position_str}، الوقت المتبقي: {remaining_str}، مدة المقطع: {duration_str}"
