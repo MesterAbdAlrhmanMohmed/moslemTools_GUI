@@ -263,6 +263,7 @@ class main(qt.QMainWindow):
         self.khatmah_timer.timeout.connect(self.check_scheduled_khatmah_reminder)
         self.khatmah_timer.start(5000)
         qt2.QTimer.singleShot(1000, self.check_scheduled_khatmah_reminder)
+        qt2.QTimer.singleShot(1000, self.play_startup_athkar)
 
     def check_scheduled_khatmah_reminder(self):
         try:
@@ -336,6 +337,12 @@ class main(qt.QMainWindow):
             file_path = os.path.abspath(os.path.join(folder_path, chosen_file))
             self.media_player.setSource(qt2.QUrl.fromLocalFile(file_path))
             self.media_player.play()
+
+    def play_startup_athkar(self):
+        if settings_handler.get("athkar", "playAtStartup") == "True":
+            self.random_audio_theker()
+        elif settings_handler.get("athkar", "playBasmalaAtStartup") == "True":
+            self.play_random_basmala()
 
     def start_message_check_thread(self):
         self.message_worker = MessageCheckWorker(self)
