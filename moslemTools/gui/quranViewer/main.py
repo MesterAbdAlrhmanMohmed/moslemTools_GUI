@@ -1219,6 +1219,7 @@ class QuranViewer(qt.QDialog):
                 ayahOptions.addAction(note_action)
         menu.addMenu(ayahOptions)
         category_menu_title = ""
+        cat_target_label = ""
         go_to_action_text = ""
         copy_action_text = ""
         save_action_text = ""
@@ -1238,12 +1239,14 @@ class QuranViewer(qt.QDialog):
         iarab_to_end_text = ""
         if self.is_search_view:
             category_menu_title = "خيارات نتائج البحث"
+            cat_target_label = "نتائج البحث"
             copy_action_text = "نسخ نتائج البحث"
             save_action_text = "حفظ النتائج كملف نصي"
             print_action_text = "طباعة النتائج"
             play_to_end_text = "التشغيل من الآية المحددة إلى نهاية نتائج البحث"
         elif self.type == 5:
             category_menu_title = "خيارات العرض المخصص"
+            cat_target_label = "العرض المخصص"
             copy_action_text = "نسخ الآيات"
             save_action_text = "حفظ الآيات كملف نصي"
             print_action_text = "طباعة الآيات"
