@@ -52,7 +52,7 @@ def get_range_detailed_irab(ayah_text_list, category=None, type=None):
                 results.append("لا تتوفر بيانات إعراب مفصل لهذه الآية.")
         except Exception:
             results.append("تعذر جلب الإعراب المفصل.")
-    return "\n\n\n".join(results) if results else "لا توجد بيانات متاحة."
+    return "\n\n".join(results) if results else "لا توجد بيانات متاحة."
 
 
 def get_single_ayah_meanings(surah_no, ayah_no, ayah_text=None):
@@ -122,4 +122,4 @@ def get_range_sarf(ayah_text_list, category=None, type=None):
             output_blocks.append(sarf)
         except Exception:
             output_blocks.append(f"{line}\n\nتعذر جلب بيانات صرف الكلمات.")
-    return "\n\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."
+    return "\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."

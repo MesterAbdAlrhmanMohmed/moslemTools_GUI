@@ -14,7 +14,7 @@ def getIarab(From:int,to:int):
         for index, ayah in enumerate(data, 1):
             if index>=From and index<=to:
                 ayahText = functions.quranJsonControl.getAyahTextByNumber(index)
-                result.append(ayahText + "\n" + ayah)
-        return "\n".join(result)
+                result.append(ayahText + "\n" + ayah.strip())
+        return "\n\n".join(result)
     except:
         return ("لم يتم العثور على ملفات الإعراب, الرجاء إعادة تثبيت البرنامج مرة أخرى")
