@@ -11,57 +11,40 @@ from gui.quranViewer.threads import SearchModeDialog
 
 
 class SearchThread(qt2.QThread):
-    batch_ready = qt2.pyqtSignal(dict, int, bool)
+    batch_ready = qt2.pyqtSignal(dict, int, int, bool, int, int)
 
-    def __init__(self, data, search_term, ignore_tashkeel, ignore_hamza, ignore_symbols):
+    def __init__(self, book_name, part_name, search_term, ignore_tashkeel, ignore_hamza, ignore_symbols, page_num=1, limit=100):
         super().__init__()
-        self.data = data
+        self.book_name = book_name
+        self.part_name = part_name
         self.search_term = search_term
         self.ignore_tashkeel = ignore_tashkeel
         self.ignore_hamza = ignore_hamza
         self.ignore_symbols = ignore_symbols
+        self.page_num = page_num
+        self.limit = limit
 
     def run(self):
-        def remove_tashkeel(text):
-            return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
+        json_path = functions.searchIndex.get_book_json_path(self.book_name)
+        if not json_path:
+            self.batch_ready.emit({}, 0, 0, True, 1, 1)
+            return
 
-        def normalize_hamza(text):
-            return re.sub(r'[أإآ]', 'ا', text)
+        db_path = functions.searchIndex.get_index_db_path(json_path)
+        if not functions.searchIndex.is_index_valid(json_path, db_path):
+            functions.searchIndex.build_index(json_path, db_path)
 
-        def remove_symbols(text):
-            return re.sub(r'[^\w\s]', '', text)
+        offset = (self.page_num - 1) * self.limit
+        results_by_page, total_results, total_book_pages = functions.searchIndex.query_index(
+            db_path, self.part_name, self.search_term,
+            self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols,
+            offset=offset, limit=self.limit
+        )
 
-        def normalize(text):
-            normalized_text = text
-            if self.ignore_tashkeel:
-                normalized_text = remove_tashkeel(normalized_text)
-            if self.ignore_hamza:
-                normalized_text = normalize_hamza(normalized_text)
-            if self.ignore_symbols:
-                normalized_text = remove_symbols(normalized_text)
-            return normalized_text
+        total_pages = max(1, (total_results + self.limit - 1) // self.limit) if total_results > 0 else 1
+        self.batch_ready.emit(results_by_page, total_results, total_book_pages, True, self.page_num, total_pages)
 
-        normalized_pattern = normalize(self.search_term)
-        results_by_page = {}
-        total_results = 0
-        first_batch_emitted = False
 
-        for page_idx, page_content in enumerate(self.data):
-            lines = page_content.splitlines()
-            page_matches = []
-            for line_idx, line in enumerate(lines):
-                if not line.strip():
-                    continue
-                if normalized_pattern in normalize(line):
-                    page_matches.append((line_idx, line))
-            if page_matches:
-                results_by_page[page_idx] = page_matches
-                total_results += len(page_matches)
-                if not first_batch_emitted and total_results >= 100:
-                    self.batch_ready.emit(dict(results_by_page), total_results, False)
-                    first_batch_emitted = True
-
-        self.batch_ready.emit(results_by_page, total_results, True)
 
 
 class book_viewer(qt.QDialog):
@@ -98,6 +81,8 @@ class book_viewer(qt.QDialog):
         qt1.QShortcut("ctrl+shift+q", self).activated.connect(self.toggle_search_bar)
         qt1.QShortcut("ctrl+delete", self).activated.connect(self.clear_search_results)
         qt1.QShortcut("ctrl+q", self).activated.connect(self.show_search_mode_dialog)
+        qt1.QShortcut("ctrl+shift+g", self).activated.connect(self.go_to_search_result_page)
+
         self.setStyleSheet("""
             QPushButton#startButton, QPushButton#applySearchModeChangesButton {
                 background-color: #28a745; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-weight: bold;
@@ -179,6 +164,14 @@ class book_viewer(qt.QDialog):
         self.show_book_number.setAccessibleDescription("رقم الصفحة")
         self.show_book_number.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
+        self.search_results_page_label = qt.QLabel("صفحة النتائج")
+        self.search_results_page_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.search_results_page_label.hide()
+        self.show_search_results_page = guiTools.QNavigableLabel()
+        self.show_search_results_page.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.show_search_results_page.setAccessibleDescription("صفحة النتائج")
+        self.show_search_results_page.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.show_search_results_page.hide()
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.search_widget)
         self.search_widget.hide()
@@ -187,14 +180,32 @@ class book_viewer(qt.QDialog):
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
         layout.addWidget(self.more_options_label)
+        layout.addWidget(self.search_results_page_label)
+        layout.addWidget(self.show_search_results_page)
         layout.addWidget(self.book_number_laybol)
         layout.addWidget(self.show_book_number)
+
+        self.N_search = guiTools.QPushButton("صفحة النتائج التالية")
+        self.N_search.setAccessibleDescription("alt زائد السهم الأيمن")
+        self.N_search.clicked.connect(self.next_book)
+        self.N_search.setStyleSheet("background-color: #0000AA; color: white;")
+        self.N_search.setAutoDefault(False)
+        self.P_search = guiTools.QPushButton("صفحة النتائج السابقة")
+        self.P_search.setAccessibleDescription("alt زائد السهم الأيسر")
+        self.P_search.clicked.connect(self.previous_book)
+        self.P_search.setStyleSheet("background-color: #0000AA; color: white;")
+        self.P_search.setAutoDefault(False)
+        self.P_search.hide()
+        self.N_search.hide()
         layout1 = qt.QHBoxLayout()
         layout1.addWidget(self.P_book)
+        layout1.addWidget(self.P_search)
         layout1.addWidget(self.toggle_search_button)
+        layout1.addWidget(self.N_search)
         layout1.addWidget(self.N_book)
         layout.addLayout(layout1)
         self.update_font_size()
+
 
     def toggle_search_bar(self):
         if self.search_widget.isVisible():
@@ -254,11 +265,24 @@ class book_viewer(qt.QDialog):
         self.search_button.setStyleSheet("background-color: gray; color: white;")
         guiTools.speak("جاري البحث")
 
-        self.search_thread = SearchThread(self.data, search_term, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
+        self.search_thread = SearchThread(self.bookName, self.part, search_term, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols, page_num=1, limit=100)
         self.search_thread.batch_ready.connect(self.on_search_batch_ready)
         self.search_thread.start()
 
-    def on_search_batch_ready(self, results_by_page, total_results, is_finished):
+    def fetch_result_page(self, page_num):
+        search_term = self.search_input.text().strip()
+        if not search_term:
+            return
+        if hasattr(self, 'search_thread') and self.search_thread and self.search_thread.isRunning():
+            return
+        self.search_button.setEnabled(False)
+        self.search_button.setStyleSheet("background-color: gray; color: white;")
+        guiTools.speak(f"جاري تحميل صفحة النتائج {page_num}")
+        self.search_thread = SearchThread(self.bookName, self.part, search_term, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols, page_num=page_num, limit=100)
+        self.search_thread.batch_ready.connect(self.on_search_batch_ready)
+        self.search_thread.start()
+
+    def on_search_batch_ready(self, results_by_page, total_results, total_book_pages, is_finished, page_num=1, total_pages=1):
         if not results_by_page:
             if is_finished:
                 self.search_button.setEnabled(True)
@@ -267,16 +291,36 @@ class book_viewer(qt.QDialog):
             return
 
         self.is_search_view = True
+        self.current_result_page = page_num
+        self.total_result_pages = total_pages
+        self.total_search_results = total_results
+
         self.P_book.hide()
         self.N_book.hide()
         self.toggle_search_button.hide()
         self.book_number_laybol.hide()
         self.show_book_number.hide()
         self.clear_results_button.show()
+        if total_pages > 1:
+            self.P_search.show()
+            self.N_search.show()
+            self.search_results_page_label.show()
+            self.show_search_results_page.setText(f"{page_num} من {total_pages}")
+            self.show_search_results_page.show()
+        else:
+            self.P_search.hide()
+            self.N_search.hide()
+            self.search_results_page_label.hide()
+            self.show_search_results_page.hide()
 
         res_str = self.format_arabic_count(total_results, "نتيجة واحدة", "نتيجتين", "نتائج", "نتيجة")
-        pages_str = self.format_arabic_count(len(results_by_page), "صفحة واحدة", "صفحتين", "صفحات", "صفحة")
-        header = f"عدد نتائج البحث {res_str} في {pages_str}"
+        book_pages_str = self.format_arabic_count(total_book_pages, "صفحة واحدة من الكتاب", "صفحتين من الكتاب", "صفحات من الكتاب", "صفحة من الكتاب")
+        result_pages_str = self.format_arabic_count(total_pages, "صفحة نتائج واحدة", "صفحتين نتائج", "صفحات نتائج", "صفحة نتائج")
+
+        header = f"تم العثور على {res_str} في {book_pages_str}"
+        if total_pages > 1:
+            header += f"، وتم تقسيم النتائج إلى {result_pages_str}"
+
 
         display_lines = [header, ""]
         self.search_line_map = {}
@@ -308,6 +352,7 @@ class book_viewer(qt.QDialog):
             self.search_button.setEnabled(True)
             self.search_button.setStyleSheet("")
 
+
     def clear_search_results(self):
         if not self.is_search_view:
             return
@@ -319,6 +364,10 @@ class book_viewer(qt.QDialog):
         self.is_search_view = False
         self.search_line_map = {}
         self.clear_results_button.hide()
+        self.P_search.hide()
+        self.N_search.hide()
+        self.search_results_page_label.hide()
+        self.show_search_results_page.hide()
         self.search_input.clear()
         self.P_book.show()
         self.N_book.show()
@@ -329,6 +378,8 @@ class book_viewer(qt.QDialog):
         self.update_font_size()
         self.text.setFocus()
         guiTools.speak("تمت العودة إلى العرض الأصلي")
+
+
 
     def go_to_search_result_target(self, target_data):
         page_idx, line_idx, line_text = target_data
@@ -348,6 +399,15 @@ class book_viewer(qt.QDialog):
         winsound.PlaySound("data/sounds/next_page.wav", 1)
         guiTools.speak(f"الصفحة {self.index + 1}")
 
+    def go_to_search_result_page(self):
+        if not self.is_search_view or not hasattr(self, 'total_result_pages') or self.total_result_pages <= 1:
+            winsound.Beep(440, 200)
+            guiTools.speak("لا توجد صفحات نتائج متعددة للذهاب إليها")
+            return
+        page, OK = guiTools.QInputDialog.getInt(self, "الذهاب إلى صفحة نتائج", "أكتب رقم صفحة النتائج", self.current_result_page, 1, self.total_result_pages)
+        if OK:
+            self.fetch_result_page(page)
+
     def OnContextMenu(self):
         if self.is_search_view:
             menu = qt.QMenu("الخيارات", self)
@@ -364,6 +424,12 @@ class book_viewer(qt.QDialog):
                 go_action = menu.addAction("الذهاب إلى الصفحة والنتيجة")
                 go_action.setShortcut("ctrl+g")
                 go_action.triggered.connect(lambda: self.go_to_search_result_target(target_data))
+
+            if hasattr(self, 'total_result_pages') and self.total_result_pages > 1:
+                go_res_page_action = menu.addAction("الذهاب إلى صفحة نتائج")
+                go_res_page_action.setShortcut("ctrl+shift+g")
+                go_res_page_action.triggered.connect(self.go_to_search_result_page)
+
 
                 text_options_menu = qt.QMenu("خيارات النص", self)
                 text_options_menu.setFont(boldFont)
@@ -668,6 +734,10 @@ class book_viewer(qt.QDialog):
 
     def next_book(self):
         if self.is_search_view:
+            if hasattr(self, 'total_result_pages') and self.total_result_pages > 1:
+                next_page = 1 if self.current_result_page >= self.total_result_pages else self.current_result_page + 1
+                winsound.PlaySound("data/sounds/next_page.wav", 1)
+                self.fetch_result_page(next_page)
             return
         self.index = 0 if self.index == len(self.data) - 1 else self.index + 1
         self.text.setText(self.data[self.index])
@@ -678,6 +748,10 @@ class book_viewer(qt.QDialog):
 
     def previous_book(self):
         if self.is_search_view:
+            if hasattr(self, 'total_result_pages') and self.total_result_pages > 1:
+                prev_page = self.total_result_pages if self.current_result_page <= 1 else self.current_result_page - 1
+                winsound.PlaySound("data/sounds/previous_page.wav", 1)
+                self.fetch_result_page(prev_page)
             return
         self.index = len(self.data) - 1 if self.index == 0 else self.index - 1
         self.text.setText(self.data[self.index])
@@ -685,6 +759,9 @@ class book_viewer(qt.QDialog):
         guiTools.speak(str(self.index + 1))
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         winsound.PlaySound("data/sounds/previous_page.wav", 1)
+
+
+
 
     def go_to_book(self):
         if self.is_search_view:

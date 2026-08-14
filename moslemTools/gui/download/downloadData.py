@@ -420,6 +420,11 @@ class DownloadThread(qt2.QThread):
 						functions.translater.reload_translations()
 						functions.ahadeeth.reload_ahadeeths()
 						functions.islamicBooks.reload_books()
+						if "book" in dir_lower or self.DIRName == "islamicBooks":
+							json_path = functions.searchIndex.get_book_json_path(self.fileName)
+							if json_path:
+								db_path = functions.searchIndex.get_index_db_path(json_path)
+								functions.searchIndex.build_index(json_path, db_path)
 					except Exception as e:
 						log_error("DownloadThread.run (post-processing)", e)
 					self.finished.emit(True)
