@@ -178,17 +178,16 @@ class SearchThread(qt2.QThread):
                 listOfWords = []
                 data = functions.quranJsonControl.data
                 def get_display(sn, sname, a):
-                    return f"{sn}{sname} {a['text']}({a['numberInSurah']})"
+                    return f"{sn}. {sname} {a['text']}({a['numberInSurah']})"
                 if self.search_scope is None:
                     for sn, sv in data.items():
                         sname = sv["name"]
                         for a in sv["ayahs"]:
                             listOfWords.append((get_display(sn, sname, a), a['text']))
                 elif self.search_scope[0] == 'surah':
-                    surah_key_part = self.search_scope[1].split(' ')[0]
                     for sn, sv in data.items():
                         sname = sv["name"]
-                        if f"{sn}{sname}" == surah_key_part:
+                        if f"{sn}. {sname}" == self.search_scope[1]:
                             for a in sv["ayahs"]:
                                 listOfWords.append((get_display(sn, sname, a), a['text']))
                             break

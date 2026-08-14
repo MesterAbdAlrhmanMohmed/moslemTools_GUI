@@ -813,7 +813,12 @@ class Albaheth(qt.QWidget):
 
     def go_to_surah(self, metadata):
         self.pause_for_action()
-        surah_name_key = f"{metadata['surah_number']}{metadata['surah_name']}"
+        surah_name_key = f"{metadata['surah_number']}. {metadata['surah_name']}"
+        if surah_name_key not in self.surahsList:
+            for k in self.surahsList.keys():
+                if k.startswith(f"{metadata['surah_number']}."):
+                    surah_name_key = k
+                    break
         if surah_name_key in self.surahsList:
             surah_text = self.surahsList[surah_name_key][1]
             ayah_index = metadata["ayah_number_in_surah"] - 1
