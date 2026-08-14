@@ -11,7 +11,7 @@ from gui.quranViewer.threads import SearchModeDialog
 
 
 class SearchThread(qt2.QThread):
-    results_ready = qt2.pyqtSignal(dict, int)
+    batch_ready = qt2.pyqtSignal(dict, int, bool)
 
     def __init__(self, data, search_term, ignore_tashkeel, ignore_hamza, ignore_symbols):
         super().__init__()
@@ -44,6 +44,7 @@ class SearchThread(qt2.QThread):
         normalized_pattern = normalize(self.search_term)
         results_by_page = {}
         total_results = 0
+        first_batch_emitted = False
 
         for page_idx, page_content in enumerate(self.data):
             lines = page_content.splitlines()
@@ -56,8 +57,11 @@ class SearchThread(qt2.QThread):
             if page_matches:
                 results_by_page[page_idx] = page_matches
                 total_results += len(page_matches)
+                if not first_batch_emitted and total_results >= 100:
+                    self.batch_ready.emit(dict(results_by_page), total_results, False)
+                    first_batch_emitted = True
 
-        self.results_ready.emit(results_by_page, total_results)
+        self.batch_ready.emit(results_by_page, total_results, True)
 
 
 class book_viewer(qt.QDialog):
@@ -245,15 +249,21 @@ class book_viewer(qt.QDialog):
         if hasattr(self, 'search_thread') and self.search_thread and self.search_thread.isRunning():
             return
 
+        self._search_spoken = False
+        self.search_button.setEnabled(False)
+        self.search_button.setStyleSheet("background-color: gray; color: white;")
         guiTools.speak("جاري البحث")
 
         self.search_thread = SearchThread(self.data, search_term, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
-        self.search_thread.results_ready.connect(self.on_search_finished)
+        self.search_thread.batch_ready.connect(self.on_search_batch_ready)
         self.search_thread.start()
 
-    def on_search_finished(self, results_by_page, total_results):
+    def on_search_batch_ready(self, results_by_page, total_results, is_finished):
         if not results_by_page:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على نتائج")
+            if is_finished:
+                self.search_button.setEnabled(True)
+                self.search_button.setStyleSheet("")
+                guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على نتائج")
             return
 
         self.is_search_view = True
@@ -287,13 +297,25 @@ class book_viewer(qt.QDialog):
                 display_lines.append(line_text)
                 self.search_line_map[result_content_line_idx] = (page_idx, line_idx, line_text)
 
-        guiTools.speak(header)
+        if not hasattr(self, '_search_spoken') or not self._search_spoken:
+            guiTools.speak(header)
+            self._search_spoken = True
+
         self.text.setText("\n".join(display_lines))
         self.update_font_size()
+
+        if is_finished:
+            self.search_button.setEnabled(True)
+            self.search_button.setStyleSheet("")
 
     def clear_search_results(self):
         if not self.is_search_view:
             return
+        if hasattr(self, 'search_thread') and self.search_thread and self.search_thread.isRunning():
+            self.search_thread.terminate()
+        self.search_button.setEnabled(True)
+        self.search_button.setStyleSheet("")
+        self._search_spoken = False
         self.is_search_view = False
         self.search_line_map = {}
         self.clear_results_button.hide()
