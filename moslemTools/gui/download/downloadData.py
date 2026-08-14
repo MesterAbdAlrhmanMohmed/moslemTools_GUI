@@ -478,7 +478,7 @@ class StartDownloading(qt.QDialog):
 		self.pause_button.clicked.connect(self.toggle_pause)
 		btns_layout.addWidget(self.pause_button)
 
-		self.cancel = guiTools.QPushButton("إلغاء الملف الحالي")
+		self.cancel = guiTools.QPushButton("إلغاء تحميل الملف" if self.total_count == 1 else "إلغاء الملف الحالي")
 		self.cancel.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #A52A2A;}")
 		self.cancel.clicked.connect(self.cancel_current_file)
 		btns_layout.addWidget(self.cancel)
