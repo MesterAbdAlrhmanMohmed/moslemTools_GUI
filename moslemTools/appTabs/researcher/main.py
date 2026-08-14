@@ -8,7 +8,7 @@ from gui.quranViewer import QuranViewer
 from gui.tafaseerViewer import TafaseerViewer
 from gui.translationViewer import translationViewer
 from gui.changeReciter import ChangeReciter
-from .search_worker import DownloadThread, SearchModeDialog, SearchThread
+from .search_worker import DownloadThread, SearchModeDialog, SearchThread, RemainingThread
 
 
 class Albaheth(qt.QWidget):
@@ -26,6 +26,7 @@ class Albaheth(qt.QWidget):
         self.media_player.setAudioOutput(self.audio_output)
         self.was_playing_before_action = False
         self.current_search_thread = None
+        self.remaining_thread = None
         self.is_saving = False
         self.cancellation_requested = False
         self.setStyleSheet("""QPushButton {background-color: #007bff; color: white; border: none; border-radius: 6px; padding: 10px 15px; min-height: 40px; font-weight: bold; outline: none; } QPushButton:hover { background-color: #0056b3; } QPushButton:pressed { background-color: #003d80; } QPushButton#searchModeButton { background-color: #0056b3; } QPushButton#searchModeButton:hover { background-color: #003d80; } QPushButton#searchModeButton:pressed { background-color: #003d80; } QPushButton#startButton { background-color: #28a745; } QPushButton#startButton:hover { background-color: #218838; } QPushButton#startButton:pressed { background-color: #218838; } QPushButton#applySearchModeChangesButton { background-color: #28a745; } QPushButton#applySearchModeChangesButton:hover { background-color: #218838; } QPushButton#applySearchModeChangesButton:pressed { background-color: #218838; } QPushButton#cancelButton { background-color: #dc3545; } QPushButton#cancelButton:hover { background-color: #c82333; } QPushButton#cancelButton:pressed { background-color: #bd2130; } QPushButton#clearResultsButton { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 10px 15px; min-height: 40px; font-weight: bold; outline: none; } QPushButton#clearResultsButton:hover { background-color: #c82333; } QPushButton#clearResultsButton:pressed { background-color: #bd2130; } QPushButton#clearResultsButton:disabled { background-color: #6c757d; color: #d3d3d3; } """)
@@ -370,6 +371,12 @@ class Albaheth(qt.QWidget):
             guiTools.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء عملية الحفظ.")
             event.ignore()
         else:
+            if hasattr(self, 'remaining_thread') and self.remaining_thread and self.remaining_thread.isRunning():
+                self.remaining_thread.cancel()
+                self.remaining_thread.wait()
+            if self.current_search_thread and self.current_search_thread.isRunning():
+                self.current_search_thread.quit()
+                self.current_search_thread.wait()
             if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                 self.media_player.stop()
             super().closeEvent(event)
@@ -559,6 +566,9 @@ class Albaheth(qt.QWidget):
         if self.current_search_thread and self.current_search_thread.isRunning():
             guiTools.speak("جاري تنفيذ عملية بحث أخرى. يرجى الانتظار")
             return
+        if hasattr(self, 'remaining_thread') and self.remaining_thread and self.remaining_thread.isRunning():
+            self.remaining_thread.cancel()
+            self.remaining_thread.wait()
         self.results.clear()
         self.search_metadata.clear()
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -581,9 +591,9 @@ class Albaheth(qt.QWidget):
         self.current_search_thread = SearchThread(self, search_type, search_text, self.current_scope, ahadeeth_text, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
         self.current_search_thread.searchFinished.connect(self.onSearchFinished)
         self.current_search_thread.start()
-    @qt2.pyqtSlot(list, dict, int)
+    @qt2.pyqtSlot(list, dict, int, list)
 
-    def onSearchFinished(self, display_text, search_metadata, total_results_count):
+    def onSearchFinished(self, display_text, search_metadata, total_results_count, remaining_chunks):
         self.start.setEnabled(True)
         self.start.setText("البحث")
         self.search_metadata = search_metadata
@@ -592,10 +602,23 @@ class Albaheth(qt.QWidget):
             self.update_font_size()
             self.clear_results_button.setDisabled(False)
             self.results.setFocus()
+            if remaining_chunks:
+                self.remaining_thread = RemainingThread(remaining_chunks, self)
+                self.remaining_thread.chunkFinished.connect(self.onRemainingChunkFinished)
+                self.remaining_thread.start()
         else:
             guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
             self.clear_results_button.setDisabled(True)
             self.serch_input.setFocus()
+    @qt2.pyqtSlot(list, dict)
+
+    def onRemainingChunkFinished(self, chunk_display, chunk_metadata):
+        if hasattr(self, 'remaining_thread') and self.remaining_thread and self.remaining_thread.is_cancelled:
+            return
+        if chunk_display:
+            self.results.append("\n".join(chunk_display))
+            self.search_metadata.update(chunk_metadata)
+            qt2.QCoreApplication.processEvents()
 
     def get_metadata_from_result(self, result_text):
         match = re.search(r'^(\d+).+?\((\d+)\)$', result_text)
@@ -613,6 +636,9 @@ class Albaheth(qt.QWidget):
         return None
 
     def clear_results(self):
+        if hasattr(self, 'remaining_thread') and self.remaining_thread and self.remaining_thread.isRunning():
+            self.remaining_thread.cancel()
+            self.remaining_thread.wait()
         if self.results.toPlainText():
             self.results.clear()
             self.search_metadata.clear()

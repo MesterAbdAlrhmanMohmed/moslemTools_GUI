@@ -136,8 +136,27 @@ class SearchModeDialog(qt.QDialog):
         return {"ignore_tashkeel": self.ignore_tashkeel, "ignore_hamza": self.ignore_hamza, "ignore_symbols": self.ignore_symbols}
 
 
+class RemainingThread(qt2.QThread):
+    chunkFinished = qt2.pyqtSignal(list, dict)
+
+    def __init__(self, remaining_chunks, parent=None):
+        super().__init__(parent)
+        self.remaining_chunks = remaining_chunks
+        self.is_cancelled = False
+
+    def cancel(self):
+        self.is_cancelled = True
+
+    def run(self):
+        for text_chunk, meta_chunk in self.remaining_chunks:
+            if self.is_cancelled:
+                break
+            self.chunkFinished.emit(text_chunk, meta_chunk)
+            self.msleep(250)
+
+
 class SearchThread(qt2.QThread):
-    searchFinished = qt2.pyqtSignal(list, dict, int)
+    searchFinished = qt2.pyqtSignal(list, dict, int, list)
 
     def __init__(self, parent, search_type, search_text, search_scope, ahadeeth_text, ignore_tashkeel, ignore_hamza, ignore_symbols):
         super().__init__(parent)
@@ -173,6 +192,7 @@ class SearchThread(qt2.QThread):
         display_text = []
         search_metadata = {}
         total_results_count = 0
+        remaining_chunks = []
         try:
             if self.search_type == 0:
                 listOfWords = []
@@ -204,23 +224,41 @@ class SearchThread(qt2.QThread):
                             if match: listOfWords.append((get_display(sn, sname, a), a['text']))
                 result = self._search(self.search_text, listOfWords)
                 if result:
-                    header = "عدد نتائج البحث " + str(len(result))
-                    display_text.extend([header, ""])
+                    total_results_count = len(result)
+                    header = "عدد نتائج البحث " + str(total_results_count)
+                    first_display = [header, ""]
+                    first_metadata = {}
                     current_line_number = 3
-                    for line in result:
-                        display_text.append(line)
+                    first_batch = result[:100]
+                    for line in first_batch:
+                        first_display.append(line)
                         metadata = self.parent_widget.get_metadata_from_result(line)
                         if metadata:
-                            search_metadata[current_line_number] = metadata
+                            first_metadata[current_line_number] = metadata
                         current_line_number += 1
-                    total_results_count = len(result)
+                    remaining_results = result[100:]
+                    if remaining_results:
+                        chunk_size = 250
+                        for i in range(0, len(remaining_results), chunk_size):
+                            chunk_batch = remaining_results[i:i + chunk_size]
+                            chunk_display = []
+                            chunk_metadata = {}
+                            for line in chunk_batch:
+                                chunk_display.append(line)
+                                metadata = self.parent_widget.get_metadata_from_result(line)
+                                if metadata:
+                                    chunk_metadata[current_line_number] = metadata
+                                current_line_number += 1
+                            remaining_chunks.append((chunk_display, chunk_metadata))
+                    display_text = first_display
+                    search_metadata = first_metadata
             else:
                 search_books = {}
                 if self.ahadeeth_text == "البحث في جميع كتب الأحاديث المتاحة":
                     search_books = functions.ahadeeth.ahadeeths
                 else:
                     search_books = {self.ahadeeth_text: functions.ahadeeth.ahadeeths[self.ahadeeth_text]}
-                current_line_number = 3
+                found_books = []
                 for book_name_ar, file_name in search_books.items():
                     try:
                         full_path = os.path.join(os.getenv("appdata"), settings.app.appName, "ahadeeth", file_name)
@@ -228,46 +266,83 @@ class SearchThread(qt2.QThread):
                             ahadeeth_data = json.load(f)
                         if isinstance(ahadeeth_data, list):
                             listOfWords = [(str(i + 1) + ". " + item, item) for i, item in enumerate(ahadeeth_data)]
-                            result = self._search(self.search_text, listOfWords)
-                            if result:
-                                display_text.append(f"عدد النتائج في كتاب {book_name_ar}, {len(result)} نتيجة")
-                                current_line_number += 1
-                                display_text.append("")
-                                current_line_number += 1
-                                for item in result:
-                                    display_text.append(item)
-                                    match = re.match(r'^(\d+)\.', item)
-                                    if match:
-                                        hadith_index = int(match.group(1)) - 1
-                                        metadata = {
-                                            "type": "hadith",
-                                            "book_name": book_name_ar,
-                                            "file_name": file_name,
-                                            "hadith_index": hadith_index
-                                        }
-                                        num_lines = item.count('\n') + 1
-                                        for offset in range(num_lines):
-                                            search_metadata[current_line_number + offset] = metadata
-                                        current_line_number += num_lines
-                                    else:
-                                        current_line_number += 1
-                                display_text.append("")
-                                current_line_number += 1
-                                total_results_count += len(result)
+                            res = self._search(self.search_text, listOfWords)
+                            if res:
+                                found_books.append((book_name_ar, file_name, res))
+                                total_results_count += len(res)
                         else:
                             qt.QMetaObject.invokeMethod(self.parent_widget, "handle_error", qt2.Qt.ConnectionType.QueuedConnection, qt2.Q_ARG(str, f"خطأ في البيانات: تنسيق ملف الأحاديث غير صحيح لكتاب: {book_name_ar}."))
                     except Exception as e:
                         qt.QMetaObject.invokeMethod(self.parent_widget, "handle_error", qt2.Qt.ConnectionType.QueuedConnection, qt2.Q_ARG(str, f"خطأ غير متوقع أثناء تحميل الأحاديث لكتاب {book_name_ar}: {e}"))
                 if total_results_count > 0:
-                    if display_text and display_text[-1] == "":
-                        display_text.pop()
-                    display_text.insert(0, "")
-                    display_text.insert(0, f"إجمالي عدد النتائج: {total_results_count}")
+                    first_display = [f"إجمالي عدد النتائج: {total_results_count}", ""]
+                    first_metadata = {}
+                    current_line_number = 3
+                    hadith_count = 0
+                    current_chunk_display = []
+                    current_chunk_metadata = {}
+                    current_chunk_item_count = 0
+                    for book_name_ar, file_name, res in found_books:
+                        book_in_first = (hadith_count < 100)
+                        if book_in_first:
+                            first_display.append(f"عدد النتائج في كتاب {book_name_ar}, {len(res)} نتيجة")
+                            current_line_number += 1
+                            first_display.append("")
+                            current_line_number += 1
+                        else:
+                            current_chunk_display.append(f"عدد النتائج في كتاب {book_name_ar}, {len(res)} نتيجة")
+                            current_line_number += 1
+                            current_chunk_display.append("")
+                            current_line_number += 1
+                        for item in res:
+                            hadith_count += 1
+                            match = re.match(r'^(\d+)\.', item)
+                            metadata = None
+                            if match:
+                                hadith_index = int(match.group(1)) - 1
+                                metadata = {
+                                    "type": "hadith",
+                                    "book_name": book_name_ar,
+                                    "file_name": file_name,
+                                    "hadith_index": hadith_index
+                                }
+                            num_lines = item.count('\n') + 1
+                            if hadith_count <= 100:
+                                first_display.append(item)
+                                if metadata:
+                                    for offset in range(num_lines):
+                                        first_metadata[current_line_number + offset] = metadata
+                                current_line_number += num_lines
+                            else:
+                                current_chunk_display.append(item)
+                                if metadata:
+                                    for offset in range(num_lines):
+                                        current_chunk_metadata[current_line_number + offset] = metadata
+                                current_line_number += num_lines
+                                current_chunk_item_count += 1
+                                if current_chunk_item_count >= 250:
+                                    remaining_chunks.append((current_chunk_display, current_chunk_metadata))
+                                    current_chunk_display = []
+                                    current_chunk_metadata = {}
+                                    current_chunk_item_count = 0
+                        if book_in_first and (hadith_count <= 100):
+                            first_display.append("")
+                            current_line_number += 1
+                        else:
+                            current_chunk_display.append("")
+                            current_line_number += 1
+                    if current_chunk_display:
+                        remaining_chunks.append((current_chunk_display, current_chunk_metadata))
+                    if first_display and first_display[-1] == "" and len(remaining_chunks) == 0:
+                        first_display.pop()
+                    display_text = first_display
+                    search_metadata = first_metadata
                 else:
                     display_text = []
         except Exception:
             display_text = []
             search_metadata = {}
             total_results_count = 0
+            remaining_chunks = []
         finally:
-            self.searchFinished.emit(display_text, search_metadata, total_results_count)
+            self.searchFinished.emit(display_text, search_metadata, total_results_count, remaining_chunks)
