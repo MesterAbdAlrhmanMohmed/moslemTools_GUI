@@ -292,6 +292,10 @@ class Albaheth(qt.QWidget):
         self.clear_results_button.setObjectName("clearResultsButton")
         self.clear_results_button.setDisabled(True)
         self.clear_results_button.clicked.connect(self.clear_results)
+        self.loading_label = guiTools.QNavigableLabel("جاري تحميل باقي نتائج البحث")
+        self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.loading_label.hide()
         self.more_options_label = guiTools.QNavigableLabel("لمزيد من الخيارات، نستخدم زر التطبيقات أو click الأيمن")
         self.more_options_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.more_options_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -348,7 +352,10 @@ class Albaheth(qt.QWidget):
         font_layout.addWidget(self.show_font)
         bottom_layout.addLayout(font_layout, 1)
         bottom_layout.addSpacing(20)
-        bottom_layout.addWidget(self.more_options_label, 1)
+        options_layout = qt.QVBoxLayout()
+        options_layout.addWidget(self.loading_label)
+        options_layout.addWidget(self.more_options_label)
+        bottom_layout.addLayout(options_layout, 1)
         main_layout.addLayout(bottom_layout)
         self.ahadeeth_laibol.hide()
         self.ahadeeth.hide()
@@ -569,6 +576,7 @@ class Albaheth(qt.QWidget):
         if hasattr(self, 'remaining_thread') and self.remaining_thread and self.remaining_thread.isRunning():
             self.remaining_thread.cancel()
             self.remaining_thread.wait()
+        self.loading_label.hide()
         self.results.clear()
         self.search_metadata.clear()
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -603,10 +611,16 @@ class Albaheth(qt.QWidget):
             self.clear_results_button.setDisabled(False)
             self.results.setFocus()
             if remaining_chunks:
+                self.loading_label.show()
                 self.remaining_thread = RemainingThread(remaining_chunks, self)
                 self.remaining_thread.chunkFinished.connect(self.onRemainingChunkFinished)
+                self.remaining_thread.finished.connect(self.onRemainingFinished)
                 self.remaining_thread.start()
+            else:
+                self.loading_label.hide()
+                guiTools.speak("تم تحميل جميع نتائج البحث")
         else:
+            self.loading_label.hide()
             guiTools.MessageBox.view(self,"تنبيه","لم يتم العثور على نتائج")
             self.clear_results_button.setDisabled(True)
             self.serch_input.setFocus()
@@ -619,6 +633,12 @@ class Albaheth(qt.QWidget):
             self.results.append("\n".join(chunk_display))
             self.search_metadata.update(chunk_metadata)
             qt2.QCoreApplication.processEvents()
+
+    def onRemainingFinished(self):
+        self.loading_label.hide()
+        if hasattr(self, 'remaining_thread') and self.remaining_thread and self.remaining_thread.is_cancelled:
+            return
+        guiTools.speak("تم تحميل جميع نتائج البحث")
 
     def get_metadata_from_result(self, result_text):
         match = re.search(r'^(\d+).+?\((\d+)\)$', result_text)
@@ -639,6 +659,7 @@ class Albaheth(qt.QWidget):
         if hasattr(self, 'remaining_thread') and self.remaining_thread and self.remaining_thread.isRunning():
             self.remaining_thread.cancel()
             self.remaining_thread.wait()
+        self.loading_label.hide()
         if self.results.toPlainText():
             self.results.clear()
             self.search_metadata.clear()

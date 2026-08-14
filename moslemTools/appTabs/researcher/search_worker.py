@@ -229,16 +229,16 @@ class SearchThread(qt2.QThread):
                     first_display = [header, ""]
                     first_metadata = {}
                     current_line_number = 3
-                    first_batch = result[:100]
+                    first_batch = result[:1000]
                     for line in first_batch:
                         first_display.append(line)
                         metadata = self.parent_widget.get_metadata_from_result(line)
                         if metadata:
                             first_metadata[current_line_number] = metadata
                         current_line_number += 1
-                    remaining_results = result[100:]
+                    remaining_results = result[1000:]
                     if remaining_results:
-                        chunk_size = 250
+                        chunk_size = 500
                         for i in range(0, len(remaining_results), chunk_size):
                             chunk_batch = remaining_results[i:i + chunk_size]
                             chunk_display = []
@@ -283,7 +283,7 @@ class SearchThread(qt2.QThread):
                     current_chunk_metadata = {}
                     current_chunk_item_count = 0
                     for book_name_ar, file_name, res in found_books:
-                        book_in_first = (hadith_count < 100)
+                        book_in_first = (hadith_count < 1000)
                         if book_in_first:
                             first_display.append(f"عدد النتائج في كتاب {book_name_ar}, {len(res)} نتيجة")
                             current_line_number += 1
@@ -307,7 +307,7 @@ class SearchThread(qt2.QThread):
                                     "hadith_index": hadith_index
                                 }
                             num_lines = item.count('\n') + 1
-                            if hadith_count <= 100:
+                            if hadith_count <= 1000:
                                 first_display.append(item)
                                 if metadata:
                                     for offset in range(num_lines):
@@ -320,12 +320,12 @@ class SearchThread(qt2.QThread):
                                         current_chunk_metadata[current_line_number + offset] = metadata
                                 current_line_number += num_lines
                                 current_chunk_item_count += 1
-                                if current_chunk_item_count >= 250:
+                                if current_chunk_item_count >= 500:
                                     remaining_chunks.append((current_chunk_display, current_chunk_metadata))
                                     current_chunk_display = []
                                     current_chunk_metadata = {}
                                     current_chunk_item_count = 0
-                        if book_in_first and (hadith_count <= 100):
+                        if book_in_first and (hadith_count <= 1000):
                             first_display.append("")
                             current_line_number += 1
                         else:
