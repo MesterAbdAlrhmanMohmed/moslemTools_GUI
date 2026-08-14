@@ -5,7 +5,6 @@ from ..translationViewer import translationViewer
 from ..tafaseerViewer import TafaseerViewer
 from ..quranPlayer import QuranPlayer
 import time, winsound, pyperclip, os, re, requests, subprocess, shutil, traceback
-from custom_errors import log_error_to_file
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1

@@ -1,6 +1,5 @@
 import gui.translationViewer
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
-from custom_errors import log_error_to_file
 import ujson as json
 from settings.app import appName
 from settings import settings_handler

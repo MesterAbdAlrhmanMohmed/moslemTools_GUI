@@ -1,10 +1,9 @@
-import os,guiTools,random,re,winsound,functions,traceback
+import os,guiTools,random,re,winsound,functions
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from settings import settings_handler
-from custom_errors import log_error_to_file
 
 
 class IslamicQuestionsGame(qt.QWidget):
@@ -16,12 +15,10 @@ class IslamicQuestionsGame(qt.QWidget):
         try:
             with open(self.asked_file, "r", encoding="utf-8") as f: self.asked_questions = set(json.load(f))
         except Exception as e:
-            log_error_to_file(traceback.format_exc())
             self.asked_questions = set()
         try:
             with open(self.game_settings_file, "r", encoding="utf-8") as f: self.game_settings = json.load(f)
         except Exception as e:
-            log_error_to_file(traceback.format_exc())
             self.game_settings = {"sound_enabled": True}
         self.categories_info = {
             "tafseer": {"name": "التفسير", "color": "#1B5E20", "file": "tafseer.json"},
@@ -278,7 +275,7 @@ class IslamicQuestionsGame(qt.QWidget):
                 try:
                     with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
                 except Exception as e:
-                    log_error_to_file(traceback.format_exc())
+                    pass
             self.solved_count = 0
             self.incorrect_questions = []
             self.total_questions = len(self.questions)
@@ -291,7 +288,7 @@ class IslamicQuestionsGame(qt.QWidget):
                     if l_int in self.round_level_total:
                         self.round_level_total[l_int] += 1
                 except Exception as e:
-                    log_error_to_file(traceback.format_exc())
+                    pass
 
             self.show_question()
             self.stacked_widget.setCurrentWidget(self.game_widget)
@@ -358,7 +355,7 @@ class IslamicQuestionsGame(qt.QWidget):
             try:
                 with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
             except Exception as e:
-                log_error_to_file(traceback.format_exc())
+                pass
         self.question_edit.setText(q_data.get("q", ""))
         self.update_question_font()
         solved_text = self.get_arabic_count_text(self.solved_count)
@@ -398,7 +395,7 @@ class IslamicQuestionsGame(qt.QWidget):
                 if int_l in self.round_level_solved:
                     self.round_level_solved[int_l] += 1
             except Exception as e:
-                log_error_to_file(traceback.format_exc())
+                pass
         else:
             correct_text = ""
             for ans in q_data.get("answers", []):
@@ -419,13 +416,13 @@ class IslamicQuestionsGame(qt.QWidget):
             os.makedirs(os.path.dirname(self.game_settings_file), exist_ok=True)
             with open(self.game_settings_file, "w", encoding="utf-8") as f: json.dump(self.game_settings, f, ensure_ascii=False)
         except Exception as e:
-            log_error_to_file(traceback.format_exc())
+            pass
 
     def clear_asked_questions(self):
         self.asked_questions.clear()
         if os.path.exists(self.asked_file):
             try: os.remove(self.asked_file)
-            except Exception as e: log_error_to_file(traceback.format_exc())
+            except Exception as e: pass
 
     def confirm_exit_game(self):
         if guiTools.QQuestionMessageBox.view(self, "تأكيد الخروج", "هل أنت متأكد من الخروج من الجولة؟", "نعم", "لا") == 0:

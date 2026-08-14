@@ -2,7 +2,6 @@ from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
 from ..tafaseerViewer import TafaseerViewer
 import time,os,requests,subprocess,shutil,re,traceback
-from custom_errors import log_error_to_file
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
