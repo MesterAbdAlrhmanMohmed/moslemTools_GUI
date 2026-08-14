@@ -66,10 +66,11 @@ class DateConverter(qt.QWidget):
         container.setMaximumWidth(550)
         content_layout = qt.QVBoxLayout(container)
         content_layout.setContentsMargins(20, 20, 20, 20)
-        content_layout.setSpacing(18)
+        content_layout.setSpacing(12)
+        content_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignTop)
         grid_layout = qt.QGridLayout()
         grid_layout.setHorizontalSpacing(12)
-        grid_layout.setVerticalSpacing(15)
+        grid_layout.setVerticalSpacing(12)
         self.l_Converter = qt.QLabel("اختيار نوع التحويل")
         self.l_Converter.setAlignment(qt2.Qt.AlignmentFlag.AlignLeft | qt2.Qt.AlignmentFlag.AlignVCenter)
         self.Converter_combo = qt.QComboBox()
@@ -108,15 +109,21 @@ class DateConverter(qt.QWidget):
         self.Convert.clicked.connect(self.convert_date)
         content_layout.addWidget(self.Convert)
         result_area_layout = qt.QVBoxLayout()
-        result_area_layout.setSpacing(12)
-        self.l_result = qt.QLabel("النتيجة")
+        result_area_layout.setSpacing(6)
+        result_display_layout = qt.QHBoxLayout()
+        result_display_layout.setSpacing(15)
+        result_display_layout.addStretch(1)
+        self.l_result = qt.QLabel("النتيجة:")
         self.l_result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        result_area_layout.addWidget(self.l_result)
-        result_area_layout.addStretch(1)
+        self.l_result.setVisible(False)
         self.result = guiTools.QNavigableLabel()
         self.result.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.result.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        result_area_layout.addWidget(self.result)
+        self.result.setVisible(False)
+        result_display_layout.addWidget(self.result)
+        result_display_layout.addWidget(self.l_result)
+        result_display_layout.addStretch(1)
+        result_area_layout.addLayout(result_display_layout)
         result_buttons_layout = qt.QHBoxLayout()
         result_buttons_layout.setSpacing(10)
         result_buttons_layout.addStretch(1)
@@ -124,6 +131,7 @@ class DateConverter(qt.QWidget):
         self.copy_result.setObjectName("copyButton")
         self.copy_result.clicked.connect(self.copy)
         self.copy_result.setEnabled(False)
+        self.copy_result.setVisible(False)
         result_buttons_layout.addWidget(self.copy_result)
         self.clear_result = guiTools.QPushButton("حذف النتيجة")
         self.clear_result.setStyleSheet("background-color: #8B0000; color: white;")
@@ -137,6 +145,7 @@ class DateConverter(qt.QWidget):
         content_layout.addLayout(result_area_layout)
         main_layout = qt.QHBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignTop)
         main_layout.addStretch(1)
         main_layout.addWidget(container)
         main_layout.addStretch(1)
@@ -162,7 +171,10 @@ class DateConverter(qt.QWidget):
 
     def _reset_result_state(self):
         self.result.clear()
+        self.l_result.setVisible(False)
+        self.result.setVisible(False)
         self.copy_result.setEnabled(False)
+        self.copy_result.setVisible(False)
         self.clear_result.setEnabled(False)
         self.clear_result.setVisible(False)
 
@@ -210,6 +222,8 @@ class DateConverter(qt.QWidget):
         if not (year_text.isdigit() and day_text.isdigit()):
             self._reset_result_state()
             self.result.setText("الرجاء إدخال أرقام صحيحة.")
+            self.l_result.setVisible(True)
+            self.result.setVisible(True)
             self.result.setFocus()
             return
         year = int(year_text)
@@ -218,6 +232,8 @@ class DateConverter(qt.QWidget):
         if not (year > 0 and day > 0):
             self._reset_result_state()
             self.result.setText("الرجاء إدخال أرقام موجبة.")
+            self.l_result.setVisible(True)
+            self.result.setVisible(True)
             self.result.setFocus()
             return
         try:
@@ -232,7 +248,10 @@ class DateConverter(qt.QWidget):
                 hijri_date = gregorian_date.to_hijri()
                 result_str = f"{days_of_week[gregorian_date.weekday()]} - {hijri_date.day} {self.get_hijri_month_name(hijri_date.month)} {hijri_date.year}"
             self.result.setText(result_str)
+            self.l_result.setVisible(True)
+            self.result.setVisible(True)
             self.copy_result.setEnabled(True)
+            self.copy_result.setVisible(True)
             self.clear_result.setEnabled(True)
             self.clear_result.setVisible(True)
             self.result.setFocus()
@@ -242,6 +261,8 @@ class DateConverter(qt.QWidget):
             if isinstance(e, ValueError):
                 error_message = str(e)
             self.result.setText(error_message)
+            self.l_result.setVisible(True)
+            self.result.setVisible(True)
             self.result.setFocus()
 
     def get_gregorian_month_name(self, month):
