@@ -224,10 +224,11 @@ class SelectItem(qt.QDialog):
 		if not self.custom_download_list:
 			return
 		file_keys = [self.data[text] for text in self.custom_download_list if text in self.data]
+		display_names = [text for text in self.custom_download_list if text in self.data]
 		self.custom_download_list.clear()
 		self.update_selection_ui()
 		if file_keys:
-			StartDownloading(self, file_keys, self.dirName).exec()
+			StartDownloading(self, file_keys, self.dirName, display_names).exec()
 
 	def cancel_custom_list(self):
 		self.custom_download_list.clear()
@@ -259,14 +260,16 @@ class SelectItem(qt.QDialog):
 		if start_index > end_index:
 			start_index, end_index = end_index, start_index
 		file_keys = []
+		display_names = []
 		for i in range(start_index, end_index + 1):
 			it = self.item.item(i)
 			if it and it.text() in self.data:
 				file_keys.append(self.data[it.text()])
+				display_names.append(it.text())
 		self.start_selection_index = None
 		self.update_selection_ui()
 		if file_keys:
-			StartDownloading(self, file_keys, self.dirName).exec()
+			StartDownloading(self, file_keys, self.dirName, display_names).exec()
 
 	def update_selection_ui(self):
 		if self.custom_download_list:
@@ -287,7 +290,7 @@ class SelectItem(qt.QDialog):
 			else:
 				curr = self.item.currentItem()
 				if curr and curr.text() in self.data:
-					StartDownloading(self, self.data[curr.text()], self.dirName).exec()
+					StartDownloading(self, self.data[curr.text()], self.dirName, curr.text()).exec()
 		except Exception as e:
 			log_error("SelectItem.on_item_clicked", e)
 
@@ -432,12 +435,19 @@ class DownloadThread(qt2.QThread):
 
 
 class StartDownloading(qt.QDialog):
-	def __init__(self, p, FileName, DIRName: str):
+	def __init__(self, p, FileName, DIRName: str, display_name=None):
 		super().__init__(p)
 		if isinstance(FileName, list):
 			self.files = FileName
 		else:
 			self.files = [FileName]
+		if display_name is not None:
+			if isinstance(display_name, list):
+				self.display_names = display_name
+			else:
+				self.display_names = [display_name]
+		else:
+			self.display_names = list(self.files)
 		self.DIRName = DIRName
 		self.total_count = len(self.files)
 		self.current_index = 0
@@ -494,8 +504,9 @@ class StartDownloading(qt.QDialog):
 	def start_next_file(self):
 		if self.current_index < self.total_count:
 			current_file = self.files[self.current_index]
+			current_display = self.display_names[self.current_index] if self.current_index < len(self.display_names) else current_file
 			if self.total_count == 1:
-				self.status_label.setText(f"جاري تحميل {current_file}")
+				self.status_label.setText(f"جاري تحميل {current_display}")
 			else:
 				sc_str = format_file_count(self.successful_count) if self.successful_count > 0 else "0 ملف"
 				tot_str = format_file_count(self.total_count)
@@ -508,7 +519,11 @@ class StartDownloading(qt.QDialog):
 			self.thread.network_error.connect(self.on_network_error)
 			self.thread.start()
 		else:
-			guiTools.qMessageBox.MessageBox.view(self, "تم", f"اكتملت عملية التحميل بنجاح ({format_file_count(self.successful_count)} من إجمالي {format_file_count(self.total_count)})")
+			if self.total_count == 1 and self.successful_count == 1:
+				current_display = self.display_names[0] if self.display_names else self.files[0]
+				guiTools.qMessageBox.MessageBox.view(self, "تم", f"تم تحميل {current_display}")
+			else:
+				guiTools.qMessageBox.MessageBox.view(self, "تم", f"اكتملت عملية التحميل بنجاح ({format_file_count(self.successful_count)} من إجمالي {format_file_count(self.total_count)})")
 			self.accept()
 
 	def toggle_pause(self):
