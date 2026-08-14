@@ -10,6 +10,56 @@ import re
 from gui.quranViewer.threads import SearchModeDialog
 
 
+class SearchThread(qt2.QThread):
+    results_ready = qt2.pyqtSignal(dict, int)
+
+    def __init__(self, data, search_term, ignore_tashkeel, ignore_hamza, ignore_symbols):
+        super().__init__()
+        self.data = data
+        self.search_term = search_term
+        self.ignore_tashkeel = ignore_tashkeel
+        self.ignore_hamza = ignore_hamza
+        self.ignore_symbols = ignore_symbols
+
+    def run(self):
+        def remove_tashkeel(text):
+            return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
+
+        def normalize_hamza(text):
+            return re.sub(r'[أإآ]', 'ا', text)
+
+        def remove_symbols(text):
+            return re.sub(r'[^\w\s]', '', text)
+
+        def normalize(text):
+            normalized_text = text
+            if self.ignore_tashkeel:
+                normalized_text = remove_tashkeel(normalized_text)
+            if self.ignore_hamza:
+                normalized_text = normalize_hamza(normalized_text)
+            if self.ignore_symbols:
+                normalized_text = remove_symbols(normalized_text)
+            return normalized_text
+
+        normalized_pattern = normalize(self.search_term)
+        results_by_page = {}
+        total_results = 0
+
+        for page_idx, page_content in enumerate(self.data):
+            lines = page_content.splitlines()
+            page_matches = []
+            for line_idx, line in enumerate(lines):
+                if not line.strip():
+                    continue
+                if normalized_pattern in normalize(line):
+                    page_matches.append((line_idx, line))
+            if page_matches:
+                results_by_page[page_idx] = page_matches
+                total_results += len(page_matches)
+
+        self.results_ready.emit(results_by_page, total_results)
+
+
 class book_viewer(qt.QDialog):
     def __init__(self, p, book_name, partName: str, content: list, index: int = 0):
         super().__init__(p)
@@ -192,41 +242,16 @@ class book_viewer(qt.QDialog):
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "يرجى كتابة محتوى للبحث")
             return
 
-        def remove_tashkeel(text):
-            return re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', '', text)
+        if hasattr(self, 'search_thread') and self.search_thread and self.search_thread.isRunning():
+            return
 
-        def normalize_hamza(text):
-            return re.sub(r'[أإآ]', 'ا', text)
+        guiTools.speak("جاري البحث")
 
-        def remove_symbols(text):
-            return re.sub(r'[^\w\s]', '', text)
+        self.search_thread = SearchThread(self.data, search_term, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
+        self.search_thread.results_ready.connect(self.on_search_finished)
+        self.search_thread.start()
 
-        def normalize(text):
-            normalized_text = text
-            if self.ignore_tashkeel:
-                normalized_text = remove_tashkeel(normalized_text)
-            if self.ignore_hamza:
-                normalized_text = normalize_hamza(normalized_text)
-            if self.ignore_symbols:
-                normalized_text = remove_symbols(normalized_text)
-            return normalized_text
-
-        normalized_pattern = normalize(search_term)
-        results_by_page = {}
-        total_results = 0
-
-        for page_idx, page_content in enumerate(self.data):
-            lines = page_content.splitlines()
-            page_matches = []
-            for line_idx, line in enumerate(lines):
-                if not line.strip():
-                    continue
-                if normalized_pattern in normalize(line):
-                    page_matches.append((line_idx, line))
-            if page_matches:
-                results_by_page[page_idx] = page_matches
-                total_results += len(page_matches)
-
+    def on_search_finished(self, results_by_page, total_results):
         if not results_by_page:
             guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لم يتم العثور على نتائج")
             return

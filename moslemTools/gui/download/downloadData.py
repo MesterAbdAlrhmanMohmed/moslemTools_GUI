@@ -477,6 +477,8 @@ class StartDownloading(qt.QDialog):
 		self.cancel_all_button.setStyleSheet("QPushButton {background-color: #550000; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #770000;}")
 		self.cancel_all_button.clicked.connect(self.cancel_all)
 		btns_layout.addWidget(self.cancel_all_button)
+		if self.total_count == 1:
+			self.cancel_all_button.hide()
 
 		layout.addLayout(btns_layout)
 
@@ -492,9 +494,12 @@ class StartDownloading(qt.QDialog):
 	def start_next_file(self):
 		if self.current_index < self.total_count:
 			current_file = self.files[self.current_index]
-			sc_str = format_file_count(self.successful_count) if self.successful_count > 0 else "0 ملف"
-			tot_str = format_file_count(self.total_count)
-			self.status_label.setText(f"تم تحميل {sc_str} من إجمالي {tot_str} (جاري تحميل الملف {self.current_index + 1})")
+			if self.total_count == 1:
+				self.status_label.setText(f"جاري تحميل {current_file}")
+			else:
+				sc_str = format_file_count(self.successful_count) if self.successful_count > 0 else "0 ملف"
+				tot_str = format_file_count(self.total_count)
+				self.status_label.setText(f"تم تحميل {sc_str} من إجمالي {tot_str} (جاري تحميل الملف {self.current_index + 1})")
 			self.progressBar.setValue(0)
 			self.pause_button.setText("إيقاف مؤقت")
 			self.thread = DownloadThread(current_file, self.DIRName)
