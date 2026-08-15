@@ -486,7 +486,7 @@ class protcasts(qt.QWidget):
     def pauseRecording(self):
         self.recorder.pause()
         self.pauseBtn.setText("استئناف")
-        self.pauseBtn.setStyleSheet("background-color: #FF8C00; color: white; min-height: 40px; font-size: 16px;")
+        self.pauseBtn.setStyleSheet("background-color: #0056b3; color: white; min-height: 40px; font-size: 16px;")
         try: self.pauseBtn.clicked.disconnect()
         except TypeError: pass
         self.pauseBtn.clicked.connect(self.resumeRecording)
@@ -511,9 +511,13 @@ class protcasts(qt.QWidget):
         if not self.recorder._running and not self.recorder._paused: return
         self.recorder.stop(cleanup_only=False)
 
-    @qt2.pyqtSlot(str)
-    def on_recording_stopped(self, temp_wav_path):
-        if temp_wav_path and os.path.exists(temp_wav_path):
+    @qt2.pyqtSlot(str, str)
+    def on_recording_stopped(self, status, temp_wav_path):
+        if status == "CONVERTED":
+            guiTools.qMessageBox.MessageBox.view(self, "نجاح", "تم حفظ التسجيل بنجاح.")
+            self.resetRecorderState()
+            return
+        if status == "STOPPED" and temp_wav_path and os.path.exists(temp_wav_path):
             self.temp_wav_to_convert = temp_wav_path
             if hasattr(self, 'scheduled_stop_due_to_radio'):
                 guiTools.qMessageBox.MessageBox.view(self, "إيقاف التسجيل", "تم إيقاف التسجيل بسبب إيقاف الإذاعة.")
