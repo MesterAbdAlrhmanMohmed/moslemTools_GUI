@@ -93,17 +93,7 @@ class translationViewer(qt.QDialog):
         copy_all.triggered.connect(self.copy_text)
         copy_selected_text = menu.addAction("نسخ النص المحدد")
         copy_selected_text .setShortcut("ctrl+c")
-        copy_selected_text.triggered.connect(self.copy_current_selection)
-        fontMenu = qt.QMenu("حجم الخط", self)
-        incressFontAction = qt1.QAction("تكبير الخط", self)
-        incressFontAction.setShortcut("ctrl+=")
-        fontMenu.addAction(incressFontAction)
-        incressFontAction.triggered.connect(self.increase_font_size)
-        decreaseFontSizeAction = qt1.QAction("تصغير الخط", self)
-        decreaseFontSizeAction.setShortcut("ctrl+-")
-        fontMenu.addAction(decreaseFontSizeAction)
-        decreaseFontSizeAction.triggered.connect(self.decrease_font_size)
-        menu.addMenu(fontMenu)
+        copy_selected_text.triggered.connect(self.copy_current_selection)        
         menu.exec(qt1.QCursor.pos())
 
     def on_change_translation(self):
