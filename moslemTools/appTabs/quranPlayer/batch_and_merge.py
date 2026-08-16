@@ -1,4 +1,4 @@
-﻿import guiTools, requests, os, winsound, gui, functions, subprocess, shutil
+import guiTools, requests, os, winsound, gui, functions, subprocess, shutil, time
 import ujson as json
 from guiTools import TextViewer
 from guiTools import speak
@@ -14,6 +14,16 @@ from .favorites import FavoritesManager
 
 
 class PlayerBatchAndMergeMixin:
+    def safe_remove_file(self, file_path):
+        for _ in range(15):
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                break
+            except PermissionError:
+                time.sleep(0.2)
+            except Exception:
+                break
     def handle_merge_action(self):
         if self.is_merging:
             self.confirm_and_cancel_merge()
@@ -308,15 +318,13 @@ class PlayerBatchAndMergeMixin:
         self.update_merge_ui()
         if self.cancellation_requested:
             guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الدمج.")
-            if hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
-                os.remove(self.current_merge_output_path)
+            if hasattr(self, 'current_merge_output_path'):
+                self.safe_remove_file(self.current_merge_output_path)
             if self.files_to_delete_after_merge:
                 reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", "هل تريد حذف السور الفردية التي تم تحميلها لهذه العملية الملغاة؟", "نعم", "لا")
                 if reply == 0:
                     for f_path in self.files_to_delete_after_merge:
-                        if os.path.exists(f_path):
-                            try: os.remove(f_path)
-                            except: pass
+                        self.safe_remove_file(f_path)
         elif success:
             merged_files_names = [f" {item['surah']}" for item in self.merge_list]
             details = "\n".join(merged_files_names)
@@ -326,9 +334,7 @@ class PlayerBatchAndMergeMixin:
                 reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", "هل تريد حذف السور الفردية التي تم تحميلها للدمج؟", "نعم", "لا")
                 if reply == 0:
                     for f_path in self.files_to_delete_after_merge:
-                        if os.path.exists(f_path):
-                            try: os.remove(f_path)
-                            except: pass
+                        self.safe_remove_file(f_path)
         else:
             guiTools.qMessageBox.MessageBox.error(self, "فشل", message)
         self.cancellation_requested = False
@@ -485,6 +491,7 @@ class PlayerBatchAndMergeMixin:
         widgets_to_toggle = [
             self.recitersListWidget, self.surahListWidget,
             self.reciterSearchEdit, self.surahSearchEdit,
+            self.view_favorites_btn,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
             self.Slider, self.openBookmarks, self.User_guide,
@@ -501,6 +508,7 @@ class PlayerBatchAndMergeMixin:
             self.recitersListWidget, self.surahListWidget,
             self.reciterSearchEdit, self.surahSearchEdit,
             self.reciterSearchLabel, self.surahSearchLabel,
+            self.view_favorites_btn,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
             self.Slider, self.openBookmarks, self.User_guide,
@@ -520,6 +528,7 @@ class PlayerBatchAndMergeMixin:
             self.recitersListWidget, self.surahListWidget,
             self.reciterSearchEdit, self.surahSearchEdit,
             self.reciterSearchLabel, self.surahSearchLabel,
+            self.view_favorites_btn,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
             self.Slider, self.openBookmarks, self.User_guide,
