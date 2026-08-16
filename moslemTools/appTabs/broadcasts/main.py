@@ -489,7 +489,6 @@ class protcasts(qt.QWidget):
             self.remaining_seconds_to_start -= 1
             time_str = format_arabic_duration(self.remaining_seconds_to_start)
             self.aud.setText(f"متبقي على بدء التسجيل: {time_str}")
-            self.aud.setFocus()
         else:
             self.countdown_timer.stop()
             if not self.recorder.is_ready():
@@ -511,7 +510,6 @@ class protcasts(qt.QWidget):
             self.remaining_duration_seconds -= 1
             time_str = format_arabic_duration(self.remaining_duration_seconds)
             self.aud.setText(f"متبقي على انتهاء التسجيل: {time_str}")
-            self.aud.setFocus()
         else:
             self.duration_timer.stop()
             self.stopRecording()

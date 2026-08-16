@@ -13,46 +13,37 @@ class book_marcks(qt.QDialog):
         font.setBold(True)
         self.setFont(font)
         self.setWindowTitle("العلامات المرجعية")
-        self.setMinimumSize(600, 350)
-        self.resize(800, 450)
-        self.tabWidget = qt.QTabWidget()
-        self.tabWidget.setStyleSheet("""
-            QTabWidget::pane {
-                border: 1px solid #444;
-                border-radius: 6px;
-                background-color: #1e1e1e;
-            }
-            QTabBar::tab {
-                background: #2b2b2b;
-                color: white;
-                padding: 10px 20px;
-                border: 1px solid #444;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-                margin: 2px;
-                min-width: 100px;
-                font-weight: bold;
-            }
-            QTabBar::tab:selected {
-                background: #0078d7;
-                color: white;
-                border: 1px solid #0078d7;
-            }
-            QTabBar::tab:hover {
-                background: #3a3a3a;
-            }
-        """)
+        self.setMinimumSize(1080, 420)
+        self.resize(1120, 450)
+        layout = qt.QVBoxLayout(self)
+        h_layout = qt.QHBoxLayout()
+        self.sectian = guiTools.listBook()
+        self.sectian.setSpacing(3)
+        self.sectian.setFocus()
+        self.sectian.setStyleSheet("color: #e0e0e0;")
+        self.sectian.setAccessibleName("اختر فئة")
+        self.sectian.setFont(font)
+        self.sectian.setMinimumWidth(285)
+        self.sectian.setMaximumWidth(310)
+        h_layout.addWidget(self.sectian, 0)
+        scroll_area = qt.QScrollArea()
+        scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+        scroll_area.setWidget(self.sectian.w)
+        h_layout.addWidget(scroll_area, 1)
+        layout.addLayout(h_layout)
         self.tabs = []
         self.results_lists = []
         self.bookMarks1 = [[] for _ in range(5)]
-        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المنوعة"]
+        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة"]
         for i, category in enumerate(categories):
             tab = qt.QWidget()
             tab_layout = qt.QVBoxLayout(tab)
-            search_label = qt.QLabel("البحث عن علامة مرجعية")
+            search_label = qt.QLabel(f"البحث عن علامة مرجعية في فئة {category}")
             search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
             search_bar = qt.QLineEdit()
-            search_bar.setAccessibleName("البحث عن علامة مرجعية")
+            search_bar.setAccessibleName(f"البحث عن علامة مرجعية في فئة {category}")
             search_bar.textChanged.connect(lambda text, idx=i: self.onsearch_tab(text, idx))
             search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
             results = qt.QListWidget()
@@ -61,36 +52,36 @@ class book_marcks(qt.QDialog):
             tab_layout.addWidget(search_label)
             tab_layout.addWidget(search_bar)
             tab_layout.addWidget(results)
-            self.tabWidget.addTab(tab, category)
+            self.sectian.add(category, tab)
             self.tabs.append(tab)
             self.results_lists.append(results)
-        layout = qt.QVBoxLayout(self)
-        layout.addWidget(self.tabWidget)
         self.dl = guiTools.QPushButton("حذف العلامة المرجعية المحددة")
         self.dl.setAutoDefault(False)
-        self.dl.setStyleSheet("background-color: #8B0000; color: white;")
         self.dl.clicked.connect(self.onRemove)
         self.dl.setShortcut("Delete")
         self.dl.setAccessibleDescription("delete")
         self.dl_all_current = guiTools.QPushButton("حذف كل العلامات من الفئة الحالية")
         self.dl_all_current.setAutoDefault(False)
-        self.dl_all_current.setStyleSheet("background-color: #8B0000; color: white;")
         self.dl_all_current.clicked.connect(self.onRemoveAllCurrentCategory)
         self.dl_all_current.setShortcut("Ctrl+Delete")
         self.dl_all_all = guiTools.QPushButton("حذف كل العلامات من كل الفئات")
         self.dl_all_all.setAutoDefault(False)
-        self.dl_all_all.setStyleSheet("background-color: #8B0000; color: white;")
         self.dl_all_all.clicked.connect(self.onRemoveAllCategories)
         self.dl_all_all.setShortcut("Ctrl+Shift+Delete")
         self.dl_all_all.setAccessibleDescription("control plus shift plus delete")
         self.dl_all_current.setAccessibleDescription("control plus delete")
+        for btn in [self.dl, self.dl_all_current, self.dl_all_all]:
+            btn.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Minimum)
+            btn.setMinimumHeight(40)
+            btn.setStyleSheet("background-color: #5C0000; color: white; padding: 6px 8px; font-weight: bold;")
         buttons_layout = qt.QHBoxLayout()
+        buttons_layout.setSpacing(6)
         buttons_layout.addWidget(self.dl)
         buttons_layout.addWidget(self.dl_all_current)
         buttons_layout.addWidget(self.dl_all_all)
         layout.addLayout(buttons_layout)
-        self.tabWidget.currentChanged.connect(self.onCategoryChanged)
-        self.onCategoryChanged(0)
+        self.sectian.currentRowChanged.connect(self.onCategoryChanged)
+        self.sectian.setCurrentRow(0)
 
     def onItemClicked(self, item, tab_index):
         try:
@@ -125,7 +116,7 @@ class book_marcks(qt.QDialog):
 
     def onRemove(self):
         try:
-            tab_index = self.tabWidget.currentIndex()
+            tab_index = self.sectian.currentRow()
             results = self.results_lists[tab_index]
             item = results.currentItem()
             if item:
@@ -150,8 +141,8 @@ class book_marcks(qt.QDialog):
 
     def onRemoveAllCurrentCategory(self):
         try:
-            tab_index = self.tabWidget.currentIndex()
-            category_name = self.tabWidget.tabText(tab_index)
+            tab_index = self.sectian.currentRow()
+            category_name = self.sectian.item(tab_index).text()
             confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف الكلي", f"هل تريد حذف كل علامات '{category_name}'؟", "نعم", "لا")
             if confirm == 0:
                 if tab_index == 0:

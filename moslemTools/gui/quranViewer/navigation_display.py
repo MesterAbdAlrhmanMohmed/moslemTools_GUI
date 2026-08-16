@@ -1,4 +1,4 @@
-﻿from guiTools import note_dialog
+from guiTools import note_dialog
 import functions.notesManager as notesManager
 from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
@@ -18,6 +18,74 @@ from .threads import DownloadThread, MergeThread, PreMergeCheckThread, SaveThrea
 
 with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
     reciters = json.load(file)
+
+
+class GoToAyahDialog(qt.QDialog):
+    def __init__(self, parent, title, label, value, min_val, max_val):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setMinimumSize(310, 200)
+        self.resize(330, 210)
+        self.config_path = os.path.join(os.getenv('appdata'), settings.app.appName if hasattr(settings, 'app') and hasattr(settings.app, 'appName') else "moslemTools", "goto_ayah.json")
+        layout = qt.QVBoxLayout(self)
+        layout.setSpacing(6)
+        layout.setContentsMargins(15, 12, 15, 12)
+        self.label = qt.QLabel(label)
+        self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.label)
+        self.spin_box = qt.QSpinBox()
+        self.spin_box.setRange(min_val, max_val)
+        self.spin_box.setValue(value)
+        self.spin_box.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.spin_box.setAccessibleName(label)
+        self.spin_box.setMinimumHeight(32)
+        layout.addWidget(self.spin_box)
+        layout.addSpacing(4)
+        self.play_checkbox = qt.QCheckBox("تشغيل الآية عند الذهاب إليها")
+        self.play_checkbox.setAccessibleName("تشغيل الآية عند الذهاب إليها")
+        self.play_checkbox.setChecked(self.load_setting())
+        layout.addWidget(self.play_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addSpacing(6)
+        buttons_layout = qt.QHBoxLayout()
+        self.go_button = guiTools.QPushButton("موافق")
+        self.go_button.setStyleSheet("background-color:#006400;color:white;padding:5px;")
+        self.go_button.clicked.connect(self.on_go)
+        self.go_button.setMinimumHeight(32)
+        self.cancel_button = guiTools.QPushButton("إلغاء")
+        self.cancel_button.setStyleSheet("background-color:#8B0000;color:white;padding:5px;")
+        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setMinimumHeight(32)
+        buttons_layout.addWidget(self.go_button)
+        buttons_layout.addWidget(self.cancel_button)
+        layout.addLayout(buttons_layout)
+        qt1.QShortcut("Escape", self).activated.connect(self.reject)
+        qt1.QShortcut("Return", self).activated.connect(self.on_go)
+        qt1.QShortcut("Enter", self).activated.connect(self.on_go)
+
+    def load_setting(self):
+        try:
+            if os.path.exists(self.config_path):
+                with open(self.config_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    return data.get("play_on_goto", False)
+        except Exception:
+            pass
+        return False
+
+    def save_setting(self, play_state):
+        try:
+            os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
+            with open(self.config_path, "w", encoding="utf-8") as f:
+                json.dump({"play_on_goto": play_state}, f, ensure_ascii=False, indent=4)
+        except Exception:
+            pass
+
+    def on_go(self):
+        self.save_setting(self.play_checkbox.isChecked())
+        self.accept()
+
+    def get_values(self):
+        return self.spin_box.value(), self.play_checkbox.isChecked()
 
 
 class NavigationDisplayMixin:
@@ -282,10 +350,17 @@ class NavigationDisplayMixin:
             self._handle_invalid_search_line_action()
             return
         self.pause_for_action()
-        ayah,OK=guiTools.QInputDialog.getInt(self,"الذهاب إلى آية","أكتب رقم الآية ",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
-        if OK:
+        dialog = GoToAyahDialog(self, "الذهاب إلى آية", "أكتب رقم الآية ", self.getCurrentAyah() + 1, 1, len(self.original_quran_text.split("\n")))
+        if dialog.exec() == qt.QDialog.DialogCode.Accepted:
+            ayah, should_play = dialog.get_values()
             self._go_to_specific_ayah(ayah - 1)
-        self.resume_after_action()
+            if should_play:
+                if hasattr(self, 'on_play'):
+                    self.on_play()
+            else:
+                self.resume_after_action()
+        else:
+            self.resume_after_action()
 
     def getCurrentAyah(self):
         if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):

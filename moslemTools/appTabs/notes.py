@@ -21,43 +21,35 @@ class NotesDialog(qt.QDialog):
         qt1.QShortcut(qt1.QKeySequence("Ctrl+G"), self).activated.connect(self.handle_goto)
         qt1.QShortcut(qt1.QKeySequence("Ctrl+E"), self).activated.connect(self.handle_edit)
         qt1.QShortcut(qt1.QKeySequence("Ctrl+O"), self).activated.connect(self.handle_view)
-        self.setMinimumSize(600, 350)
-        self.resize(800, 450)
+        self.setMinimumSize(1080, 420)
+        self.resize(1120, 450)
         layout = qt.QVBoxLayout(self)
-        self.tabWidget = qt.QTabWidget()
-        self.tabWidget.setStyleSheet("""
-            QTabWidget::pane {
-                border: 1px solid #444;
-                border-radius: 6px;
-                background-color: #1e1e1e;
-            }
-            QTabBar::tab {
-                background: #2b2b2b;
-                color: white;
-                padding: 10px 20px;
-                border: 1px solid #444;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-                margin: 2px;
-                min-width: 100px;
-                font-weight: bold;
-            }
-            QTabBar::tab:selected {
-                background: #0078d7;
-                color: white;
-                border: 1px solid #0078d7;
-            }
-            QTabBar::tab:hover {
-                background: #3a3a3a;
-            }
-        """)
+        h_layout = qt.QHBoxLayout()
+        self.sectian = guiTools.listBook()
+        self.sectian.setSpacing(3)
+        self.sectian.setFocus()
+        font = qt1.QFont()
+        font.setBold(True)
+        self.sectian.setStyleSheet("color: #e0e0e0;")
+        self.sectian.setAccessibleName("اختر فئة")
+        self.sectian.setFont(font)
+        self.sectian.setMinimumWidth(285)
+        self.sectian.setMaximumWidth(310)
+        h_layout.addWidget(self.sectian, 0)
+        scroll_area = qt.QScrollArea()
+        scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+        scroll_area.setWidget(self.sectian.w)
+        h_layout.addWidget(scroll_area, 1)
+        layout.addLayout(h_layout)
         self.tabs = []
         self.notes_lists = []
-        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المنوعة"]
+        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة"]
         for i, category in enumerate(categories):
             tab = qt.QWidget()
             tab_layout = qt.QVBoxLayout(tab)
-            search_label = qt.QLabel("البحث عن ملاحظة")
+            search_label = qt.QLabel(f"البحث عن ملاحظة في فئة {category}")
             search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
             search_bar = qt.QLineEdit()
             search_bar.setAccessibleName(search_label.text())
@@ -71,32 +63,34 @@ class NotesDialog(qt.QDialog):
             tab_layout.addWidget(search_label)
             tab_layout.addWidget(search_bar)
             tab_layout.addWidget(notes_list)
-            self.tabWidget.addTab(tab, category)
+            self.sectian.add(category, tab)
             self.tabs.append(tab)
             self.notes_lists.append(notes_list)
             notes_list.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
             notes_list.customContextMenuRequested.connect(lambda pos, idx=i: self.show_context_menu(pos, idx))
             notes_list.itemActivated.connect(lambda item, idx=i: self.on_item_activated(item, idx))
-        layout.addWidget(self.tabWidget)
-        buttons_layout = qt.QHBoxLayout()
         self.dl_all_current = QPushButton("حذف كل الملاحظات من الفئة الحالية")
         self.dl_all_current.setAutoDefault(False)
-        self.dl_all_current.setStyleSheet("background-color: #8B0000; color: white;")
         self.dl_all_current.clicked.connect(self.onRemoveAllCurrentCategory)
         self.dl_all_current.setShortcut("Ctrl+Delete")
         self.dl_all_current.setAccessibleDescription("control plus delete")
-        buttons_layout.addWidget(self.dl_all_current)
         self.dl_all_all = QPushButton("حذف كل الملاحظات من كل الفئات")
         self.dl_all_all.setAutoDefault(False)
-        self.dl_all_all.setStyleSheet("background-color: #8B0000; color: white;")
         self.dl_all_all.clicked.connect(self.onRemoveAllCategories)
         self.dl_all_all.setShortcut("Ctrl+Shift+Delete")
         self.dl_all_all.setAccessibleDescription("control plus shift plus delete")
+        for btn in [self.dl_all_current, self.dl_all_all]:
+            btn.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Minimum)
+            btn.setMinimumHeight(40)
+            btn.setStyleSheet("background-color: #5C0000; color: white; padding: 6px 8px; font-weight: bold;")
+        buttons_layout = qt.QHBoxLayout()
+        buttons_layout.setSpacing(6)
+        buttons_layout.addWidget(self.dl_all_current)
         buttons_layout.addWidget(self.dl_all_all)
         layout.addLayout(buttons_layout)
-        self.tabWidget.currentChanged.connect(self.load_notes)
+        self.sectian.currentRowChanged.connect(self.load_notes)
         self.all_notes_in_current_category = [[] for _ in range(5)]
-        self.load_notes(0)
+        self.sectian.setCurrentRow(0)
 
     def on_item_activated(self, item, tab_index):
         notes_list = self.notes_lists[tab_index]
@@ -148,7 +142,7 @@ class NotesDialog(qt.QDialog):
             dialog.exec()
 
     def re_open_for_editing(self, note_name):
-        self.edit_note(note_name, self.tabWidget.currentIndex())
+        self.edit_note(note_name, self.sectian.currentRow())
 
     def edit_note(self, note_name, tab_index):
         category_type = self.get_category_type(tab_index)
@@ -318,7 +312,7 @@ class NotesDialog(qt.QDialog):
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ أثناء فتح الملاحظة: {e}")
 
     def onRemove(self, note_name=None, tab_index=None):
-        if tab_index is None: tab_index = self.tabWidget.currentIndex()
+        if tab_index is None: tab_index = self.sectian.currentRow()
         if not note_name:
             item = self.notes_lists[tab_index].currentItem()
             if not item: return
@@ -331,9 +325,9 @@ class NotesDialog(qt.QDialog):
             guiTools.speak("تم حذف الملاحظة")
 
     def onRemoveAllCurrentCategory(self):
-        tab_index = self.tabWidget.currentIndex()
+        tab_index = self.sectian.currentRow()
         category_type = self.get_category_type(tab_index)
-        category_name = self.tabWidget.tabText(tab_index)
+        category_name = self.sectian.item(tab_index).text()
         confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل تريد حذف كل ملاحظات '{category_name}'؟", "نعم", "لا")
         if confirm == 0:
             notesManager.removeAllNotesForCategory(category_type)
@@ -365,13 +359,13 @@ class NotesDialog(qt.QDialog):
         self.onRemove()
 
     def handle_goto(self):
-        item = self.notes_lists[self.tabWidget.currentIndex()].currentItem()
-        if item: self.goto_note_position(item.text(), self.tabWidget.currentIndex())
+        item = self.notes_lists[self.sectian.currentRow()].currentItem()
+        if item: self.goto_note_position(item.text(), self.sectian.currentRow())
 
     def handle_edit(self):
-        item = self.notes_lists[self.tabWidget.currentIndex()].currentItem()
-        if item: self.edit_note(item.text(), self.tabWidget.currentIndex())
+        item = self.notes_lists[self.sectian.currentRow()].currentItem()
+        if item: self.edit_note(item.text(), self.sectian.currentRow())
 
     def handle_view(self):
-        item = self.notes_lists[self.tabWidget.currentIndex()].currentItem()
-        if item: self.view_note(item.text(), self.tabWidget.currentIndex())
+        item = self.notes_lists[self.sectian.currentRow()].currentItem()
+        if item: self.view_note(item.text(), self.sectian.currentRow())
