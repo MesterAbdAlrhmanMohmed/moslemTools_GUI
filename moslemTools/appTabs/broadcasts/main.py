@@ -17,6 +17,45 @@ from .stations import (
 )
 
 
+def format_arabic_duration(total_seconds):
+    if total_seconds <= 0:
+        return "ثانية واحدة"
+    h = total_seconds // 3600
+    m = (total_seconds % 3600) // 60
+    s = total_seconds % 60
+    parts = []
+    if h > 0:
+        if h == 1:
+            parts.append("ساعة واحدة")
+        elif h == 2:
+            parts.append("ساعتين")
+        elif 3 <= h <= 10:
+            parts.append(f"{h} ساعات")
+        else:
+            parts.append(f"{h} ساعة")
+    if m > 0:
+        if m == 1:
+            parts.append("دقيقة واحدة")
+        elif m == 2:
+            parts.append("دقيقتين")
+        elif 3 <= m <= 10:
+            parts.append(f"{m} دقائق")
+        else:
+            parts.append(f"{m} دقيقة")
+    if s > 0:
+        if s == 1:
+            parts.append("ثانية واحدة")
+        elif s == 2:
+            parts.append("ثانيتين")
+        elif 3 <= s <= 10:
+            parts.append(f"{s} ثواني")
+        else:
+            parts.append(f"{s} ثانية")
+    if not parts:
+        return "ثانية واحدة"
+    return " و ".join(parts)
+
+
 class protcasts(qt.QWidget):
     def __init__(self):
         super().__init__()
@@ -448,10 +487,7 @@ class protcasts(qt.QWidget):
             return
         if self.remaining_seconds_to_start > 0:
             self.remaining_seconds_to_start -= 1
-            h = self.remaining_seconds_to_start // 3600
-            m = (self.remaining_seconds_to_start % 3600) // 60
-            s = self.remaining_seconds_to_start % 60
-            time_str = f"{h:02d}:{m:02d}:{s:02d}"
+            time_str = format_arabic_duration(self.remaining_seconds_to_start)
             self.aud.setText(f"متبقي على بدء التسجيل: {time_str}")
             self.aud.setFocus()
         else:
@@ -473,11 +509,8 @@ class protcasts(qt.QWidget):
             return
         if self.remaining_duration_seconds > 0:
             self.remaining_duration_seconds -= 1
-            h = self.remaining_duration_seconds // 3600
-            m = (self.remaining_duration_seconds % 3600) // 60
-            s = self.remaining_duration_seconds % 60
-            time_str = f"{h:02d}:{m:02d}:{s:02d}"
-            self.aud.setText(f"متبقي على إيقاف التسجيل: {time_str}")
+            time_str = format_arabic_duration(self.remaining_duration_seconds)
+            self.aud.setText(f"متبقي على انتهاء التسجيل: {time_str}")
             self.aud.setFocus()
         else:
             self.duration_timer.stop()
