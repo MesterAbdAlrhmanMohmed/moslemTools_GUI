@@ -67,23 +67,22 @@ class PlayerFavoritesAndSearchMixin:
             self.reciterSearchEdit.setAccessibleName("ابحث عن قارئ")
 
     def open_reciter_menu(self, pos):
-        item = self.recitersListWidget.itemAt(pos)
+        item = self.recitersListWidget.itemAt(pos) or self.recitersListWidget.currentItem()
         if not item: return
         name = item.text()
         if name == "لا يوجد قراء في قائمة المفضلة": return
-        menu = qt.QMenu(self)
         if name in self.favorites:
-            act = qt1.QAction("إزالة من المفضلة", self)
-            act.triggered.connect(lambda: self.manage_favorites(name, "remove"))
+            self.manage_favorites(name, "remove")
         else:
-            act = qt1.QAction("إضافة إلى المفضلة", self)
-            act.triggered.connect(lambda: self.manage_favorites(name, "add"))
-        menu.addAction(act)
-        menu.exec(self.recitersListWidget.viewport().mapToGlobal(pos))
+            self.manage_favorites(name, "add")
 
     def manage_favorites(self, name, op):
-        if op == "add" and name not in self.favorites: self.favorites.append(name)
-        elif op == "remove" and name in self.favorites: self.favorites.remove(name)
+        if op == "add" and name not in self.favorites:
+            self.favorites.append(name)
+            guiTools.qMessageBox.MessageBox.view(self, "تم", f"تم إضافة {name} إلى المفضلة")
+        elif op == "remove" and name in self.favorites:
+            self.favorites.remove(name)
+            guiTools.qMessageBox.MessageBox.view(self, "تم", f"تم إزالة {name} من المفضلة")
         self.save_favorites_to_disk()
         if self.show_favorites_only: self.reciter_onsearch()
 
