@@ -1,52 +1,65 @@
-import settings,guiTools,requests
-from .updater import DownloadUpdateGUI
-import PyQt6.QtWidgets as qt
-import PyQt6.QtGui as qt1
-from settings.app import appdirname
-def check(p,message=True):
-    try:
-        r = requests.get(f"https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/{settings.settings_handler.appName}/main/{appdirname}/update/app.json")
-        info=r.json()
-        if info["version"]>settings.app.version:
-            if info["is_beta"] and settings.settings_handler.get("update","beta")=="False":
-                if message: guiTools.qMessageBox.MessageBox.view(p,"معلومة","لا تتوفر تحديثات جديدة . أنت تستخدم أحدث إصدار")
-            else:
-                download(p,info["version"],info["download"],info["what is new"]).exec()
-        else:
-            if message: guiTools.qMessageBox.MessageBox.view(p,"معلومة","لا تتوفر تحديثات جديدة . أنت تستخدم أحدث إصدار")
-    except:
-        if message:guiTools.qMessageBox.MessageBox.error(p,"خطأ","حدث خطأ أثناء الإتصال بالخادم . ألرجاء المحاولة في وقت لاحق.")
-class download(qt.QDialog):
-    def __init__(self,p,version,URL,whatsNew):
-        super().__init__(p)
-        self.resize(700,500)
-        self.center()
-        layout=qt.QVBoxLayout(self)
-        layout1=qt.QHBoxLayout()
-        self.setWindowTitle("جديد {} إصدار {}".format(settings.app.name,str(version)))
-        self.p=p
-        whatsn=guiTools.QReadOnlyTextEdit()
-        whatsn.setAccessibleName("ما الجديد")
-        whatsn.setText(whatsNew)
-        self.URL=URL
-        self.download=qt.QPushButton("تحميل")
-        self.download.setDefault(True)
-        self.download.setStyleSheet("background-color: #0000AA; color: white;")         
-        self.download.clicked.connect(self.onUpdate)
-        self.URL=URL
-        self.Close=qt.QPushButton("إغلاق")
-        self.Close.clicked.connect(lambda:self.close())
-        self.Close.setStyleSheet("background-color: #0000AA; color: white;")
-        layout.addWidget(whatsn)         
-        layout1.addWidget(self.download)
-        layout1.addWidget(self.Close)
-        layout.addLayout(layout1)
-    def center(self):        
-        frame_geometry = self.frameGeometry()        
-        screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
-        frame_geometry.moveCenter(screen_center)        
-        self.move(frame_geometry.topLeft())
-    def onUpdate(self):
-        self.close()
-        settings.app.exit=False
-        DownloadUpdateGUI(self,self.URL).exec()
+import settings ,guiTools ,requests 
+from update.updater import DownloadUpdateGUI 
+import PyQt6 .QtWidgets as qt 
+import PyQt6 .QtGui as qt1 
+from settings .app import appdirname 
+import time 
+
+
+def check (p ,message =True ):
+    try :
+        r =requests .get (f"https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/{settings.settings_handler.appName}/main/{appdirname}/update/app.json",params ={'t':int (time .time ())},timeout =10 )
+        info =r .json ()
+        if info ["version"]>settings .app .version :
+            if info ["is_beta"]and settings .settings_handler .get ("update","beta")=="False":
+                if message :guiTools .qMessageBox .MessageBox .view (p ,"معلومة","لا تتوفر تحديثات جديدة . أنت تستخدم أحدث إصدار")
+                return False 
+            else :
+                download (p ,info ["version"],info ["download"],info ["what is new"]).exec ()
+                return True 
+        else :
+            if message :guiTools .qMessageBox .MessageBox .view (p ,"معلومة","لا تتوفر تحديثات جديدة . أنت تستخدم أحدث إصدار")
+            return False 
+    except Exception as e :
+        print (f"Error checking update: {e}")
+        if message :guiTools .qMessageBox .MessageBox .error (p ,"خطأ","حدث خطأ أثناء الاتصال بالخادم .")
+        return False 
+
+
+class download (qt .QDialog ):
+    def __init__ (self ,p ,version ,URL ,whatsNew ):
+        super ().__init__ (p )
+        self .setMinimumSize (500 ,360 )
+        self .resize (720 ,520 )
+        self .center ()
+        layout =qt .QVBoxLayout (self )
+        layout1 =qt .QHBoxLayout ()
+        self .setWindowTitle ("جديد {} إصدار {}".format (settings .app .name ,str (version )))
+        self .p =p 
+        whatsn =guiTools .QReadOnlyTextEdit (viewer_name ="checkForUpdate")
+        whatsn .setAccessibleName ("ما الجديد")
+        whatsn .setText (whatsNew )
+        self .URL =URL 
+        self .download =qt .QPushButton ("تحميل")
+        self .download .setDefault (True )
+        self .download .setStyleSheet ("background-color: #0000AA; color: white;")
+        self .download .clicked .connect (self .onUpdate )
+        self .URL =URL 
+        self .Close =qt .QPushButton ("إغلاق")
+        self .Close .clicked .connect (lambda :self .close ())
+        self .Close .setStyleSheet ("background-color: #0000AA; color: white;")
+        layout .addWidget (whatsn )
+        layout1 .addWidget (self .download )
+        layout1 .addWidget (self .Close )
+        layout .addLayout (layout1 )
+
+    def center (self ):
+        frame_geometry =self .frameGeometry ()
+        screen_center =qt1 .QGuiApplication .primaryScreen ().availableGeometry ().center ()
+        frame_geometry .moveCenter (screen_center )
+        self .move (frame_geometry .topLeft ())
+
+    def onUpdate (self ):
+        self .close ()
+        settings .app .exit =False 
+        DownloadUpdateGUI (None ,self .URL ).exec ()
