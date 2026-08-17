@@ -1,4 +1,4 @@
-﻿from ..changeReciter import ChangeReciter
+from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
 from ..tafaseerViewer import TafaseerViewer
 import time,os,requests,subprocess,shutil,re,traceback
@@ -78,7 +78,8 @@ class PlayerTafseerAndInfoMixin:
         self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         sajda="الآية تحتوي على سجدة" if juz[3] else ""
-        guiTools.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nتوجد في الجزء {} \nتوجد في الربع {} \nتوجد في الصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
+        hizb=(juz[2]-1)//4+1
+        guiTools.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nتوجد في الجزء {} \nتوجد في الحزب {} \nتوجد في الربع {} \nتوجد في الصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],hizb,juz[2],page,sajda))
         self.resume_after_action()
 
     def getCurentAyahTranslation(self):

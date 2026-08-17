@@ -1,4 +1,4 @@
-﻿import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
+import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -92,10 +92,12 @@ class ResearcherActionsMixin:
         ayah_number_in_surah = metadata["ayah_number_in_surah"]
         ayah_data = self.quran_data[str(surah_number)]['ayahs'][ayah_number_in_surah - 1]
         sajda_text = "الآية تحتوي على سجدة" if ayah_data.get("sajda") else ""
+        hizb = (ayah_data['hizbQuarter'] - 1) // 4 + 1
         info_text = f"رقم الآية: {ayah_number_in_surah}\n"
         info_text += f"رقم السورة: {surah_number} ({metadata['surah_name']})\n"
         info_text += f"رقم الآية في المصحف: {ayah_data['number']}\n"
         info_text += f"توجد في الجزء: {ayah_data['juz']}\n"
+        info_text += f"توجد في الحزب: {hizb}\n"
         info_text += f"توجد في الربع: {ayah_data['hizbQuarter']}\n"
         info_text += f"توجد في الصفحة: {ayah_data['page']}\n{sajda_text}"
         guiTools.MessageBox.view(self, "معلومات الآية", info_text)

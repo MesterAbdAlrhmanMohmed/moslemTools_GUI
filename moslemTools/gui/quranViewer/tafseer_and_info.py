@@ -1,4 +1,4 @@
-﻿from guiTools import note_dialog
+from guiTools import note_dialog
 import functions.notesManager as notesManager
 from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
@@ -451,7 +451,8 @@ class TafseerAndInfoMixin:
         sajda=""
         if juz[3]:
             sajda="الآية تحتوي على سجدة"
-        guiTools.qMessageBox.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nتوجد في الجزء {} \nتوجد في الربع {} \nتوجد في الصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
+        hizb=(juz[2]-1)//4+1
+        guiTools.qMessageBox.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nتوجد في الجزء {} \nتوجد في الحزب {} \nتوجد في الربع {} \nتوجد في الصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],hizb,juz[2],page,sajda))
         self.resume_after_action()
 
     def getCurentAyahTranslation(self):
