@@ -78,7 +78,7 @@ class PlayerTafseerAndInfoMixin:
         self.pause_for_action()
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         sajda="الآية تحتوي على سجدة" if juz[3] else ""
-        guiTools.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nالجزء {} \nالربع {} \nالصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
+        guiTools.MessageBox.view(self,"معلومة","رقم الآية {} \nرقم السورة {} {} \nرقم الآية في المصحف {} \nتوجد في الجزء {} \nتوجد في الربع {} \nتوجد في الصفحة {} \n{}".format(str(Ayah),surah,juz[1],AyahNumber,juz[0],juz[2],page,sajda))
         self.resume_after_action()
 
     def getCurentAyahTranslation(self):

@@ -95,9 +95,9 @@ class ResearcherActionsMixin:
         info_text = f"رقم الآية: {ayah_number_in_surah}\n"
         info_text += f"رقم السورة: {surah_number} ({metadata['surah_name']})\n"
         info_text += f"رقم الآية في المصحف: {ayah_data['number']}\n"
-        info_text += f"الجزء: {ayah_data['juz']}\n"
-        info_text += f"الربع: {ayah_data['hizbQuarter']}\n"
-        info_text += f"الصفحة: {ayah_data['page']}\n{sajda_text}"
+        info_text += f"توجد في الجزء: {ayah_data['juz']}\n"
+        info_text += f"توجد في الربع: {ayah_data['hizbQuarter']}\n"
+        info_text += f"توجد في الصفحة: {ayah_data['page']}\n{sajda_text}"
         guiTools.MessageBox.view(self, "معلومات الآية", info_text)
         self.resume_after_action()
 
