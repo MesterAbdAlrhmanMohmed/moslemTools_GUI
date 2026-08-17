@@ -1,2 +1,2 @@
-from .checkForUpdate import *
-from .updater import *
+from update.checkForUpdate import *
+from update.updater import *
