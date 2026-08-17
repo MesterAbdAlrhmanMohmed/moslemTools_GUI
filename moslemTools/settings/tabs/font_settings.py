@@ -24,6 +24,7 @@ class FontSettings(qt.QWidget):
         ("aiChat", "شاشة الذكاء الاصطناعي"),
         ("namesOfAllah", "عارض أسماء الله الحسنى"),
         ("islamicQuestionsGame", "لعبة الأسئلة الإسلامية"),
+        ("checkForUpdate", "نافذة ما الجديد في التحديثات"),
     ]
 
     def __init__(self):
