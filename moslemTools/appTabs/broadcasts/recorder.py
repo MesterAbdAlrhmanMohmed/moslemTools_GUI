@@ -200,17 +200,32 @@ class WasapiRecorder(qt2.QObject):
 class SchedulingDialog(qt.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setMinimumSize(450, 220)
-        self.resize(500, 270)
+        self.setMinimumSize(780, 335)
+        self.resize(780, 335)
         self.setWindowTitle("جدولة التسجيل")
-        layout = qt.QVBoxLayout(self)
+        
+        main_dialog_layout = qt.QVBoxLayout(self)
+        
+        scroll_area = qt.QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+        
+        content_widget = qt.QWidget()
+        layout = qt.QVBoxLayout(content_widget)
+        
         main_h_layout = qt.QHBoxLayout()
+        main_h_layout.setSpacing(40)
         start_v_layout = qt.QVBoxLayout()
+        start_v_layout.setSpacing(4)
         dur_v_layout = qt.QVBoxLayout()
+        dur_v_layout.setSpacing(4)
+        
         self.start_label = qt.QLabel("█ وقت بدء التسجيل █")
         self.start_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.start_label.setStyleSheet("font-weight: bold; color: #0078d7;")
         start_v_layout.addWidget(self.start_label)
+        
         self.start_h_label = qt.QLabel("بدء التسجيل بعد: بالساعات")
         self.start_h_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         start_v_layout.addWidget(self.start_h_label)
@@ -219,6 +234,7 @@ class SchedulingDialog(qt.QDialog):
         self.start_h_spin.setAccessibleName("بدء التسجيل بعد بالساعات")
         self.start_h_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         start_v_layout.addWidget(self.start_h_spin)
+        
         self.start_m_label = qt.QLabel("بدء التسجيل بعد: بالدقائق")
         self.start_m_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         start_v_layout.addWidget(self.start_m_label)
@@ -227,6 +243,7 @@ class SchedulingDialog(qt.QDialog):
         self.start_m_spin.setAccessibleName("بدء التسجيل بعد بالدقائق")
         self.start_m_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         start_v_layout.addWidget(self.start_m_spin)
+        
         self.start_s_label = qt.QLabel("بدء التسجيل بعد: بالثواني")
         self.start_s_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         start_v_layout.addWidget(self.start_s_label)
@@ -235,10 +252,12 @@ class SchedulingDialog(qt.QDialog):
         self.start_s_spin.setAccessibleName("بدء التسجيل بعد بالثواني")
         self.start_s_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         start_v_layout.addWidget(self.start_s_spin)
+        
         self.dur_label = qt.QLabel("█ مدة التسجيل █")
         self.dur_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.dur_label.setStyleSheet("font-weight: bold; color: #008000;")
         dur_v_layout.addWidget(self.dur_label)
+        self.dur_label.setStyleSheet("font-weight: bold; color: #008000;")
+        
         self.dur_h_label = qt.QLabel("مدة التسجيل: بالساعات")
         self.dur_h_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         dur_v_layout.addWidget(self.dur_h_label)
@@ -247,14 +266,16 @@ class SchedulingDialog(qt.QDialog):
         self.dur_h_spin.setAccessibleName("مدة التسجيل بالساعات")
         self.dur_h_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         dur_v_layout.addWidget(self.dur_h_spin)
+        
         self.dur_m_label = qt.QLabel("مدة التسجيل: بالدقائق")
         self.dur_m_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         dur_v_layout.addWidget(self.dur_m_label)
         self.dur_m_spin = qt.QSpinBox()
-        self.dur_m_spin.setRange(0, 300)
+        self.dur_m_spin.setRange(0, 59)
         self.dur_m_spin.setAccessibleName("مدة التسجيل بالدقائق")
         self.dur_m_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         dur_v_layout.addWidget(self.dur_m_spin)
+        
         self.dur_s_label = qt.QLabel("مدة التسجيل: بالثواني")
         self.dur_s_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         dur_v_layout.addWidget(self.dur_s_label)
@@ -263,6 +284,7 @@ class SchedulingDialog(qt.QDialog):
         self.dur_s_spin.setAccessibleName("مدة التسجيل بالثواني")
         self.dur_s_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         dur_v_layout.addWidget(self.dur_s_spin)
+        
         main_h_layout.addLayout(start_v_layout)
         line = qt.QFrame()
         line.setFrameShape(qt.QFrame.Shape.VLine)
@@ -270,20 +292,24 @@ class SchedulingDialog(qt.QDialog):
         main_h_layout.addWidget(line)
         main_h_layout.addLayout(dur_v_layout)
         layout.addLayout(main_h_layout)
+        
+        layout.addSpacing(10)
         line2 = qt.QFrame()
         line2.setFrameShape(qt.QFrame.Shape.HLine)
         line2.setFrameShadow(qt.QFrame.Shadow.Sunken)
         layout.addWidget(line2)
-        self.warning_label = guiTools.QNavigableLabel("تنبيه: إذا تم إيقاف الإذاعة، سيتم إلغاء جدولة التسجيل.")                
-        self.warning_label.setStyleSheet("color: #8B0000; font-weight: bold; margin-top: 10px;")        
+        
+        self.warning_label = guiTools.QNavigableLabel("تنبيه: إذا تم إيقاف الإذاعة، سيتم إلغاء جدولة التسجيل.")                        
         self.warning_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.warning_label)
+        
         self.OKBTN = guiTools.QPushButton("موافق")
         self.OKBTN.clicked.connect(self.validate_and_accept)
         self.OKBTN.setStyleSheet("QPushButton { background-color: #008000; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px; }")
         self.cancelBTN = guiTools.QPushButton("إلغاء")
         self.cancelBTN.clicked.connect(self.reject)
         self.cancelBTN.setStyleSheet("QPushButton { background-color: #8B0000; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px; }")
+        
         buttonsLayout = qt.QHBoxLayout()
         buttonsLayout.addWidget(self.OKBTN)
         buttonsLayout.addWidget(self.cancelBTN)
@@ -291,6 +317,10 @@ class SchedulingDialog(qt.QDialog):
         wrapper.addLayout(buttonsLayout)
         wrapper.setAlignment(qt2.Qt.AlignmentFlag.AlignLeft)
         layout.addLayout(wrapper)
+        
+        scroll_area.setWidget(content_widget)
+        main_dialog_layout.addWidget(scroll_area)
+        
         qt1.QShortcut("Escape", self).activated.connect(self.reject)
 
     def validate_and_accept(self):

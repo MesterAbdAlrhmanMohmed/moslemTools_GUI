@@ -33,8 +33,12 @@ class NotesDialog(qt.QDialog):
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر فئة")
         self.sectian.setFont(font)
-        self.sectian.setMinimumWidth(285)
-        self.sectian.setMaximumWidth(310)
+        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة"]
+        fm = self.sectian.fontMetrics()
+        max_w = max(fm.horizontalAdvance(cat) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(cat).width() for cat in categories)
+        calc_w = max(340, max_w + 70)
+        self.sectian.setMinimumWidth(calc_w)
+        self.sectian.setMaximumWidth(calc_w + 40)
         h_layout.addWidget(self.sectian, 0)
         scroll_area = qt.QScrollArea()
         scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
@@ -45,7 +49,6 @@ class NotesDialog(qt.QDialog):
         layout.addLayout(h_layout)
         self.tabs = []
         self.notes_lists = []
-        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة"]
         for i, category in enumerate(categories):
             tab = qt.QWidget()
             tab_layout = qt.QVBoxLayout(tab)
