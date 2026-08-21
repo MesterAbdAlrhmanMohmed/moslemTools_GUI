@@ -130,15 +130,12 @@ class FontSettings(qt.QWidget):
         self.bold_checkbox.setFont(font)
 
     def on_bold_changed(self, state):
-        settings_handler.set("font", "bold", str(self.bold_checkbox.isChecked()))
         self.update_checkbox_font()
 
     def on_font_size_changed(self, value):
-        settings_handler.set("font", "size", str(value))
+        pass
 
     def on_viewer_checkbox_changed(self, key, state):
-        is_checked = (state == qt2.Qt.CheckState.Checked.value or state == True)
-        settings_handler.set("font_wrap", key, str(is_checked))
         if not self.updating_select_all:
             self.check_select_all_state()
 
@@ -149,8 +146,6 @@ class FontSettings(qt.QWidget):
         is_checked = (state == qt2.Qt.CheckState.Checked.value or state == True)
         for key, cb in self.viewer_checkboxes.items():
             cb.setChecked(is_checked)
-            settings_handler.set("font_wrap", key, str(is_checked))
-        settings_handler.set("font", "wrap", str(is_checked))
         self.updating_select_all = False
 
     def check_select_all_state(self):

@@ -135,6 +135,7 @@ class settings(qt.QDialog):
         original_font_bold = settings_handler.get("font", "bold")
         original_font_size = settings_handler.get("font", "size")
         original_font_wrap = settings_handler.get("font", "wrap")
+        original_viewer_wraps = {key: settings_handler.get("font_wrap", key) for key, _ in self.fontSettings.VIEWERS}
         original_audio_global = settings_handler.get("audio", "global")
         original_audio_quran_text = settings_handler.get("audio", "quran_text")
         original_audio_quran_audio = settings_handler.get("audio", "quran_audio")
@@ -239,7 +240,13 @@ class settings(qt.QDialog):
         settings_handler.set("font", "bold", new_font_bold)
         settings_handler.set("font", "size", new_font_size)
         settings_handler.set("font", "wrap", new_font_wrap)
-        if original_font_bold != new_font_bold or original_font_size != new_font_size or original_font_wrap != new_font_wrap:
+        font_changed = (original_font_bold != new_font_bold or original_font_size != new_font_size or original_font_wrap != new_font_wrap)
+        for key, cb in self.fontSettings.viewer_checkboxes.items():
+            new_v_wrap = str(cb.isChecked())
+            settings_handler.set("font_wrap", key, new_v_wrap)
+            if original_viewer_wraps.get(key) != new_v_wrap:
+                font_changed = True
+        if font_changed:
             restart_required = 1
         new_use_name = str(self.userNameSettings.use_name_checkbox.isChecked())
         new_name_type = self.userNameSettings.get_selected_name_type()

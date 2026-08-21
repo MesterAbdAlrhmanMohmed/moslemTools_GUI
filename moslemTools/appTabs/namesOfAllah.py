@@ -52,6 +52,8 @@ class NamesOfAllah(qt.QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
+        if not self.is_loaded:
+            self.load_data()
         self.font_is_bold = settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings_handler.get("font", "size"))
         self.show_font.setValue(self.font_size)
@@ -62,8 +64,6 @@ class NamesOfAllah(qt.QWidget):
             self.information.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
         else:
             self.information.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
-        if not self.is_loaded:
-            self.load_data()
 
     def load_data(self):
         with open("data/json/namesOfAllah.json", "r", encoding="utf-8") as file:
@@ -110,11 +110,13 @@ class NamesOfAllah(qt.QWidget):
         functions.text_actions.decrease_font_size(self.show_font)
 
     def update_font_size(self):
-        cursor = self.information.textCursor()
-        self.information.selectAll()
         font = qt1.QFont()
         font.setPointSize(self.font_size)
         font.setBold(self.font_is_bold)
+        self.information.setFont(font)
+        self.information.document().setDefaultFont(font)
+        cursor = self.information.textCursor()
+        self.information.selectAll()
         self.information.setCurrentFont(font)
         self.information.setTextCursor(cursor)
 

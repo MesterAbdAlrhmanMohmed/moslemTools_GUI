@@ -223,6 +223,19 @@ class AskAI(qt.QWidget):
         qt1.QShortcut("ctrl+-", self).activated.connect(self.decrease_font_size)
         qt1.QShortcut("ctrl+del", self).activated.connect(self.clear_results)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.font_is_bold = settings_handler.get("font", "bold") == "True"
+        self.font_size = int(settings_handler.get("font", "size"))
+        self.font_spin.setValue(self.font_size)
+        self.update_font_size()
+        wrap_val = settings_handler.get("font_wrap", "aiChat")
+        if wrap_val == "True" or (wrap_val == "" and settings_handler.get("font", "wrap") == "True"):
+            self.results.setLineWrapMode(qt.QTextEdit.LineWrapMode.WidgetWidth)
+            self.results.setWordWrapMode(qt1.QTextOption.WrapMode.WordWrap)
+        else:
+            self.results.setLineWrapMode(qt.QTextEdit.LineWrapMode.NoWrap)
+
     def init_ui(self):
         layout = qt.QVBoxLayout(self)
         self.disclaimer = guiTools.QNavigableLabel("تنبيه مهم: هذا ذكاء اصطناعي للمساعدة، ويرجى سؤال أهل العلم في المسائل الإسلامية المهمة.")
@@ -342,6 +355,7 @@ class AskAI(qt.QWidget):
         self.send_button.setEnabled(False)
         self.send_button.setText("جاري الإرسال...")
         self.results.setText("جاري معالجة طلبك، يرجى الانتظار...")
+        self.update_font_size()
         self.sources_button.setVisible(False)
         self.clear_button.setEnabled(False)
         self.current_urls = []
@@ -475,11 +489,13 @@ class AskAI(qt.QWidget):
         functions.text_actions.decrease_font_size(self.font_spin)
 
     def update_font_size(self):
-        cursor = self.results.textCursor()
-        self.results.selectAll()
         font = qt1.QFont()
         font.setPointSize(self.font_size)
         font.setBold(self.font_is_bold)
+        self.results.setFont(font)
+        self.results.document().setDefaultFont(font)
+        cursor = self.results.textCursor()
+        self.results.selectAll()
         self.results.setCurrentFont(font)
         self.results.setTextCursor(cursor)
 
