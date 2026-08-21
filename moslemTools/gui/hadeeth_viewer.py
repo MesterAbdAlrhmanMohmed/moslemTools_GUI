@@ -26,6 +26,10 @@ class hadeeth_viewer(qt.QDialog):
         except:
             guiTools.MessageBox.error(self, "خطأ", "تعذر فتح الملف ")
             self.close()
+        try:
+            self.display_book_name = functions.ahadeeth.getahadeethByIndex(book_name)
+        except:
+            self.display_book_name = book_name
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_line)
         qt1.QShortcut("ctrl+a", self).activated.connect(self.copy_text)
         qt1.QShortcut("ctrl+shift+n", self).activated.connect(self.onDeleteNoteShortcut)
@@ -70,6 +74,10 @@ class hadeeth_viewer(qt.QDialog):
         self.P_hadeeth.setAccessibleDescription("alt زائد السهم الأيسر")
         self.P_hadeeth.clicked.connect(self.previous_hadeeth)
         self.P_hadeeth.setAutoDefault(False)
+        self.show_book_name = guiTools.QNavigableLabel(self.display_book_name)
+        self.show_book_name.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.show_book_name.setAccessibleDescription("اسم كتاب الحديث")
+        self.show_book_name.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.hadeeth_number_laybol = qt.QLabel("رقم الحديث")
         self.hadeeth_number_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.show_hadeeth_number = guiTools.QNavigableLabel(f"{self.index + 1} من {len(self.data)}")
@@ -81,6 +89,7 @@ class hadeeth_viewer(qt.QDialog):
         layout.addWidget(self.font_laybol)
         layout.addWidget(self.show_font)
         layout.addWidget(self.more_options_label)
+        layout.addWidget(self.show_book_name)
         layout.addWidget(self.hadeeth_number_laybol)
         layout.addWidget(self.show_hadeeth_number)
         layout1 = qt.QHBoxLayout()
