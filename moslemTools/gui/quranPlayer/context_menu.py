@@ -76,7 +76,7 @@ class PlayerContextMenuMixin:
         saveCurrentAyahAction.setShortcut("ctrl+h")
         saveCurrentAyahAction.triggered.connect(self.onSaveCurrentAyahActionTriggered)
         menu.addAction(saveCurrentAyahAction)
-        self.toggleDiacriticsAction = qt1.QAction("إخفاء التشكيل", self)
+        self.toggleDiacriticsAction = qt1.QAction("إزالة التشكيل", self)
         self.toggleDiacriticsAction.setCheckable(True)
         self.toggleDiacriticsAction.setChecked(not self.show_diacritics)
         self.toggleDiacriticsAction.triggered.connect(self.on_toggle_diacritics)
