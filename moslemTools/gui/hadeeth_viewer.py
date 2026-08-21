@@ -76,7 +76,6 @@ class hadeeth_viewer(qt.QDialog):
         self.P_hadeeth.setAutoDefault(False)
         self.show_book_name = guiTools.QNavigableLabel(self.display_book_name)
         self.show_book_name.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.show_book_name.setAccessibleDescription("اسم كتاب الحديث")
         self.show_book_name.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.hadeeth_number_laybol = qt.QLabel("رقم الحديث")
         self.hadeeth_number_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
