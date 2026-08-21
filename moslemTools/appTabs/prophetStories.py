@@ -135,15 +135,12 @@ class ProphetStories(qt.QWidget):
         story_name = item.text()
         if story_name in ["لا توجد قصص في قائمة المفضلة"]:
             return
-        menu = qt.QMenu(self)
         if story_name in self.favorites:
-            act = qt1.QAction("إزالة من المفضلة", self)
-            act.triggered.connect(lambda: self.toggle_item_favorite(story_name, False))
+            self.toggle_item_favorite(story_name, False)
+            guiTools.MessageBox.view(self, "المفضلة", f"تمت إزالة قصة {story_name} من المفضلة")
         else:
-            act = qt1.QAction("إضافة إلى المفضلة", self)
-            act.triggered.connect(lambda: self.toggle_item_favorite(story_name, True))
-        menu.addAction(act)
-        menu.exec(qt1.QCursor.pos())
+            self.toggle_item_favorite(story_name, True)
+            guiTools.MessageBox.view(self, "المفضلة", f"تمت إضافة قصة {story_name} إلى المفضلة")
 
     def toggle_item_favorite(self, name, add):
         if add:
