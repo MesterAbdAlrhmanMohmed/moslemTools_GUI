@@ -281,7 +281,7 @@ class main(qt.QMainWindow):
                 minute = int(settings_handler.get("khatmah_reminder", "minute") or 0)
             except Exception:
                 minute = 0
-            period = settings_handler.get("khatmah_reminder", "period") or "مساءً"
+            period = settings_handler.get("khatmah_reminder", "period") or "صباحاً"
 
             if period == "مساءً" and hour < 12:
                 h24 = hour + 12
@@ -616,7 +616,7 @@ def check_missed_khatmah_alert(parent_window=None):
             minute = int(settings_handler.get("khatmah_reminder", "minute") or 0)
         except Exception:
             minute = 0
-        period = settings_handler.get("khatmah_reminder", "period") or "مساءً"
+        period = settings_handler.get("khatmah_reminder", "period") or "صباحاً"
 
         if period == "مساءً" and hour < 12:
             h24 = hour + 12

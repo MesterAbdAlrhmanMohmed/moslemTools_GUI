@@ -67,7 +67,7 @@ class KhatmahReminderSettings(qt.QWidget):
         self.period_combo.setFont(font)
         self.period_combo.addItems(["صباحاً", "مساءً"])
         self.period_combo.setAccessibleName("الفترة")
-        saved_period = settings_handler.get("khatmah_reminder", "period") or "مساءً"
+        saved_period = settings_handler.get("khatmah_reminder", "period") or "صباحاً"
         if saved_period in ["صباحاً", "مساءً"]:
             self.period_combo.setCurrentText(saved_period)
 

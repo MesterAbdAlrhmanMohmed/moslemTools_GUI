@@ -128,10 +128,10 @@ settingsConfig={
         "researcher": "Default"
     },
     "khatmah_reminder": {
-        "enabled": "True",
+        "enabled": "False",
         "hour": "8",
         "minute": "0",
-        "period": "مساءً",
+        "period": "صباحاً",
         "missed_alert": "True"
     }
 }
