@@ -117,7 +117,12 @@ class ProphetStories(qt.QWidget):
         if self.show_favorites_only:
             self.fav_btn.setText("عرض جميع القصص")
         else:
-            self.fav_btn.setText("فتح قائمة المفضلة")
+            cat_text = self.selectCategory.currentText()
+            if cat_text.startswith("قصص "):
+                cat_name = cat_text[4:]
+            else:
+                cat_name = cat_text
+            self.fav_btn.setText(f"فتح قائمة المفضلة لقصص {cat_name}")
 
     def toggle_favorites(self):
         self.show_favorites_only = not self.show_favorites_only
@@ -263,3 +268,4 @@ class ProphetStories(qt.QWidget):
             with open("data/json/quranStories.json", "r", encoding="utf-8-sig") as file:
                 self.stories = json.load(file)
         self.apply_filter()
+        self.update_favorites_ui_state()
