@@ -78,7 +78,7 @@ class NamesOfAllah(qt.QWidget):
         self.is_loaded = True
 
     def OnContextMenu(self):
-        menu = qt.QMenu("الخيارات", self)
+        menu = guiTools.QCustomContextMenu("الخيارات", self)
         bold_font = qt1.QFont()
         bold_font.setBold(True)
         menu.setFont(bold_font)

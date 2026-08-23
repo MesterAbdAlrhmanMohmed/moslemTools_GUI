@@ -1,4 +1,4 @@
-﻿import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
+import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -17,7 +17,7 @@ class ResearcherContextMenuMixin:
         cursor = self.results.textCursor()
         line_number = cursor.blockNumber() + 1
         metadata = self.search_metadata.get(line_number)
-        menu = qt.QMenu("الخيارات", self)
+        menu = guiTools.QCustomContextMenu("الخيارات", self)
         bold_font = qt1.QFont()
         bold_font.setBold(True)
         menu.setFont(bold_font)
@@ -37,7 +37,7 @@ class ResearcherContextMenuMixin:
                 copy_selected.triggered.connect(self.copy_line)
                 menu.addAction(copy_selected)
             else:
-                ayah_menu = qt.QMenu("خيارات الآية", self)
+                ayah_menu = guiTools.QCustomContextMenu("خيارات الآية", self)
                 ayah_menu.setFont(bold_font)
                 speed_menu = ayah_menu.addMenu("سرعة التشغيل")
                 speed_menu.setFont(bold_font)
@@ -98,7 +98,7 @@ class ResearcherContextMenuMixin:
                 ayah_menu.addAction(save_ayah_action)
                 menu.addMenu(ayah_menu)
                 menu.addSeparator()
-                text_menu = qt.QMenu("خيارات النص", self)
+                text_menu = guiTools.QCustomContextMenu("خيارات النص", self)
                 text_menu.setFont(bold_font)
                 copy_all = qt1.QAction("نسخ النص كاملا", self)
                 copy_all.setShortcut("Ctrl+A")

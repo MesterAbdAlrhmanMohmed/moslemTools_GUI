@@ -147,7 +147,7 @@ class SelectItem(qt.QDialog):
 	def show_context_menu(self, position):
 		if self.item.count() == 0:
 			return
-		menu = qt.QMenu(self)
+		menu = guiTools.QCustomContextMenu(self)
 
 		if self.start_selection_index is None:
 			if not self.custom_download_list:

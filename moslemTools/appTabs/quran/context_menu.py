@@ -1,4 +1,4 @@
-﻿import gui.translationViewer
+import gui.translationViewer
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
 import ujson as json
 from settings.app import appName
@@ -15,7 +15,7 @@ with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as fil
 class QuranTabContextMenuMixin:
     def onContextMenu(self):
         category_name = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}.get(self.type.currentIndex(), "الفئة")
-        menu = qt.QMenu(f"خيارات {category_name}", self)
+        menu = guiTools.QCustomContextMenu(f"خيارات {category_name}", self)
         menu.setAccessibleName(f"خيارات {category_name}")
         menu.setFocus()
         listenAction = qt1.QAction("تشغيل", self)

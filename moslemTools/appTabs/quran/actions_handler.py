@@ -1,4 +1,4 @@
-﻿import gui.translationViewer
+import gui.translationViewer
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
 import ujson as json
 from settings.app import appName
@@ -162,7 +162,7 @@ class QuranTabActionsMixin:
     def onIarabActionTriggered(self):
         if not self.info.currentItem():
             return
-        menu = qt.QMenu("اختر نوع الإعراب", self)
+        menu = guiTools.QCustomContextMenu("اختر نوع الإعراب", self)
         simplified_action = qt1.QAction("إعراب مبسط", self)
         simplified_action.triggered.connect(self.onSimplifiedIarabActionTriggered)
         menu.addAction(simplified_action)
@@ -211,7 +211,7 @@ class QuranTabActionsMixin:
 
     def onCostumBTNClicked(self):
         categories=["من سورة إلى سورة", "من صفحة إلى صفحة", "من جزء إلى جزء", "من ربع إلى ربع", "من حزب إلى حزب"]
-        menu=qt.QMenu("اختر فئة",self)
+        menu=guiTools.QCustomContextMenu("اختر فئة",self)
         font=qt1.QFont()
         font.setBold(True)
         menu.setFont(font)

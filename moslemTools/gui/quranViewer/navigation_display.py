@@ -104,7 +104,7 @@ class NavigationDisplayMixin:
         self.saved_ayah_index = self.getCurrentAyah()
         self.saved_text = self.text.toPlainText()
         self.pause_for_action()
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         action_group = qt1.QActionGroup(self)
         action_group.setExclusive(True)
         by_surah_action = qt1.QAction("إظهار الأرقام بحسب السورة", self, checkable=True)
@@ -524,7 +524,7 @@ class NavigationDisplayMixin:
     def onChangeCategory(self):
         self.pause_for_action()
         categories=["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"]
-        menu=qt.QMenu("اختر فئة",self)
+        menu=guiTools.QCustomContextMenu("اختر فئة",self)
         menu.setAccessibleName("اختر فئة")
         menu.setFocus()
         selectedCategory=qt1.QAction(categories[self.type],self)

@@ -306,7 +306,7 @@ class TafseerAndInfoMixin:
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
             return
-        menu = qt.QMenu("اختر نوع الإعراب", self)
+        menu = guiTools.QCustomContextMenu("اختر نوع الإعراب", self)
         font = qt1.QFont()
         font.setBold(True)
         menu.setFont(font)
@@ -538,7 +538,7 @@ class TafseerAndInfoMixin:
         if self.is_search_view:
             self._handle_search_view_restriction()
             return
-        menu = qt.QMenu("اختر نوع الإعراب (من آية إلى آية)", self)
+        menu = guiTools.QCustomContextMenu("اختر نوع الإعراب (من آية إلى آية)", self)
         font = qt1.QFont()
         font.setBold(True)
         menu.setFont(font)

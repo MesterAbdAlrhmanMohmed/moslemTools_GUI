@@ -1,4 +1,4 @@
-﻿from ..changeReciter import ChangeReciter
+from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
 from ..tafaseerViewer import TafaseerViewer
 import time,os,requests,subprocess,shutil,re,traceback
@@ -22,7 +22,7 @@ class PlayerContextMenuMixin:
         if self.was_playing:
             self.media.pause()
             self.PPS.setText("تشغيل")
-        menu=qt.QMenu("خيارات الآية",self)
+        menu=guiTools.QCustomContextMenu("خيارات الآية",self)
         menu.setAccessibleName("خيارات الآية")
         boldFont = menu.font()
         boldFont.setBold(True)

@@ -1,4 +1,4 @@
-﻿from guiTools import note_dialog
+from guiTools import note_dialog
 import functions.notesManager as notesManager
 import guiTools, pyperclip, winsound, functions, settings
 import PyQt6.QtWidgets as qt
@@ -13,7 +13,7 @@ from gui.quranViewer.threads import SearchModeDialog
 class BookContextMenuMixin:
     def OnContextMenu(self):
         if self.is_search_view:
-            menu = qt.QMenu("الخيارات", self)
+            menu = guiTools.QCustomContextMenu("الخيارات", self)
             boldFont = menu.font()
             boldFont.setBold(True)
             menu.setFont(boldFont)
@@ -34,7 +34,7 @@ class BookContextMenuMixin:
                 go_res_page_action.triggered.connect(self.go_to_search_result_page)
 
 
-                text_options_menu = qt.QMenu("خيارات النص", self)
+                text_options_menu = guiTools.QCustomContextMenu("خيارات النص", self)
                 text_options_menu.setFont(boldFont)
                 save_action = text_options_menu.addAction("حفظ كملف نصي")
                 save_action.setShortcut("ctrl+s")
@@ -66,12 +66,12 @@ class BookContextMenuMixin:
             menu.exec(self.mapToGlobal(self.cursor().pos()))
             return
 
-        menu = qt.QMenu("الخيارات", self)
+        menu = guiTools.QCustomContextMenu("الخيارات", self)
         boldFont = menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)
         menu.setAccessibleName("الخيارات")
-        book_menu = qt.QMenu("خيارات الصفحة", self)
+        book_menu = guiTools.QCustomContextMenu("خيارات الصفحة", self)
         book_menu.setFont(boldFont)
         next_action = book_menu.addAction("الصفحة التالية")
         next_action.setShortcut("alt+right")
@@ -83,7 +83,7 @@ class BookContextMenuMixin:
         go_action.setShortcut("ctrl+g")
         go_action.triggered.connect(self.go_to_book)
         menu.addMenu(book_menu)
-        book_options_menu = qt.QMenu("خيارات الكتاب", self)
+        book_options_menu = guiTools.QCustomContextMenu("خيارات الكتاب", self)
         book_options_menu.setFont(boldFont)
         copy_range_action = book_options_menu.addAction("نسخ محتوى الكتاب")
         copy_range_action.setShortcut("ctrl+alt+c")
@@ -95,7 +95,7 @@ class BookContextMenuMixin:
         save_docx_range_action.setShortcut("ctrl+alt+d")
         save_docx_range_action.triggered.connect(self.save_page_range_as_docx)
         menu.addMenu(book_options_menu)
-        text_options_menu = qt.QMenu("خيارات النص", self)
+        text_options_menu = guiTools.QCustomContextMenu("خيارات النص", self)
         text_options_menu.setFont(boldFont)
         save_action = text_options_menu.addAction("حفظ كملف نصي")
         save_action.setShortcut("ctrl+s")

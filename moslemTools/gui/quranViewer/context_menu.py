@@ -1,4 +1,4 @@
-﻿from guiTools import note_dialog
+from guiTools import note_dialog
 import functions.notesManager as notesManager
 from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
@@ -45,13 +45,13 @@ class ContextMenuMixin:
             ayah_tashkeel_text = "إزالة التشكيل من الآية"
         self.context_menu_active = True
         self.pause_for_action()
-        menu = qt.QMenu("الخيارات ", self)
+        menu = guiTools.QCustomContextMenu("الخيارات ", self)
         font = qt1.QFont()
         font.setBold(True)
         menu.setFont(font)
         menu.setAccessibleName("الخيارات ")
         menu.setFocus()
-        ayahOptions = qt.QMenu("خيارات الآية الحالية", self)
+        ayahOptions = guiTools.QCustomContextMenu("خيارات الآية الحالية", self)
         ayahOptions.setFont(font)
         speed_menu = ayahOptions.addMenu("سرعة التشغيل")
         speed_menu.setFont(font)
@@ -234,7 +234,7 @@ class ContextMenuMixin:
                 tashkeel_action_text = f"إظهار التشكيل ل{category_name_al}"
             else:
                 tashkeel_action_text = f"إزالة التشكيل من {category_name_al}"
-        surahOption = qt.QMenu(category_menu_title, self)
+        surahOption = guiTools.QCustomContextMenu(category_menu_title, self)
         surahOption.setFont(font)
         copySurahAction = qt1.QAction(copy_action_text, self)
         copySurahAction.setShortcut("ctrl+a")

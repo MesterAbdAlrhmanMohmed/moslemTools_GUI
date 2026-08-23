@@ -80,7 +80,7 @@ class IslamicTopicViewer(qt.QDialog):
             self.text.setTextCursor(cursor)
 
     def OnContextMenu(self):
-        menu = qt.QMenu("الخيارات", self)
+        menu = guiTools.QCustomContextMenu("الخيارات", self)
         boldFont = menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)

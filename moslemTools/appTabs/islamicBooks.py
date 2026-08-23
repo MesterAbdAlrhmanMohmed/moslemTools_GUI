@@ -350,7 +350,7 @@ class IslamicBooks(qt.QWidget):
         if len(self.categories) == 0:
             self.create_new_category()
         else:
-            menu = qt.QMenu(self)
+            menu = guiTools.QCustomContextMenu(self)
             act_add = qt1.QAction("إنشاء فئة جديدة", self)
             act_add.triggered.connect(self.create_new_category)
             menu.addAction(act_add)
@@ -544,7 +544,7 @@ class IslamicBooks(qt.QWidget):
         book_name = item.text()
         if book_name in ["جاري تحميل قائمة الكتب...", "لا توجد كتب في قائمة المفضلة", "لا توجد كتب في هذه الفئة"]:
             return
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         if book_name in self.favorites:
             act = qt1.QAction("إزالة من المفضلة", self)
             act.triggered.connect(lambda: self.toggle_item_favorite(book_name, False))
@@ -696,8 +696,4 @@ class IslamicBooks(qt.QWidget):
                 if items:
                     self.list_of_abook.setCurrentItem(items[0])
                     self.list_of_abook.scrollToItem(items[0])
-                elif self.list_of_abook.count() > 0:
-                    self.list_of_abook.setCurrentRow(0)
-            elif self.list_of_abook.count() > 0:
-                self.list_of_abook.setCurrentRow(0)
         self.update_grid_size()

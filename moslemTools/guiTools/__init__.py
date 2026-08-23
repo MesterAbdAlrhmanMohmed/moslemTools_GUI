@@ -16,3 +16,4 @@ from .note_dialog import NoteDialog
 from .QCustomListDialog import QCustomListDialog
 from .speak import speak
 from .QNavigableLabel import QNavigableLabel
+from .QCustomContextMenu import QCustomContextMenu

@@ -1,4 +1,4 @@
-﻿import guiTools, requests, os, winsound, gui, functions, subprocess, shutil
+import guiTools, requests, os, winsound, gui, functions, subprocess, shutil
 import ujson as json
 from guiTools import TextViewer
 from guiTools import speak
@@ -15,7 +15,7 @@ from .favorites import FavoritesManager
 
 class PlayerContextMenuMixin:
     def open_context_menu(self, position):
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         menu.setAccessibleName("خيارات السورة")
         boldFont=menu.font()
         boldFont.setBold(True)

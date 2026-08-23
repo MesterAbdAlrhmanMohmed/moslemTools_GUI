@@ -371,7 +371,7 @@ class FromToSurahWidget(qt.QDialog):
         gui.QuranViewer(self.p, "\n".join(result), 5, label, enableNextPreviouseButtons=False, enableBookmarks=False).exec()
 
     def onGo(self):
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         font = qt1.QFont()
         font.setBold(True)
         menu.setAccessibleName("خيارات")
@@ -448,7 +448,7 @@ class FromToSurahWidget(qt.QDialog):
         if not ayahList:
             guiTools.qMessageBox.MessageBox.warning(self, "تحذير", "لا توجد آيات في النطاق المحدد لعرض الإعراب.")
             return
-        menu = qt.QMenu("اختر نوع الإعراب", self)
+        menu = guiTools.QCustomContextMenu("اختر نوع الإعراب", self)
         font = qt1.QFont()
         font.setBold(True)
         menu.setFont(font)

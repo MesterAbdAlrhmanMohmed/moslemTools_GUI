@@ -25,7 +25,7 @@ class ResearcherActionsMixin:
         self.resume_after_action()
 
     def show_iarab(self, metadata):
-        menu = qt.QMenu("اختر نوع الإعراب", self)
+        menu = guiTools.QCustomContextMenu("اختر نوع الإعراب", self)
         font = qt1.QFont()
         font.setBold(True)
         menu.setFont(font)

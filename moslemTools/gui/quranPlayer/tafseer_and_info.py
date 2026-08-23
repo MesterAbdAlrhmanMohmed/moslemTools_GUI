@@ -24,7 +24,7 @@ class PlayerTafseerAndInfoMixin:
         self.resume_after_action()
 
     def getCurentAyahIArab(self):
-        menu = qt.QMenu("اختر نوع الإعراب", self)
+        menu = guiTools.QCustomContextMenu("اختر نوع الإعراب", self)
         boldFont = menu.font()
         boldFont.setBold(True)
         menu.setFont(boldFont)

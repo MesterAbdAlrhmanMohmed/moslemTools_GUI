@@ -200,7 +200,7 @@ class AthkerDialog (qt.QDialog):
         if self.was_playing:
             self.media.pause()
             self.PPS.setText("تشغيل")
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         boldFont = qt1.QFont()
         boldFont.setBold(True)
         menu.setFont(boldFont)

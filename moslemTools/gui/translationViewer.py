@@ -80,7 +80,7 @@ class translationViewer(qt.QDialog):
         self.getResult()
 
     def OnContextMenu(self):
-        menu = qt.QMenu("الخيارات", self)
+        menu = guiTools.QCustomContextMenu("الخيارات", self)
         menu.setAccessibleName("الخيارات")
         save = menu.addAction("حفظ كملف نصي")
         save.setShortcut("ctrl+s")
@@ -97,7 +97,7 @@ class translationViewer(qt.QDialog):
         menu.exec(qt1.QCursor.pos())
 
     def on_change_translation(self):
-        menu = qt.QMenu("اختر ترجمة", self)
+        menu = guiTools.QCustomContextMenu("اختر ترجمة", self)
         menu.setAccessibleName("اختر ترجمة")
         action_group = qt1.QActionGroup(self)
         action_group.setExclusive(True)

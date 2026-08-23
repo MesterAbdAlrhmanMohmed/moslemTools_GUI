@@ -321,7 +321,7 @@ class AskAI(qt.QWidget):
             SourcesDialog(self, self.current_urls).exec()
 
     def show_context_menu(self, pos):
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         font = qt1.QFont()
         font.setBold(True)
         menu.setFont(font)

@@ -69,7 +69,7 @@ class TextViewer(qt.QDialog):
         self.context_menu_active = True
         font = qt1.QFont()
         font.setBold(True)
-        menu = qt.QMenu("الخيارات", self)
+        menu = guiTools.QCustomContextMenu("الخيارات", self)
         menu.setFont(font)
         menu.setAccessibleName("الخيارات")
         menu.setFocus()

@@ -118,7 +118,7 @@ class NotesDialog(qt.QDialog):
         notes_list = self.notes_lists[tab_index]
         item = notes_list.itemAt(pos)
         if not item: return
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         font=qt1.QFont()
         font.setBold(True)
         menu.setFont(font)

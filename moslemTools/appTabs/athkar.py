@@ -207,7 +207,7 @@ class Athker(qt.QWidget):
         athkar_name = item.text()
         if athkar_name in ["جاري تحميل الأذكار...", "لا توجد فئات أذكار في قائمة المفضلة"]:
             return
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         if athkar_name in self.favorites:
             act = qt1.QAction("إزالة من المفضلة", self)
             act.triggered.connect(lambda: self.toggle_item_favorite(athkar_name, False))

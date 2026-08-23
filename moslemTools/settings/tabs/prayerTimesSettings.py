@@ -169,7 +169,7 @@ class PrayerTimesSettings(qt.QWidget):
         self.changeIqamaSound.setVisible(is_iqama_enabled)
 
     def onChangeAdhanButtonClicked(self):
-        contextMenu = qt.QMenu("اختر صلاة لتغيير صوت أذانها", self)
+        contextMenu = guiTools.QCustomContextMenu("اختر صلاة لتغيير صوت أذانها", self)
         font = qt1.QFont()
         font.setBold(True)
         contextMenu.setFont(font)
@@ -190,7 +190,7 @@ class PrayerTimesSettings(qt.QWidget):
         contextMenu.exec(mouse_position)
 
     def onPrayerSelected(self, prayer_key):
-        soundMenu = qt.QMenu("اختر صوت", self)
+        soundMenu = guiTools.QCustomContextMenu("اختر صوت", self)
         soundMenu.setAccessibleName("اختر صوت")
         font1 = qt1.QFont()
         font1.setBold(True)
@@ -244,7 +244,7 @@ class PrayerTimesSettings(qt.QWidget):
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ غير متوقع: {e}")
 
     def onChangeIqamaButtonClicked(self):
-        soundMenu = qt.QMenu("اختر صوت", self)
+        soundMenu = guiTools.QCustomContextMenu("اختر صوت", self)
         soundMenu.setAccessibleName("اختر صوت")
         font1 = qt1.QFont()
         font1.setBold(True)
@@ -303,7 +303,7 @@ class PrayerTimesSettings(qt.QWidget):
         self.changeDuaSound.setVisible(bool(state))
 
     def onChangeDuaButtonClicked(self):
-        soundMenu = qt.QMenu("اختر صوت", self)
+        soundMenu = guiTools.QCustomContextMenu("اختر صوت", self)
         soundMenu.setAccessibleName("اختر صوت")
         font1 = qt1.QFont()
         font1.setBold(True)

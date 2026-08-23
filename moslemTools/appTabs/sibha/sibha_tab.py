@@ -117,7 +117,7 @@ class sibha(qt.QWidget):
         self.setStyleSheet("QPushButton#resetButton {background-color: #8B0000; color: white; min-height: 40px; font-size: 16px;} QPushButton#addButton {background-color: #008000; color: white; min-height: 40px; font-size: 16px;} QPushButton#minusButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;} QComboBox, QLineEdit, QSpinBox {min-height: 40px; font-size: 16px;} QLabel {font-size: 16px;}")
 
     def show_athkar_context_menu(self, pos):
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         font = qt1.QFont()
         font.setBold(True)
         menu.setFont(font)
@@ -150,7 +150,7 @@ class sibha(qt.QWidget):
             guiTools.speak(f"تم إضافة الحد الأقصى {name} بقيمة {value}")
 
     def show_limits_menu(self):
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         font=qt1.QFont()
         font.setBold(True)
         for name, value in self.limits_data["limits"].items():
@@ -165,7 +165,7 @@ class sibha(qt.QWidget):
         menu.exec(qt1.QCursor.pos())
 
     def on_limit_selected(self, name):
-        menu = qt.QMenu(self)
+        menu = guiTools.QCustomContextMenu(self)
         font=qt1.QFont()
         font.setBold(True)
         if self.limits_data["active"] == name:
