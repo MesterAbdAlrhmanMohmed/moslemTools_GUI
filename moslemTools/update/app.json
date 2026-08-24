@@ -1,7 +1,7 @@
 {
 "name": "moslem tools",
-"version": 9.8,
-"what is new": "الجديد للإصدار 9.8\nإصلاح للكثير من الأخطاء المهمة في البرنامج، وهذا الإصدار مهم تحديثه\nإتاحة إضافة كتب الأحاديث والقصص إلى المفضلة",
-"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_9.8/moslem_tools_version_9.8.exe",
+"version": 9.9,
+"what is new": "الجديد للإصدار 9.9\nإتاحة الذهاب لأول عنصر وآخر عنصر في قائمة السياق باستخدام أزرار home, end, page up, page down\nإصلاح أخطاء مهمة في البرنامج",
+"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_9.9/moslem_tools_version_9.9.exe",
 "is_beta": false
 }
