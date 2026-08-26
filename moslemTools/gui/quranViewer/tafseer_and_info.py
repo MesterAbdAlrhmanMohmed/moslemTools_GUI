@@ -184,42 +184,50 @@ class TafseerAndInfoMixin:
                 surah_names = list(dict.fromkeys(m[0] for m in matches))
                 pages, rubs = [m[1]['page'] for m in matches], [m[1]['hizbQuarter'] for m in matches]
                 info_text = (f"رقم الجزء: {j_num}.\n"
-                             f"يبدأ الجزء من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
+                             f"يبدأ الجزء {j_num} من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
                              f"ينتهي الجزء في الآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
                              f"يبدأ من الصفحة {min(pages)} وينتهي في الصفحة {max(pages)}.\n"
                              f"يبدأ في الربع {min(rubs)} وينتهي في الربع {max(rubs)}.\n"
+                             f"يبدأ في الحزب {(min(rubs)-1)//4+1} وينتهي في الحزب {(max(rubs)-1)//4+1}.\n"
                              f"عدد السور في الجزء: {len(surah_names)}.\n"
-                             f"عدد الآيات في الجزء: {len(matches)}.")
+                             f"عدد الآيات في الجزء: {len(matches)}.\n"
+                             f"السور في الجزء: {', '.join(surah_names)}.")
         elif category_index == 3:
             r_num = int(item_text)
             matches = [(s_v['name'], a) for s_v in data.values() for a in s_v['ayahs'] if a['hizbQuarter'] == r_num]
             if matches:
                 surah_names = list(dict.fromkeys(m[0] for m in matches))
                 pages = [m[1]['page'] for m in matches]
-                hizb, juz = (r_num-1)//4+1, matches[0][1]['juz']
+                hizb, juz = (r_num-1)//4+1, (r_num-1)//8+1
+                q_in_j, q_in_h = (r_num-1)%8, (r_num-1)%4
+                ord_f = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن"]
+                ord_h = ["الأول", "الثاني", "الثالث", "الرابع"]
+                hizb_j_names = ["الأول", "الثاني"]
                 info_text = (f"رقم الربع: {r_num}.\n"
-                             f"يقع في الجزء: {juz}.\n"
-                             f"يقع في الحزب: {hizb}.\n"
-                             f"يبدأ من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
-                             f"ينتهي في الآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
+                             f"يبدأ الربع {r_num} من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
+                             f"ينتهي الربع في الآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
+                             f"موضع الربع في الجزء: الربع {ord_f[q_in_j]} في الحزب {hizb_j_names[(hizb-1)%2]} في الجزء {juz}.\n"
+                             f"موضع الربع في المصحف: الربع {ord_h[q_in_h]} من الحزب {hizb} في الجزء {juz}.\n"
                              f"يبدأ من الصفحة {min(pages)} وينتهي في الصفحة {max(pages)}.\n"
-                             f"عدد السور: {len(surah_names)}.\n"
-                             f"عدد الآيات: {len(matches)}.")
+                             f"عدد السور في الربع: {len(surah_names)}.\n"
+                             f"عدد الآيات في الربع: {len(matches)}.\n"
+                             f"السور في الربع: {', '.join(surah_names)}.")
         elif category_index == 4:
             h_num = int(item_text)
             matches = [(s_v['name'], a) for s_v in data.values() for a in s_v['ayahs'] if (a['hizbQuarter']-1)//4+1 == h_num]
             if matches:
                 surah_names = list(dict.fromkeys(m[0] for m in matches))
                 pages, rubs = [m[1]['page'] for m in matches], [m[1]['hizbQuarter'] for m in matches]
-                juz = matches[0][1]['juz']
+                juz, h_in_j_names = (h_num-1)//2+1, ["الأول", "الثاني"]
                 info_text = (f"رقم الحزب: {h_num}.\n"
-                             f"يقع في الجزء: {juz}.\n"
-                             f"يبدأ من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
-                             f"ينتهي في الآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
+                             f"يبدأ الحزب {h_num} من الآية {matches[0][1]['numberInSurah']} في سورة {matches[0][0]}.\n"
+                             f"ينتهي الحزب في الآية {matches[-1][1]['numberInSurah']} من سورة {matches[-1][0]}.\n"
+                             f"موضع الحزب في الجزء: الحزب {h_in_j_names[(h_num-1)%2]} من الجزء {juz}.\n"
                              f"يبدأ من الصفحة {min(pages)} وينتهي في الصفحة {max(pages)}.\n"
-                             f"يحتوي على الأرباع من {min(rubs)} إلى {max(rubs)}.\n"
-                             f"عدد السور: {len(surah_names)}.\n"
-                             f"عدد الآيات: {len(matches)}.")
+                             f"يبدأ في الربع {min(rubs)} وينتهي في الربع {max(rubs)}.\n"
+                             f"عدد السور في الحزب: {len(surah_names)}.\n"
+                             f"عدد الآيات في الحزب: {len(matches)}.\n"
+                             f"السور في الحزب: {', '.join(surah_names)}.")
         if info_text:
             guiTools.qMessageBox.MessageBox.view(self, title, info_text)
         else:
