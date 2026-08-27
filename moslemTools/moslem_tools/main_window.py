@@ -160,6 +160,9 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
         telegram_action.setShortcut("ctrl+shift+t")
         telegram_action.triggered.connect(lambda: webbrowser.open("https://t.me/moslem_tools"))
         links_menu.addAction(telegram_action)
+        copy_download_link_action = qt1.QAction("نسخ رابط تحميل البرنامج", self)
+        copy_download_link_action.triggered.connect(self.copy_download_link)
+        links_menu.addAction(copy_download_link_action)
         self.moreOptionsMenu.addMenu(links_menu)
         action_whats_new = qt1.QAction("ما الجديد في آخر إصدار من البرنامج", self)
         action_whats_new.setShortcut("ctrl+w")
@@ -215,3 +218,16 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
         self.khatmah_timer.start(5000)
         qt2.QTimer.singleShot(1000, self.check_scheduled_khatmah_reminder)
         qt2.QTimer.singleShot(1000, self.play_startup_athkar)
+
+    def copy_download_link(self):
+        def run():
+            try:
+                r = requests.get(f"https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/{settings_handler.appName}/main/{app.appdirname}/update/app.json", timeout=10)
+                info = r.json()
+                pyperclip.copy(info["download"])
+                guiTools.speak("تم نسخ رابط تحميل البرنامج")
+                winsound.Beep(1000, 100)
+            except Exception as e:
+                print(e)
+        threading.Thread(target=run, daemon=True).start()
+
