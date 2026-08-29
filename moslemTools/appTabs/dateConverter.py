@@ -73,7 +73,10 @@ class DateConverter(qt.QWidget):
         grid_layout.setVerticalSpacing(12)
         self.l_Converter = qt.QLabel("اختيار نوع التحويل")
         self.l_Converter.setAlignment(qt2.Qt.AlignmentFlag.AlignLeft | qt2.Qt.AlignmentFlag.AlignVCenter)
+        font = qt1.QFont()
+        font.setBold(True)
         self.Converter_combo = qt.QComboBox()
+        self.Converter_combo.setFont(font)
         self.Converter_combo.setAccessibleName("اختيار نوع التحويل")
         self.Converter_combo.addItem("التحويل من هجري إلى ميلادي")
         self.Converter_combo.addItem("التحويل من ميلادي إلى هجري")
@@ -90,6 +93,7 @@ class DateConverter(qt.QWidget):
         self.l_month = qt.QLabel("الشهر")
         self.l_month.setAlignment(qt2.Qt.AlignmentFlag.AlignLeft | qt2.Qt.AlignmentFlag.AlignVCenter)
         self.month_combo = qt.QComboBox()
+        self.month_combo.setFont(font)
         self.month_combo.setAccessibleName("الشهر")
         grid_layout.addWidget(self.month_combo, 2, 0)
         grid_layout.addWidget(self.l_month, 2, 1)
@@ -159,9 +163,15 @@ class DateConverter(qt.QWidget):
         self.Converter_combo.currentIndexChanged.connect(self.update_button_text)
         self.Converter_combo.currentIndexChanged.connect(self.adjust_converter_combo_width)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.adjust_converter_combo_width()
+
     def adjust_converter_combo_width(self, index=None):
-        fm = qt1.QFontMetrics(self.Converter_combo.font())
+        fm = self.Converter_combo.fontMetrics()
         current_text = self.Converter_combo.currentText()
+        if not current_text:
+            return
         text_width = fm.horizontalAdvance(current_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(current_text).width()
         self.Converter_combo.setFixedWidth(text_width + 65)
 
