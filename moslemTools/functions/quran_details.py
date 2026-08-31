@@ -186,7 +186,7 @@ def get_single_ayah_qiraat(surah_no, ayah_no, ayah_text=None):
     blocks = []
     for w in words:
         word = w.get("word", "").strip()
-        qiraat = w.get("qiraat", "").replace("---{عند الوصل}---", "{عند الوصل}").strip()
+        qiraat = w.get("qiraat", "").replace("---{عند وصل السورة}---", "{عند وصل السورة}").replace("---{عند الوصل}---", "{عند الوصل}").strip()
         if word:
             qiraat_str = qiraat if qiraat else "غير متوفر"
             blocks.append(f"الكلمة:\n{word}\nالقراءات:\n{qiraat_str}")
