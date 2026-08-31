@@ -324,6 +324,9 @@ class TafseerAndInfoMixin:
         detailedAction = qt1.QAction("إعراب مفصل", self)
         detailedAction.triggered.connect(self.getCurentAyahDetailedIArab)
         menu.addAction(detailedAction)
+        analyticalAction = qt1.QAction("إعراب تحليلي", self)
+        analyticalAction.triggered.connect(self.getCurentAyahAnalyticalIArab)
+        menu.addAction(analyticalAction)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
 
     def getCurentAyahSimplifiedIArab(self):
@@ -357,6 +360,40 @@ class TafseerAndInfoMixin:
         result=functions.quran_details.get_single_ayah_detailed_irab(surah, Ayah)
         self.text.setUpdatesEnabled(False)
         guiTools.TextViewer(self,"إعراب مفصل",result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getCurentAyahAnalyticalIArab(self):
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
+        self.pause_for_action()
+        current_ayah_index = self.getCurrentAyah()
+        current_line = self._get_line_text_for_action(current_ayah_index)
+        if not current_line:
+            self.resume_after_action()
+            return
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
+        result=functions.quran_details.get_single_ayah_analytical_irab(surah, Ayah, ayah_text=current_line)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self,"إعراب تحليلي",result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getCurentAyahQiraat(self):
+        if self._is_invalid_search_line():
+            self._handle_invalid_search_line_action()
+            return
+        self.pause_for_action()
+        current_ayah_index = self.getCurrentAyah()
+        current_line = self._get_line_text_for_action(current_ayah_index)
+        if not current_line:
+            self.resume_after_action()
+            return
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_line, self.category, self.type)
+        result=functions.quran_details.get_single_ayah_qiraat(surah, Ayah, ayah_text=current_line)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self,"قراءات الآية",result).exec()
         self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 
@@ -556,6 +593,9 @@ class TafseerAndInfoMixin:
         detailedAction = qt1.QAction("إعراب مفصل", self)
         detailedAction.triggered.connect(self.DetailedIArabFromVersToVers)
         menu.addAction(detailedAction)
+        analyticalAction = qt1.QAction("إعراب تحليلي", self)
+        analyticalAction.triggered.connect(self.AnalyticalIArabFromVersToVers)
+        menu.addAction(analyticalAction)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
 
     def SimplifiedIArabFromVersToVers(self):
@@ -618,6 +658,96 @@ class TafseerAndInfoMixin:
                 self.text.setUpdatesEnabled(False)
                 result = functions.quran_details.get_range_detailed_irab(target_list, self.category, self.type)
                 guiTools.TextViewer(self, "إعراب مفصل", result).exec()
+                self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getAnalyticalIArabForSurah(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        result = functions.quran_details.get_range_analytical_irab(ayahList, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "إعراب تحليلي", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getAnalyticalIArabFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        current_index = self.getCurrentAyah()
+        if current_index < 0 or current_index >= len(ayahList):
+            current_index = 0
+        target_list = ayahList[current_index:]
+        result = functions.quran_details.get_range_analytical_irab(target_list, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "إعراب تحليلي", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def AnalyticalIArabFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        FromVers, ok = guiTools.QInputDialog.getInt(self, "من الآية", "الإعراب التحليلي من", self.getCurrentAyah() + 1, 1, len(ayahList))
+        if ok:
+            toVers, ok = guiTools.QInputDialog.getInt(self, "إلى الآية", "الإعراب التحليلي إلى", len(ayahList), FromVers, len(ayahList))
+            if ok:
+                target_list = ayahList[FromVers - 1:toVers]
+                self.text.setUpdatesEnabled(False)
+                result = functions.quran_details.get_range_analytical_irab(target_list, self.category, self.type)
+                guiTools.TextViewer(self, "إعراب تحليلي", result).exec()
+                self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getQiraatForSurah(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        result = functions.quran_details.get_range_qiraat(ayahList, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "قراءات الآيات", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def getQiraatFromAyahToEnd(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        current_index = self.getCurrentAyah()
+        if current_index < 0 or current_index >= len(ayahList):
+            current_index = 0
+        target_list = ayahList[current_index:]
+        result = functions.quran_details.get_range_qiraat(target_list, self.category, self.type)
+        self.text.setUpdatesEnabled(False)
+        guiTools.TextViewer(self, "قراءات الآيات", result).exec()
+        self.text.setUpdatesEnabled(True)
+        self.resume_after_action()
+
+    def QiraatFromVersToVers(self):
+        if self.is_search_view:
+            self._handle_search_view_restriction()
+            return
+        self.pause_for_action()
+        ayahList = self.original_quran_text.split("\n")
+        FromVers, ok = guiTools.QInputDialog.getInt(self, "من الآية", "القراءات من", self.getCurrentAyah() + 1, 1, len(ayahList))
+        if ok:
+            toVers, ok = guiTools.QInputDialog.getInt(self, "إلى الآية", "القراءات إلى", len(ayahList), FromVers, len(ayahList))
+            if ok:
+                target_list = ayahList[FromVers - 1:toVers]
+                self.text.setUpdatesEnabled(False)
+                result = functions.quran_details.get_range_qiraat(target_list, self.category, self.type)
+                guiTools.TextViewer(self, "قراءات الآيات", result).exec()
                 self.text.setUpdatesEnabled(True)
         self.resume_after_action()
 

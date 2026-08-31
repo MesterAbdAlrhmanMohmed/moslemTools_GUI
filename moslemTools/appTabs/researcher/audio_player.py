@@ -1,4 +1,4 @@
-﻿import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
+import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -175,10 +175,18 @@ class ResearcherAudioMixin:
             print(f"Handled exception: {e}")
 
     def change_speed(self, speed):
+        is_playing = self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+        pos = self.media_player.position()
+        if is_playing:
+            self.media_player.pause()
         self.save_speed(speed)
         self.media_player.setPlaybackRate(speed)
         if hasattr(self.media_player, 'setPitchCompensation'):
             self.media_player.setPitchCompensation(True)
+        if self.media_player.duration() > 0 and pos > 0:
+            self.media_player.setPosition(pos)
+        if is_playing:
+            self.media_player.play()
 
     def apply_speed(self):
         speed = self.load_speed()

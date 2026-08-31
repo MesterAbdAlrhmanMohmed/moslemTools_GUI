@@ -1,4 +1,4 @@
-﻿import guiTools, requests, os, winsound, gui, functions, subprocess, shutil
+import guiTools, requests, os, winsound, gui, functions, subprocess, shutil
 import ujson as json
 from guiTools import TextViewer
 from guiTools import speak
@@ -104,6 +104,7 @@ class PlayerPlaybackModesMixin:
 
     def play_selected_audio(self):
         self.repeatFromPositionToPosition = False
+        self.paused_position = None
         try:
             selected_reciter_item = self.recitersListWidget.currentItem()
             if not selected_reciter_item:
@@ -126,6 +127,7 @@ class PlayerPlaybackModesMixin:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء تشغيل المقطع:" + str(e))
 
     def on_reciter_selected(self):
+        self.paused_position = None
         self.mp.stop()
         self.surahListWidget.clear()
         self.cancel_merge()

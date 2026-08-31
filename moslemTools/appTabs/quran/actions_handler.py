@@ -169,6 +169,9 @@ class QuranTabActionsMixin:
         detailed_action = qt1.QAction("إعراب مفصل", self)
         detailed_action.triggered.connect(self.onDetailedIarabActionTriggered)
         menu.addAction(detailed_action)
+        analytical_action = qt1.QAction("إعراب تحليلي", self)
+        analytical_action.triggered.connect(self.onAnalyticalIarabActionTriggered)
+        menu.addAction(analytical_action)
         menu.exec(qt1.QCursor.pos())
 
     def onSimplifiedIarabActionTriggered(self):
@@ -190,6 +193,24 @@ class QuranTabActionsMixin:
         type = self.type.currentIndex()
         result = functions.quran_details.get_range_detailed_irab(ayahList, category, type)
         guiTools.TextViewer(self, "إعراب مفصل", result).exec()
+
+    def onAnalyticalIarabActionTriggered(self):
+        if not self.info.currentItem():
+            return
+        ayahList = self.getResult().split("\n")
+        category = self.info.currentItem().text()
+        type = self.type.currentIndex()
+        result = functions.quran_details.get_range_analytical_irab(ayahList, category, type)
+        guiTools.TextViewer(self, "إعراب تحليلي", result).exec()
+
+    def onQiraatActionTriggered(self):
+        if not self.info.currentItem():
+            return
+        ayahList = self.getResult().split("\n")
+        category = self.info.currentItem().text()
+        type = self.type.currentIndex()
+        result = functions.quran_details.get_range_qiraat(ayahList, category, type)
+        guiTools.TextViewer(self, "قراءات الآيات", result).exec()
 
     def onMeaningsActionTriggered(self):
         if not self.info.currentItem():

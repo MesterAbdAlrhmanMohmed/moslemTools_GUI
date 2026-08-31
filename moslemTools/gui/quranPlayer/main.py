@@ -186,6 +186,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerNavigationDisplayMixin, PlayerTa
         qt1.QShortcut("shift+down",self).activated.connect(self.volume_down)
         qt1.QShortcut("ctrl+r", self).activated.connect(self.getCurrentAyahTanzel)
         qt1.QShortcut("ctrl+i", self).activated.connect(self.getCurentAyahIArab)
+        qt1.QShortcut("ctrl+e", self).activated.connect(self.getCurentAyahQiraat)
         qt1.QShortcut("ctrl+u", self).activated.connect(self.getCurentAyahMeanings)
         qt1.QShortcut("ctrl+k", self).activated.connect(self.getCurentAyahSarf)
         qt1.QShortcut("ctrl+t", self).activated.connect(self.getCurentAyahTafseer)

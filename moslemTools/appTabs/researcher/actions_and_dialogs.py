@@ -35,6 +35,9 @@ class ResearcherActionsMixin:
         detailed_action = qt1.QAction("إعراب مفصل", self)
         detailed_action.triggered.connect(lambda: self.show_detailed_iarab(metadata))
         menu.addAction(detailed_action)
+        analytical_action = qt1.QAction("إعراب تحليلي", self)
+        analytical_action.triggered.connect(lambda: self.show_analytical_iarab(metadata))
+        menu.addAction(analytical_action)
         menu.exec(qt1.QCursor.pos())
 
     def show_simplified_iarab(self, metadata):
@@ -50,6 +53,30 @@ class ResearcherActionsMixin:
         ayah_number_in_surah = metadata["ayah_number_in_surah"]
         result = functions.quran_details.get_single_ayah_detailed_irab(surah_number, ayah_number_in_surah)
         guiTools.TextViewer(self, "إعراب مفصل", result).exec()
+        self.resume_after_action()
+
+    def show_analytical_iarab(self, metadata):
+        self.pause_for_action()
+        surah_number = metadata["surah_number"]
+        ayah_number_in_surah = metadata["ayah_number_in_surah"]
+        line_text = metadata.get("clean_ayah_text")
+        if not line_text:
+            cursor = self.results.textCursor()
+            line_text = re.sub(r'^\d+\s*', '', cursor.block().text())
+        result = functions.quran_details.get_single_ayah_analytical_irab(surah_number, ayah_number_in_surah, ayah_text=line_text)
+        guiTools.TextViewer(self, "إعراب تحليلي", result).exec()
+        self.resume_after_action()
+
+    def show_qiraat(self, metadata):
+        self.pause_for_action()
+        surah_number = metadata["surah_number"]
+        ayah_number_in_surah = metadata["ayah_number_in_surah"]
+        line_text = metadata.get("clean_ayah_text")
+        if not line_text:
+            cursor = self.results.textCursor()
+            line_text = re.sub(r'^\d+\s*', '', cursor.block().text())
+        result = functions.quran_details.get_single_ayah_qiraat(surah_number, ayah_number_in_surah, ayah_text=line_text)
+        guiTools.TextViewer(self, "قراءات الآية", result).exec()
         self.resume_after_action()
 
     def show_meanings(self, metadata):
@@ -133,6 +160,9 @@ class ResearcherActionsMixin:
 
     def on_iarab_shortcut(self):
         self.on_shortcut_activated(self.show_iarab)
+
+    def on_qiraat_shortcut(self):
+        self.on_shortcut_activated(self.show_qiraat)
 
     def on_meanings_shortcut(self):
         self.on_shortcut_activated(self.show_meanings)

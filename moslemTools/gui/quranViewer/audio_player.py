@@ -1,4 +1,4 @@
-﻿from guiTools import note_dialog
+from guiTools import note_dialog
 import functions.notesManager as notesManager
 from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
@@ -199,10 +199,18 @@ class AudioPlayerMixin:
             print(f"Handled exception: {e}")
 
     def change_speed(self, speed):
+        is_playing = self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+        pos = self.media.position()
+        if is_playing:
+            self.media.pause()
         self.save_speed(speed)
         self.media.setPlaybackRate(speed)
         if hasattr(self.media, 'setPitchCompensation'):
             self.media.setPitchCompensation(True)
+        if self.media.duration() > 0 and pos > 0:
+            self.media.setPosition(pos)
+        if is_playing:
+            self.media.play()
 
     def apply_speed(self):
         speed = self.load_speed()

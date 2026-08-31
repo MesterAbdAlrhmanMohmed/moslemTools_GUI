@@ -123,3 +123,86 @@ def get_range_sarf(ayah_text_list, category=None, type=None):
         except Exception:
             output_blocks.append(f"{line}\n\nتعذر جلب بيانات صرف الكلمات.")
     return "\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."
+
+
+_word_by_word_data = None
+
+
+def _load_word_by_word_data():
+    global _word_by_word_data
+    if _word_by_word_data is None:
+        file_path = os.path.join("data", "json", "earab_and_qurat_word_by_word.json")
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                raw_list = json.load(f)
+            _word_by_word_data = {}
+            for item in raw_list:
+                key = (int(item["surah_number"]), int(item["ayah_number"]))
+                if key not in _word_by_word_data:
+                    _word_by_word_data[key] = []
+                _word_by_word_data[key].append(item)
+        except Exception:
+            _word_by_word_data = {}
+    return _word_by_word_data
+
+
+def get_single_ayah_analytical_irab(surah_no, ayah_no, ayah_text=None):
+    data = _load_word_by_word_data()
+    words = data.get((int(surah_no), int(ayah_no)), [])
+    header = f"{ayah_text}\n" if ayah_text else ""
+    if not words:
+        return f"{header}لا تتوفر بيانات إعراب تحليلي لهذه الآية."
+    blocks = []
+    for w in words:
+        word = w.get("word", "").strip()
+        eerab = w.get("eerab", "").strip()
+        if word:
+            eerab_str = eerab if eerab else "غير متوفر"
+            blocks.append(f"{word}: {eerab_str}")
+    words_str = "\n".join(blocks) if blocks else "لا تتوفر بيانات إعراب تحليلي لهذه الآية."
+    return f"{header}{words_str}"
+
+
+def get_range_analytical_irab(ayah_text_list, category=None, type=None):
+    output_blocks = []
+    for line in ayah_text_list:
+        if not line or not line.strip():
+            continue
+        try:
+            Ayah, surah, juz, page, AyahNumber = functions.quranJsonControl.getAyah(line, category, type)
+            irab = get_single_ayah_analytical_irab(surah, Ayah, ayah_text=line)
+            output_blocks.append(irab)
+        except Exception:
+            output_blocks.append(f"{line}\nتعذر جلب بيانات الإعراب التحليلي.")
+    return "\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."
+
+
+def get_single_ayah_qiraat(surah_no, ayah_no, ayah_text=None):
+    data = _load_word_by_word_data()
+    words = data.get((int(surah_no), int(ayah_no)), [])
+    header = f"{ayah_text}\n\n" if ayah_text else ""
+    if not words:
+        return f"{header}لا تتوفر بيانات قراءات لهذه الآية."
+    blocks = []
+    for w in words:
+        word = w.get("word", "").strip()
+        qiraat = w.get("qiraat", "").replace("---{عند الوصل}---", "{عند الوصل}").strip()
+        if word:
+            qiraat_str = qiraat if qiraat else "غير متوفر"
+            blocks.append(f"الكلمة:\n{word}\nالقراءات:\n{qiraat_str}")
+    words_str = "\n\n".join(blocks) if blocks else "لا تتوفر بيانات قراءات لهذه الآية."
+    return f"{header}{words_str}"
+
+
+def get_range_qiraat(ayah_text_list, category=None, type=None):
+    output_blocks = []
+    for line in ayah_text_list:
+        if not line or not line.strip():
+            continue
+        try:
+            Ayah, surah, juz, page, AyahNumber = functions.quranJsonControl.getAyah(line, category, type)
+            qiraat = get_single_ayah_qiraat(surah, Ayah, ayah_text=line)
+            output_blocks.append(qiraat)
+        except Exception:
+            output_blocks.append(f"{line}\n\nتعذر جلب بيانات القراءات.")
+    return "\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."

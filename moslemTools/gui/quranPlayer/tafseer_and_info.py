@@ -34,6 +34,9 @@ class PlayerTafseerAndInfoMixin:
         detailedAction = qt1.QAction("إعراب مفصل", self)
         detailedAction.triggered.connect(self.getCurentAyahDetailedIArab)
         menu.addAction(detailedAction)
+        analyticalAction = qt1.QAction("إعراب تحليلي", self)
+        analyticalAction.triggered.connect(self.getCurentAyahAnalyticalIArab)
+        menu.addAction(analyticalAction)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
 
     def getCurentAyahSimplifiedIArab(self):
@@ -48,6 +51,22 @@ class PlayerTafseerAndInfoMixin:
         Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(self.getcurrentAyahText(), self.category, self.type)
         result=functions.quran_details.get_single_ayah_detailed_irab(surah, Ayah)
         guiTools.TextViewer(self,"إعراب مفصل",result).exec()
+        self.resume_after_action()
+
+    def getCurentAyahAnalyticalIArab(self):
+        self.pause_for_action()
+        current_text = self.getcurrentAyahText()
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_text, self.category, self.type)
+        result=functions.quran_details.get_single_ayah_analytical_irab(surah, Ayah, ayah_text=current_text)
+        guiTools.TextViewer(self,"إعراب تحليلي",result).exec()
+        self.resume_after_action()
+
+    def getCurentAyahQiraat(self):
+        self.pause_for_action()
+        current_text = self.getcurrentAyahText()
+        Ayah,surah,juz,page,AyahNumber=functions.quranJsonControl.getAyah(current_text, self.category, self.type)
+        result=functions.quran_details.get_single_ayah_qiraat(surah, Ayah, ayah_text=current_text)
+        guiTools.TextViewer(self,"قراءات الآية",result).exec()
         self.resume_after_action()
 
     def getCurentAyahMeanings(self):

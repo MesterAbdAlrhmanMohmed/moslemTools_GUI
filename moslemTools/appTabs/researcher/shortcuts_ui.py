@@ -1,4 +1,4 @@
-﻿import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
+import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -17,6 +17,7 @@ class ResearcherShortcutsUIMixin:
         qt1.QShortcut("Ctrl+T", self).activated.connect(self.on_tafseer_shortcut)
         qt1.QShortcut("Ctrl+L", self).activated.connect(self.on_translation_shortcut)
         qt1.QShortcut("Ctrl+I", self).activated.connect(self.on_iarab_shortcut)
+        qt1.QShortcut("Ctrl+E", self).activated.connect(self.on_qiraat_shortcut)
         qt1.QShortcut("Ctrl+U", self).activated.connect(self.on_meanings_shortcut)
         qt1.QShortcut("Ctrl+K", self).activated.connect(self.on_sarf_shortcut)
         qt1.QShortcut("Ctrl+R", self).activated.connect(self.on_tanzil_shortcut)

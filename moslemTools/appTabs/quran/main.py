@@ -1,4 +1,4 @@
-﻿import gui.translationViewer
+import gui.translationViewer
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
 import ujson as json
 from settings.app import appName
@@ -23,6 +23,7 @@ class Quran(QuranTabContextMenuMixin, QuranTabNavSearchMixin, QuranTabActionsMix
         qt1.QShortcut("ctrl+t",self).activated.connect(self.onTafseerActionTriggered)
         qt1.QShortcut("ctrl+l",self).activated.connect(self.onTranslationActionTriggered)
         qt1.QShortcut("ctrl+i",self).activated.connect(self.onIarabActionTriggered)
+        qt1.QShortcut("ctrl+e",self).activated.connect(self.onQiraatActionTriggered)
         qt1.QShortcut("ctrl+u",self).activated.connect(self.onMeaningsActionTriggered)
         qt1.QShortcut("ctrl+k",self).activated.connect(self.onSarfActionTriggered)
         qt1.QShortcut("ctrl+f",self).activated.connect(self.onCategoryInfoTriggered)
