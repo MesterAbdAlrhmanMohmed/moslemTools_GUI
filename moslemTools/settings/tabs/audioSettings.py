@@ -9,6 +9,14 @@ class AudioSettings(qt.QWidget):
         super().__init__(parent)
         self.layout = qt.QVBoxLayout()
         self.setLayout(self.layout)
+        self.setStyleSheet("""
+            QComboBox {
+                color: #e0e0e0;
+                border: 1px solid #555;
+                padding: 4px 8px;
+                font-size: 13px;
+            }
+        """)
         self.devices_list = ["افتراضي"] + [d.description() for d in QMediaDevices.audioOutputs()]
         self.global_options = self.devices_list + ["مخصص"]
         self.feature_widgets = []
@@ -17,10 +25,16 @@ class AudioSettings(qt.QWidget):
             container = qt.QWidget()
             row_layout = qt.QHBoxLayout(container)
             row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(10)
             label = qt.QLabel(label_text)
             combo = qt.QComboBox()
+            combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
             combo.addItems(self.global_options if is_global else self.devices_list)
             combo.setAccessibleName(label_text)
+            fm = combo.fontMetrics()
+            items = self.global_options if is_global else self.devices_list
+            max_w = max([fm.horizontalAdvance(text) for text in items], default=100)
+            combo.setMinimumWidth(max_w + 35)
             row_layout.addWidget(combo)
             row_layout.addWidget(label)
             row_layout.addStretch()
@@ -31,13 +45,16 @@ class AudioSettings(qt.QWidget):
         self.global_combo = create_row("تحديد كرت الصوت لكل البرنامج", "global", is_global=True)
         self.global_combo.currentIndexChanged.connect(self.on_global_change)
         feature_map = [
-            ("تحديد كرت الصوت لتشغيل الآيات في تبويبة القرآن الكريم مكتوب", "quran_text"),
+            ("تحديد كرت الصوت لتشغيل الآيات في عارض القرآن الكريم", "quran_viewer"),
+            ("تحديد كرت الصوت لتشغيل الآيات في مشغل القرآن الكريم", "quran_player"),
             ("تحديد كرت الصوت لتشغيل السور في تبويبة القرآن الكريم صوتي", "quran_audio"),
             ("تحديد كرت الصوت لتشغيل الآيات في الباحث", "researcher"),
             ("تحديد كرت الصوت لتشغيل الإذاعات الإسلامية", "broadcasts"),
             ("تحديد كرت الصوت لتشغيل الأذان وما يتعلق به", "adhan"),
             ("تحديد كرت الصوت لتشغيل الأذكار والأدعية", "athkar"),
             ("تحديد كرت الصوت لتشغيل الأذكار العشوائية والبسملة", "random_athkar"),
+            ("تحديد كرت الصوت لتشغيل الأبيات في عارض المتون", "moton_viewer"),
+            ("تحديد كرت الصوت لتشغيل الأبيات في مشغل المتون", "moton_player"),
         ]
         for label, key in feature_map:
             combo = create_row(label, key)
@@ -61,6 +78,10 @@ class AudioSettings(qt.QWidget):
             self.global_combo.setCurrentIndex(0)
         for key, combo in self.features.items():
             val = settings_handler.get("audio", key)
+            if not val and key in ["quran_viewer", "quran_player"]:
+                val = settings_handler.get("audio", "quran_text")
+            if not val and key in ["moton_viewer", "moton_player"]:
+                val = settings_handler.get("audio", "moton")
             if not val or val == "Default" or val == "الافتراضي": val = "افتراضي"
             index = combo.findText(val)
             if index >= 0:

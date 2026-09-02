@@ -454,6 +454,9 @@ class NavigationDisplayMixin:
         prev_suffix = "السابق" if self.type in [2, 3, 4] else "السابقة"
         self.next.setText(f"{name} {next_suffix}")
         self.previous.setText(f"{name} {prev_suffix}")
+        if hasattr(self, 'toggle_search_button') and hasattr(self, 'search_widget'):
+            if not self.search_widget.isVisible():
+                self.toggle_search_button.setText(self.get_search_button_text())
 
     def onNext(self):
         self.pause_for_action()

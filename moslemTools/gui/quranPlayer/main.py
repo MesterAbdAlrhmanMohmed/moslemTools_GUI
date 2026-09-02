@@ -51,7 +51,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerNavigationDisplayMixin, PlayerTa
         self.media=QMediaPlayer(self)
         self.apply_speed()
         self.audioOutput=QAudioOutput(self)
-        self.audioOutput.setDevice(audio_manager.get_audio_device("quran_text"))
+        self.audioOutput.setDevice(audio_manager.get_audio_device("quran_player"))
         self.media.setAudioOutput(self.audioOutput)
         self.media.mediaStatusChanged.connect(self.on_state)
         self.index=index

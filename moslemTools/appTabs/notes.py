@@ -33,7 +33,7 @@ class NotesDialog(qt.QDialog):
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر فئة")
         self.sectian.setFont(font)
-        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة"]
+        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة", "المتون الإسلامية"]
         fm = self.sectian.fontMetrics()
         max_w = max(fm.horizontalAdvance(cat) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(cat).width() for cat in categories)
         calc_w = max(340, max_w + 70)
@@ -92,7 +92,7 @@ class NotesDialog(qt.QDialog):
         buttons_layout.addWidget(self.dl_all_all)
         layout.addLayout(buttons_layout)
         self.sectian.currentRowChanged.connect(self.load_notes)
-        self.all_notes_in_current_category = [[] for _ in range(5)]
+        self.all_notes_in_current_category = [[] for _ in range(len(categories))]
         self.sectian.setCurrentRow(0)
 
     def on_item_activated(self, item, tab_index):
@@ -102,7 +102,7 @@ class NotesDialog(qt.QDialog):
         self.show_context_menu(pos, tab_index)
 
     def get_category_type(self, index):
-        category_map = {0: "quran", 1: "ahadeeth", 2: "islamicBooks", 3: "stories", 4: "islamicTopics"}
+        category_map = {0: "quran", 1: "ahadeeth", 2: "islamicBooks", 3: "stories", 4: "islamicTopics", 5: "moton"}
         return category_map.get(index)
 
     def load_notes(self, index):
@@ -180,8 +180,21 @@ class NotesDialog(qt.QDialog):
             elif tab_index == 2: self.open_book_note(pd)
             elif tab_index == 3: self.open_story_note(pd)
             elif tab_index == 4: self.open_islamic_topic_note(pd)
+            elif tab_index == 5: self.open_moton_note(pd)
         else:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "بيانات الموضع غير موجودة لهذه الملاحظة.")
+
+    def open_moton_note(self, position_data):
+        try:
+            if not all(key in position_data for key in ["matn_name", "bayt_number"]):
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "بيانات موضع المتن أو رقم البيت غير مكتملة.")
+                return
+            from gui.motonViewer import MotonViewer
+            matn_name = position_data["matn_name"]
+            bayt_number = position_data["bayt_number"]
+            MotonViewer(self, matn_name=matn_name, is_full_matn=True, index=bayt_number).exec()
+        except Exception as e:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ أثناء فتح ملاحظة المتن: {e}")
 
     def open_quran_note(self, position_data):
         try:
@@ -341,7 +354,7 @@ class NotesDialog(qt.QDialog):
         confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", "هل تريد حذف كل الملاحظات؟", "نعم", "لا")
         if confirm == 0:
             notesManager.removeAllNotes()
-            for i in range(5): self.load_notes(i)
+            for i in range(len(self.tabs)): self.load_notes(i)
             guiTools.speak("تم حذف جميع الملاحظات")
 
     def search_notes(self, pattern, note_list):

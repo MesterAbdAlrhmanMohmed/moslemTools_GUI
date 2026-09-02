@@ -25,6 +25,8 @@ class FontSettings(qt.QWidget):
         ("namesOfAllah", "عارض أسماء الله الحسنى"),
         ("islamicQuestionsGame", "لعبة الأسئلة الإسلامية"),
         ("checkForUpdate", "نافذة ما الجديد في التحديثات"),
+        ("motonViewer", "عارض المتون الإسلامية"),
+        ("motonPlayer", "مشغل المتون الإسلامية"),
     ]
 
     def __init__(self):

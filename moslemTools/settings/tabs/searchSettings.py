@@ -18,6 +18,7 @@ class SearchSettings(qt.QWidget):
         ("quran_search", "عارض القرآن الكريم"),
         ("researcher_search", "تبويبة الباحث في القرآن والأحاديث"),
         ("islamic_books_search", "عارض الكتب الإسلامية"),
+        ("moton_search", "عارض المتون الإسلامية"),
     ]
 
     def __init__(self):
@@ -57,6 +58,11 @@ class SearchSettings(qt.QWidget):
                 "ignore_hamza": settings_handler.get("islamic_books_search", "ignore_hamza") != "False",
                 "ignore_symbols": settings_handler.get("islamic_books_search", "ignore_symbols") != "False",
             },
+            "moton_search": {
+                "ignore_tashkeel": settings_handler.get("moton_search", "ignore_tashkeel") != "False",
+                "ignore_hamza": settings_handler.get("moton_search", "ignore_hamza") != "False",
+                "ignore_symbols": settings_handler.get("moton_search", "ignore_symbols") != "False",
+            },
         }
 
         self.quran_tashkeel_checkbox = _SettingProxy(lambda: self.settings_data["quran_search"]["ignore_tashkeel"])
@@ -70,6 +76,10 @@ class SearchSettings(qt.QWidget):
         self.islamic_books_tashkeel_checkbox = _SettingProxy(lambda: self.settings_data["islamic_books_search"]["ignore_tashkeel"])
         self.islamic_books_hamza_checkbox = _SettingProxy(lambda: self.settings_data["islamic_books_search"]["ignore_hamza"])
         self.islamic_books_symbols_checkbox = _SettingProxy(lambda: self.settings_data["islamic_books_search"]["ignore_symbols"])
+
+        self.moton_tashkeel_checkbox = _SettingProxy(lambda: self.settings_data["moton_search"]["ignore_tashkeel"])
+        self.moton_hamza_checkbox = _SettingProxy(lambda: self.settings_data["moton_search"]["ignore_hamza"])
+        self.moton_symbols_checkbox = _SettingProxy(lambda: self.settings_data["moton_search"]["ignore_symbols"])
 
         layout = qt.QVBoxLayout(self)
         layout.setSpacing(15)

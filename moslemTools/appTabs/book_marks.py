@@ -23,7 +23,7 @@ class book_marcks(qt.QDialog):
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر فئة")
         self.sectian.setFont(font)
-        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة"]
+        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة", "المتون الإسلامية"]
         fm = self.sectian.fontMetrics()
         max_w = max(fm.horizontalAdvance(cat) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(cat).width() for cat in categories)
         calc_w = max(340, max_w + 70)
@@ -39,7 +39,7 @@ class book_marcks(qt.QDialog):
         layout.addLayout(h_layout)
         self.tabs = []
         self.results_lists = []
-        self.bookMarks1 = [[] for _ in range(5)]
+        self.bookMarks1 = [[] for _ in range(len(categories))]
         for i, category in enumerate(categories):
             tab = qt.QWidget()
             tab_layout = qt.QVBoxLayout(tab)
@@ -113,6 +113,8 @@ class book_marcks(qt.QDialog):
                 functions.bookMarksManager.getStoryBookmark(self, item.text())
             elif tab_index == 4:
                 functions.bookMarksManager.openIslamicTopicByBookmarkName(self, item.text())
+            elif tab_index == 5:
+                functions.bookMarksManager.openMotonByBookmarkName(self, item.text())
             self.close()
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ أثناء فتح العلامة المرجعية: {e}")
@@ -135,6 +137,8 @@ class book_marcks(qt.QDialog):
                         functions.bookMarksManager.removeStoriesBookMark(item.text())
                     elif tab_index == 4:
                         functions.bookMarksManager.removeIslamicTopicBookMark(item.text())
+                    elif tab_index == 5:
+                        functions.bookMarksManager.removeMotonBookmark(item.text())
                     guiTools.speak("تم حذف العلامة المرجعية")
                     self.onCategoryChanged(tab_index)
             else:
@@ -158,6 +162,8 @@ class book_marcks(qt.QDialog):
                     functions.bookMarksManager.removeAllStoriesBookMarks()
                 elif tab_index == 4:
                     functions.bookMarksManager.removeAllIslamicTopicsBookMarks()
+                elif tab_index == 5:
+                    functions.bookMarksManager.removeAllMotonBookMarks()
                 guiTools.speak(f"تم حذف جميع العلامات المرجعية من فئة {category_name}")
                 self.onCategoryChanged(tab_index)
         except Exception as e:
@@ -169,7 +175,7 @@ class book_marcks(qt.QDialog):
             if confirm == 0:
                 functions.bookMarksManager.removeAllBookMarks()
                 guiTools.speak("تم حذف جميع العلامات المرجعية")
-                for i in range(5):
+                for i in range(len(self.tabs)):
                     self.onCategoryChanged(i)
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ: {e}")
@@ -186,6 +192,7 @@ class book_marcks(qt.QDialog):
             elif index == 2: type_key = "islamicBooks"
             elif index == 3: type_key = "stories"
             elif index == 4: type_key = "islamicTopics"
+            elif index == 5: type_key = "moton"
             if type_key and type_key in bookMarksData:
                 for item in bookMarksData[type_key]:
                     self.bookMarks1[index].append(item["name"])

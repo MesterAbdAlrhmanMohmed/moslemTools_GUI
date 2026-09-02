@@ -38,10 +38,15 @@ class SearchHandlerMixin:
         winsound.Beep(440, 200)
         guiTools.speak("هذا الخيار غير متاح في وضع البحث")
 
+    def get_search_button_text(self):
+        cat_map = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب", 5: "العرض المخصص"}
+        cat_name = cat_map.get(self.type, "المحتوى المعروض")
+        return f"البحث في {cat_name}"
+
     def toggle_search_bar(self):
         if self.search_widget.isVisible():
             self.search_widget.hide()
-            self.toggle_search_button.setText("البحث في المحتوى المعروض")
+            self.toggle_search_button.setText(self.get_search_button_text())
             guiTools.speak("تم إخفاء شريط البحث")
             self.text.setFocus()
         else:

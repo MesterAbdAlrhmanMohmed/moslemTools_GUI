@@ -8,14 +8,16 @@ def openNotesFile():
     try:
         if not os.path.exists(notesPath):
             with open(notesPath, "w", encoding="utf-8") as file:
-                json.dump({"quran": [], "ahadeeth": [], "islamicBooks": [], "stories": [], "islamicTopics": []}, file, ensure_ascii=False, indent=4)
+                json.dump({"quran": [], "ahadeeth": [], "islamicBooks": [], "stories": [], "islamicTopics": [], "moton": []}, file, ensure_ascii=False, indent=4)
         with open(notesPath, "r", encoding="utf-8") as file:
             data = json.load(file)
             if "islamicTopics" not in data:
                 data["islamicTopics"] = []
+            if "moton" not in data:
+                data["moton"] = []
             return data
     except:
-        return {"quran": [], "ahadeeth": [], "islamicBooks": [], "stories": [], "islamicTopics": []}
+        return {"quran": [], "ahadeeth": [], "islamicBooks": [], "stories": [], "islamicTopics": [], "moton": []}
 
 
 def saveNotes(notesList: dict):
@@ -81,4 +83,4 @@ def removeAllNotesForCategory(category_type):
 
 
 def removeAllNotes():
-    saveNotes({"quran": [], "ahadeeth": [], "islamicBooks": [], "stories": [], "islamicTopics": []})
+    saveNotes({"quran": [], "ahadeeth": [], "islamicBooks": [], "stories": [], "islamicTopics": [], "moton": []})

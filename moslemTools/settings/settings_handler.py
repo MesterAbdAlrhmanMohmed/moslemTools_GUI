@@ -63,6 +63,21 @@ settingsConfig={
         "verse_numbering_mode":"by_surah",
         "remove_tashkeel":"False"
     },
+    "motonViewer":{
+        "verse_numbering_mode":"by_chapter",
+        "remove_tashkeel":"False"
+    },
+    "motonPlayer":{
+        "times":"1",
+        "duration":"0",
+        "replay":"True",
+        "show_diacritics":"True"
+    },
+    "moton_search":{
+        "ignore_tashkeel":"True",
+        "ignore_hamza":"True",
+        "ignore_symbols":"True"
+    },
     "tafaseer":{
         "tafaseer":"muyassar.json"
     },
@@ -119,13 +134,16 @@ settingsConfig={
     },
     "audio": {
         "global": "Default",
-        "quran_text": "Default",
+        "quran_viewer": "Default",
+        "quran_player": "Default",
         "quran_audio": "Default",
         "broadcasts": "Default",
         "adhan": "Default",
         "athkar": "Default",
         "random_athkar": "Default",
-        "researcher": "Default"
+        "researcher": "Default",
+        "moton_viewer": "Default",
+        "moton_player": "Default"
     },
     "khatmah_reminder": {
         "enabled": "False",

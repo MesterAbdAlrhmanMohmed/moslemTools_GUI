@@ -112,3 +112,29 @@ def format_arabic_time(ms_or_sec, is_ms=True):
     parts = [p for p in [h_str, m_str, s_str] if p]
     return " و ".join(parts) if parts else "0 ثانية"
 
+def format_arabic_bayt_count(n):
+    try:
+        n = int(n)
+    except:
+        return f"{n} بيت"
+    if n == 1:
+        return "بيت واحد"
+    elif n == 2:
+        return "بيتان"
+    elif 3 <= n <= 10:
+        return f"{n} أبيات"
+    elif 11 <= n <= 99:
+        return f"{n} بيتاً"
+    else:
+        last_two = n % 100
+        if last_two == 0:
+            return f"{n} بيت"
+        elif last_two == 1:
+            return f"{n} بيت"
+        elif last_two == 2:
+            return f"{n} بيت"
+        elif 3 <= last_two <= 10:
+            return f"{n} أبيات"
+        else:
+            return f"{n} بيتاً"
+

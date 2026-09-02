@@ -1,4 +1,4 @@
-import traceback, os, ctypes, datetime
+import traceback, os, ctypes, datetime, sys
 
 def log_error_to_file(error_msg):
     try:
@@ -36,11 +36,31 @@ def log_error_to_file(error_msg):
 def my_excepthook(exctype, value, tb):
     tb_list = traceback.extract_tb(tb)
     error_message = ""
-    for tb in tb_list:
-        file_name = os.path.basename(tb.filename)
-        line_number = tb.lineno
-        code = tb.line
+    for tb_item in tb_list:
+        file_name = os.path.basename(tb_item.filename)
+        line_number = tb_item.lineno
+        code = tb_item.line
         error_message += f"\nFile: {file_name}\nLine: {line_number}\nCode: {code}\n"
     error_message += f"\n{exctype.__name__}: {value}"
     log_error_to_file(error_message)
     ctypes.windll.user32.MessageBoxW(None, error_message, "Error", 0x10)
+
+def handle_exception(e=None, custom_msg=""):
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    if exc_type is None and e is not None:
+        exc_type = type(e)
+        exc_value = e
+        exc_tb = getattr(e, '__traceback__', None)
+    if exc_type is not None:
+        tb_list = traceback.extract_tb(exc_tb) if exc_tb else []
+        error_message = f"{custom_msg}\n" if custom_msg else ""
+        for tb_item in tb_list:
+            file_name = os.path.basename(tb_item.filename)
+            line_number = tb_item.lineno
+            code = tb_item.line
+            error_message += f"\nFile: {file_name}\nLine: {line_number}\nCode: {code}\n"
+        error_message += f"\n{exc_type.__name__}: {exc_value}"
+        log_error_to_file(error_message)
+        ctypes.windll.user32.MessageBoxW(None, error_message, "Error", 0x10)
+
+sys.excepthook = my_excepthook

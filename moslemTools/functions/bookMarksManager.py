@@ -12,12 +12,12 @@ def openBookMarksFile():
     try:
         with open(bookMarksPath,"r",encoding="utf-8") as file:
             data = json.load(file)
-            for key in ["quran", "ahadeeth", "islamicBooks", "stories", "islamicTopics"]:
+            for key in ["quran", "ahadeeth", "islamicBooks", "stories", "islamicTopics", "moton"]:
                 if key not in data:
                     data[key] = []
             return data
     except:
-        return {"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[], "islamicTopics":[]}
+        return {"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[], "islamicTopics":[], "moton":[]}
 
 
 def saveBookMarks(bookMarksList:dict):
@@ -56,7 +56,7 @@ def removeAllIslamicTopicsBookMarks():
 
 
 def removeAllBookMarks():
-    saveBookMarks({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[], "islamicTopics":[]})
+    saveBookMarks({"quran":[],"ahadeeth":[],"islamicBooks":[],"stories":[], "islamicTopics":[], "moton":[]})
 
 
 def addNewHadeethBookMark(bookName:str,hadeethNumber:int,bookMarkName:str):
@@ -441,3 +441,65 @@ def getIslamicBookBookmarks():
 def getStoriesBookmarks():
     bookMarksList = openBookMarksFile()
     return bookMarksList["stories"]
+
+
+def getMotonBookmarks():
+    bookMarksList = openBookMarksFile()
+    return bookMarksList.get("moton", [])
+
+
+def getMotonBookmarkName(matn_name: str, bayt_number: int):
+    name = ""
+    state = False
+    bookMarksList = openBookMarksFile()
+    motonList = bookMarksList.get("moton", [])
+    for bm in motonList:
+        if bm.get("matn_name") == matn_name and bm.get("bayt_number") == bayt_number:
+            state = True
+            name = bm.get("name", "")
+            break
+    return state, name
+
+
+def addMotonBookmark(name: str, matn_name: str, chapter_title: str, bayt_number: int, bayt_text: str):
+    bookMarksList = openBookMarksFile()
+    if "moton" not in bookMarksList:
+        bookMarksList["moton"] = []
+    bookMarksList["moton"].append({
+        "name": name,
+        "matn_name": matn_name,
+        "chapter_title": chapter_title,
+        "bayt_number": bayt_number,
+        "bayt_text": bayt_text
+    })
+    saveBookMarks(bookMarksList)
+
+
+def removeMotonBookmark(name: str):
+    bookMarksList = openBookMarksFile()
+    motonList = bookMarksList.get("moton", [])
+    for bm in motonList:
+        if bm.get("name") == name:
+            motonList.remove(bm)
+            break
+    bookMarksList["moton"] = motonList
+    saveBookMarks(bookMarksList)
+
+
+def removeAllMotonBookMarks():
+    bookMarksList = openBookMarksFile()
+    bookMarksList["moton"] = []
+    saveBookMarks(bookMarksList)
+
+
+def openMotonByBookmarkName(parent, bookmark_name):
+    bookMarksList = openBookMarksFile()
+    motonList = bookMarksList.get("moton", [])
+    for bm in motonList:
+        if bm.get("name") == bookmark_name:
+            from gui.motonViewer import MotonViewer
+            matn_name = bm.get("matn_name", "")
+            bayt_number = bm.get("bayt_number", 1)
+            MotonViewer(parent, matn_name=matn_name, is_full_matn=True, index=bayt_number).exec()
+            return True
+    return False

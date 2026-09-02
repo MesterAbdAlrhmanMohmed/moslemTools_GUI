@@ -14,4 +14,7 @@ from .quranDisplaySettings import QuranDisplaySettings
 from .userNameSettings import UserNameSettings
 from .startupTabSettings import StartupTabSettings
 from .khatmahReminderSettings import KhatmahReminderSettings
+from .motonPlayerSettings import MotonPlayerSettings
+from .motonDisplaySettings import MotonDisplaySettings
+from .motonRecitersSettings import MotonRecitersSettings
 

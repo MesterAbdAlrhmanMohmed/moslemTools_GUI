@@ -7,6 +7,11 @@ def get_audio_device(feature_name):
     target_device_name = "Default"
     if global_setting == "مخصص" or global_setting == "Custom":
         target_device_name = settings.settings_handler.get("audio", feature_name)
+        if not target_device_name:
+            if feature_name in ["quran_viewer", "quran_player"]:
+                target_device_name = settings.settings_handler.get("audio", "quran_text")
+            elif feature_name in ["moton_viewer", "moton_player"]:
+                target_device_name = settings.settings_handler.get("audio", "moton")
     elif global_setting and global_setting != "الافتراضي" and global_setting != "Default":
         target_device_name = global_setting
     if target_device_name == "الافتراضي" or target_device_name == "Default" or not target_device_name:

@@ -56,18 +56,24 @@ class settings(qt.QDialog):
         self.sectian.add("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings)
         self.khatmahReminderSettings = tabs.KhatmahReminderSettings(self)
         self.sectian.add("إعدادات التذكير بالورد اليومي", self.khatmahReminderSettings)
-        self.tafaseerSettings = tabs.TafaseerSettings()
-        self.sectian.add("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings)
-        self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
-        self.sectian.add("إعدادات الأذان", self.prayerTimesSettings)
         self.locationSettings=tabs.LocationSettings(self)
         self.sectian.add("إعدادات تحديد الموقع الجغرافي لمواقيت الصلاة",self.locationSettings)
+        self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
+        self.sectian.add("إعدادات الأذان", self.prayerTimesSettings)
+        self.tafaseerSettings = tabs.TafaseerSettings()
+        self.sectian.add("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings)
         self.quranPlayerTimes = tabs.QuranPlayerSettings(self)
         self.sectian.add("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes)
-        self.searchSettings = tabs.SearchSettings()
-        self.sectian.add("إعدادات البحث", self.searchSettings)
         self.quranDisplaySettings = tabs.QuranDisplaySettings()
         self.sectian.add("إعدادات عرض الآيات في عارض القرآن الكريم", self.quranDisplaySettings)
+        self.searchSettings = tabs.SearchSettings()
+        self.sectian.add("إعدادات البحث", self.searchSettings)
+        self.motonRecitersSettings = tabs.MotonRecitersSettings()
+        self.sectian.add("إعدادات اختيار القارئ لتبويبة المتون الإسلامية المكتوبة", self.motonRecitersSettings)
+        self.motonPlayerTimes = tabs.MotonPlayerSettings(self)
+        self.sectian.add("إعدادات مشغل المتون لتبويبة المتون الإسلامية المكتوبة", self.motonPlayerTimes)
+        self.motonDisplaySettings = tabs.MotonDisplaySettings()
+        self.sectian.add("إعدادات عرض الأبيات في عارض المتون الإسلامية", self.motonDisplaySettings)
         self.athkar = tabs.AthkarSettings()
         self.sectian.add("إعدادات الأذكار العشوائية", self.athkar)
         self.fanarSettings = tabs.FanarSettings()
@@ -86,10 +92,12 @@ class settings(qt.QDialog):
         self.sectian.setCurrentRow(0)
 
     def center(self):
-        frame_geometry = self.frameGeometry()
-        screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
-        frame_geometry.moveCenter(screen_center)
-        self.move(frame_geometry.topLeft())
+        primary_screen = qt1.QGuiApplication.primaryScreen()
+        if primary_screen:
+            frame_geometry = self.frameGeometry()
+            screen_center = primary_screen.availableGeometry().center()
+            frame_geometry.moveCenter(screen_center)
+            self.move(frame_geometry.topLeft())
 
     def fok(self):
         if self.userNameSettings.use_name_checkbox.isChecked():
@@ -137,13 +145,16 @@ class settings(qt.QDialog):
         original_font_wrap = settings_handler.get("font", "wrap")
         original_viewer_wraps = {key: settings_handler.get("font_wrap", key) for key, _ in self.fontSettings.VIEWERS}
         original_audio_global = settings_handler.get("audio", "global")
-        original_audio_quran_text = settings_handler.get("audio", "quran_text")
+        original_audio_quran_viewer = settings_handler.get("audio", "quran_viewer")
+        original_audio_quran_player = settings_handler.get("audio", "quran_player")
         original_audio_quran_audio = settings_handler.get("audio", "quran_audio")
         original_audio_researcher = settings_handler.get("audio", "researcher")
         original_audio_broadcasts = settings_handler.get("audio", "broadcasts")
         original_audio_adhan = settings_handler.get("audio", "adhan")
         original_audio_athkar = settings_handler.get("audio", "athkar")
         original_audio_random_athkar = settings_handler.get("audio", "random_athkar")
+        original_audio_moton_viewer = settings_handler.get("audio", "moton_viewer")
+        original_audio_moton_player = settings_handler.get("audio", "moton_player")
         original_use_name = settings_handler.get("g", "use_name_in_occasions")
         original_name_type = settings_handler.get("g", "name_type")
         original_user_name = settings_handler.get("g", "user_name")
@@ -157,27 +168,36 @@ class settings(qt.QDialog):
         orig_ibs_tashkeel = settings_handler.get("islamic_books_search", "ignore_tashkeel")
         orig_ibs_hamza = settings_handler.get("islamic_books_search", "ignore_hamza")
         orig_ibs_symbols = settings_handler.get("islamic_books_search", "ignore_symbols")
+        orig_ms_tashkeel = settings_handler.get("moton_search", "ignore_tashkeel")
+        orig_ms_hamza = settings_handler.get("moton_search", "ignore_hamza")
+        orig_ms_symbols = settings_handler.get("moton_search", "ignore_symbols")
         def get_audio_val(text):
             if text == "افتراضي": return "Default"
             if text == "مخصص": return "Custom"
             return text
         if (original_audio_global != get_audio_val(self.audioSettings.global_combo.currentText()) or
-            original_audio_quran_text != get_audio_val(self.audioSettings.features["quran_text"].currentText()) or
+            original_audio_quran_viewer != get_audio_val(self.audioSettings.features["quran_viewer"].currentText()) or
+            original_audio_quran_player != get_audio_val(self.audioSettings.features["quran_player"].currentText()) or
             original_audio_quran_audio != get_audio_val(self.audioSettings.features["quran_audio"].currentText()) or
             original_audio_researcher != get_audio_val(self.audioSettings.features["researcher"].currentText()) or
             original_audio_broadcasts != get_audio_val(self.audioSettings.features["broadcasts"].currentText()) or
             original_audio_adhan != get_audio_val(self.audioSettings.features["adhan"].currentText()) or
             original_audio_athkar != get_audio_val(self.audioSettings.features["athkar"].currentText()) or
-            original_audio_random_athkar != get_audio_val(self.audioSettings.features["random_athkar"].currentText())):
+            original_audio_random_athkar != get_audio_val(self.audioSettings.features["random_athkar"].currentText()) or
+            original_audio_moton_viewer != get_audio_val(self.audioSettings.features["moton_viewer"].currentText()) or
+            original_audio_moton_player != get_audio_val(self.audioSettings.features["moton_player"].currentText())):
             restart_required = 1
         settings_handler.set("audio", "global", get_audio_val(self.audioSettings.global_combo.currentText()))
-        settings_handler.set("audio", "quran_text", get_audio_val(self.audioSettings.features["quran_text"].currentText()))
+        settings_handler.set("audio", "quran_viewer", get_audio_val(self.audioSettings.features["quran_viewer"].currentText()))
+        settings_handler.set("audio", "quran_player", get_audio_val(self.audioSettings.features["quran_player"].currentText()))
         settings_handler.set("audio", "quran_audio", get_audio_val(self.audioSettings.features["quran_audio"].currentText()))
         settings_handler.set("audio", "researcher", get_audio_val(self.audioSettings.features["researcher"].currentText()))
         settings_handler.set("audio", "broadcasts", get_audio_val(self.audioSettings.features["broadcasts"].currentText()))
         settings_handler.set("audio", "adhan", get_audio_val(self.audioSettings.features["adhan"].currentText()))
         settings_handler.set("audio", "athkar", get_audio_val(self.audioSettings.features["athkar"].currentText()))
         settings_handler.set("audio", "random_athkar", get_audio_val(self.audioSettings.features["random_athkar"].currentText()))
+        settings_handler.set("audio", "moton_viewer", get_audio_val(self.audioSettings.features["moton_viewer"].currentText()))
+        settings_handler.set("audio", "moton_player", get_audio_val(self.audioSettings.features["moton_player"].currentText()))
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
         settings_handler.set("g", "startup_tab", str(self.startupTabSettings.tab_list.currentRow()))
         settings_handler.set("g", "randomMessageAtStartup", str(self.layout1.randomMessageAtStartup.isChecked()))
@@ -194,8 +214,17 @@ class settings(qt.QDialog):
         settings_handler.set("islamic_books_search", "ignore_tashkeel", str(self.searchSettings.islamic_books_tashkeel_checkbox.isChecked()))
         settings_handler.set("islamic_books_search", "ignore_hamza", str(self.searchSettings.islamic_books_hamza_checkbox.isChecked()))
         settings_handler.set("islamic_books_search", "ignore_symbols", str(self.searchSettings.islamic_books_symbols_checkbox.isChecked()))
+        settings_handler.set("moton_search", "ignore_tashkeel", str(self.searchSettings.moton_tashkeel_checkbox.isChecked()))
+        settings_handler.set("moton_search", "ignore_hamza", str(self.searchSettings.moton_hamza_checkbox.isChecked()))
+        settings_handler.set("moton_search", "ignore_symbols", str(self.searchSettings.moton_symbols_checkbox.isChecked()))
         settings_handler.set("quran_display", "verse_numbering_mode", self.quranDisplaySettings.get_selected_mode())
         settings_handler.set("quran_display", "remove_tashkeel", str(self.quranDisplaySettings.remove_tashkeel_checkbox.isChecked()))
+        settings_handler.set("motonViewer", "verse_numbering_mode", self.motonDisplaySettings.get_selected_mode())
+        settings_handler.set("motonViewer", "remove_tashkeel", str(self.motonDisplaySettings.remove_tashkeel_checkbox.isChecked()))
+        settings_handler.set("motonPlayer", "times", str(self.motonPlayerTimes.times.value()))
+        settings_handler.set("motonPlayer", "duration", self.motonPlayerTimes.duration.text())
+        settings_handler.set("motonPlayer", "replay", str(self.motonPlayerTimes.replay.isChecked()))
+        self.motonRecitersSettings.save_settings()
         if self.layout1.reciter.count() > 0:
              settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
         settings_handler.set("prayerTimes","volume",str(self.prayerTimesSettings.Sound_level.value()))
@@ -263,9 +292,13 @@ class settings(qt.QDialog):
         new_ibs_tashkeel = str(self.searchSettings.islamic_books_tashkeel_checkbox.isChecked())
         new_ibs_hamza = str(self.searchSettings.islamic_books_hamza_checkbox.isChecked())
         new_ibs_symbols = str(self.searchSettings.islamic_books_symbols_checkbox.isChecked())
+        new_ms_tashkeel = str(self.searchSettings.moton_tashkeel_checkbox.isChecked())
+        new_ms_hamza = str(self.searchSettings.moton_hamza_checkbox.isChecked())
+        new_ms_symbols = str(self.searchSettings.moton_symbols_checkbox.isChecked())
         if (orig_qs_tashkeel != new_qs_tashkeel or orig_qs_hamza != new_qs_hamza or orig_qs_symbols != new_qs_symbols or
             orig_rs_tashkeel != new_rs_tashkeel or orig_rs_hamza != new_rs_hamza or orig_rs_symbols != new_rs_symbols or
-            orig_ibs_tashkeel != new_ibs_tashkeel or orig_ibs_hamza != new_ibs_hamza or orig_ibs_symbols != new_ibs_symbols):
+            orig_ibs_tashkeel != new_ibs_tashkeel or orig_ibs_hamza != new_ibs_hamza or orig_ibs_symbols != new_ibs_symbols or
+            orig_ms_tashkeel != new_ms_tashkeel or orig_ms_hamza != new_ms_hamza or orig_ms_symbols != new_ms_symbols):
             restart_required = 1
         self.p.viewInfoTextEdit()
         self.p.runAudioThkarTimer()
