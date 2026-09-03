@@ -136,6 +136,7 @@ class ResearcherShortcutsUIMixin:
         self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.media_progress.setRange(0, 100)
         self.media_progress.valueChanged.connect(self.set_media_position)
+        self.media_progress.sliderReleased.connect(self._check_seek_resume)
         self.time_label = guiTools.QNavigableLabel("0 ثانية")
         self.time_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.time_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)

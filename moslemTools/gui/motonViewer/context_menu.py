@@ -260,9 +260,25 @@ class MotonContextMenuMixin:
         menu.exec(self.mapToGlobal(self.cursor().pos()))
 
     def copy_bayt(self, bayt):
-        sadr = bayt.get("sadr", "")
-        ajuz = bayt.get("ajuz", "")
-        txt = f"{sadr}\n{ajuz}" if ajuz else sadr
+        target_global = bayt.get("global_num")
+        blocks = [line_num for line_num, info in self.line_to_bayt_map.items() if info.get("type") == "verse" and info.get("verse", {}).get("global_num") == target_global]
+        doc = self.text.document()
+        lines = [doc.findBlockByNumber(b_num).text() for b_num in sorted(blocks) if doc.findBlockByNumber(b_num).isValid()]
+        if lines:
+            txt = "\n".join(lines)
+        else:
+            v_num_str = ""
+            if self.verse_numbering_mode == "by_chapter":
+                chap_idx = self.getCurrentBaytIndex()
+                v_num_str = f"{bayt.get('chapter_bayt_num', chap_idx + 1)}. "
+            elif self.verse_numbering_mode == "by_matn":
+                v_num_str = f"{bayt.get('global_num', 1)}. "
+            sadr = f"{v_num_str}{bayt.get('sadr', '')}"
+            ajuz = f"    {bayt.get('ajuz', '')}" if bayt.get('ajuz') else ""
+            txt = f"{sadr}\n{ajuz}" if ajuz else sadr
+            if self.remove_tashkeel:
+                txt = self._remove_tashkeel_from_text(txt)
         pyperclip.copy(txt)
         winsound.Beep(1000, 100)
         guiTools.speak("تم نسخ البيت")
+

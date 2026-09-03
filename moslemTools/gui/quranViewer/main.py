@@ -34,7 +34,7 @@ class QuranViewer(ContextMenuMixin, NavigationDisplayMixin, AudioPlayerMixin, Se
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings.settings_handler.get("font", "size"))
-        self.currentReciter=int(settings.settings_handler.get("g","reciter"))
+        self.currentReciter=int(settings.settings_handler.get("quran_reciters","viewer") or settings.settings_handler.get("g","reciter") or 0)
         self.nameOfBookmark=""
         self.enableBookmarks=enableBookmarks
         self.type=type
@@ -115,6 +115,7 @@ class QuranViewer(ContextMenuMixin, NavigationDisplayMixin, AudioPlayerMixin, Se
         self.media_progress.setVisible(False)
         self.media_progress.setRange(0,100)
         self.media_progress.valueChanged.connect(self.set_position_from_slider)
+        self.media_progress.sliderReleased.connect(self._check_seek_resume)
         self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.time_label = guiTools.QNavigableLabel()
         self.time_label.setVisible(False)

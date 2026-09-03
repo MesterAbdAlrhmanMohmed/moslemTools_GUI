@@ -42,34 +42,6 @@ class Genral(qt.QWidget):
         main_layout.addWidget(self.themeButton)
         main_layout.addSpacing(22)
 
-        reciter_section_layout = qt.QVBoxLayout()
-        reciter_section_layout.setContentsMargins(0, 0, 0, 0)
-        reciter_section_layout.setSpacing(5)
-        reciter_laybol = qt.QLabel("تحديد القارئ لقراءة القرآن الكريم آية بآية")
-        reciter_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        reciter_section_layout.addWidget(reciter_laybol)
-        delete_laybol = qt.QLabel("لحذف القارئ المحدد: نستخدم زر الحذف أو التطبيقات")
-        delete_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        reciter_section_layout.addWidget(delete_laybol)
-        self.search_bar = qt.QLineEdit()
-        self.search_bar.setPlaceholderText("البحث عن قارئ")
-        self.search_bar.textChanged.connect(self.onsearch)
-        self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        reciter_section_layout.addWidget(self.search_bar)
-        self.reciter = qt.QComboBox()
-        font = qt1.QFont()
-        font.setBold(True)
-        self.reciter.addItems(gui.reciters.keys())
-        self.reciter.setCurrentIndex(int(settings_handler.get("g", "reciter")))
-        self.reciter.setAccessibleName("تحديد القارئ لقراءة القرآن الكريم آية بآية")
-        self.reciter.setAccessibleDescription("لحذف القارئ المحدد: نستخدم زر الحذف أو زر التطبيقات")
-        self.reciter.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.reciter.customContextMenuRequested.connect(self.onDelete)
-        self.reciter.setFont(font)
-        qt1.QShortcut("delete", self).activated.connect(self.onDelete)
-        reciter_section_layout.addWidget(self.reciter)
-        main_layout.addLayout(reciter_section_layout)
-        main_layout.addSpacing(35)
         self.tray_note = guiTools.QNavigableLabel("تنبيه هام، يمكنكم إظهار أو إخفاء البرنامج عبر استخدام الاختصار windows+alt+h أو من قائمة علبة النظام system tray")
         self.tray_note.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.tray_note.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -111,28 +83,6 @@ class Genral(qt.QWidget):
         else:
             self.add_to_startup()
 
-    def onDelete(self):
-        itemText = self.reciter.currentText()
-        if itemText:
-            reciterText = gui.quranViewer.reciters[itemText].split("/")[-3]
-            path = os.path.join(os.getenv('appdata'), app.appName, "reciters", reciterText)
-            if os.path.exists(path):
-                question = guiTools.QQuestionMessageBox.view(self, "تنبيه", "هل تريد حذف هذا القارئ","نعم","لا")
-                if question == 0:
-                    shutil.rmtree(path)
-                    guiTools.speak("تم الحذف")
-
-    def search(self, pattern, text_list):
-        tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
-        normalized_pattern = tashkeel_pattern.sub('', pattern)
-        matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text)]
-        return matches
-
-    def onsearch(self):
-        search_text = self.search_bar.text().lower()
-        self.reciter.clear()
-        result = self.search(search_text, gui.reciters.keys())
-        self.reciter.addItems(result)
 
     def update_theme_button_style(self):
         if self.current_theme == "light":

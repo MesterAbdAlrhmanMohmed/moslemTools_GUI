@@ -60,7 +60,8 @@ class MotonRecitersSettings(qt.QWidget):
                         k, v = line.strip().split(":", 1)
                         self.matn_to_types[k] = [t.strip() for t in v.split(",") if t.strip()]
 
-        self.selected_reciters_cache = {}
+        self.viewer_reciters_cache = {}
+        self.player_reciters_cache = {}
 
         layout = qt.QVBoxLayout(self)
         layout.setSpacing(15)
@@ -68,6 +69,22 @@ class MotonRecitersSettings(qt.QWidget):
         font = qt1.QFont()
         font.setBold(True)
         layout.addStretch(1)
+
+        target_layout = qt.QHBoxLayout()
+        target_layout.setSpacing(10)
+        target_layout.addStretch(1)
+        self.target_combo = qt.QComboBox()
+        self.target_combo.setFont(font)
+        self.target_combo.setAccessibleName("تخصيص القارئ ل")
+        self.target_combo.addItem("عارض المتون", "viewer")
+        self.target_combo.addItem("مشغل المتون", "player")
+        self.target_label = qt.QLabel("تخصيص القارئ ل:")
+        self.target_label.setFont(font)
+        self.target_label.setAlignment(qt2.Qt.AlignmentFlag.AlignVCenter | qt2.Qt.AlignmentFlag.AlignRight)
+        target_layout.addWidget(self.target_combo)
+        target_layout.addWidget(self.target_label)
+        target_layout.addStretch(1)
+        layout.addLayout(target_layout)
 
         cat_layout = qt.QHBoxLayout()
         cat_layout.setSpacing(10)
@@ -117,6 +134,7 @@ class MotonRecitersSettings(qt.QWidget):
 
         self.category_combo.currentIndexChanged.connect(self.on_category_changed)
         self.matn_combo.currentIndexChanged.connect(self.on_matn_changed)
+        self.target_combo.currentIndexChanged.connect(self.on_target_changed)
         self.reciter_combo.currentIndexChanged.connect(self.on_reciter_changed)
 
         if self.categories:
@@ -134,6 +152,7 @@ class MotonRecitersSettings(qt.QWidget):
         super().showEvent(event)
         self.adjust_combo_width(self.category_combo)
         self.adjust_combo_width(self.matn_combo)
+        self.adjust_combo_width(self.target_combo)
         self.adjust_combo_width(self.reciter_combo)
 
     def on_category_changed(self, index):
@@ -150,6 +169,10 @@ class MotonRecitersSettings(qt.QWidget):
             self.reciter_combo.blockSignals(True)
             self.reciter_combo.clear()
             self.reciter_combo.blockSignals(False)
+
+    def on_target_changed(self, index):
+        self.adjust_combo_width(self.target_combo)
+        self.on_matn_changed(self.matn_combo.currentIndex())
 
     def on_matn_changed(self, index):
         self.adjust_combo_width(self.matn_combo)
@@ -175,7 +198,11 @@ class MotonRecitersSettings(qt.QWidget):
             self.reciter_combo.setEnabled(False)
         else:
             self.reciter_combo.setEnabled(True)
-            saved_reciter = self.selected_reciters_cache.get(matn_slug) or settings_handler.get("moton_reciters", matn_slug) or settings_handler.get("moton_reciters", "default")
+            target = self.target_combo.currentData() if hasattr(self, 'target_combo') else "viewer"
+            if target == "player":
+                saved_reciter = self.player_reciters_cache.get(matn_slug) or settings_handler.get("moton_player_reciters", matn_slug) or settings_handler.get("moton_player_reciters", "default") or settings_handler.get("moton_reciters", matn_slug) or settings_handler.get("moton_reciters", "default")
+            else:
+                saved_reciter = self.viewer_reciters_cache.get(matn_slug) or settings_handler.get("moton_viewer_reciters", matn_slug) or settings_handler.get("moton_viewer_reciters", "default") or settings_handler.get("moton_reciters", matn_slug) or settings_handler.get("moton_reciters", "default")
             selected_idx = 0
             for i, (r_ar, r_slug) in enumerate(verse_reciters):
                 self.reciter_combo.addItem(r_ar, r_slug)
@@ -194,12 +221,35 @@ class MotonRecitersSettings(qt.QWidget):
             return
         matn_slug = self.data_loader.get_matn_slug(matn_name)
         reciter_slug = self.reciter_combo.currentData()
+        target = self.target_combo.currentData() if hasattr(self, 'target_combo') else "viewer"
         if matn_slug and reciter_slug:
-            self.selected_reciters_cache[matn_slug] = reciter_slug
+            if target == "player":
+                self.player_reciters_cache[matn_slug] = reciter_slug
+            else:
+                self.viewer_reciters_cache[matn_slug] = reciter_slug
 
     def save_settings(self):
-        for matn_slug, reciter_slug in self.selected_reciters_cache.items():
+        matn_name = self.matn_combo.currentText()
+        if matn_name:
+            matn_slug = self.data_loader.get_matn_slug(matn_name)
+            current_slug = self.reciter_combo.currentData()
+            target = self.target_combo.currentData() if hasattr(self, 'target_combo') else "viewer"
+            if matn_slug and current_slug:
+                if target == "player":
+                    self.player_reciters_cache[matn_slug] = current_slug
+                else:
+                    self.viewer_reciters_cache[matn_slug] = current_slug
+        for matn_slug, reciter_slug in self.viewer_reciters_cache.items():
+            settings_handler.set("moton_viewer_reciters", matn_slug, reciter_slug)
             settings_handler.set("moton_reciters", matn_slug, reciter_slug)
+        for matn_slug, reciter_slug in self.player_reciters_cache.items():
+            settings_handler.set("moton_player_reciters", matn_slug, reciter_slug)
         current_slug = self.reciter_combo.currentData()
+        target = self.target_combo.currentData() if hasattr(self, 'target_combo') else "viewer"
         if current_slug:
-            settings_handler.set("moton_reciters", "default", current_slug)
+            if target == "player":
+                settings_handler.set("moton_player_reciters", "default", current_slug)
+            else:
+                settings_handler.set("moton_viewer_reciters", "default", current_slug)
+                settings_handler.set("moton_reciters", "default", current_slug)
+

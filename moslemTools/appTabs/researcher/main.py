@@ -1,4 +1,4 @@
-﻿import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
+import guiTools, pyperclip, winsound, functions, re, os, settings, requests, shutil
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -23,7 +23,7 @@ class Albaheth(ResearcherContextMenuMixin, ResearcherActionsMixin, ResearcherSea
         self.font_size = int(settings.settings_handler.get("font", "size"))
         self.quran_data = functions.quranJsonControl.data
         self.search_metadata = {}
-        self.currentReciter = int(settings.settings_handler.get("g", "reciter"))
+        self.currentReciter = int(settings.settings_handler.get("quran_reciters", "researcher") or settings.settings_handler.get("g", "reciter") or 0)
         self.media_player = QMediaPlayer(self)
         self.apply_speed()
         self.audio_output = QAudioOutput(self)
@@ -40,3 +40,8 @@ class Albaheth(ResearcherContextMenuMixin, ResearcherActionsMixin, ResearcherSea
         self.media_player.mediaStatusChanged.connect(self.on_media_state_changed)
         self.media_player.durationChanged.connect(self.update_slider_and_time)
         self.media_player.positionChanged.connect(self.update_slider_and_time)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.currentReciter = int(settings.settings_handler.get("quran_reciters", "researcher") or settings.settings_handler.get("g", "reciter") or 0)
+        self.manual_reciter_selected = False

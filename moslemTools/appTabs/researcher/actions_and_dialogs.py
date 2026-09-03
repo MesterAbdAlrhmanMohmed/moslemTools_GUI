@@ -197,6 +197,8 @@ class ResearcherActionsMixin:
     def save_ayah(self, metadata):
         if getattr(self, 'is_saving', False): return
         self.pause_for_action()
+        if not getattr(self, 'manual_reciter_selected', False):
+            self.currentReciter = int(settings.settings_handler.get("quran_reciters", "researcher") or settings.settings_handler.get("g", "reciter") or 0)
         with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as file:
             reciters = json.load(file)
         reciter_url = list(reciters.values())[self.currentReciter]

@@ -27,7 +27,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerNavigationDisplayMixin, PlayerTa
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings.settings_handler.get("font", "size") or 12)
-        self.currentReciter=int(settings.settings_handler.get("g","reciter") or 0)
+        self.currentReciter=int(settings.settings_handler.get("quran_reciters","player") or settings.settings_handler.get("g","reciter") or 0)
         self.resize(1200,600)
         font = qt1.QFont()
         font.setBold(True)
@@ -70,6 +70,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerNavigationDisplayMixin, PlayerTa
         self.media_progress=qt.QSlider(qt2.Qt.Orientation.Horizontal)
         self.media_progress.setRange(0,100)
         self.media_progress.valueChanged.connect(self.set_position_from_slider)
+        self.media_progress.sliderReleased.connect(self._check_seek_resume)
         self.media.durationChanged.connect(self.update_slider)
         self.media.positionChanged.connect(self.update_slider)
         self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")

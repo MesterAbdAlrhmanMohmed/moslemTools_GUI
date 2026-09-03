@@ -133,7 +133,7 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
             self.available_reciters.append((r_ar, r_slug, r_type))
 
         if self.available_reciters:
-            saved_reciter = settings_handler.get("moton_reciters", self.matn_slug) or settings_handler.get("moton_reciters", "default")
+            saved_reciter = settings_handler.get("moton_viewer_reciters", self.matn_slug) or settings_handler.get("moton_viewer_reciters", "default") or settings_handler.get("moton_reciters", self.matn_slug) or settings_handler.get("moton_reciters", "default")
             matched = False
             if saved_reciter:
                 for r in self.available_reciters:

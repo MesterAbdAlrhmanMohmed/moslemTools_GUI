@@ -60,6 +60,8 @@ class settings(qt.QDialog):
         self.sectian.add("إعدادات تحديد الموقع الجغرافي لمواقيت الصلاة",self.locationSettings)
         self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
         self.sectian.add("إعدادات الأذان", self.prayerTimesSettings)
+        self.quranRecitersSettings = tabs.QuranRecitersSettings(self)
+        self.sectian.add("إعدادات اختيار قارئ القرآن آية بآية", self.quranRecitersSettings)
         self.tafaseerSettings = tabs.TafaseerSettings()
         self.sectian.add("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings)
         self.quranPlayerTimes = tabs.QuranPlayerSettings(self)
@@ -225,8 +227,9 @@ class settings(qt.QDialog):
         settings_handler.set("motonPlayer", "duration", self.motonPlayerTimes.duration.text())
         settings_handler.set("motonPlayer", "replay", str(self.motonPlayerTimes.replay.isChecked()))
         self.motonRecitersSettings.save_settings()
-        if self.layout1.reciter.count() > 0:
-             settings_handler.set("g", "reciter", str(list(gui.reciters.keys()).index(self.layout1.reciter.currentText())))
+        self.quranRecitersSettings.save_settings()
+        if hasattr(self.p, 'researcher'):
+            self.p.researcher.currentReciter = int(settings_handler.get("quran_reciters", "researcher") or 0)
         settings_handler.set("prayerTimes","volume",str(self.prayerTimesSettings.Sound_level.value()))
         settings_handler.set("location","autoDetect",str(self.locationSettings.autoDetectLocation.isChecked()))
         settings_handler.set("location","LT1",str(self.locationSettings.LT1.value()))

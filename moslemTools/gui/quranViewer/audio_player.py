@@ -21,68 +21,88 @@ with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as fil
 
 
 class AudioPlayerMixin:
+    def seek_position(self, new_position):
+        is_playing = self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+        if is_playing:
+            self.media.pause()
+            self.pending_seek_resume = True
+        self.media.setPosition(new_position)
+        if is_playing:
+            qt2.QTimer.singleShot(150, self._check_seek_resume)
+
+    def _check_seek_resume(self):
+        if getattr(self, 'pending_seek_resume', False):
+            if hasattr(self, 'media_progress') and self.media_progress.isSliderDown():
+                qt2.QTimer.singleShot(150, self._check_seek_resume)
+                return
+            if self.media.mediaStatus() in (QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.LoadedMedia):
+                self.pending_seek_resume = False
+                self.media.play()
+            elif self.media.mediaStatus() in (QMediaPlayer.MediaStatus.BufferingMedia, QMediaPlayer.MediaStatus.LoadingMedia, QMediaPlayer.MediaStatus.StalledMedia):
+                qt2.QTimer.singleShot(200, self._check_seek_resume)
+
     def t10(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.1))
+        self.seek_position(int(total_duration * 0.1))
 
     def t20(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.2))
+        self.seek_position(int(total_duration * 0.2))
 
     def t30(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.3))
+        self.seek_position(int(total_duration * 0.3))
 
     def t40(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.4))
+        self.seek_position(int(total_duration * 0.4))
 
     def t50(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.5))
+        self.seek_position(int(total_duration * 0.5))
 
     def t60(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.6))
+        self.seek_position(int(total_duration * 0.6))
 
     def t70(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.7))
+        self.seek_position(int(total_duration * 0.7))
 
     def t80(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.8))
+        self.seek_position(int(total_duration * 0.8))
 
     def t90(self):
         if self.media.duration() == 0:
             guiTools.speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.media.duration()
-        self.media.setPosition(int(total_duration * 0.9))
+        self.seek_position(int(total_duration * 0.9))
 
     def on_play(self):
         if self._is_invalid_search_line():
@@ -105,11 +125,13 @@ class AudioPlayerMixin:
             path = qt2.QUrl(reciters[reciter_key] + file_name)
         is_playing_this_verse = (self.media.playbackState() != QMediaPlayer.PlaybackState.StoppedState) and (self.media.source() == path)
         if is_playing_this_verse:
+            self.pending_seek_resume = False
             if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                 self.media.pause()
             elif self.media.playbackState() == QMediaPlayer.PlaybackState.PausedState:
                 self.media.play()
         else:
+            self.pending_seek_resume = False
             self.media.stop()
             self.media.setSource(path)
             qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))
@@ -118,33 +140,43 @@ class AudioPlayerMixin:
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
             return
+        was_playing = self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState or getattr(self, 'was_playing_before_action', False)
+        if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.media.pause()
+        self.was_playing_before_action = False
         text_for_player = self.original_quran_text if not self.is_search_view else self.quranText
         QuranPlayer(self, text_for_player, self.getCurrentAyah(), self.type, self.category).exec()
+        if was_playing:
+            self.media.play()
 
     def playFromVersToVers(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
             return
-        self.pause_for_action()
-        FromVers,ok=guiTools.QInputDialog.getInt(self,"من الآية","التشغيل من",self.getCurrentAyah()+1,1,len(self.original_quran_text.split("\n")))
+        was_playing = self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState or getattr(self, 'was_playing_before_action', False)
+        if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.media.pause()
+        self.was_playing_before_action = False
+        FromVers, ok = guiTools.QInputDialog.getInt(self, "من الآية", "التشغيل من", self.getCurrentAyah() + 1, 1, len(self.original_quran_text.split("\n")))
         if ok:
-            toVers,ok=guiTools.QInputDialog.getInt(self,"إلى الآية","التشغيل إلى",len(self.original_quran_text.split("\n")),FromVers,len(self.original_quran_text.split("\n")))
-            if ok:
-                verses=[]
-                allVerses=self.original_quran_text.split("\n")
+            toVers, ok2 = guiTools.QInputDialog.getInt(self, "إلى الآية", "التشغيل إلى", len(self.original_quran_text.split("\n")), FromVers, len(self.original_quran_text.split("\n")))
+            if ok2:
+                verses = []
+                allVerses = self.original_quran_text.split("\n")
                 for vers in allVerses:
-                    index=allVerses.index(vers)+1
-                    if index>=FromVers and index<=toVers:
+                    index = allVerses.index(vers) + 1
+                    if index >= FromVers and index <= toVers:
                         verses.append(vers)
                 self.text.setUpdatesEnabled(False)
-                QuranPlayer(self,"\n".join(verses),0,self.type,self.category).exec()
+                QuranPlayer(self, "\n".join(verses), 0, self.type, self.category).exec()
                 self.text.setUpdatesEnabled(True)
-        self.resume_after_action()
+        if was_playing:
+            self.media.play()
 
     def set_position_from_slider(self, value):
         duration = self.media.duration()
         new_position = int((value / 100) * duration)
-        self.media.setPosition(new_position)
+        self.seek_position(new_position)
         guiTools.speak(f"{value}%")
 
     def update_slider(self):
@@ -166,8 +198,14 @@ class AudioPlayerMixin:
         remaining_str = functions.text_actions.format_arabic_time(max(0, duration - position))
         self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
 
-    def on_state(self,state):
-        if state==QMediaPlayer.MediaStatus.EndOfMedia:
+    def on_state(self, state):
+        if getattr(self, 'pending_seek_resume', False):
+            if hasattr(self, 'media_progress') and self.media_progress.isSliderDown():
+                return
+            if state in (QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.LoadedMedia):
+                self.pending_seek_resume = False
+                self.media.play()
+        if state == QMediaPlayer.MediaStatus.EndOfMedia:
             self.media_progress.setVisible(False)
             self.time_label.setVisible(False)
 

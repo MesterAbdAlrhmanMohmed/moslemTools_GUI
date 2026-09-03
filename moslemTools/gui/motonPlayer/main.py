@@ -112,7 +112,7 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
 
         if self.available_reciters:
             if not self.current_reciter_slug:
-                saved_reciter = settings_handler.get("moton_reciters", self.matn_slug) or settings_handler.get("moton_reciters", "default")
+                saved_reciter = settings_handler.get("moton_player_reciters", self.matn_slug) or settings_handler.get("moton_player_reciters", "default") or settings_handler.get("moton_reciters", self.matn_slug) or settings_handler.get("moton_reciters", "default")
                 if saved_reciter and saved_reciter in [r[1] for r in self.available_reciters]:
                     self.current_reciter_slug = saved_reciter
             if self.current_reciter_slug in [r[1] for r in self.available_reciters]:

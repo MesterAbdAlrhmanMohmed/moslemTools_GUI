@@ -342,20 +342,48 @@ class MotonMergerSaverMixin:
             return
         current_idx = self.getCurrentBaytIndex()
         self.pause_for_action()
-        from_bayt, ok = guiTools.QInputDialog.getInt(self, "نسخ من البيت", "النسخ من:", current_idx + 1, 1, total)
+        use_matn_num = (self.verse_numbering_mode == "by_matn")
+        if use_matn_num:
+            min_val = self.displayed_verses[0]["global_num"]
+            max_val = self.displayed_verses[-1]["global_num"]
+            current_val = bayt["global_num"]
+        else:
+            min_val = 1
+            max_val = total
+            current_val = bayt.get("chapter_bayt_num", current_idx + 1) if not self.is_full_matn else (current_idx + 1)
+        from_bayt, ok = guiTools.QInputDialog.getInt(self, "نسخ من البيت", "النسخ من:", current_val, min_val, max_val)
         if ok:
-            to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "نسخ إلى البيت", "النسخ إلى:", total, from_bayt, total)
+            to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "نسخ إلى البيت", "النسخ إلى:", max_val, from_bayt, max_val)
             if ok2:
-                verses_slice = self.displayed_verses[from_bayt - 1:to_bayt]
+                if use_matn_num:
+                    verses_slice = [v for v in self.displayed_verses if from_bayt <= v["global_num"] <= to_bayt]
+                else:
+                    verses_slice = self.displayed_verses[from_bayt - 1:to_bayt]
                 lines_to_copy = []
+                doc = self.text.document()
                 for v in verses_slice:
-                    sadr = v.get("sadr", "")
-                    ajuz = v.get("ajuz", "")
-                    txt = f"{sadr}\n{ajuz}" if ajuz else sadr
-                    lines_to_copy.append(txt)
+                    target_global = v.get("global_num")
+                    blocks = [line_num for line_num, info in self.line_to_bayt_map.items() if info.get("type") == "verse" and info.get("verse", {}).get("global_num") == target_global]
+                    lines = [doc.findBlockByNumber(b_num).text() for b_num in sorted(blocks) if doc.findBlockByNumber(b_num).isValid()]
+                    if lines:
+                        bayt_text = "\n".join(lines)
+                    else:
+                        v_num_str = ""
+                        if self.verse_numbering_mode == "by_chapter":
+                            b_idx = self.displayed_verses.index(v) if v in self.displayed_verses else 0
+                            v_num_str = f"{v.get('chapter_bayt_num', b_idx + 1)}. "
+                        elif self.verse_numbering_mode == "by_matn":
+                            v_num_str = f"{v.get('global_num', 1)}. "
+                        sadr = f"{v_num_str}{v.get('sadr', '')}"
+                        ajuz = f"    {v.get('ajuz', '')}" if v.get('ajuz') else ""
+                        bayt_text = f"{sadr}\n{ajuz}" if ajuz else sadr
+                        if self.remove_tashkeel:
+                            bayt_text = self._remove_tashkeel_from_text(bayt_text)
+                    lines_to_copy.append(bayt_text)
                 if lines_to_copy:
                     full_copy = "\n\n".join(lines_to_copy)
                     pyperclip.copy(full_copy)
                     winsound.Beep(1000, 100)
                     guiTools.speak(f"تم نسخ {len(verses_slice)} أبيات بنجاح")
         self.resume_after_action()
+

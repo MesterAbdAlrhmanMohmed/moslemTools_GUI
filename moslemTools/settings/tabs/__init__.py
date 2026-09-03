@@ -17,4 +17,6 @@ from .khatmahReminderSettings import KhatmahReminderSettings
 from .motonPlayerSettings import MotonPlayerSettings
 from .motonDisplaySettings import MotonDisplaySettings
 from .motonRecitersSettings import MotonRecitersSettings
+from .quranRecitersSettings import QuranRecitersSettings
+
 

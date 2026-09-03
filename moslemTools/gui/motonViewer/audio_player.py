@@ -216,11 +216,15 @@ class MotonAudioPlayerMixin:
         if not b:
             self.handle_invalid_line_action()
             return
+        was_playing = (self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState) or getattr(self, 'was_playing_before_action', False)
         if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-            self.media.stop()
+            self.media.pause()
+        self.was_playing_before_action = False
         start_idx = self.getCurrentBaytIndex()
         verses_to_play = self.displayed_verses[start_idx:]
         if not verses_to_play:
+            if was_playing:
+                self.media.play()
             return
         from ..motonPlayer import MotonPlayer
         player = MotonPlayer(
@@ -229,11 +233,13 @@ class MotonAudioPlayerMixin:
             matn_slug=self.matn_slug,
             parsed_sections=None,
             start_bayt=1,
-            current_reciter_slug=self.current_reciter_slug,
-            current_reciter_type=self.current_reciter_type,
+            current_reciter_slug=None,
+            current_reciter_type=None,
             verses=verses_to_play
         )
         player.exec()
+        if was_playing:
+            self.media.play()
 
     def playFromVersToVers(self):
         if hasattr(self, 'is_search_view') and self.is_search_view:
@@ -254,13 +260,15 @@ class MotonAudioPlayerMixin:
             max_val = len(self.displayed_verses)
             current_val = b.get("chapter_bayt_num", self.getCurrentBaytIndex() + 1) if not self.is_full_matn else (self.getCurrentBaytIndex() + 1)
 
-        self.pause_for_action()
+        was_playing = (self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState) or getattr(self, 'was_playing_before_action', False)
+        if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.media.pause()
+        self.was_playing_before_action = False
+
         from_bayt, ok = guiTools.QInputDialog.getInt(self, "التشغيل من البيت", "التشغيل من:", current_val, min_val, max_val)
         if ok:
             to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "التشغيل إلى البيت", "التشغيل إلى:", max_val, from_bayt, max_val)
             if ok2:
-                if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-                    self.media.stop()
                 if use_matn_num:
                     verses_to_play = [v for v in self.displayed_verses if from_bayt <= v.get("global_num", 0) <= to_bayt]
                 else:
@@ -276,12 +284,13 @@ class MotonAudioPlayerMixin:
                         matn_slug=self.matn_slug,
                         parsed_sections=None,
                         start_bayt=1,
-                        current_reciter_slug=self.current_reciter_slug,
-                        current_reciter_type=self.current_reciter_type,
+                        current_reciter_slug=None,
+                        current_reciter_type=None,
                         verses=verses_to_play
                     )
                     player.exec()
-        self.resume_after_action()
+        if was_playing:
+            self.media.play()
 
     def on_media_status_changed(self, status):
         if status in (QMediaPlayer.MediaStatus.LoadedMedia, QMediaPlayer.MediaStatus.BufferedMedia):

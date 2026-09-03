@@ -49,6 +49,11 @@ settingsConfig={
         "theme":"dark",
         "startup_tab":"0"
     },
+    "quran_reciters":{
+        "researcher":"0",
+        "player":"0",
+        "viewer":"0"
+    },
     "quran_search":{
         "ignore_tashkeel":"True",
         "ignore_hamza":"True",
