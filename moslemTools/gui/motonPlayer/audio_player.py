@@ -27,6 +27,7 @@ class MotonPlayerAudioMixin:
         self.is_closing = False
         self.is_custom_seeking = False
         self.current_continuous_end_ms = 0
+        self.pending_continuous_seek_ms = None
         self.was_playing_before_action = False
         self.register_audio_shortcuts()
 
@@ -118,6 +119,9 @@ class MotonPlayerAudioMixin:
 
     def stop_audio(self):
         self.is_closing = True
+        self.is_user_paused = False
+        self.saved_pause_position = 0
+        self._last_playback_pos = 0
         self.media.stop()
         self.media.setSource(qt2.QUrl())
         self.audioOutput.setVolume(0.0)
@@ -130,11 +134,31 @@ class MotonPlayerAudioMixin:
         if not (0 <= self.current_index < self.total_verses):
             return
 
+        now = qt2.QDateTime.currentMSecsSinceEpoch()
+        if hasattr(self, '_last_toggle_time') and now - self._last_toggle_time < 200:
+            return
+        self._last_toggle_time = now
+
+        if getattr(self, "is_user_paused", False):
+            self.is_user_paused = False
+            resume_pos = getattr(self, "saved_pause_position", 0)
+            if resume_pos > 0:
+                self.media.setPosition(resume_pos)
+            self.media.play()
+            self.PPS.setText("إيقاف مؤقت")
+            return
+
         if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.is_user_paused = True
+            pos = self.media.position()
+            self.saved_pause_position = pos if pos > 0 else getattr(self, '_last_playback_pos', 0)
             self.media.pause()
             self.PPS.setText("تشغيل")
             return
 
+        self.is_user_paused = False
+        self.saved_pause_position = 0
+        self._last_playback_pos = 0
         self.audioOutput.setVolume(1.0)
         bayt = self.all_verses_list[self.current_index]
         self.current_bayt_num = bayt.get("global_num", self.current_index + 1)
@@ -154,19 +178,28 @@ class MotonPlayerAudioMixin:
                     timestamps = [int(line.strip()) for line in f if line.strip().isdigit()]
             start_ms = 0
             end_ms = 0
-            if global_bayt_num == 1:
-                start_ms = 0
-                end_ms = timestamps[0] if len(timestamps) > 0 else 0
-            elif 1 < global_bayt_num <= len(timestamps) + 1:
-                start_ms = timestamps[global_bayt_num - 2] if len(timestamps) >= global_bayt_num - 1 else 0
-                end_ms = timestamps[global_bayt_num - 1] if len(timestamps) >= global_bayt_num else 0
+            has_intro_offset = (len(timestamps) == self.total_verses + 1)
+            if has_intro_offset:
+                if 1 <= global_bayt_num <= len(timestamps):
+                    start_ms = timestamps[global_bayt_num - 1]
+                    end_ms = timestamps[global_bayt_num] if global_bayt_num < len(timestamps) else 0
+            else:
+                if global_bayt_num == 1:
+                    start_ms = 0
+                    end_ms = timestamps[0] if len(timestamps) > 0 else 0
+                elif 1 < global_bayt_num <= len(timestamps) + 1:
+                    start_ms = timestamps[global_bayt_num - 2] if len(timestamps) >= global_bayt_num - 1 else 0
+                    end_ms = timestamps[global_bayt_num - 1] if len(timestamps) >= global_bayt_num else 0
             self.current_continuous_end_ms = end_ms
             url = qt2.QUrl.fromLocalFile(audio_path)
             if self.media.source() != url:
+                self.pending_continuous_seek_ms = start_ms
                 self.media.setSource(url)
-            self.media.setPosition(start_ms)
-            self.PPS.setText("إيقاف مؤقت")
-            qt2.QTimer.singleShot(80, lambda: (self.apply_speed(self.playback_speed), self.media.play()))
+            else:
+                self.pending_continuous_seek_ms = None
+                self.media.setPosition(start_ms)
+                self.PPS.setText("إيقاف مؤقت")
+                qt2.QTimer.singleShot(80, lambda: (self.apply_speed(self.playback_speed), self.media.play()))
         else:
             audio_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, self.matn_slug, f"{global_bayt_num}.mp3"))
             if not os.path.exists(audio_path):
@@ -182,7 +215,17 @@ class MotonPlayerAudioMixin:
     def on_state(self, state):
         if getattr(self, "is_closing", False):
             return
-        if state == QMediaPlayer.MediaStatus.EndOfMedia:
+        if state in (QMediaPlayer.MediaStatus.LoadedMedia, QMediaPlayer.MediaStatus.BufferedMedia):
+            if getattr(self, "pending_continuous_seek_ms", None) is not None:
+                seek_ms = self.pending_continuous_seek_ms
+                self.pending_continuous_seek_ms = None
+                self.media.setPosition(seek_ms)
+                self.PPS.setText("إيقاف مؤقت")
+                qt2.QTimer.singleShot(80, lambda: (self.apply_speed(self.playback_speed), self.media.play()))
+        elif state == QMediaPlayer.MediaStatus.EndOfMedia:
+            self.is_user_paused = False
+            self.saved_pause_position = 0
+            self._last_playback_pos = 0
             dur_val = settings_handler.get("motonPlayer", "duration")
             duration_ms = int(dur_val if (dur_val and str(dur_val).isdigit()) else 0) * 1000
             max_times = int(settings_handler.get("motonPlayer", "times") or 1)
@@ -201,6 +244,8 @@ class MotonPlayerAudioMixin:
                 qt2.QTimer.singleShot(duration_ms, qt2.Qt.TimerType.PreciseTimer, self.media.play)
 
     def update_slider(self, position):
+        if position > 0:
+            self._last_playback_pos = position
         if not self.is_custom_seeking and self.media.duration() > 0:
             self.media_progress.blockSignals(True)
             pct = int((position / self.media.duration()) * 100)

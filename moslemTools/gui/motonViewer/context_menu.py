@@ -70,7 +70,6 @@ class MotonContextMenuMixin:
             baytOptions.addAction(goToBaytAction)
 
         playCurrentBaytAction = qt1.QAction("تشغيل البيت", self)
-        playCurrentBaytAction.setShortcut("space")
         playCurrentBaytAction.triggered.connect(self.on_play)
         baytOptions.addAction(playCurrentBaytAction)
 
@@ -251,7 +250,7 @@ class MotonContextMenuMixin:
 
             if not self.is_full_matn:
                 goToCategoryAction = qt1.QAction("الذهاب إلى باب", self)
-                goToCategoryAction.setShortcut("ctrl+shift+g")
+                goToCategoryAction.setShortcut("ctrl+alt+g")
                 goToCategoryAction.triggered.connect(self.onChangeCategory)
                 surahOption.addAction(goToCategoryAction)
 

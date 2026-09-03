@@ -101,19 +101,32 @@ class MotonMergerSaverMixin:
         if self.is_merging:
             return
         bayt = self.get_bayt_at_cursor()
-        if not bayt:
+        if not bayt or not self.displayed_verses:
             self.handle_invalid_line_action()
             return
-        total = len(self.displayed_verses)
-        if total == 0:
-            return
-        current_idx = self.getCurrentBaytIndex()
+        use_matn_num = (self.verse_numbering_mode == "by_matn")
+        if use_matn_num:
+            min_val = self.displayed_verses[0]["global_num"]
+            max_val = self.displayed_verses[-1]["global_num"]
+            current_val = bayt["global_num"]
+        else:
+            min_val = 1
+            max_val = len(self.displayed_verses)
+            current_val = bayt.get("chapter_bayt_num", self.getCurrentBaytIndex() + 1) if not self.is_full_matn else (self.getCurrentBaytIndex() + 1)
+
         self.pause_for_action()
-        from_bayt, ok = guiTools.QInputDialog.getInt(self, "حفظ من البيت", "الحفظ من:", current_idx + 1, 1, total)
+        from_bayt, ok = guiTools.QInputDialog.getInt(self, "حفظ من البيت", "الحفظ من:", current_val, min_val, max_val)
         if ok:
-            to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "حفظ إلى البيت", "الحفظ إلى:", total, from_bayt, total)
+            to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "حفظ إلى البيت", "الحفظ إلى:", max_val, from_bayt, max_val)
             if ok2:
-                self.save_verses_range(from_bayt - 1, to_bayt)
+                if use_matn_num:
+                    verses_to_save = [v for v in self.displayed_verses if from_bayt <= v.get("global_num", 0) <= to_bayt]
+                else:
+                    if not self.is_full_matn:
+                        verses_to_save = [v for v in self.displayed_verses if from_bayt <= v.get("chapter_bayt_num", 0) <= to_bayt]
+                    else:
+                        verses_to_save = self.displayed_verses[from_bayt - 1: to_bayt]
+                self.save_verses_range(verses_to_save, None)
         self.resume_after_action()
 
     def save_verses_range(self, start_idx, end_idx):
@@ -134,7 +147,10 @@ class MotonMergerSaverMixin:
             self.resume_after_action()
             return
 
-        verses_slice = self.displayed_verses[start_idx:end_idx]
+        if isinstance(start_idx, list):
+            verses_slice = start_idx
+        else:
+            verses_slice = self.displayed_verses[start_idx:end_idx]
         file_list = []
         for v in verses_slice:
             b_num = v["global_num"]
@@ -212,19 +228,32 @@ class MotonMergerSaverMixin:
         if self.is_merging:
             return
         bayt = self.get_bayt_at_cursor()
-        if not bayt:
+        if not bayt or not self.displayed_verses:
             self.handle_invalid_line_action()
             return
-        total = len(self.displayed_verses)
-        if total == 0:
-            return
-        current_idx = self.getCurrentBaytIndex()
+        use_matn_num = (self.verse_numbering_mode == "by_matn")
+        if use_matn_num:
+            min_val = self.displayed_verses[0]["global_num"]
+            max_val = self.displayed_verses[-1]["global_num"]
+            current_val = bayt["global_num"]
+        else:
+            min_val = 1
+            max_val = len(self.displayed_verses)
+            current_val = bayt.get("chapter_bayt_num", self.getCurrentBaytIndex() + 1) if not self.is_full_matn else (self.getCurrentBaytIndex() + 1)
+
         self.pause_for_action()
-        from_bayt, ok = guiTools.QInputDialog.getInt(self, "دمج من البيت", "الدمج من:", current_idx + 1, 1, total)
+        from_bayt, ok = guiTools.QInputDialog.getInt(self, "دمج من البيت", "الدمج من:", current_val, min_val, max_val)
         if ok:
-            to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "دمج إلى البيت", "الدمج إلى:", total, from_bayt, total)
+            to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "دمج إلى البيت", "الدمج إلى:", max_val, from_bayt, max_val)
             if ok2:
-                self.merge_verses_range(from_bayt - 1, to_bayt)
+                if use_matn_num:
+                    verses_to_merge = [v for v in self.displayed_verses if from_bayt <= v.get("global_num", 0) <= to_bayt]
+                else:
+                    if not self.is_full_matn:
+                        verses_to_merge = [v for v in self.displayed_verses if from_bayt <= v.get("chapter_bayt_num", 0) <= to_bayt]
+                    else:
+                        verses_to_merge = self.displayed_verses[from_bayt - 1: to_bayt]
+                self.merge_verses_range(verses_to_merge, None)
         self.resume_after_action()
 
     def merge_verses_range(self, start_idx, end_idx):
@@ -240,7 +269,10 @@ class MotonMergerSaverMixin:
             self.resume_after_action()
             return
 
-        verses_slice = self.displayed_verses[start_idx:end_idx]
+        if isinstance(start_idx, list):
+            verses_slice = start_idx
+        else:
+            verses_slice = self.displayed_verses[start_idx:end_idx]
         input_files = []
         for v in verses_slice:
             b_num = v["global_num"]

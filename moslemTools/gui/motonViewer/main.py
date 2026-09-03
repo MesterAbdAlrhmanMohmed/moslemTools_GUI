@@ -129,9 +129,8 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
         self.available_reciters = []
         for idx, r_slug in enumerate(moton_reciters):
             r_type = moton_types[idx] if idx < len(moton_types) else "N"
-            if r_type == "N":
-                r_ar = slug_to_ar.get(r_slug, r_slug)
-                self.available_reciters.append((r_ar, r_slug, r_type))
+            r_ar = slug_to_ar.get(r_slug, r_slug)
+            self.available_reciters.append((r_ar, r_slug, r_type))
 
         if self.available_reciters:
             saved_reciter = settings_handler.get("moton_reciters", self.matn_slug) or settings_handler.get("moton_reciters", "default")
@@ -174,20 +173,21 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
                 mapping = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
                 cnt = int(raw_s.translate(mapping))
                 return f"({text_actions.format_arabic_bayt_count(cnt)})"
-            title = re.sub(r'\(\s*(\d+|[\u0660-\u0669]+)\s*\)', format_ch, lines[0])
+            has_raw_num = bool(re.search(r'\(\s*(\d+|[\u0660-\u0669]+)\s*\)', lines[0]))
+            title = re.sub(r'\(\s*(\d+|[\u0660-\u0669]+)\s*\)', format_ch, lines[0]) if has_raw_num else lines[0]
             verse_lines = lines[1:] if len(sections) > 1 else lines
             verses = []
             i = 0
             while i < len(verse_lines):
                 line = verse_lines[i]
-                m = re.match(r"^(?:\[\s*(\d+|[\u0660-\u0669]+)\s*\]|\(\s*(\d+|[\u0660-\u0669]+)\s*\)|(\d+|[\u0660-\u0669]+)[\s\-\.\)\t]+)(.*)", line)
+                m = re.match(r"^\s*[\*•\-]?\s*(?:\[\s*(\d+|[\u0660-\u0669]+)\s*\]|\(\s*(\d+|[\u0660-\u0669]+)\s*\)|(\d+|[\u0660-\u0669]+)(?:[\s\-\.\)\t/:]+|(?=[\u0600-\u06FF])))(.*)", line)
                 if m:
                     raw_s = m.group(1) or m.group(2) or m.group(3)
                     raw_num = int(self.convert_arabic_digits(raw_s))
                     sadr = m.group(4).strip()
                     if i + 1 < len(verse_lines):
                         next_l = verse_lines[i + 1]
-                        m_next = re.match(r"^(?:\[\s*(\d+|[\u0660-\u0669]+)\s*\]|\(\s*(\d+|[\u0660-\u0669]+)\s*\)|(\d+|[\u0660-\u0669]+)[\s\-\.\)\t]+)", next_l)
+                        m_next = re.match(r"^\s*[\*•\-]?\s*(?:\[\s*(\d+|[\u0660-\u0669]+)\s*\]|\(\s*(\d+|[\u0660-\u0669]+)\s*\)|(\d+|[\u0660-\u0669]+)(?:[\s\-\.\)\t/:]+|(?=[\u0600-\u06FF])))", next_l)
                         if not m_next:
                             ajuz = next_l
                             i += 2
@@ -200,6 +200,7 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
                     global_bayt_counter += 1
                     verses.append({
                         "global_num": global_bayt_counter,
+                        "chapter_bayt_num": len(verses) + 1,
                         "raw_num": raw_num,
                         "sadr": sadr,
                         "ajuz": ajuz,
@@ -208,6 +209,10 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
                     })
                 else:
                     i += 1
+            if not has_raw_num and verses:
+                title = f"{lines[0]} ({text_actions.format_arabic_bayt_count(len(verses))})"
+                for v in verses:
+                    v["chapter_title"] = title
             self.parsed_sections.append({"title": title, "verses": verses})
         self.total_verses = global_bayt_counter
 

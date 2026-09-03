@@ -20,6 +20,7 @@ class MotonAudioPlayerMixin:
         self.is_playing_continuous = False
         self.continuous_end_bayt = None
         self.current_continuous_end_ms = 0
+        self.pending_continuous_seek_ms = None
         self.speed_file_path = os.path.join(os.getenv("appdata"), "moslemTools_GUI", "playback_speed.json")
         self.playback_speed = self.load_speed()
         self.media.setPlaybackRate(self.playback_speed)
@@ -103,26 +104,45 @@ class MotonAudioPlayerMixin:
         self.is_playing_continuous = False
         self.continuous_end_bayt = None
         self.current_playing_bayt = None
+        self.is_user_paused = False
+        self.saved_pause_position = 0
+        self._last_playback_pos = 0
         self.media_progress.setVisible(False)
         self.time_label.setVisible(False)
 
     def on_play(self):
+        now = qt2.QDateTime.currentMSecsSinceEpoch()
+        if hasattr(self, '_last_toggle_time') and now - self._last_toggle_time < 200:
+            return
+        self._last_toggle_time = now
+
         bayt = self.get_bayt_at_cursor()
         if not bayt:
             self.handle_invalid_line_action()
             return
 
         target_global_num = bayt["global_num"]
-        is_playing_this_verse = (self.media.playbackState() != QMediaPlayer.PlaybackState.StoppedState) and (self.current_playing_bayt == target_global_num)
 
-        if is_playing_this_verse:
-            if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-                self.media.pause()
-            elif self.media.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-                self.media.play()
-        else:
-            self.media.stop()
-            self.play_bayt(target_global_num)
+        if getattr(self, "is_user_paused", False) and (self.current_playing_bayt == target_global_num):
+            self.is_user_paused = False
+            resume_pos = getattr(self, "saved_pause_position", 0)
+            if resume_pos > 0:
+                self.media.setPosition(resume_pos)
+            self.media.play()
+            return
+
+        if (self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState) and (self.current_playing_bayt == target_global_num):
+            self.is_user_paused = True
+            pos = self.media.position()
+            self.saved_pause_position = pos if pos > 0 else getattr(self, '_last_playback_pos', 0)
+            self.media.pause()
+            return
+
+        self.is_user_paused = False
+        self.saved_pause_position = 0
+        self._last_playback_pos = 0
+        self.media.stop()
+        self.play_bayt(target_global_num)
 
     def play_bayt(self, global_bayt_num):
         if self.current_reciter_type == "Y":
@@ -159,22 +179,33 @@ class MotonAudioPlayerMixin:
 
         start_ms = 0
         end_ms = 0
-        if global_bayt_num == 1:
-            start_ms = 0
-            end_ms = timestamps[0] if len(timestamps) > 0 else 0
-        elif 1 < global_bayt_num <= len(timestamps) + 1:
-            start_ms = timestamps[global_bayt_num - 2] if len(timestamps) >= global_bayt_num - 1 else 0
-            end_ms = timestamps[global_bayt_num - 1] if len(timestamps) >= global_bayt_num else 0
+        has_intro_offset = (len(timestamps) == self.total_verses + 1)
+        if has_intro_offset:
+            if 1 <= global_bayt_num <= len(timestamps):
+                start_ms = timestamps[global_bayt_num - 1]
+                end_ms = timestamps[global_bayt_num] if global_bayt_num < len(timestamps) else 0
+        else:
+            if global_bayt_num == 1:
+                start_ms = 0
+                end_ms = timestamps[0] if len(timestamps) > 0 else 0
+            elif 1 < global_bayt_num <= len(timestamps) + 1:
+                start_ms = timestamps[global_bayt_num - 2] if len(timestamps) >= global_bayt_num - 1 else 0
+                end_ms = timestamps[global_bayt_num - 1] if len(timestamps) >= global_bayt_num else 0
 
         self.current_playing_bayt = global_bayt_num
         self.current_continuous_end_ms = end_ms
         self.media_progress.setVisible(True)
         self.time_label.setVisible(True)
         curr_src = self.media.source().toLocalFile()
+        target_url = qt2.QUrl.fromLocalFile(audio_path)
         if os.path.normpath(curr_src) != os.path.normpath(audio_path):
-            self.media.setSource(qt2.QUrl.fromLocalFile(audio_path))
-        self.media.setPosition(start_ms)
-        self.media.play()
+            self.pending_continuous_seek_ms = start_ms
+            self.media.setSource(target_url)
+        else:
+            self.pending_continuous_seek_ms = None
+            self.media.setPosition(start_ms)
+            self.apply_speed()
+            self.media.play()
         self.highlight_playing_bayt(global_bayt_num)
 
     def playFromBaytToEnd(self):
@@ -210,21 +241,33 @@ class MotonAudioPlayerMixin:
             guiTools.speak("هذا الخيار غير متاح في وضع البحث")
             return
         b = self.get_bayt_at_cursor()
-        if not b:
+        if not b or not self.displayed_verses:
             self.handle_invalid_line_action()
             return
-        total = len(self.displayed_verses)
-        if total == 0:
-            return
-        current_idx = self.getCurrentBaytIndex()
+        use_matn_num = (self.verse_numbering_mode == "by_matn")
+        if use_matn_num:
+            min_val = self.displayed_verses[0]["global_num"]
+            max_val = self.displayed_verses[-1]["global_num"]
+            current_val = b["global_num"]
+        else:
+            min_val = 1
+            max_val = len(self.displayed_verses)
+            current_val = b.get("chapter_bayt_num", self.getCurrentBaytIndex() + 1) if not self.is_full_matn else (self.getCurrentBaytIndex() + 1)
+
         self.pause_for_action()
-        from_bayt, ok = guiTools.QInputDialog.getInt(self, "التشغيل من البيت", "التشغيل من:", current_idx + 1, 1, total)
+        from_bayt, ok = guiTools.QInputDialog.getInt(self, "التشغيل من البيت", "التشغيل من:", current_val, min_val, max_val)
         if ok:
-            to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "التشغيل إلى البيت", "التشغيل إلى:", total, from_bayt, total)
+            to_bayt, ok2 = guiTools.QInputDialog.getInt(self, "التشغيل إلى البيت", "التشغيل إلى:", max_val, from_bayt, max_val)
             if ok2:
                 if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                     self.media.stop()
-                verses_to_play = self.displayed_verses[from_bayt - 1: to_bayt]
+                if use_matn_num:
+                    verses_to_play = [v for v in self.displayed_verses if from_bayt <= v.get("global_num", 0) <= to_bayt]
+                else:
+                    if not self.is_full_matn:
+                        verses_to_play = [v for v in self.displayed_verses if from_bayt <= v.get("chapter_bayt_num", 0) <= to_bayt]
+                    else:
+                        verses_to_play = self.displayed_verses[from_bayt - 1: to_bayt]
                 if verses_to_play:
                     from ..motonPlayer import MotonPlayer
                     player = MotonPlayer(
@@ -241,12 +284,24 @@ class MotonAudioPlayerMixin:
         self.resume_after_action()
 
     def on_media_status_changed(self, status):
-        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+        if status in (QMediaPlayer.MediaStatus.LoadedMedia, QMediaPlayer.MediaStatus.BufferedMedia):
+            if getattr(self, "pending_continuous_seek_ms", None) is not None:
+                seek_ms = self.pending_continuous_seek_ms
+                self.pending_continuous_seek_ms = None
+                self.media.setPosition(seek_ms)
+                self.apply_speed()
+                self.media.play()
+        elif status == QMediaPlayer.MediaStatus.EndOfMedia:
             self.media_progress.setVisible(False)
             self.time_label.setVisible(False)
             self.current_playing_bayt = None
+            self.is_user_paused = False
+            self.saved_pause_position = 0
+            self._last_playback_pos = 0
 
     def update_slider(self, position):
+        if position > 0:
+            self._last_playback_pos = position
         if self.media.duration() > 0:
             self.media_progress.blockSignals(True)
             pct = int((position / self.media.duration()) * 100)

@@ -67,18 +67,41 @@ class MotonDataLoader:
                 return v
         return ""
 
+    def count_section_verses(self, verse_lines):
+        count = 0
+        i = 0
+        while i < len(verse_lines):
+            line = verse_lines[i]
+            m = re.match(r"^\s*[\*•\-]?\s*(?:\[\s*(\d+|[\u0660-\u0669]+)\s*\]|\(\s*(\d+|[\u0660-\u0669]+)\s*\)|(\d+|[\u0660-\u0669]+)(?:[\s\-\.\)\t/:]+|(?=[\u0600-\u06FF])))", line)
+            if m:
+                count += 1
+                if i + 1 < len(verse_lines):
+                    next_l = verse_lines[i + 1]
+                    m_next = re.match(r"^\s*[\*•\-]?\s*(?:\[\s*(\d+|[\u0660-\u0669]+)\s*\]|\(\s*(\d+|[\u0660-\u0669]+)\s*\)|(\d+|[\u0660-\u0669]+)(?:[\s\-\.\)\t/:]+|(?=[\u0600-\u06FF])))", next_l)
+                    if not m_next:
+                        i += 2
+                    else:
+                        i += 1
+                else:
+                    i += 1
+            else:
+                i += 1
+        return count
+
     def get_matn_chapters(self, matn_name):
         slug = self.get_matn_slug(matn_name)
         if not slug:
-            return ["عرض المتن كاملا"]
+            return ["المتن كاملا"]
         txt_path = os.path.join(self.base_data_path, "TextFiles", f"{slug}.txt")
         if not os.path.exists(txt_path):
-            return ["عرض المتن كاملا"]
+            return ["المتن كاملا"]
         try:
             with open(txt_path, "r", encoding="utf-8") as f:
                 content = f.read()
             sections = re.split(r"\*{3,}", content)
             chapters = []
+            total_verses = 0
+            from functions.text_actions import format_arabic_bayt_count
             if len(sections) > 1:
                 for s in sections[1:]:
                     lines = [line.strip() for line in s.strip().split("\n") if line.strip()]
@@ -87,14 +110,23 @@ class MotonDataLoader:
                             raw_s = match.group(1)
                             mapping = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
                             cnt = int(raw_s.translate(mapping))
-                            from functions.text_actions import format_arabic_bayt_count
                             return f"({format_arabic_bayt_count(cnt)})"
-                        ch_title = re.sub(r'\(\s*(\d+|[\u0660-\u0669]+)\s*\)', format_ch, lines[0])
+                        ch_verses = self.count_section_verses(lines[1:])
+                        total_verses += ch_verses
+                        if re.search(r'\(\s*(\d+|[\u0660-\u0669]+)\s*\)', lines[0]):
+                            ch_title = re.sub(r'\(\s*(\d+|[\u0660-\u0669]+)\s*\)', format_ch, lines[0])
+                        else:
+                            ch_title = f"{lines[0]} ({format_arabic_bayt_count(ch_verses)})" if ch_verses > 0 else lines[0]
                         chapters.append(ch_title)
             else:
                 lines = [line.strip() for line in content.strip().split("\n") if line.strip()]
-                chapters.append("المقدمة" if lines else "المتن")
-            chapters.append("عرض المتن كاملا")
+                cnt = self.count_section_verses(lines)
+                total_verses = cnt
+                base = "المقدمة" if lines else "المتن"
+                ch_title = f"{base} ({format_arabic_bayt_count(cnt)})" if cnt > 0 else base
+                chapters.append(ch_title)
+            full_title = f"المتن كاملا ({format_arabic_bayt_count(total_verses)})" if total_verses > 0 else "المتن كاملا"
+            chapters.append(full_title)
             return chapters
         except Exception:
-            return ["عرض المتن كاملا"]
+            return ["المتن كاملا"]

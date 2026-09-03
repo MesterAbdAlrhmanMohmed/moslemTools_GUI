@@ -31,6 +31,8 @@ class MotonPlayerNavigationDisplayMixin:
         if getattr(self, "is_closing", False) or self.total_verses == 0:
             return
         self.currentTime = 1
+        self.is_user_paused = False
+        self.saved_pause_position = 0
         if self.current_index + 1 == self.total_verses:
             self.current_index = 0
         else:
@@ -43,6 +45,8 @@ class MotonPlayerNavigationDisplayMixin:
         if getattr(self, "is_closing", False) or self.total_verses == 0:
             return
         self.currentTime = 1
+        self.is_user_paused = False
+        self.saved_pause_position = 0
         if self.current_index == 0:
             self.current_index = self.total_verses - 1
         else:
@@ -54,6 +58,8 @@ class MotonPlayerNavigationDisplayMixin:
     def goto_bayt(self, target_num):
         if 1 <= target_num <= self.total_verses:
             self.currentTime = 1
+            self.is_user_paused = False
+            self.saved_pause_position = 0
             self.current_index = target_num - 1
             self.update_display_text()
             self.media.stop()

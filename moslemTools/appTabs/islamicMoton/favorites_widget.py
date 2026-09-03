@@ -86,7 +86,7 @@ class MotonFavoritesWidget(qt.QWidget):
             return
         from gui.motonViewer import MotonViewer
         chapter_title = item.text()
-        is_full = (chapter_title == "عرض المتن كاملا")
+        is_full = (chapter_title == "عرض المتن كاملا") or chapter_title.startswith("المتن كاملا")
         row = self.chapters_list.row(item)
         viewer = MotonViewer(self, matn_name=matn_name, chapter_index=row, chapter_title=chapter_title, is_full_matn=is_full)
         viewer.exec()

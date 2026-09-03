@@ -8,7 +8,7 @@ import PyQt6.QtWidgets as qt
 import guiTools
 import settings
 from settings import settings_handler
-from .threads import GoToBaytDialog
+from .threads import GoToBaytDialog, GoToCategoryDialog
 
 class MotonNavigationDisplayMixin:
     def init_navigation_display(self):
@@ -171,7 +171,6 @@ class MotonNavigationDisplayMixin:
         if self.verse_numbering_mode == mode:
             return
         self.verse_numbering_mode = mode
-        settings_handler.set("motonViewer", "verse_numbering_mode", mode)
         self._update_display_text()
 
     def _update_display_text(self):
@@ -187,14 +186,14 @@ class MotonNavigationDisplayMixin:
         lines_out = []
 
         if self.is_full_matn:
-            chap_counter = 0
             for s_idx, sec in enumerate(self.parsed_sections):
+                chap_counter = 0
                 for v in sec["verses"]:
                     chap_counter += 1
                     self.displayed_verses.append(v)
                     v_num_str = ""
                     if self.verse_numbering_mode == "by_chapter":
-                        v_num_str = f"{v.get('raw_num', chap_counter)}. "
+                        v_num_str = f"{v.get('chapter_bayt_num', chap_counter)}. "
                     elif self.verse_numbering_mode == "by_matn":
                         v_num_str = f"{v['global_num']}. "
                     line1 = f"{v_num_str}{v['sadr']}"
@@ -214,7 +213,7 @@ class MotonNavigationDisplayMixin:
                 self.displayed_verses.append(v)
                 v_num_str = ""
                 if self.verse_numbering_mode == "by_chapter":
-                    v_num_str = f"{chap_counter}. "
+                    v_num_str = f"{v.get('chapter_bayt_num', chap_counter)}. "
                 elif self.verse_numbering_mode == "by_matn":
                     v_num_str = f"{v['global_num']}. "
                 line1 = f"{v_num_str}{v['sadr']}"
@@ -274,22 +273,30 @@ class MotonNavigationDisplayMixin:
                     self.text.ensureCursorVisible()
                 break
 
-    def _go_to_specific_bayt(self, target_idx_1based):
-        for idx, v in enumerate(self.displayed_verses):
-            if v.get("global_num") == target_idx_1based or (idx + 1) == target_idx_1based:
-                target_global = v.get("global_num")
-                for line_num, info in self.line_to_bayt_map.items():
-                    if info.get("type") == "verse" and info.get("verse", {}).get("global_num") == target_global:
-                        cursor = self.text.textCursor()
-                        doc = self.text.document()
-                        block = doc.findBlockByNumber(line_num)
-                        if block.isValid():
-                            cursor.setPosition(block.position())
-                            self.text.setTextCursor(cursor)
-                            self.text.ensureCursorVisible()
-                            self.text.setFocus()
-                            guiTools.speak(f"البيت رقم {target_idx_1based}")
-                        return
+    def _go_to_specific_bayt(self, target_global_or_idx):
+        target_v = None
+        for v in self.displayed_verses:
+            if v.get("global_num") == target_global_or_idx:
+                target_v = v
+                break
+        if not target_v and 1 <= target_global_or_idx <= len(self.displayed_verses):
+            target_v = self.displayed_verses[target_global_or_idx - 1]
+
+        if target_v:
+            target_global = target_v.get("global_num")
+            for line_num, info in self.line_to_bayt_map.items():
+                if info.get("type") == "verse" and info.get("verse", {}).get("global_num") == target_global:
+                    cursor = self.text.textCursor()
+                    doc = self.text.document()
+                    block = doc.findBlockByNumber(line_num)
+                    if block.isValid():
+                        cursor.setPosition(block.position())
+                        self.text.setTextCursor(cursor)
+                        self.text.ensureCursorVisible()
+                        self.text.setFocus()
+                        display_num = target_v.get("chapter_bayt_num") if (self.verse_numbering_mode == "by_chapter" and not self.is_full_matn) else target_global
+                        guiTools.speak(f"البيت رقم {display_num}")
+                    return
         winsound.Beep(440, 200)
 
     def goToBayt(self):
@@ -297,19 +304,41 @@ class MotonNavigationDisplayMixin:
             self.goToBaytAndExitSearch()
             return
         b = self.get_bayt_at_cursor()
-        if not b:
+        if not b or not self.displayed_verses:
             self.handle_invalid_line_action()
             return
-        current_val = self.getCurrentBaytIndex() + 1
-        max_val = len(self.displayed_verses)
+        use_matn_num = (self.verse_numbering_mode == "by_matn")
+        if use_matn_num:
+            min_val = self.displayed_verses[0]["global_num"]
+            max_val = self.displayed_verses[-1]["global_num"]
+            current_val = b["global_num"]
+        else:
+            min_val = 1
+            max_val = len(self.displayed_verses)
+            current_val = b.get("chapter_bayt_num", self.getCurrentBaytIndex() + 1) if not self.is_full_matn else (self.getCurrentBaytIndex() + 1)
+
         self.pause_for_action()
-        dialog = GoToBaytDialog(self, "الذهاب إلى بيت", "أكتب رقم البيت:", current_val, 1, max_val)
+        dialog = GoToBaytDialog(self, "الذهاب إلى بيت", "أكتب رقم البيت:", current_val, min_val, max_val)
         if dialog.exec() == qt.QDialog.DialogCode.Accepted:
             bayt_num, should_play = dialog.get_values()
-            self._go_to_specific_bayt(bayt_num)
-            if should_play:
-                if 1 <= bayt_num <= len(self.displayed_verses):
+            target_v = None
+            if use_matn_num:
+                for v in self.displayed_verses:
+                    if v.get("global_num") == bayt_num:
+                        target_v = v
+                        break
+            else:
+                if not self.is_full_matn:
+                    for v in self.displayed_verses:
+                        if v.get("chapter_bayt_num") == bayt_num:
+                            target_v = v
+                            break
+                if not target_v and 1 <= bayt_num <= len(self.displayed_verses):
                     target_v = self.displayed_verses[bayt_num - 1]
+
+            if target_v:
+                self._go_to_specific_bayt(target_v["global_num"])
+                if should_play:
                     self.media.stop()
                     self.play_bayt(target_v["global_num"])
             else:
@@ -384,19 +413,10 @@ class MotonNavigationDisplayMixin:
         if not chapters:
             self.resume_after_action()
             return
-        menu = guiTools.QCustomContextMenu("اختر باب", self)
-        font = menu.font()
-        font.setBold(True)
-        menu.setFont(font)
-        for idx, ch in enumerate(chapters):
-            act = qt1.QAction(ch, self)
-            if idx == self.chapter_index:
-                act.setCheckable(True)
-                act.setChecked(True)
-            act.triggered.connect(lambda checked, i=idx: self.select_chapter(i))
-            menu.addAction(act)
-        menu.aboutToHide.connect(self.resume_after_action)
-        menu.exec(self.mapToGlobal(self.cursor().pos()))
+        chapter, OK = GoToCategoryDialog.getItem(self, "الذهاب إلى باب", "اختر باب", chapters, self.chapter_index)
+        if OK and chapter in chapters:
+            self.select_chapter(chapters.index(chapter))
+        self.resume_after_action()
 
     def select_chapter(self, index):
         self.chapter_index = index

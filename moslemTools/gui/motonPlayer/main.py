@@ -107,9 +107,8 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
         self.available_reciters = []
         for idx, r_slug in enumerate(moton_reciters):
             r_type = moton_types[idx] if idx < len(moton_types) else "N"
-            if r_type == "N":
-                r_ar = slug_to_ar.get(r_slug, r_slug)
-                self.available_reciters.append((r_ar, r_slug, r_type))
+            r_ar = slug_to_ar.get(r_slug, r_slug)
+            self.available_reciters.append((r_ar, r_slug, r_type))
 
         if self.available_reciters:
             if not self.current_reciter_slug:

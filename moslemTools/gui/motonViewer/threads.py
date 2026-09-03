@@ -259,3 +259,49 @@ class ChangeMotonReciterDialog(qt.QDialog):
 
     def get_reciter(self):
         return self.selected_reciter
+
+class GoToCategoryDialog(qt.QDialog):
+    def __init__(self, parent, title: str, label: str, items: list, selected_index: int):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setMinimumSize(250, 140)
+        self.resize(300, 150)
+        self.selected_item = None
+        layout = qt.QVBoxLayout(self)
+        self.label = qt.QLabel(label)
+        self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.label)
+        self.list_widget = qt.QComboBox()
+        self.list_widget.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.list_widget.addItems(items)
+        if 0 <= selected_index < len(items):
+            self.list_widget.setCurrentIndex(selected_index)
+        self.list_widget.setAccessibleName(label)
+        self.list_widget.setMinimumHeight(35)
+        layout.addWidget(self.list_widget)
+        self.ok_button = guiTools.QPushButton("موافق")
+        self.ok_button.setStyleSheet("background-color:#006400;color:white;padding:5px;")
+        self.ok_button.clicked.connect(self.on_ok)
+        self.ok_button.setMinimumHeight(35)
+        self.cancel_button = guiTools.QPushButton("إلغاء")
+        self.cancel_button.setStyleSheet("background-color:#8B0000;color:white;padding:5px;")
+        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setMinimumHeight(35)
+        buttons_layout = qt.QHBoxLayout()
+        buttons_layout.addWidget(self.ok_button)
+        buttons_layout.addWidget(self.cancel_button)
+        layout.addLayout(buttons_layout)
+
+    def on_ok(self):
+        if self.list_widget.currentText():
+            self.selected_item = self.list_widget.currentText()
+            self.accept()
+
+    @staticmethod
+    def getItem(parent, title: str, label: str, items: list, selected_index: int):
+        dialog = GoToCategoryDialog(parent, title, label, items, selected_index)
+        result = dialog.exec()
+        if result == qt.QDialog.DialogCode.Accepted:
+            return dialog.selected_item, True
+        return "", False
+
