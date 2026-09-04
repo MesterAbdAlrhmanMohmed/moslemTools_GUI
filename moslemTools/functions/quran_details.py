@@ -1,4 +1,5 @@
 import os
+import re
 import ujson as json
 import functions.quranJsonControl
 
@@ -177,6 +178,56 @@ def get_range_analytical_irab(ayah_text_list, category=None, type=None):
     return "\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."
 
 
+def format_qiraat_section(section_text):
+    if not section_text or not section_text.strip():
+        return ""
+    text = section_text.strip()
+    if "@" not in text and "/" not in text:
+        return text
+    lines = []
+    raw_items = re.findall(r'@([^@]+)', text)
+    for raw in raw_items:
+        raw = raw.strip()
+        if not raw:
+            continue
+        if "/" in raw:
+            parts = raw.split("/", 1)
+            reciters = parts[0].strip()
+            ruling = parts[1].strip()
+            if ruling.endswith("."):
+                ruling = ruling[:-1].strip()
+            lines.append(f"- {reciters}: {ruling}.")
+        else:
+            lines.append(f"- {raw}")
+    return "\n".join(lines) if lines else text
+
+
+def format_qiraat_string(raw_qiraat):
+    if not raw_qiraat:
+        return "لا تتوفر بيانات قراءات"
+    text = raw_qiraat.replace("---{عند وصل السورة}---", "{عند وصل السورة}").replace("---{عند الوصل}---", "{عند الوصل}").strip()
+    surah_wasl_part = None
+    if "{عند وصل السورة}" in text:
+        parts = text.split("{عند وصل السورة}")
+        text = parts[0].strip()
+        surah_wasl_part = parts[1].strip()
+    wasl_part = None
+    if "{عند الوصل}" in text:
+        parts = text.split("{عند الوصل}")
+        main_part = parts[0].strip()
+        wasl_part = parts[1].strip()
+    else:
+        main_part = text
+    output_parts = []
+    if main_part:
+        output_parts.append(format_qiraat_section(main_part))
+    if wasl_part:
+        output_parts.append("[عند الوصل]:\n" + format_qiraat_section(wasl_part))
+    if surah_wasl_part:
+        output_parts.append("[عند وصل السورة]:\n" + format_qiraat_section(surah_wasl_part))
+    return "\n\n".join(output_parts)
+
+
 def get_single_ayah_qiraat(surah_no, ayah_no, ayah_text=None):
     data = _load_word_by_word_data()
     words = data.get((int(surah_no), int(ayah_no)), [])
@@ -186,9 +237,9 @@ def get_single_ayah_qiraat(surah_no, ayah_no, ayah_text=None):
     blocks = []
     for w in words:
         word = w.get("word", "").strip()
-        qiraat = w.get("qiraat", "").replace("---{عند وصل السورة}---", "{عند وصل السورة}").replace("---{عند الوصل}---", "{عند الوصل}").strip()
+        qiraat = w.get("qiraat", "")
         if word:
-            qiraat_str = qiraat if qiraat else "غير متوفر"
+            qiraat_str = format_qiraat_string(qiraat) if qiraat else "غير متوفر"
             blocks.append(f"الكلمة:\n{word}\nالقراءات:\n{qiraat_str}")
     words_str = "\n\n".join(blocks) if blocks else "لا تتوفر بيانات قراءات لهذه الآية."
     return f"{header}{words_str}"
