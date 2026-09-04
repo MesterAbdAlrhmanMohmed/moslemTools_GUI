@@ -51,6 +51,32 @@ class MotonPlayerContextMenuMixin:
         diacritics_act.triggered.connect(self.on_toggle_diacritics)
         menu.addAction(diacritics_act)
 
+        numbering_menu = menu.addMenu("طريقة عرض أرقام الأبيات")
+        numbering_menu.setFont(font)
+        action_group = qt1.QActionGroup(self)
+        action_group.setExclusive(True)
+
+        mode = getattr(self, "verse_numbering_mode", "by_chapter")
+        by_chap_action = qt1.QAction("إظهار الأرقام بحسب الباب", self, checkable=True)
+        by_chap_action.setChecked(mode == "by_chapter")
+        by_chap_action.triggered.connect(lambda: self._set_numbering_mode("by_chapter"))
+
+        by_matn_action = qt1.QAction("إظهار الأرقام بحسب المتن كاملا", self, checkable=True)
+        by_matn_action.setChecked(mode == "by_matn")
+        by_matn_action.triggered.connect(lambda: self._set_numbering_mode("by_matn"))
+
+        none_action = qt1.QAction("إخفاء أرقام الأبيات", self, checkable=True)
+        none_action.setChecked(mode == "none")
+        none_action.triggered.connect(lambda: self._set_numbering_mode("none"))
+
+        action_group.addAction(by_chap_action)
+        action_group.addAction(by_matn_action)
+        action_group.addAction(none_action)
+
+        numbering_menu.addAction(by_chap_action)
+        numbering_menu.addAction(by_matn_action)
+        numbering_menu.addAction(none_action)
+
         menu.aboutToHide.connect(self.resume_playback)
         global_pos = self.text.mapToGlobal(pos) if hasattr(self, "text") else self.cursor().pos()
         menu.exec(global_pos)

@@ -62,9 +62,10 @@ class LocationSettings(qt.QWidget):
         coords_layout.addLayout(lat_layout)
         layout.addLayout(coords_layout)
         layout.addSpacing(12)
-        method_row = qt.QHBoxLayout()
-        method_row.setSpacing(20)
-        self.methodLabel = qt.QLabel("طريقة حساب مواقيت الصلاة")
+        method_layout = qt.QVBoxLayout()
+        method_layout.setSpacing(6)
+        self.methodLabel = qt.QLabel("طريقة حساب مواقيت الصلاة:")
+        self.methodLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         font = qt1.QFont()
         font.setBold(True)
         self.methodCombo = qt.QComboBox()
@@ -102,9 +103,9 @@ class LocationSettings(qt.QWidget):
             if method_id == current_method_id:
                 index_to_select = i
         self.methodCombo.setCurrentIndex(index_to_select)
-        method_row.addWidget(self.methodCombo, 1)
-        method_row.addWidget(self.methodLabel)
-        layout.addLayout(method_row)
+        method_layout.addWidget(self.methodLabel)
+        method_layout.addWidget(self.methodCombo)
+        layout.addLayout(method_layout)
         layout.addSpacing(12)
         def copy_and_beep(link):
             pyperclip.copy(link)

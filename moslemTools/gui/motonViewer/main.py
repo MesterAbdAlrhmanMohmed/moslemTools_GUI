@@ -188,8 +188,6 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
         self.total_verses = global_bayt_counter
 
     def init_ui(self):
-        self.setWindowTitle(f"عارض المتون: {self.matn_name}")
-
         self.media_progress = qt.QSlider(qt2.Qt.Orientation.Horizontal)
         self.media_progress.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
         self.media_progress.setVisible(False)

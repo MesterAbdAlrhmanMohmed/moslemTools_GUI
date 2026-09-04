@@ -12,7 +12,7 @@ class Download(qt.QDialog):
         self.types = guiTools.QListWidget()
         font = qt1.QFont()
         font.setBold(True)
-        self.types.addItems(["كتاب تفسير لتبويبة القرآن الكريم مكتوب", "ترجمة لمعاني القرآن الكريم لتبويبة القرآن الكريم مكتوب", "كتاب حديث", "قارئ للقرآن لتبويبة القرآن الكريم مكتوب", "أذكار وأدعية صوتية لتبويبة الأذكار", "الكتب الإسلامية", "قارئ للمتون الإسلامية"])
+        self.types.addItems(["كتاب تفسير لتبويبة القرآن الكريم مكتوب", "ترجمة لمعاني القرآن الكريم لتبويبة القرآن الكريم مكتوب", "كتاب حديث", "قارئ قرآن آية بآية", "قارئ للمتون الإسلامية", "أذكار وأدعية صوتية لتبويبة الأذكار", "الكتب الإسلامية"])
         self.types.setFont(font)
         self.types.clicked.connect(self.onItemClicked)
         self.types.setSpacing(3)
@@ -37,11 +37,11 @@ class Download(qt.QDialog):
         elif index == 3:
             self.show_dialog(gui.download.SelectReciter, ())
         elif index == 4:
-            self.show_dialog(gui.download.SelectAthkar, ())
-        elif index == 5:
-            self.show_dialog(gui.download.SelectItem, ("all_islamic_books.json", "islamicBooks"))
-        elif index == 6:
             self.show_dialog(gui.download.DownloadMotonReciters, ())
+        elif index == 5:
+            self.show_dialog(gui.download.SelectAthkar, ())
+        elif index == 6:
+            self.show_dialog(gui.download.SelectItem, ("all_islamic_books.json", "islamicBooks"))
 
     def show_dialog(self, dialog_class, args):
         if args:

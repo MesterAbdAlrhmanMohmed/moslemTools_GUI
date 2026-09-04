@@ -227,7 +227,8 @@ class MotonAudioPlayerMixin:
             start_bayt=1,
             current_reciter_slug=None,
             current_reciter_type=None,
-            verses=verses_to_play
+            verses=verses_to_play,
+            verse_numbering_mode=self.verse_numbering_mode
         )
         player.exec()
         if was_playing:
@@ -278,7 +279,8 @@ class MotonAudioPlayerMixin:
                         start_bayt=1,
                         current_reciter_slug=None,
                         current_reciter_type=None,
-                        verses=verses_to_play
+                        verses=verses_to_play,
+                        verse_numbering_mode=self.verse_numbering_mode
                     )
                     player.exec()
         if was_playing:

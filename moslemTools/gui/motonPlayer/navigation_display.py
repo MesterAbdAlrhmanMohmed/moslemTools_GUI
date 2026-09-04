@@ -15,17 +15,42 @@ class MotonPlayerNavigationDisplayMixin:
         if not (0 <= self.current_index < self.total_verses):
             return
         bayt = self.all_verses_list[self.current_index]
-        self.current_bayt_num = bayt.get("global_num", self.current_index + 1)
-        sadr = bayt.get("sadr", "")
-        ajuz = bayt.get("ajuz", "")
+        if isinstance(bayt, dict):
+            self.current_bayt_num = bayt.get("global_num", self.current_index + 1)
+            sadr = bayt.get("sadr", "")
+            ajuz = bayt.get("ajuz", "")
+        else:
+            self.current_bayt_num = self.current_index + 1
+            sadr = str(bayt)
+            ajuz = ""
+
         if not self.show_diacritics:
             sadr = self.remove_diacritics(sadr)
-            ajuz = self.remove_diacritics(ajuz)
+            if ajuz:
+                ajuz = self.remove_diacritics(ajuz)
 
-        display_num = self.current_index + 1
-        display_str = f"البيت رقم: {display_num} من أصل {self.total_verses}\n\n{sadr}\n{ajuz}"
+        mode = getattr(self, "verse_numbering_mode", None) or settings_handler.get("motonViewer", "verse_numbering_mode") or "by_chapter"
+        v_num_str = ""
+        if mode == "by_chapter":
+            num = (bayt.get("chapter_bayt_num") or bayt.get("raw_num") or (self.current_index + 1)) if isinstance(bayt, dict) else (self.current_index + 1)
+            v_num_str = f"{num}. "
+        elif mode == "by_matn":
+            num = (bayt.get("global_num") or (self.current_index + 1)) if isinstance(bayt, dict) else (self.current_index + 1)
+            v_num_str = f"{num}. "
+        elif mode == "none":
+            v_num_str = ""
+
+        line1 = f"{v_num_str}{sadr}"
+        if ajuz:
+            display_str = f"{line1}\n{ajuz}"
+        else:
+            display_str = line1
         self.text.setPlainText(display_str)
-        self.setWindowTitle(f"مشغل المتون: {self.matn_name} - بيت {display_num}")
+
+    def _set_numbering_mode(self, mode):
+        self.verse_numbering_mode = mode
+        self.update_display_text()
+        guiTools.speak("تم تغيير طريقة عرض الأرقام")
 
     def onNextBayt(self):
         if getattr(self, "is_closing", False) or self.total_verses == 0:

@@ -7,7 +7,6 @@ class Update(qt.QWidget):
     def __init__(self, p):
         super().__init__()
         self.setStyleSheet("""
-            }
             QCheckBox {
                 color: #e0e0e0;
                 border: 1px solid #555;
@@ -34,12 +33,12 @@ class Update(qt.QWidget):
         self.update_beta.setChecked(p.cbts(settings_handler.get("update", "beta")))
         UpdateLayout.addWidget(self.update_beta)
         UpdateLayout.addSpacing(10)
-        button_container = qt.QWidget()
-        button_layout = qt.QHBoxLayout(button_container)
+        button_layout = qt.QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
         self.update_check = qt.QPushButton("التحقق من وجود تحديثات")
         self.update_check.clicked.connect(lambda: update.check(self))
         button_layout.addStretch()
         button_layout.addWidget(self.update_check)
-        UpdateLayout.addWidget(button_container)
+        button_layout.addStretch()
+        UpdateLayout.addLayout(button_layout)
         UpdateLayout.addStretch()

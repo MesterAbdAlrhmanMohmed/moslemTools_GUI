@@ -13,7 +13,7 @@ class AthkarSettings(qt.QWidget):
                 font-size: 14px;
                 color: #e0e0e0;
             }
-            QComboBox, QSlider, QLineEdit {
+            QComboBox, QSpinBox, QSlider, QLineEdit {
                 color: #e0e0e0;
                 border: 1px solid #555;
                 padding: 4px;
@@ -45,16 +45,19 @@ class AthkarSettings(qt.QWidget):
         group_layout.addLayout(voice_row)
         volume_row = qt.QHBoxLayout()
         volume_row.setSpacing(15)
-        initial_volume = int(settings_handler.get("athkar", "voiceVolume"))
-        self.voiceVolumeLabel = qt.QLabel(f"مستوى صوت الأذكار: {initial_volume}%")
-        self.voiceVolume = qt.QSlider(qt2.Qt.Orientation.Horizontal)
-        self.voiceVolume.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
-        self.voiceVolume.setAccessibleName("مستوى صوت الأذكار")
-        self.voiceVolume.setRange(0, 100)
+        initial_volume = int(settings_handler.get("athkar", "voiceVolume") or 100)
+        initial_volume = max(1, min(100, initial_volume))
+        self.voiceVolumeLabel = qt.QLabel("مستوى صوت الأذكار:")
+        self.voiceVolume = qt.QSpinBox()
+        self.voiceVolume.setFont(font)
+        self.voiceVolume.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.voiceVolume.setFixedWidth(80)
+        self.voiceVolume.setRange(1, 100)
         self.voiceVolume.setValue(initial_volume)
-        self.voiceVolume.valueChanged.connect(self.onVoiceVolumeChanged)
-        volume_row.addWidget(self.voiceVolume, 2)
+        self.voiceVolume.setAccessibleName("مستوى صوت الأذكار")
+        volume_row.addWidget(self.voiceVolume)
         volume_row.addWidget(self.voiceVolumeLabel)
+        volume_row.addStretch()
         group_layout.addLayout(volume_row)
         text_row = qt.QHBoxLayout()
         text_row.setSpacing(15)
@@ -94,7 +97,7 @@ class AthkarSettings(qt.QWidget):
         self.playBasmalaAtStartup.clicked.connect(lambda checked: self.playAtStartup.setChecked(False) if checked else None)
         group_layout.addWidget(self.playBasmalaAtStartup)
         main_layout.addWidget(group_box)
-        main_layout.addStretch(1)
+        main_layout.addSpacing(15)
         info_layout = qt.QVBoxLayout()
         info_layout.setSpacing(8)
         info_layout.setContentsMargins(0, 0, 0, 0)
@@ -112,13 +115,14 @@ class AthkarSettings(qt.QWidget):
         info_layout.addWidget(self.info2)
         info_layout.addWidget(self.info)
         main_layout.addLayout(info_layout)
+        main_layout.addStretch(1)
         self.voiceSelection.currentIndexChanged.connect(self.onVoiceSelectionChanged)
         self.onVoiceSelectionChanged(self.voiceSelection.currentIndex())
         self.textSelection.currentIndexChanged.connect(self.onTextSelectionChanged)
         self.onTextSelectionChanged(self.textSelection.currentIndex())
 
     def onVoiceVolumeChanged(self, value):
-        self.voiceVolumeLabel.setText(f"مستوى صوت الأذكار الصوتية: {value}%")
+        pass
 
     def onVoiceSelectionChanged(self, index):
         is_stopped = (index == 5)

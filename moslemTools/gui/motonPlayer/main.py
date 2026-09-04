@@ -20,7 +20,7 @@ from .merger_saver import MotonPlayerMergerSaverMixin
 from .audio_player import MotonPlayerAudioMixin
 
 class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin, MotonPlayerMergerSaverMixin, MotonPlayerAudioMixin, qt.QDialog):
-    def __init__(self, parent=None, matn_name="", matn_slug="", parsed_sections=None, start_bayt=1, current_reciter_slug="", current_reciter_type="N", verses=None):
+    def __init__(self, parent=None, matn_name="", matn_slug="", parsed_sections=None, start_bayt=1, current_reciter_slug="", current_reciter_type="N", verses=None, verse_numbering_mode=None):
         super().__init__(parent)
         self.matn_name = matn_name
         self.matn_slug = matn_slug
@@ -30,6 +30,12 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
         self.show_diacritics = settings_handler.get("motonPlayer", "show_diacritics") != "False"
         self.font_is_bold = settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings_handler.get("font", "motonPlayer_size") or settings_handler.get("font", "size") or 18)
+        if verse_numbering_mode is not None:
+            self.verse_numbering_mode = verse_numbering_mode
+        elif hasattr(parent, "verse_numbering_mode"):
+            self.verse_numbering_mode = parent.verse_numbering_mode
+        else:
+            self.verse_numbering_mode = settings_handler.get("motonViewer", "verse_numbering_mode") or "by_chapter"
 
         if verses is not None:
             self.all_verses_list = list(verses)
@@ -104,8 +110,6 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
             self.current_reciter_type = "N"
 
     def init_ui(self):
-        self.setWindowTitle(f"مشغل المتون: {self.matn_name}")
-
         main_layout = qt.QVBoxLayout(self)
         main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(10)

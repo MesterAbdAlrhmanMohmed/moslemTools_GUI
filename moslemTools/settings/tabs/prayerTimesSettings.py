@@ -21,11 +21,11 @@ class PrayerTimesSettings(qt.QWidget):
                 border-radius: 4px;
                 font-size: 14px;
             }
-            QComboBox {
+            QComboBox, QSpinBox {
+                color: #e0e0e0;
                 padding: 4px;
                 border: 1px solid #555;
                 border-radius: 4px;
-            }
             }
         """)
         main_layout = qt.QVBoxLayout(self)
@@ -74,18 +74,21 @@ class PrayerTimesSettings(qt.QWidget):
         group_layout.addLayout(row2_layout)
         row3_layout = qt.QHBoxLayout()
         row3_layout.setSpacing(10)
-        initial_volume = int(settings_handler.get("prayerTimes", "volume"))
-        self.soundLevelLabel = qt.QLabel(f"مستوى صوت الأذان: {initial_volume}%")
+        initial_volume = int(settings_handler.get("prayerTimes", "volume") or 100)
+        initial_volume = max(1, min(100, initial_volume))
+        self.soundLevelLabel = qt.QLabel("مستوى صوت الأذان:")
         self.soundLevelLabel.setVisible(p.cbts(settings_handler.get("prayerTimes", "adaanReminder")))
-        self.Sound_level = qt.QSlider(qt2.Qt.Orientation.Horizontal)
-        self.Sound_level.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
-        self.Sound_level.setRange(0, 100)
+        self.Sound_level = qt.QSpinBox()
+        self.Sound_level.setFont(self.font_for_widgets)
+        self.Sound_level.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.Sound_level.setFixedWidth(80)
+        self.Sound_level.setRange(1, 100)
         self.Sound_level.setValue(initial_volume)
-        self.Sound_level.setAccessibleName("تحديد مستوى صوت الأذان")
+        self.Sound_level.setAccessibleName("مستوى صوت الأذان")
         self.Sound_level.setVisible(p.cbts(settings_handler.get("prayerTimes", "adaanReminder")))
-        self.Sound_level.valueChanged.connect(self.onSoundLevelChanged)
-        row3_layout.addWidget(self.Sound_level, 2)
+        row3_layout.addWidget(self.Sound_level)
         row3_layout.addWidget(self.soundLevelLabel)
+        row3_layout.addStretch()
         group_layout.addLayout(row3_layout)
         row4_layout = qt.QHBoxLayout()
         row4_layout.setSpacing(10)
@@ -107,22 +110,25 @@ class PrayerTimesSettings(qt.QWidget):
         group_layout.addLayout(row4_layout)
         row5_layout = qt.QHBoxLayout()
         row5_layout.setSpacing(10)
-        initial_iqama_volume = int(settings_handler.get("prayerTimes", "iqamaVolume"))
+        initial_iqama_volume = int(settings_handler.get("prayerTimes", "iqamaVolume") or 100)
+        initial_iqama_volume = max(1, min(100, initial_iqama_volume))
         is_main_reminder_on = p.cbts(settings_handler.get("prayerTimes", "adaanReminder"))
         initial_iqama_index = int(settings_handler.get("prayerTimes", "remindAfterAdaan"))
         is_iqama_reminder_on = (initial_iqama_index != 3)
         final_iqama_visibility = is_main_reminder_on and is_iqama_reminder_on
-        self.iqamaVolumeLabel = qt.QLabel(f"مستوى صوت الإقامة: {initial_iqama_volume}%")
+        self.iqamaVolumeLabel = qt.QLabel("مستوى صوت الإقامة:")
         self.iqamaVolumeLabel.setVisible(final_iqama_visibility)
-        self.iqamaVolumeSlider = qt.QSlider(qt2.Qt.Orientation.Horizontal)
-        self.iqamaVolumeSlider.setStyleSheet("QSlider{min-height:30px;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
-        self.iqamaVolumeSlider.setRange(0, 100)
+        self.iqamaVolumeSlider = qt.QSpinBox()
+        self.iqamaVolumeSlider.setFont(self.font_for_widgets)
+        self.iqamaVolumeSlider.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.iqamaVolumeSlider.setFixedWidth(80)
+        self.iqamaVolumeSlider.setRange(1, 100)
         self.iqamaVolumeSlider.setValue(initial_iqama_volume)
-        self.iqamaVolumeSlider.setAccessibleName("تحديد مستوى صوت الإقامة")
+        self.iqamaVolumeSlider.setAccessibleName("مستوى صوت الإقامة")
         self.iqamaVolumeSlider.setVisible(final_iqama_visibility)
-        self.iqamaVolumeSlider.valueChanged.connect(self.onIqamaSoundLevelChanged)
-        row5_layout.addWidget(self.iqamaVolumeSlider, 2)
+        row5_layout.addWidget(self.iqamaVolumeSlider)
         row5_layout.addWidget(self.iqamaVolumeLabel)
+        row5_layout.addStretch()
         group_layout.addLayout(row5_layout)
         buttons_layout = qt.QHBoxLayout()
         buttons_layout.setSpacing(10)
@@ -140,10 +146,10 @@ class PrayerTimesSettings(qt.QWidget):
         main_layout.addStretch()
 
     def onSoundLevelChanged(self, value):
-        self.soundLevelLabel.setText(f"مستوى صوت الأذان: {value}%")
+        pass
 
     def onIqamaSoundLevelChanged(self, value):
-        self.iqamaVolumeLabel.setText(f"مستوى صوت الإقامة: {value}%")
+        pass
 
     def onprayerTimesReminderCheckboxStateChanged(self, state):
         is_checked = bool(state)

@@ -30,6 +30,7 @@ class settings(qt.QDialog):
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
         scroll_area.setWidget(self.sectian.w)
+        self.sectian.currentRowChanged.connect(lambda: scroll_area.verticalScrollBar().setValue(0))
         h_layout.addWidget(scroll_area)
         layout.addLayout(h_layout)
         self.update = tabs.Update(self)

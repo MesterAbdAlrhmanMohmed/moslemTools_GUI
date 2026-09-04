@@ -84,21 +84,107 @@ class Genral(qt.QWidget):
             self.add_to_startup()
 
 
+    def get_running_theme(self):
+        app_instance = qt.QApplication.instance()
+        if app_instance:
+            return "light" if app_instance.palette().color(qt1.QPalette.ColorRole.Window).lightness() > 128 else "dark"
+        return settings_handler.get("g", "theme") or "dark"
+
     def update_theme_button_style(self):
-        if self.current_theme == "light":
+        running_theme = self.get_running_theme()
+        saved_theme = settings_handler.get("g", "theme") or "dark"
+        if saved_theme != running_theme:
+            target_name = "الوضع الفاتح" if saved_theme == "light" else "الوضع الداكن"
+            self.themeButton.setText(f"تم حفظ {target_name} (سيتفعل بعد إعادة التشغيل)")
+            self.themeButton.setStyleSheet("""
+                QPushButton {
+                    background-color: #0d47a1;
+                    color: #ffffff;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    padding: 10px;
+                }
+                QPushButton:hover {
+                    background-color: #1565c0;
+                }
+            """)
+        elif running_theme == "light":
             self.themeButton.setText("تفعيل الوضع الداكن")
-            self.themeButton.setStyleSheet("background-color: #1e1e1e; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 10px;")
+            self.themeButton.setStyleSheet("""
+                QPushButton {
+                    background-color: #1e1e1e;
+                    color: #ffffff;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    padding: 10px;
+                }
+                QPushButton:hover {
+                    background-color: #333333;
+                }
+            """)
         else:
             self.themeButton.setText("تفعيل الوضع الفاتح")
-            self.themeButton.setStyleSheet("background-color: #ffffff; color: #1e1e1e; font-weight: bold; border-radius: 6px; padding: 10px;")
+            self.themeButton.setStyleSheet("""
+                QPushButton {
+                    background-color: #ffffff;
+                    color: #1e1e1e;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    padding: 10px;
+                }
+                QPushButton:hover {
+                    background-color: #e0e0e0;
+                }
+            """)
+
+    def restart_app(self):
+        import subprocess
+        try:
+            shared = qt2.QSharedMemory("com.MTC.moslemTools")
+            shared.attach()
+            shared.detach()
+        except Exception:
+            pass
+        if getattr(sys, 'frozen', False):
+            args = [sys.executable] + sys.argv[1:]
+        else:
+            args = [sys.executable] + sys.argv
+        subprocess.Popen(args)
+        app_instance = qt.QApplication.instance()
+        if app_instance:
+            app_instance.quit()
+        sys.exit()
 
     def toggle_theme(self):
-        new_theme = "light" if self.current_theme == "dark" else "dark"
+        running_theme = self.get_running_theme()
+        saved_theme = settings_handler.get("g", "theme") or "dark"
+        if saved_theme != running_theme:
+            target_name = "الوضع الفاتح" if saved_theme == "light" else "الوضع الداكن"
+            mb = guiTools.QQuestionMessageBox.view(
+                self,
+                "إعادة تشغيل البرنامج",
+                f"تم حفظ {target_name} مسبقاً، وسيتفعل عند إعادة تشغيل البرنامج.\nهل تريد إعادة التشغيل الآن لتطبيقه، أم تريد التراجع والرجوع إلى الوضع الحالي؟",
+                "إعادة التشغيل الآن",
+                "التراجع والرجوع للوضع الحالي"
+            )
+            if mb == 0:
+                self.restart_app()
+            else:
+                settings_handler.set("g", "theme", running_theme)
+                self.update_theme_button_style()
+            return
+
+        new_theme = "light" if running_theme == "dark" else "dark"
+        target_name = "الوضع الفاتح" if new_theme == "light" else "الوضع الداكن"
         settings_handler.set("g", "theme", new_theme)
-        self.current_theme = new_theme
         self.update_theme_button_style()
-        mb = guiTools.QQuestionMessageBox.view(self, "إعادة تشغيل البرنامج", "تم تغيير نمط الواجهة. يجب إعادة تشغيل البرنامج لتطبيق التغيير. هل تريد إعادة التشغيل الآن؟", "إعادة التشغيل الآن", "إعادة التشغيل لاحقاً")
+        mb = guiTools.QQuestionMessageBox.view(
+            self,
+            "إعادة تشغيل البرنامج",
+            f"تم حفظ {target_name}. يتطلب تطبيق التغيير إعادة تشغيل البرنامج. هل تريد إعادة التشغيل الآن؟",
+            "إعادة التشغيل الآن",
+            "ليس الآن"
+        )
         if mb == 0:
-            import subprocess
-            subprocess.Popen([sys.executable] + sys.argv)
-            sys.exit()
+            self.restart_app()
+

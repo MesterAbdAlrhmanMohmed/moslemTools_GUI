@@ -4,6 +4,7 @@ import gui
 import guiTools
 from settings import settings_handler, app
 import PyQt6.QtWidgets as qt
+import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtCore import Qt
 
@@ -12,6 +13,8 @@ class QuranRecitersSettings(qt.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.layout = qt.QVBoxLayout(self)
+        self.layout.setSpacing(10)
+        self.layout.setContentsMargins(15, 15, 15, 15)
         self.setStyleSheet("""
             QComboBox {
                 color: #e0e0e0;
@@ -30,8 +33,8 @@ class QuranRecitersSettings(qt.QWidget):
         self.delete_notice = guiTools.QNavigableLabel(self.default_notice_text)
         self.delete_notice.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.delete_notice.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.layout.addSpacing(25)
-        self.layout.addWidget(self.delete_notice)
+        self.layout.addSpacing(12)
+        self.layout.addWidget(self.delete_notice, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         self.layout.addStretch(1)
 
         self.notice_timer = qt2.QTimer(self)
@@ -42,11 +45,16 @@ class QuranRecitersSettings(qt.QWidget):
 
     def create_row(self, label_text, accessible_name):
         container = qt.QWidget()
-        row_layout = qt.QHBoxLayout(container)
+        row_layout = qt.QVBoxLayout(container)
         row_layout.setContentsMargins(0, 0, 0, 0)
-        row_layout.setSpacing(10)
+        row_layout.setSpacing(6)
         label = qt.QLabel(label_text)
+        label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        font = qt1.QFont()
+        font.setBold(True)
+        label.setFont(font)
         combo = qt.QComboBox()
+        combo.setFont(font)
         self.combos.append(combo)
         combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         combo.addItems(self.reciters_list)
@@ -58,9 +66,8 @@ class QuranRecitersSettings(qt.QWidget):
         combo.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         combo.customContextMenuRequested.connect(lambda pos, c=combo: self.on_delete(c))
         combo.installEventFilter(self)
+        row_layout.addWidget(label, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         row_layout.addWidget(combo)
-        row_layout.addWidget(label)
-        row_layout.addStretch()
         self.layout.addWidget(container)
         return combo
 
