@@ -63,13 +63,16 @@ class DownloadUpdateGUI (qt .QDialog ):
         if self .thread and self .thread .isRunning ():
             if self .thread .is_paused :
                 self .pause_button .setText ("إيقاف مؤقت")
+                guiTools .speak ("تم استئناف التحميل")
                 self .thread .resume ()
             else :
                 self .pause_button .setText ("استئناف")
+                guiTools .speak ("تم إيقاف التحميل مؤقتاً")
                 self .thread .pause ()
 
     def on_network_error (self ,msg ):
         self .pause_button .setText ("استئناف")
+        guiTools .speak ("تم إيقاف التحميل مؤقتاً بسبب انقطاع الاتصال بالإنترنت")
         guiTools .MessageBox .error (self ,"انقطاع الاتصال",msg )
 
     def Installation (self ,choice ):
