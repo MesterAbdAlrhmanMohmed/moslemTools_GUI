@@ -66,7 +66,7 @@ class MotonNavigationDisplayMixin:
             v_num_str = f"{bayt['global_num']}. "
 
         orig_part1 = f"{v_num_str}{bayt['sadr']}"
-        orig_part2 = f"    {bayt['ajuz']}" if bayt.get('ajuz') else ""
+        orig_part2 = bayt['ajuz'] if bayt.get('ajuz') else ""
         orig_combined = orig_part1 + " " + orig_part2
         orig_has_tashkeel = bool(re.search(r'[\u064B-\u065F\u0670\u06D6-\u06ED]', orig_combined))
 
@@ -197,7 +197,7 @@ class MotonNavigationDisplayMixin:
                     elif self.verse_numbering_mode == "by_matn":
                         v_num_str = f"{v['global_num']}. "
                     line1 = f"{v_num_str}{v['sadr']}"
-                    line2 = f"    {v['ajuz']}" if v['ajuz'] else ""
+                    line2 = v['ajuz'] if v['ajuz'] else ""
                     self.line_to_bayt_map[len(lines_out)] = {"type": "verse", "verse": v, "line_part": 1}
                     lines_out.append(line1)
                     if line2:
@@ -217,7 +217,7 @@ class MotonNavigationDisplayMixin:
                 elif self.verse_numbering_mode == "by_matn":
                     v_num_str = f"{v['global_num']}. "
                 line1 = f"{v_num_str}{v['sadr']}"
-                line2 = f"    {v['ajuz']}" if v['ajuz'] else ""
+                line2 = v['ajuz'] if v['ajuz'] else ""
                 self.line_to_bayt_map[len(lines_out)] = {"type": "verse", "verse": v, "line_part": 1}
                 lines_out.append(line1)
                 if line2:

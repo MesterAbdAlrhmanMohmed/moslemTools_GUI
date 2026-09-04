@@ -160,7 +160,7 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
                         next_l = verse_lines[i + 1]
                         m_next = re.match(r"^\s*[\*•\-]?\s*(?:\[\s*(\d+|[\u0660-\u0669]+)\s*\]|\(\s*(\d+|[\u0660-\u0669]+)\s*\)|(\d+|[\u0660-\u0669]+)(?:[\s\-\.\)\t/:]+|(?=[\u0600-\u06FF])))", next_l)
                         if not m_next:
-                            ajuz = next_l
+                            ajuz = next_l.strip()
                             i += 2
                         else:
                             ajuz = ""

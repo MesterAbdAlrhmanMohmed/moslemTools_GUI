@@ -554,7 +554,7 @@ class MotonMergerSaverMixin:
                         elif self.verse_numbering_mode == "by_matn":
                             v_num_str = f"{v.get('global_num', 1)}. "
                         sadr = f"{v_num_str}{v.get('sadr', '')}"
-                        ajuz = f"    {v.get('ajuz', '')}" if v.get('ajuz') else ""
+                        ajuz = v.get('ajuz', '') if v.get('ajuz') else ""
                         bayt_text = f"{sadr}\n{ajuz}" if ajuz else sadr
                         if self.remove_tashkeel:
                             bayt_text = self._remove_tashkeel_from_text(bayt_text)

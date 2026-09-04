@@ -108,7 +108,7 @@ class MotonSearchHandlerMixin:
 
         for v in self.search_results_verses:
             line1 = f"{v['global_num']}. {v['sadr']}"
-            line2 = f"    {v['ajuz']}" if v.get('ajuz') else ""
+            line2 = v['ajuz'] if v.get('ajuz') else ""
             self.line_to_bayt_map[len(lines_out)] = {"type": "verse", "verse": v, "line_part": 1}
             lines_out.append(line1)
             if line2:

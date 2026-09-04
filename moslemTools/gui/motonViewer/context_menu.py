@@ -274,7 +274,7 @@ class MotonContextMenuMixin:
             elif self.verse_numbering_mode == "by_matn":
                 v_num_str = f"{bayt.get('global_num', 1)}. "
             sadr = f"{v_num_str}{bayt.get('sadr', '')}"
-            ajuz = f"    {bayt.get('ajuz', '')}" if bayt.get('ajuz') else ""
+            ajuz = bayt.get('ajuz', '') if bayt.get('ajuz') else ""
             txt = f"{sadr}\n{ajuz}" if ajuz else sadr
             if self.remove_tashkeel:
                 txt = self._remove_tashkeel_from_text(txt)
