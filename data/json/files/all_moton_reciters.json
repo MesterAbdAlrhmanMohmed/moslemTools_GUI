@@ -1,0 +1,720 @@
+{
+  "reciters": {
+    "Ayman": "أيمن سويد",
+    "Taha": "طه الفهد",
+    "Saad": "سعد الغامدي",
+    "AbdAlHakem": "عبد الحكيم صوفي",
+    "MohammadBilal": "محمد بلال",
+    "AbdAlzeezKhzaim": "عبد العزيز الخزيم",
+    "MohammadMonshed": "محمد المنشد",
+    "AmerBahjat": "عامر بهجت",
+    "AbdAlHameedQerieo": "عبد الحميد القريو",
+    "MohammadAlsharef": "محمد الشريف",
+    "SaiedAbdALsalam": "السيد عبد السلام",
+    "BaderTurky": "بدر التركي",
+    "MohammadAteeq": "محمد عتيق",
+    "AbdAlrasheedSofi": "عبد الرشيد الصوفي",
+    "AbdAlghaniFaqeh": "عبد الغني صادق الفقيه",
+    "YousefEnaty": "يوسف العيناتي",
+    "MahmoudHaleem": "محمود حليم",
+    "AhmadAlHadad": "أحمد الحداد",
+    "Mashari-Closed": "مشاري العفاسي",
+    "solymanshwaihi": "سليمان الشويهي"
+  },
+  "matn_reciters": {
+    "tohfa": [
+      {
+        "name": "أيمن سويد",
+        "slug": "Ayman",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/tohfa/"
+      },
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/tohfa/"
+      },
+      {
+        "name": "سعد الغامدي",
+        "slug": "Saad",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Saad/tohfa/"
+      },
+      {
+        "name": "عبد الحكيم صوفي",
+        "slug": "AbdAlHakem",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AbdAlHakem/tohfa/"
+      }
+    ],
+    "jasaryia": [
+      {
+        "name": "أيمن سويد",
+        "slug": "Ayman",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/jasaryia/"
+      },
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/jasaryia/"
+      },
+      {
+        "name": "سعد الغامدي",
+        "slug": "Saad",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Saad/jasaryia/"
+      }
+    ],
+    "alsakhawi": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/alsakhawi/"
+      }
+    ],
+    "aqylaa": [
+      {
+        "name": "أيمن سويد",
+        "slug": "Ayman",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/aqylaa/"
+      },
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/aqylaa/"
+      }
+    ],
+    "shatebia": [
+      {
+        "name": "أيمن سويد",
+        "slug": "Ayman",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/shatebia/"
+      },
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/shatebia/"
+      }
+    ],
+    "doraa": [
+      {
+        "name": "أيمن سويد",
+        "slug": "Ayman",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/doraa/"
+      },
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/doraa/"
+      },
+      {
+        "name": "محمد المنشد",
+        "slug": "MohammadMonshed",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/MohammadMonshed/doraa/"
+      }
+    ],
+    "tayba": [
+      {
+        "name": "أيمن سويد",
+        "slug": "Ayman",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/tayba/"
+      },
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/tayba/"
+      }
+    ],
+    "nathmitzohr": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/nathmitzohr/"
+      }
+    ],
+    "minhamitwaly": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/minhamitwaly/"
+      }
+    ],
+    "gharebalquran": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/gharebalquran/"
+      }
+    ],
+    "salsabeel": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/salsabeel/"
+      }
+    ],
+    "ibnmalik": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/ibnmalik/"
+      }
+    ],
+    "fatehkareem": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/fatehkareem/"
+      }
+    ],
+    "thatshefa": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/thatshefa/"
+      }
+    ],
+    "fraedhesan": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/fraedhesan/"
+      }
+    ],
+    "mowridalthaman": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/mowridalthaman/"
+      }
+    ],
+    "hidayatmortab": [
+      {
+        "name": "سعد الغامدي",
+        "slug": "Saad",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Saad/hidayatmortab/"
+      }
+    ],
+    "soyoty": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/soyoty/"
+      }
+    ],
+    "solamwosol": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/solamwosol/"
+      }
+    ],
+    "orjoza": [
+      {
+        "name": "محمد بلال",
+        "slug": "MohammadBilal",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/MohammadBilal/orjoza/"
+      },
+      {
+        "name": "عبد العزيز الخزيم",
+        "slug": "AbdAlzeezKhzaim",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AbdAlzeezKhzaim/orjoza/"
+      }
+    ],
+    "rahbya": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/rahbya/"
+      }
+    ],
+    "la2ebayan": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/la2ebayan/"
+      }
+    ],
+    "zamzami": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/zamzami/"
+      }
+    ],
+    "bahjatalarwah": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/bahjatalarwah/"
+      }
+    ],
+    "maqsoodsarf": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/maqsoodsarf/"
+      }
+    ],
+    "tasheeltorokat": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/tasheeltorokat/"
+      }
+    ],
+    "nathimjali": [
+      {
+        "name": "عامر بهجت",
+        "slug": "AmerBahjat",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AmerBahjat/nathimjali/"
+      }
+    ],
+    "motamimzamzami": [
+      {
+        "name": "عبد الحميد القريو",
+        "slug": "AbdAlHameedQerieo",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AbdAlHameedQerieo/motamimzamzami/"
+      }
+    ],
+    "tohfanadeya": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/tohfanadeya/"
+      },
+      {
+        "name": "محمد الشريف",
+        "slug": "MohammadAlsharef",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/MohammadAlsharef/tohfanadeya/"
+      }
+    ],
+    "dorarlawame3": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/dorarlawame3/"
+      }
+    ],
+    "erakihadeeth": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/erakihadeeth/"
+      }
+    ],
+    "hedayarewaya": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/hedayarewaya/"
+      }
+    ],
+    "ajromia": [
+      {
+        "name": "عبد الحميد القريو",
+        "slug": "AbdAlHameedQerieo",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AbdAlHameedQerieo/ajromia/"
+      },
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/ajromia/"
+      }
+    ],
+    "bayqonia": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/bayqonia/"
+      }
+    ],
+    "samnodiya": [
+      {
+        "name": "السيد عبد السلام",
+        "slug": "SaiedAbdALsalam",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/SaiedAbdALsalam/samnodiya/"
+      }
+    ],
+    "khaqani": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/khaqani/"
+      }
+    ],
+    "mofedtajweed": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/mofedtajweed/"
+      }
+    ],
+    "bahjatallohath": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/bahjatallohath/"
+      }
+    ],
+    "resaltqasermonfasel": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/resaltqasermonfasel/"
+      }
+    ],
+    "qeraetmonfaselmaatawasot": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/qeraetmonfaselmaatawasot/"
+      }
+    ],
+    "qawolmalofhrof": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/qawolmalofhrof/"
+      }
+    ],
+    "almorshedalmoeen": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/almorshedalmoeen/"
+      }
+    ],
+    "nehaya": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/nehaya/"
+      }
+    ],
+    "noniya1": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya1/"
+      }
+    ],
+    "noniya2": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya2/"
+      }
+    ],
+    "noniya3": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya3/"
+      }
+    ],
+    "noniya4": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya4/"
+      }
+    ],
+    "noniya5": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya5/"
+      }
+    ],
+    "noniya6": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya6/"
+      }
+    ],
+    "safaira": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/safaira/"
+      }
+    ],
+    "altahaweya": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/altahaweya/"
+      }
+    ],
+    "lamia": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/lamia/"
+      }
+    ],
+    "7aeyya": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/7aeyya/"
+      }
+    ],
+    "jomlatulaqaed": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/jomlatulaqaed/"
+      }
+    ],
+    "alkawazane": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/alkawazane/"
+      }
+    ],
+    "kalaed": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/kalaed/"
+      }
+    ],
+    "omulmomenen": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/omulmomenen/"
+      }
+    ],
+    "ebnalqayem": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/ebnalqayem/"
+      }
+    ],
+    "almansora": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/almansora/"
+      }
+    ],
+    "lamiatebnalqayem": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/lamiatebnalqayem/"
+      }
+    ],
+    "alhoda": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/alhoda/"
+      }
+    ],
+    "nabhan": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/nabhan/"
+      }
+    ],
+    "monabeha": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/monabeha/"
+      }
+    ],
+    "alberi": [
+      {
+        "name": "بدر التركي",
+        "slug": "BaderTurky",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/BaderTurky/alberi/"
+      },
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/alberi/"
+      }
+    ],
+    "lamiaibnwardi": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/lamiaibnwardi/"
+      }
+    ],
+    "arb3ashwath": [
+      {
+        "name": "طه الفهد",
+        "slug": "Taha",
+        "type": "N",
+        "url": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/arb3ashwath/"
+      }
+    ]
+  },
+  "reciters_flat": {
+    "أيمن سويد - tohfa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/tohfa/",
+    "طه الفهد - tohfa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/tohfa/",
+    "سعد الغامدي - tohfa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Saad/tohfa/",
+    "عبد الحكيم صوفي - tohfa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AbdAlHakem/tohfa/",
+    "أيمن سويد - jasaryia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/jasaryia/",
+    "طه الفهد - jasaryia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/jasaryia/",
+    "سعد الغامدي - jasaryia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Saad/jasaryia/",
+    "طه الفهد - alsakhawi": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/alsakhawi/",
+    "أيمن سويد - aqylaa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/aqylaa/",
+    "طه الفهد - aqylaa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/aqylaa/",
+    "أيمن سويد - shatebia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/shatebia/",
+    "طه الفهد - shatebia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/shatebia/",
+    "أيمن سويد - doraa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/doraa/",
+    "طه الفهد - doraa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/doraa/",
+    "محمد المنشد - doraa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/MohammadMonshed/doraa/",
+    "أيمن سويد - tayba": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Ayman/tayba/",
+    "طه الفهد - tayba": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/tayba/",
+    "طه الفهد - nathmitzohr": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/nathmitzohr/",
+    "طه الفهد - minhamitwaly": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/minhamitwaly/",
+    "طه الفهد - gharebalquran": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/gharebalquran/",
+    "طه الفهد - salsabeel": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/salsabeel/",
+    "طه الفهد - ibnmalik": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/ibnmalik/",
+    "طه الفهد - fatehkareem": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/fatehkareem/",
+    "طه الفهد - thatshefa": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/thatshefa/",
+    "طه الفهد - fraedhesan": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/fraedhesan/",
+    "طه الفهد - mowridalthaman": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/mowridalthaman/",
+    "سعد الغامدي - hidayatmortab": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Saad/hidayatmortab/",
+    "طه الفهد - soyoty": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/soyoty/",
+    "طه الفهد - solamwosol": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/solamwosol/",
+    "محمد بلال - orjoza": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/MohammadBilal/orjoza/",
+    "عبد العزيز الخزيم - orjoza": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AbdAlzeezKhzaim/orjoza/",
+    "طه الفهد - rahbya": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/rahbya/",
+    "طه الفهد - la2ebayan": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/la2ebayan/",
+    "طه الفهد - zamzami": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/zamzami/",
+    "طه الفهد - bahjatalarwah": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/bahjatalarwah/",
+    "طه الفهد - maqsoodsarf": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/maqsoodsarf/",
+    "طه الفهد - tasheeltorokat": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/tasheeltorokat/",
+    "عامر بهجت - nathimjali": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AmerBahjat/nathimjali/",
+    "عبد الحميد القريو - motamimzamzami": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AbdAlHameedQerieo/motamimzamzami/",
+    "طه الفهد - tohfanadeya": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/tohfanadeya/",
+    "محمد الشريف - tohfanadeya": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/MohammadAlsharef/tohfanadeya/",
+    "طه الفهد - dorarlawame3": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/dorarlawame3/",
+    "طه الفهد - erakihadeeth": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/erakihadeeth/",
+    "طه الفهد - hedayarewaya": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/hedayarewaya/",
+    "عبد الحميد القريو - ajromia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/AbdAlHameedQerieo/ajromia/",
+    "طه الفهد - ajromia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/ajromia/",
+    "طه الفهد - bayqonia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/bayqonia/",
+    "السيد عبد السلام - samnodiya": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/SaiedAbdALsalam/samnodiya/",
+    "طه الفهد - khaqani": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/khaqani/",
+    "طه الفهد - mofedtajweed": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/mofedtajweed/",
+    "طه الفهد - bahjatallohath": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/bahjatallohath/",
+    "طه الفهد - resaltqasermonfasel": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/resaltqasermonfasel/",
+    "طه الفهد - qeraetmonfaselmaatawasot": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/qeraetmonfaselmaatawasot/",
+    "طه الفهد - qawolmalofhrof": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/qawolmalofhrof/",
+    "طه الفهد - almorshedalmoeen": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/almorshedalmoeen/",
+    "طه الفهد - nehaya": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/nehaya/",
+    "طه الفهد - noniya1": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya1/",
+    "طه الفهد - noniya2": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya2/",
+    "طه الفهد - noniya3": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya3/",
+    "طه الفهد - noniya4": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya4/",
+    "طه الفهد - noniya5": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya5/",
+    "طه الفهد - noniya6": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/noniya6/",
+    "طه الفهد - safaira": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/safaira/",
+    "طه الفهد - altahaweya": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/altahaweya/",
+    "طه الفهد - lamia": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/lamia/",
+    "طه الفهد - 7aeyya": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/7aeyya/",
+    "طه الفهد - jomlatulaqaed": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/jomlatulaqaed/",
+    "طه الفهد - alkawazane": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/alkawazane/",
+    "طه الفهد - kalaed": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/kalaed/",
+    "طه الفهد - omulmomenen": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/omulmomenen/",
+    "طه الفهد - ebnalqayem": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/ebnalqayem/",
+    "طه الفهد - almansora": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/almansora/",
+    "طه الفهد - lamiatebnalqayem": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/lamiatebnalqayem/",
+    "طه الفهد - alhoda": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/alhoda/",
+    "طه الفهد - nabhan": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/nabhan/",
+    "طه الفهد - monabeha": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/monabeha/",
+    "بدر التركي - alberi": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/BaderTurky/alberi/",
+    "طه الفهد - alberi": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/alberi/",
+    "طه الفهد - lamiaibnwardi": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/lamiaibnwardi/",
+    "طه الفهد - arb3ashwath": "https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/Taha/arb3ashwath/"
+  }
+}
