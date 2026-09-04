@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 import guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -93,12 +94,14 @@ class MotonRecitersSettings(qt.QWidget):
         reciter_layout = qt.QHBoxLayout()
         reciter_layout.setSpacing(10)
         reciter_layout.addStretch(1)
+        self.combos = []
         self.reciter_combo = qt.QComboBox()
         self.reciter_combo.setFont(font)
+        self.combos.append(self.reciter_combo)
         self.reciter_combo.setAccessibleName("القارئ")
         self.reciter_combo.setAccessibleDescription("لحذف بيانات القارئ، نستخدم زر التطبيقات أو click الأيمن")
         self.reciter_combo.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.reciter_combo.customContextMenuRequested.connect(lambda pos: self.on_delete(self.reciter_combo))
+        self.reciter_combo.customContextMenuRequested.connect(lambda pos, c=self.reciter_combo: self.on_delete(c))
         self.reciter_combo.installEventFilter(self)
         self.reciter_label = qt.QLabel("القارئ:")
         self.reciter_label.setFont(font)
@@ -129,9 +132,9 @@ class MotonRecitersSettings(qt.QWidget):
             self.on_category_changed(0)
 
     def eventFilter(self, obj, event):
-        if hasattr(self, 'reciter_combo') and obj == self.reciter_combo:
+        if hasattr(self, 'combos') and obj in self.combos:
             if event.type() == qt2.QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Menu:
-                self.on_delete(self.reciter_combo)
+                self.on_delete(obj)
                 return True
         return super().eventFilter(obj, event)
 
@@ -139,6 +142,10 @@ class MotonRecitersSettings(qt.QWidget):
         self.delete_notice.setText(self.default_notice_text)
 
     def on_delete(self, combo):
+        now = time.time()
+        if hasattr(self, '_last_delete_time') and (now - self._last_delete_time) < 0.5:
+            return
+        self._last_delete_time = now
         reciter_slug = combo.currentData()
         if not reciter_slug:
             return

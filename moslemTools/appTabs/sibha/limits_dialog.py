@@ -111,14 +111,17 @@ class LimitsDialog(qt.QDialog):
             self.set_active_btn.setEnabled(False)
             self.delete_btn.setEnabled(False)
             self.set_active_btn.setText("تعيين الحد المحدد")
+            self.set_active_btn.setStyleSheet("QPushButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 14px; font-weight: bold; border-radius: 4px; padding: 6px 14px;}")
             return
         self.set_active_btn.setEnabled(True)
         self.delete_btn.setEnabled(True)
         active = self.limits_data.get("active")
         if current_name == active:
             self.set_active_btn.setText("إلغاء تعيين الحد المحدد")
+            self.set_active_btn.setStyleSheet("QPushButton {background-color: #8B0000; color: white; min-height: 40px; font-size: 14px; font-weight: bold; border-radius: 4px; padding: 6px 14px;}")
         else:
             self.set_active_btn.setText("تعيين الحد المحدد")
+            self.set_active_btn.setStyleSheet("QPushButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 14px; font-weight: bold; border-radius: 4px; padding: 6px 14px;}")
         self.update_window_size()
 
     def toggle_active_limit(self):
