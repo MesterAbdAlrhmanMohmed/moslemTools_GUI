@@ -72,10 +72,20 @@ class ContextMenuMixin:
             goToAyah.setShortcut("ctrl+g")
             ayahOptions.addAction(goToAyah)
             goToAyah.triggered.connect(self.goToAyah)
-        playCurrentAyahAction = qt1.QAction("تشغيل الآية", self)
-        playCurrentAyahAction.setShortcut("space")
-        ayahOptions.addAction(playCurrentAyahAction)
-        playCurrentAyahAction.triggered.connect(self.on_play)
+        current_ayah_index = self.getCurrentAyah()
+        file_name = self.on_set(current_ayah_index) if current_ayah_index >= 0 else None
+        media_src = self.media.source().toString()
+        is_playing = getattr(self, "was_playing_before_action", False) and bool(file_name and (file_name in media_src))
+        if is_playing:
+            playCurrentAyahAction = qt1.QAction("إيقاف مؤقت", self)
+            playCurrentAyahAction.setShortcut("space")
+            ayahOptions.addAction(playCurrentAyahAction)
+            playCurrentAyahAction.triggered.connect(self._on_context_pause)
+        else:
+            playCurrentAyahAction = qt1.QAction("تشغيل الآية", self)
+            playCurrentAyahAction.setShortcut("space")
+            ayahOptions.addAction(playCurrentAyahAction)
+            playCurrentAyahAction.triggered.connect(self._on_context_play)
         tafaserCurrentAyahAction = qt1.QAction("تفسير الآية", self)
         tafaserCurrentAyahAction.setShortcut("ctrl+t")
         ayahOptions.addAction(tafaserCurrentAyahAction)
@@ -469,3 +479,11 @@ class ContextMenuMixin:
         menu.aboutToHide.connect(lambda: self.__setattr__('context_menu_active', False))
         menu.aboutToHide.connect(self.resume_after_action)
         menu.exec(self.mapToGlobal(self.cursor().pos()))
+
+    def _on_context_pause(self):
+        self.was_playing_before_action = False
+        self.media.pause()
+
+    def _on_context_play(self):
+        self.was_playing_before_action = False
+        self.on_play()

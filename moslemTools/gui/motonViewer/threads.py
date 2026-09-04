@@ -220,11 +220,16 @@ class PreMergeCheckThread(qt2.QThread):
 
 
 class GoToBaytDialog(qt.QDialog):
-    def __init__(self, parent, title, label, value, min_val, max_val):
+    def __init__(self, parent, title, label, value, min_val, max_val, show_play_checkbox=True):
         super().__init__(parent)
+        self.show_play_checkbox = show_play_checkbox
         self.setWindowTitle(title)
-        self.setMinimumSize(310, 200)
-        self.resize(330, 210)
+        if self.show_play_checkbox:
+            self.setMinimumSize(310, 200)
+            self.resize(330, 210)
+        else:
+            self.setMinimumSize(310, 150)
+            self.resize(330, 160)
         self.config_path = os.path.join(os.getenv('appdata'), settings.app.appName if hasattr(settings, 'app') and hasattr(settings.app, 'appName') else "moslemTools", "goto_bayt.json")
         layout = qt.QVBoxLayout(self)
         layout.setSpacing(6)
@@ -240,11 +245,14 @@ class GoToBaytDialog(qt.QDialog):
         self.spin_box.setMinimumHeight(32)
         layout.addWidget(self.spin_box)
         layout.addSpacing(4)
-        self.play_checkbox = qt.QCheckBox("تشغيل البيت عند الذهاب إليه")
-        self.play_checkbox.setAccessibleName("تشغيل البيت عند الذهاب إليه")
-        self.play_checkbox.setChecked(self.load_setting())
-        layout.addWidget(self.play_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
-        layout.addSpacing(6)
+        if self.show_play_checkbox:
+            self.play_checkbox = qt.QCheckBox("تشغيل البيت عند الذهاب إليه")
+            self.play_checkbox.setAccessibleName("تشغيل البيت عند الذهاب إليه")
+            self.play_checkbox.setChecked(self.load_setting())
+            layout.addWidget(self.play_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+            layout.addSpacing(6)
+        else:
+            self.play_checkbox = None
         buttons_layout = qt.QHBoxLayout()
         self.go_button = guiTools.QPushButton("موافق")
         self.go_button.setStyleSheet("background-color:#006400;color:white;padding:5px;")
@@ -280,11 +288,13 @@ class GoToBaytDialog(qt.QDialog):
             pass
 
     def on_go(self):
-        self.save_setting(self.play_checkbox.isChecked())
+        if self.play_checkbox is not None:
+            self.save_setting(self.play_checkbox.isChecked())
         self.accept()
 
     def get_values(self):
-        return self.spin_box.value(), self.play_checkbox.isChecked()
+        play_state = self.play_checkbox.isChecked() if self.play_checkbox is not None else True
+        return self.spin_box.value(), play_state
 
 class SearchModeDialog(qt.QDialog):
     def __init__(self, parent=None, ignore_tashkeel=True, ignore_hamza=True, ignore_symbols=True):

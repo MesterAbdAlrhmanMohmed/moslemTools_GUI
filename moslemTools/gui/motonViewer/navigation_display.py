@@ -248,6 +248,7 @@ class MotonNavigationDisplayMixin:
     def resume_after_action(self):
         if self.was_playing_before_action:
             self.media.play()
+            self.was_playing_before_action = False
 
     def get_bayt_at_cursor(self):
         cursor = self.text.textCursor()

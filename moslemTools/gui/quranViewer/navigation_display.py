@@ -224,6 +224,7 @@ class NavigationDisplayMixin:
     def resume_after_action(self):
         if self.was_playing_before_action:
             self.media.play()
+            self.was_playing_before_action = False
 
     def _set_text_with_delay(self, full_text):
         self.saved_text = full_text

@@ -69,9 +69,18 @@ class MotonContextMenuMixin:
             goToBaytAction.triggered.connect(self.goToBayt)
             baytOptions.addAction(goToBaytAction)
 
-        playCurrentBaytAction = qt1.QAction("تشغيل البيت", self)
-        playCurrentBaytAction.triggered.connect(self.on_play)
-        baytOptions.addAction(playCurrentBaytAction)
+        target_global = bayt.get("global_num")
+        is_playing = getattr(self, "was_playing_before_action", False) and (getattr(self, "current_playing_bayt", None) == target_global)
+        if is_playing:
+            playCurrentBaytAction = qt1.QAction("إيقاف مؤقت", self)
+            playCurrentBaytAction.setShortcut("Space")
+            playCurrentBaytAction.triggered.connect(self._on_context_pause)
+            baytOptions.addAction(playCurrentBaytAction)
+        else:
+            playCurrentBaytAction = qt1.QAction("تشغيل البيت", self)
+            playCurrentBaytAction.setShortcut("Space")
+            playCurrentBaytAction.triggered.connect(self._on_context_play)
+            baytOptions.addAction(playCurrentBaytAction)
 
         copy_bayt = qt1.QAction("نسخ البيت", self)
         copy_bayt.triggered.connect(lambda: self.copy_bayt(bayt))
@@ -281,4 +290,15 @@ class MotonContextMenuMixin:
         pyperclip.copy(txt)
         winsound.Beep(1000, 100)
         guiTools.speak("تم نسخ البيت")
+
+    def _on_context_pause(self):
+        self.was_playing_before_action = False
+        self.is_user_paused = True
+        pos = self.media.position()
+        self.saved_pause_position = pos if pos > 0 else getattr(self, '_last_playback_pos', 0)
+        self.media.pause()
+
+    def _on_context_play(self):
+        self.was_playing_before_action = False
+        self.on_play()
 

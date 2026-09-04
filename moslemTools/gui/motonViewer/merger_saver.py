@@ -397,7 +397,7 @@ class MotonMergerSaverMixin:
         self.single_save_mode = False
 
     def on_save_bayt_audio(self):
-        if self.is_merging:
+        if self.is_merging or getattr(self, 'is_search_view', False):
             return
         bayt = self.get_bayt_at_cursor()
         if not bayt:

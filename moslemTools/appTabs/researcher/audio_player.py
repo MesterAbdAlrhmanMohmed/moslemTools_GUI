@@ -104,6 +104,7 @@ class ResearcherAudioMixin:
     def resume_after_action(self):
         if self.was_playing_before_action:
             self.media_player.play()
+            self.was_playing_before_action = False
 
     def t10(self):
         if self.media_player.duration() == 0:

@@ -239,6 +239,7 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
         qt1.QShortcut("ctrl+shift+r", self).activated.connect(self.on_change_reciter)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.merge_all_verses)
         qt1.QShortcut("ctrl+alt+h", self).activated.connect(self.save_all_verses_audio)
+        qt1.QShortcut("ctrl+h", self).activated.connect(self.save_current_bayt_audio)
         qt1.QShortcut("ctrl+g", self).activated.connect(self.on_goto_bayt_dialog)
         qt1.QShortcut("ctrl+x", self).activated.connect(self.on_toggle_diacritics)
         qt1.QShortcut("ctrl+c", self).activated.connect(self.copy_current_bayt)
@@ -309,6 +310,9 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
                 guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا يمكن إغلاق النافذة أثناء العملية الجارية.")
                 return
             self.close()
+            return
+        if event.key() == qt2.Qt.Key.Key_Menu:
+            self.oncontextMenu()
             return
         super().keyPressEvent(event)
 

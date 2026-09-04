@@ -48,10 +48,19 @@ class ResearcherContextMenuMixin:
                     action.setCheckable(True)
                     action.setChecked(abs(current_speed - s) < 0.01)
                     action.triggered.connect(lambda checked, val=s: self.change_speed(val))
-                play_action = qt1.QAction("تشغيل الآية", self)
-                play_action.setShortcut(qt1.QKeySequence(qt2.Qt.Key.Key_Space))
-                play_action.triggered.connect(lambda: self.start_playback(metadata))
-                ayah_menu.addAction(play_action)
+                current_media_src = self.media_player.source().fileName().split('/')[-1]
+                expected_filename = f'{str(metadata["surah_number"]).zfill(3)}{str(metadata["ayah_number_in_surah"]).zfill(3)}.mp3'
+                is_playing_this_verse = getattr(self, 'was_playing_before_action', False) and (current_media_src == expected_filename)
+                if is_playing_this_verse:
+                    play_action = qt1.QAction("إيقاف مؤقت", self)
+                    play_action.setShortcut(qt1.QKeySequence(qt2.Qt.Key.Key_Space))
+                    play_action.triggered.connect(self._on_context_pause)
+                    ayah_menu.addAction(play_action)
+                else:
+                    play_action = qt1.QAction("تشغيل الآية", self)
+                    play_action.setShortcut(qt1.QKeySequence(qt2.Qt.Key.Key_Space))
+                    play_action.triggered.connect(lambda: self._on_context_play(metadata))
+                    ayah_menu.addAction(play_action)
                 change_reciter_action = qt1.QAction("تغيير القارئ", self)
                 change_reciter_action.setShortcut("Ctrl+Shift+R")
                 change_reciter_action.triggered.connect(self.on_change_reciter_requested)
@@ -127,3 +136,11 @@ class ResearcherContextMenuMixin:
             menu.addAction(copy_selected)
         menu.exec(qt1.QCursor.pos())
         self.resume_after_action()
+
+    def _on_context_pause(self):
+        self.was_playing_before_action = False
+        self.media_player.pause()
+
+    def _on_context_play(self, metadata):
+        self.was_playing_before_action = False
+        self.handle_play_toggle(metadata)

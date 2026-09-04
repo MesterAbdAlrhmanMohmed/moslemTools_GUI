@@ -384,6 +384,7 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
         qt1.QShortcut("ctrl+shift+d", self).activated.connect(self.mergeCategoryBayts)
         qt1.QShortcut("shift+alt+d", self).activated.connect(self.mergeFromBaytToEnd)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.mergeBayts)
+        qt1.QShortcut("ctrl+h", self).activated.connect(self.on_save_bayt_audio)
         qt1.QShortcut("ctrl+shift+h", self).activated.connect(self.saveCategoryBayts)
         qt1.QShortcut("shift+alt+h", self).activated.connect(self.saveFromBaytToEnd)
         qt1.QShortcut("ctrl+alt+h", self).activated.connect(self.saveFromVersToVers)
