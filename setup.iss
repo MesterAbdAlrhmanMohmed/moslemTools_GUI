@@ -1,5 +1,5 @@
 #define MyAppName "moslem tools, alcoder"
-#define MyAppVersion "10.0"
+#define MyAppVersion "10.1"
 #define MyAppPublisher "abd alrhman mohamed alcoder"
 #define MyAppURL "https://github.com/MesterAbdAlrhmanMohmed"
 #define MyAppExeName "moslem_tools.exe"
