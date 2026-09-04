@@ -75,6 +75,7 @@ class IslamicMoton(qt.QWidget):
             self.favorites_widget.refresh_favorites()
             self.favorites_widget.show()
             self.fav_btn.setText("عرض جميع المتون")
+            self.favorites_widget.moton_list.setFocus()
         else:
             self.favorites_widget.hide()
             self.moton_tab.show()

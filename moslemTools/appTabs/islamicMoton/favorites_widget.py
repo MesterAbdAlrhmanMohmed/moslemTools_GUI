@@ -34,7 +34,9 @@ class MotonFavoritesWidget(qt.QWidget):
         moton_layout.addWidget(self.moton_label)
         moton_layout.addWidget(self.moton_list)
 
-        chapters_layout = qt.QVBoxLayout()
+        self.chapters_container = qt.QWidget()
+        chapters_layout = qt.QVBoxLayout(self.chapters_container)
+        chapters_layout.setContentsMargins(0, 0, 0, 0)
         chapters_layout.setSpacing(10)
         self.chapters_label = qt.QLabel("اختيار باب")
         self.chapters_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -49,40 +51,48 @@ class MotonFavoritesWidget(qt.QWidget):
         chapters_layout.addWidget(self.chapters_list)
 
         layout.addLayout(moton_layout, 1)
-        layout.addLayout(chapters_layout, 1)
+        layout.addWidget(self.chapters_container, 1)
 
         self.refresh_favorites()
 
     def refresh_favorites(self):
+        self.moton_list.blockSignals(True)
         self.moton_list.clear()
+        self.chapters_list.clear()
         favs = self.favorites_manager.favorites
         if favs:
+            self.chapters_container.show()
             self.moton_list.addItems(favs)
-            self.moton_list.setCurrentRow(0)
-            self.on_moton_selected()
         else:
-            self.moton_list.addItem("لا يوجد متون في قائمة المفضلة")
-            self.chapters_list.clear()
+            self.chapters_container.hide()
+            self.moton_list.addItem("لا توجد متون في قائمة المفضلة")
+        self.moton_list.setCurrentRow(0)
+        self.moton_list.blockSignals(False)
+        self.on_moton_selected()
 
     def on_moton_selected(self):
         selected_item = self.moton_list.currentItem()
+        self.chapters_list.clear()
         if not selected_item:
-            self.chapters_list.clear()
+            self.chapters_container.hide()
             return
         matn_name = selected_item.text()
-        if matn_name == "لا يوجد متون في قائمة المفضلة":
-            self.chapters_list.clear()
+        if matn_name in ["لا يوجد متون في قائمة المفضلة", "لا توجد متون في قائمة المفضلة"]:
+            self.chapters_container.hide()
             return
+        self.chapters_container.show()
         chapters = self.data_loader.get_matn_chapters(matn_name)
-        self.chapters_list.clear()
         if chapters:
             self.chapters_list.addItems(chapters)
+            self.chapters_list.setCurrentRow(0)
 
     def on_chapter_activated(self, item):
         if not item:
             return
         matn_name = self.get_current_matn()
-        if not matn_name or matn_name == "لا يوجد متون في قائمة المفضلة":
+        if not matn_name or matn_name in ["لا يوجد متون في قائمة المفضلة", "لا توجد متون في قائمة المفضلة"]:
+            return
+        if item.text() in ["لا يوجد متون في قائمة المفضلة", "لا توجد متون في قائمة المفضلة", "لا توجد أبواب لعرضها"]:
             return
         from gui.motonViewer import MotonViewer
         chapter_title = item.text()
@@ -92,16 +102,18 @@ class MotonFavoritesWidget(qt.QWidget):
         viewer.exec()
 
     def on_moton_context_menu(self, pos):
-        item = self.moton_list.itemAt(pos) or self.moton_list.currentItem()
-        if item and item.text() and item.text() != "لا يوجد متون في قائمة المفضلة":
+        item = (self.moton_list.itemAt(pos) if pos is not None else None) or self.moton_list.currentItem()
+        if item and item.text() and item.text() not in ["لا يوجد متون في قائمة المفضلة", "لا توجد متون في قائمة المفضلة"]:
             self.on_toggle_fav_callback(item.text())
 
     def get_current_matn(self):
         item = self.moton_list.currentItem()
-        if item and item.text() != "لا يوجد متون في قائمة المفضلة":
+        if item and item.text() not in ["لا يوجد متون في قائمة المفضلة", "لا توجد متون في قائمة المفضلة"]:
             return item.text()
         return ""
 
     def get_current_chapter(self):
         item = self.chapters_list.currentItem()
-        return item.text() if item else ""
+        if item and item.text() not in ["لا يوجد متون في قائمة المفضلة", "لا توجد متون في قائمة المفضلة", "لا توجد أبواب لعرضها"]:
+            return item.text()
+        return ""
