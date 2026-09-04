@@ -193,6 +193,7 @@ class DownloadReciter(qt.QDialog):
                 return
             self.pause.setText("إيقاف مؤقت")
             self.pause.setAccessibleName("إيقاف مؤقت")
+            guiTools.speak("تم استئناف التحميل")
             self.run.resume()
         else:
             self.close()
