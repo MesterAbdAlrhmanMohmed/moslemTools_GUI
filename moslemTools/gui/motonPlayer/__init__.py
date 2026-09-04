@@ -1,1 +1,1 @@
-from .main import MotonPlayer
+from .main import MotonPlayer, moton_reciters

@@ -10,5 +10,5 @@ from .book_marks import book_marcks
 from .tafaseerViewer import TafaseerViewer
 from .translationViewer import translationViewer
 from .islamicTopicViewer import IslamicTopicViewer
-from .motonViewer import MotonViewer
+from .motonViewer import MotonViewer, moton_reciters
 from .motonPlayer import MotonPlayer

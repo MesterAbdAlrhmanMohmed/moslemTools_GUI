@@ -17,7 +17,7 @@ class IslamicMoton(qt.QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.moton_tab = qt.QTabWidget()
+        self.moton_tab = guiTools.QCustomTabWidget()
         self.moton_tab.setStyleSheet(
             "QTabWidget::pane { border: 1px solid #444; border-radius: 6px; background-color: #1e1e1e; } "
             "QTabBar::tab { background: #2b2b2b; color: white; padding: 10px 20px; border: 1px solid #444; "

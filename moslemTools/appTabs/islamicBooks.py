@@ -176,7 +176,7 @@ class IslamicBooks(qt.QWidget):
         search_layout.addLayout(view_mode_v_layout)
         layout.addLayout(search_layout)
 
-        self.category_tabs = qt.QTabBar()
+        self.category_tabs = guiTools.QCustomTabBar()
         self.category_tabs.setElideMode(qt2.Qt.TextElideMode.ElideNone)
         self.category_tabs.setExpanding(False)
         self.category_tabs.setStyleSheet("""QTabBar::tab { background: #2b2b2b; color: white; padding: 10px 20px; border: 1px solid #444; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; font-weight: bold; } QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } QTabBar::tab:hover { background: #3a3a3a; }""")

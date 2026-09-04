@@ -3,7 +3,7 @@ import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 from collections import defaultdict
-from guiTools.QListWidget import QListWidget
+from guiTools import QListWidget, QCustomTabWidget
 from gui.islamicTopicViewer import IslamicTopicViewer
 
 
@@ -26,7 +26,7 @@ class IslamicTopicsTab(qt.QWidget):
         return matches
 
     def initUI(self):
-        self.tabs = qt.QTabWidget()
+        self.tabs = QCustomTabWidget()
         self.tabs.setStyleSheet("""
             QTabWidget::pane {
                 border: 1px solid #444;

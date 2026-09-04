@@ -1,4 +1,4 @@
-import json,os,requests,re
+import json,os,requests,re,time,socket
 import guiTools,settings,settings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -47,51 +47,86 @@ class downloadObjects(qt2.QObject):
     downloaded=qt2.pyqtSignal(int)
     pauseDownloading=qt2.pyqtSignal(str)
     finch=qt2.pyqtSignal(bool)
-class downloadThread(qt2.QRunnable):
+    network_error=qt2.pyqtSignal(str)
+class downloadThread(qt2.QThread):
     def __init__(self,p,url,name):
-        super().__init__()        
+        super().__init__(p)        
         self.objects=downloadObjects()
         self.name=name
         self.url=url
-        self.pause=False
-        self.objects.pauseDownloading.connect(self.on_pause)        
-    def on_pause(self,s):
-        self.pause=True
-    def  run(self):
+        self.is_paused=False
+        self.is_cancelled=False
+        self.current_file=None
+        self.objects.pauseDownloading.connect(self.cancel)
+    def resume(self):
+        self.is_paused=False
+    def cancel(self):
+        self.is_cancelled=True
+        self.is_paused=False
+    def run(self):
         try:
             count=0
+            base_dir=os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name)
+            os.makedirs(base_dir,exist_ok=True)
             for item in self.url:
-                if not self.pause:
-                    if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar")):
-                        os.makedirs(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar"))
-                    if not os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name)):
-                        os.makedirs(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name))
-                    file=str(self.url.index(item)) + ".mp3"
-                    if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name,file)):
-                        count+=1
-                        self.objects.downloaded.emit(count)
-                    else:
-                        with requests.get(item["audio"],stream=True) as r:
+                if self.is_cancelled:
+                    return
+                file_name=str(self.url.index(item)) + ".mp3"
+                file_path=os.path.join(base_dir,file_name)
+                self.current_file=file_path
+                if os.path.exists(file_path):
+                    count+=1
+                    self.objects.downloaded.emit(count)
+                    continue
+                downloaded_current=False
+                while not downloaded_current and not self.is_cancelled:
+                    while self.is_paused and not self.is_cancelled:
+                        self.msleep(200)
+                    if self.is_cancelled:
+                        return
+                    try:
+                        with requests.get(item["audio"],stream=True,timeout=(5,5)) as r:
                             if r.status_code!=200:
                                 self.objects.finch.emit(False)
                                 return
                             size=r.headers.get("content-length")
                             try:
                                 size=int(size)
-                            except TypeError:
-                                self.objects.finch.emit(False)
-                                return
+                            except (TypeError, ValueError):
+                                size=0
                             recieved=0
                             progress=0
-                            with open(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.name,file),"wb") as file:
+                            with open(file_path,"wb") as f:
                                 for pk in r.iter_content(1024):
-                                    file.write(pk)
+                                    if self.is_cancelled:
+                                        break
+                                    f.write(pk)
                                     recieved+=len(pk)
-                                    progress=int((recieved/size)*100)
-                                    self.objects.progress.emit(progress)
+                                    if size>0:
+                                        progress=int((recieved/size)*100)
+                                        self.objects.progress.emit(progress)
+                            if self.is_cancelled:
+                                if os.path.exists(file_path):
+                                    try:
+                                        os.remove(file_path)
+                                    except Exception:
+                                        pass
+                                return
+                        downloaded_current=True
                         count+=1
                         self.objects.downloaded.emit(count)
-            self.objects.finch.emit(True)
+                    except (requests.exceptions.RequestException, Exception) as e:
+                        if os.path.exists(file_path):
+                            try:
+                                os.remove(file_path)
+                            except Exception:
+                                pass
+                        if self.is_cancelled:
+                            return
+                        self.is_paused=True
+                        self.objects.network_error.emit("تم انقطاع الاتصال بالإنترنت وتم إيقاف التحميل مؤقتاً. يرجى التأكد من الاتصال ثم الضغط على زر الاستئناف.")
+            if not self.is_cancelled:
+                self.objects.finch.emit(True)
         except Exception as e:
             print(e)
             self.objects.finch.emit(False)
@@ -99,7 +134,7 @@ class DownloadReciter(qt.QDialog):
     def __init__(self,p,url,name):
         super().__init__(p)                         
         self.setWindowTitle("جاري التحميل")        
-        qt1.QShortcut("escape",self).activated.connect(lambda:self.run.objects.pauseDownloading.emit("a"))
+        qt1.QShortcut("escape",self).activated.connect(self.close)
         self.progress=qt.QProgressBar()
         self.downloaded=qt.QSpinBox()
         self.downloaded.setAccessibleName("عدد الأذكار التي تم تحميلها")
@@ -112,15 +147,56 @@ class DownloadReciter(qt.QDialog):
         layout.addWidget(qt.QLabel("عدد الأذكار التي تم تحميلها"))
         layout.addWidget(self.downloaded)
         layout.addWidget(self.pause)
-        thread=qt2.QThreadPool(self)
         self.run=downloadThread(self,url,name)
         self.run.objects.finch.connect(self.on)
         self.run.objects.progress.connect(self.on_progress)
         self.run.objects.downloaded.connect(self.on_downloaded)
-        thread.start(self.run)
-        self.pause.clicked.connect(lambda:self.run.objects.pauseDownloading.emit("a"))
+        self.run.objects.network_error.connect(self.on_network_error)
+        self.run.start()
+        self.pause.clicked.connect(self.on_pause_clicked)
+    def check_internet(self):
+        try:
+            socket.create_connection(("8.8.8.8", 53), timeout=1.5).close()
+            return True
+        except Exception:
+            try:
+                socket.create_connection(("1.1.1.1", 53), timeout=1.5).close()
+                return True
+            except Exception:
+                try:
+                    requests.head("https://www.google.com", timeout=1.5)
+                    return True
+                except Exception:
+                    return False
+    def on_pause_clicked(self):
+        if self.run.is_paused or self.pause.text() == "استئناف":
+            if not self.check_internet():
+                self.pause.setText("استئناف")
+                self.pause.setAccessibleName("استئناف")
+                guiTools.speak("لا يوجد اتصال بالإنترنت، يرجى التأكد من الاتصال أولاً")
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ في الاتصال", "لا يوجد اتصال بالإنترنت، يرجى التأكد من الاتصال أولاً ثم الضغط على زر الاستئناف.")
+                return
+            self.pause.setText("إيقاف مؤقت")
+            self.pause.setAccessibleName("إيقاف مؤقت")
+            self.run.resume()
+        else:
+            self.close()
+    def on_network_error(self,msg):
+        self.pause.setText("استئناف")
+        self.pause.setAccessibleName("استئناف")
+        guiTools.speak("تم إيقاف التحميل مؤقتاً بسبب انقطاع الاتصال بالإنترنت")
+        guiTools.qMessageBox.MessageBox.error(self,"انقطاع الاتصال",msg)
     def closeEvent(self,event):
-        self.run.objects.pauseDownloading.emit("a")
+        if self.run and self.run.isRunning():
+            self.run.cancel()
+            self.run.terminate()
+            self.run.wait(200)
+            if self.run.current_file and os.path.exists(self.run.current_file):
+                try:
+                    os.remove(self.run.current_file)
+                except Exception:
+                    pass
+        event.accept()
     def on(self,state):
         if state==True:
             guiTools.qMessageBox.MessageBox.view(self,"تم","تم التحميل بنجاح")

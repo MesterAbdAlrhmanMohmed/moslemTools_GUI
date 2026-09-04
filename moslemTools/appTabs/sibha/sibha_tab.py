@@ -6,6 +6,7 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtCore import Qt
 from .limit_input_dialog import LimitInputDialog
+from .limits_dialog import LimitsDialog
 
 path = os.path.join(os.getenv('appdata'), app.appName, "athkar.json")
 limits_path = os.path.join(os.getenv('appdata'), app.appName, "limits.json")
@@ -57,6 +58,11 @@ class sibha(qt.QWidget):
         self.minus.setShortcut("ctrl+-")
         self.minus.clicked.connect(self.decrement_count)
         self.minus.setObjectName("minusButton")
+        self.limit_button = guiTools.QPushButton("تعيين حد أقصى لعدد التسبيحات")
+        self.limit_button.setAccessibleDescription("control plus shift plus s")
+        self.limit_button.setShortcut("ctrl+shift+s")
+        self.limit_button.clicked.connect(self.on_limit_button_clicked)
+        self.limit_button.setObjectName("limitButton")
         self.add_thecr = guiTools.QPushButton("إضافة ذكر")
         self.add_thecr.setAccessibleDescription("control plus a")
         self.add_thecr.setShortcut("ctrl+a")
@@ -64,14 +70,6 @@ class sibha(qt.QWidget):
         self.add_thecr.setMaximumWidth(160)
         self.add_thecr.clicked.connect(self.onAddThakar)
         self.add_thecr.setStyleSheet("background-color: #008000; color: white;")
-        self.limit_button = guiTools.QPushButton("تعيين حد أقصى لعدد التسبيحات")
-        self.limit_button.setMaximumHeight(30)
-        self.limit_button.setMaximumWidth(200)
-        self.limit_button.clicked.connect(self.on_limit_button_clicked)
-        self.limit_button.setStyleSheet("background-color: #0056b3; color: white;")
-        self.limit_button.setShortcut("ctrl+shift+s")
-        self.limit_button.setAccessibleDescription("control plus shift plus s")
-        self.update_limit_button_text()
         self.line_of_thecr = qt.QLineEdit()
         self.line_of_thecr.setAccessibleName("أكتب الذكر")
         self.line_of_thecr.textChanged.connect(self.onLineTextChanged)
@@ -98,7 +96,6 @@ class sibha(qt.QWidget):
         layout0 = qt.QHBoxLayout()
         layout0.addLayout(layout1)
         layout0.addWidget(self.add_thecr)
-        layout0.addWidget(self.limit_button)
         layout2 = qt.QHBoxLayout()
         layout2.addWidget(self.cancel_add)
         layout2.addWidget(self.line_of_thecr)
@@ -108,13 +105,21 @@ class sibha(qt.QWidget):
         btn_layout.addWidget(self.reset)
         btn_layout.addWidget(self.add)
         btn_layout.addWidget(self.minus)
+        btn_layout.addWidget(self.limit_button)
         main_layout.addLayout(layout0)
         main_layout.addLayout(layout1)
         main_layout.addLayout(layout2)
         main_layout.addWidget(self.numbers)
         main_layout.addLayout(btn_layout)
         self.setLayout(main_layout)
-        self.setStyleSheet("QPushButton#resetButton {background-color: #8B0000; color: white; min-height: 40px; font-size: 16px;} QPushButton#addButton {background-color: #008000; color: white; min-height: 40px; font-size: 16px;} QPushButton#minusButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;} QComboBox, QLineEdit, QSpinBox {min-height: 40px; font-size: 16px;} QLabel {font-size: 16px;}")
+        self.setStyleSheet("QPushButton#resetButton {background-color: #8B0000; color: white; min-height: 40px; font-size: 16px;} QPushButton#addButton {background-color: #008000; color: white; min-height: 40px; font-size: 16px;} QPushButton#minusButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;} QPushButton#limitButton {background-color: #0056b3; color: white; min-height: 40px; font-size: 16px;} QComboBox, QLineEdit, QSpinBox {min-height: 40px; font-size: 16px;} QLabel {font-size: 16px;}")
+        self.update_limit_button_text()
+
+    def update_limit_button_text(self):
+        if self.limits_data.get("limits"):
+            self.limit_button.setText("فتح قائمة الحدود")
+        else:
+            self.limit_button.setText("تعيين حد أقصى لعدد التسبيحات")
 
     def show_athkar_context_menu(self, pos):
         menu = guiTools.QCustomContextMenu(self)
@@ -129,100 +134,37 @@ class sibha(qt.QWidget):
         delete_all_action.triggered.connect(self.onDeleteAllCustom)
         menu.exec(qt1.QCursor.pos())
 
-    def update_limit_button_text(self):
-        if not self.limits_data["limits"]:
-            self.limit_button.setText("تعيين حد أقصى لعدد التسبيحات")
-        else:
-            self.limit_button.setText("فتح قائمة الحدود")
-
     def on_limit_button_clicked(self):
-        if not self.limits_data["limits"]:
+        if not self.limits_data.get("limits"):
             self.add_new_limit()
         else:
-            self.show_limits_menu()
+            dlg = LimitsDialog(self)
+            dlg.exec()
+        self.update_limit_button_text()
 
     def add_new_limit(self):
         name, value, ok = LimitInputDialog.getLimitData(self)
         if ok and name:
+            if "limits" not in self.limits_data:
+                self.limits_data["limits"] = {}
             self.limits_data["limits"][name] = value
             self.save_limits()
             self.update_limit_button_text()
             guiTools.speak(f"تم إضافة الحد الأقصى {name} بقيمة {value}")
-
-    def show_limits_menu(self):
-        menu = guiTools.QCustomContextMenu(self)
-        font=qt1.QFont()
-        font.setBold(True)
-        for name, value in self.limits_data["limits"].items():
-            limit_action = menu.addAction(f"{name} ({value})")
-            limit_action.triggered.connect(lambda checked, n=name: self.on_limit_selected(n))
-        menu.addSeparator()
-        add_action = menu.addAction("إضافة حد")
-        add_action.triggered.connect(self.add_new_limit)
-        delete_all_limits_action = menu.addAction("حذف كل الحدود")
-        delete_all_limits_action.triggered.connect(self.onDeleteAllLimits)
-        menu.setFont(font)
-        menu.exec(qt1.QCursor.pos())
-
-    def on_limit_selected(self, name):
-        menu = guiTools.QCustomContextMenu(self)
-        font=qt1.QFont()
-        font.setBold(True)
-        if self.limits_data["active"] == name:
-            deactivate_action = menu.addAction("إلغاء التعيين")
-            deactivate_action.triggered.connect(lambda: self.deactivate_limit(name))
-        else:
-            set_action = menu.addAction("تعيين")
-            set_action.triggered.connect(lambda: self.set_active_limit(name))
-        delete_action = menu.addAction("حذف")
-        delete_action.triggered.connect(lambda: self.delete_limit(name))
-        menu.setFont(font)
-        menu.exec(qt1.QCursor.pos())
-
-    def deactivate_limit(self, name):
-        self.limits_data["active"] = None
-        self.save_limits()
-        guiTools.speak(f"تم إلغاء تعيين الحد الأقصى {name}")
-
-    def set_active_limit(self, name):
-        self.limits_data["active"] = name
-        self.save_limits()
-        guiTools.speak(f"تم تعيين الحد الأقصى إلى {name} بقيمة {self.limits_data['limits'][name]}")
-
-    def delete_limit(self, name):
-        question = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل تريد حذف الحد الأقصى {name}؟", "نعم", "لا")
-        if question == 0:
-            del self.limits_data["limits"][name]
-            if self.limits_data["active"] == name:
-                self.limits_data["active"] = None
-            self.save_limits()
-            self.update_limit_button_text()
-            guiTools.speak(f"تم حذف الحد الأقصى {name}")
-
-    def onDeleteAllLimits(self):
-        if not self.limits_data["limits"]:
-            guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "لا توجد حدود مضافة لحذفها")
-            return
-        question = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف الكلي", "هل تريد حذف جميع الحدود المضافة؟", "نعم", "لا")
-        if question == 0:
-            self.limits_data["limits"] = {}
-            self.limits_data["active"] = None
-            self.save_limits()
-            self.update_limit_button_text()
-            guiTools.speak("تم حذف جميع الحدود المضافة")
 
     def save_limits(self):
         with open(limits_path, "w", encoding="utf-8") as file:
             json.dump(self.limits_data, file, ensure_ascii=False, indent=4)
 
     def check_limit(self):
-        if self.limits_data["active"]:
-            active_limit = self.limits_data["limits"][self.limits_data["active"]]
-            current_count = int(self.numbers.text())
-            if current_count >= active_limit:
-                winsound.Beep(750, 300)
-                guiTools.speak(f"لقد وصلت إلى الحد الأقصى {active_limit}")
-                return True
+        if self.limits_data.get("active"):
+            active_limit = self.limits_data["limits"].get(self.limits_data["active"])
+            if active_limit is not None:
+                current_count = int(self.numbers.text())
+                if current_count >= active_limit:
+                    winsound.Beep(750, 300)
+                    guiTools.speak(f"لقد وصلت إلى الحد الأقصى {active_limit}")
+                    return True
         return False
 
     def cansel_add_thecr(self):

@@ -9,7 +9,11 @@ import custom_errors
 import guiTools
 import settings
 from settings import settings_handler
-from ..motonViewer.threads import ChangeMotonReciterDialog
+import ujson as json
+
+with open("data/json/files/all_moton_reciters.json", "r", encoding="utf-8") as file:
+    moton_reciters = json.load(file)
+
 from .context_menu import MotonPlayerContextMenuMixin
 from .navigation_display import MotonPlayerNavigationDisplayMixin
 from .merger_saver import MotonPlayerMergerSaverMixin
@@ -68,55 +72,30 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
         return None
 
     def load_reciters_data(self):
-        reader_idx_path = "data/DataMoton/DicQaseadReaderIndex"
-        reader_type_path = "data/DataMoton/DicQaseadReaderIndexN"
-        qari_ar_path = "data/DataMoton/ListQariArabic"
-        qari_en_path = "data/DataMoton/ListQariEnglish"
-
-        qari_ar_list = []
-        qari_en_list = []
-        if os.path.exists(qari_ar_path):
-            with open(qari_ar_path, "r", encoding="utf-8") as f:
-                qari_ar_list = [l.strip() for l in f if l.strip()]
-        if os.path.exists(qari_en_path):
-            with open(qari_en_path, "r", encoding="utf-8") as f:
-                qari_en_list = [l.strip() for l in f if l.strip()]
-
-        slug_to_ar = dict(zip(qari_en_list, qari_ar_list))
-
-        moton_reciters = []
-        if os.path.exists(reader_idx_path):
-            with open(reader_idx_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    if ":" in line:
-                        k, v = line.strip().split(":", 1)
-                        if k == self.matn_slug:
-                            moton_reciters = [r.strip() for r in v.split(",") if r.strip()]
-                            break
-
-        moton_types = []
-        if os.path.exists(reader_type_path):
-            with open(reader_type_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    if ":" in line:
-                        k, v = line.strip().split(":", 1)
-                        if k == self.matn_slug:
-                            moton_types = [t.strip() for t in v.split(",") if t.strip()]
-                            break
-
+        from functions.moton_data import get_moton_reciters_for_matn, get_all_moton_reciters
+        reciters_list = get_moton_reciters_for_matn(self.matn_slug)
         self.available_reciters = []
-        for idx, r_slug in enumerate(moton_reciters):
-            r_type = moton_types[idx] if idx < len(moton_types) else "N"
-            r_ar = slug_to_ar.get(r_slug, r_slug)
+        for r_ar, r_slug, r_type, r_url in reciters_list:
             self.available_reciters.append((r_ar, r_slug, r_type))
+
+        all_reciters_info = get_all_moton_reciters().get("reciters", {})
 
         if self.available_reciters:
             if not self.current_reciter_slug:
-                saved_reciter = settings_handler.get("moton_player_reciters", self.matn_slug) or settings_handler.get("moton_player_reciters", "default") or settings_handler.get("moton_reciters", self.matn_slug) or settings_handler.get("moton_reciters", "default")
+                saved_reciter = (
+                    settings_handler.get("moton_player_reciters", self.matn_slug) or
+                    settings_handler.get("moton_player_reciters", "default") or
+                    settings_handler.get("moton_reciters", self.matn_slug) or
+                    settings_handler.get("moton_reciters", "default")
+                )
                 if saved_reciter and saved_reciter in [r[1] for r in self.available_reciters]:
                     self.current_reciter_slug = saved_reciter
             if self.current_reciter_slug in [r[1] for r in self.available_reciters]:
-                self.current_reciter_ar = slug_to_ar.get(self.current_reciter_slug, self.current_reciter_slug)
+                self.current_reciter_ar = all_reciters_info.get(self.current_reciter_slug, self.current_reciter_slug)
+                for r in self.available_reciters:
+                    if r[1] == self.current_reciter_slug:
+                        self.current_reciter_ar, self.current_reciter_slug, self.current_reciter_type = r
+                        break
             else:
                 self.current_reciter_ar, self.current_reciter_slug, self.current_reciter_type = self.available_reciters[0]
         else:
@@ -172,10 +151,17 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
         self.merge_action_button.setStyleSheet("QPushButton#cancelMergeButton {background-color: #8B0000; color: white; border: 2px solid #B22222; padding: 6px 12px; border-radius: 5px; font-weight: bold;} QPushButton#cancelMergeButton:hover {background-color: #A52A2A; border-color: #FF4D4D;}")
         self.merge_action_button.clicked.connect(self.handle_merge_action)
 
+        self.resume_download_button = guiTools.QPushButton("استئناف")
+        self.resume_download_button.setAutoDefault(False)
+        self.resume_download_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
+        self.resume_download_button.setVisible(False)
+        self.resume_download_button.clicked.connect(self.resume_current_download)
+
         merge_layout = qt.QHBoxLayout()
         merge_layout.addWidget(self.merge_feedback_label)
         merge_layout.addWidget(self.merge_progress_bar)
         merge_layout.addWidget(self.merge_action_button)
+        merge_layout.addWidget(self.resume_download_button)
         self.merge_widget = qt.QWidget()
         self.merge_widget.setLayout(merge_layout)
         self.merge_widget.setVisible(False)
@@ -260,14 +246,34 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
         if not self.available_reciters:
             guiTools.speak("لا يتوفر قراء مسجلين لهذا المتن")
             return
-        dialog = ChangeMotonReciterDialog(self, self.available_reciters, self.current_reciter_slug)
-        if dialog.exec():
-            selected = dialog.get_reciter()
-            if selected:
-                self.media.stop()
-                self.current_reciter_ar, self.current_reciter_slug, self.current_reciter_type = selected
-                guiTools.speak(f"تم اختيار القارئ: {self.current_reciter_ar}")
-                self.on_play()
+        self.was_playing = (self.media.playbackState() == self.media.PlaybackState.PlayingState)
+        if self.was_playing:
+            self.media.pause()
+            self.PPS.setText("تشغيل")
+        menu = guiTools.QCustomContextMenu("اختيار القارئ", self)
+        font = qt1.QFont()
+        font.setBold(True)
+        menu.setFont(font)
+        menu.setAccessibleName("اختيار القارئ")
+        group = qt1.QActionGroup(self)
+        group.setExclusive(True)
+        for r_ar, r_slug, r_type in self.available_reciters:
+            action = qt1.QAction(r_ar, self)
+            action.setCheckable(True)
+            if r_slug == self.current_reciter_slug:
+                action.setChecked(True)
+            action.triggered.connect(lambda checked, rec=(r_ar, r_slug, r_type): self._set_reciter(rec))
+            group.addAction(action)
+            menu.addAction(action)
+        menu.aboutToHide.connect(self.resume_playback)
+        menu.exec(qt1.QCursor.pos())
+
+    def _set_reciter(self, selected):
+        self.media.stop()
+        self.current_reciter_ar, self.current_reciter_slug, self.current_reciter_type = selected
+        guiTools.speak(f"تم اختيار القارئ: {self.current_reciter_ar}")
+        self.was_playing = False
+        self.on_play()
 
     def safeClose(self):
         if getattr(self, 'is_merging', False):

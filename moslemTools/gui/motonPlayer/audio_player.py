@@ -8,6 +8,7 @@ import custom_errors
 import guiTools
 from settings import settings_handler
 from functions import audio_manager, text_actions
+from functions.moton_data import get_moton_bayt_audio_url, get_moton_continuous_audio_url
 
 class MotonPlayerAudioMixin:
     def init_audio(self):
@@ -166,11 +167,7 @@ class MotonPlayerAudioMixin:
 
         is_continuous = (self.current_reciter_type == "Y")
         if is_continuous:
-            audio_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, f"{self.matn_slug}.mp3"))
-            if not os.path.exists(audio_path):
-                winsound.Beep(440, 200)
-                guiTools.speak("ملف الصوت غير موجود")
-                return
+            url = get_moton_continuous_audio_url(self.current_reciter_slug, self.matn_slug)
             dur_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, "Durations", f"{self.matn_slug}.txt"))
             timestamps = []
             if os.path.exists(dur_path):
@@ -191,7 +188,6 @@ class MotonPlayerAudioMixin:
                     start_ms = timestamps[global_bayt_num - 2] if len(timestamps) >= global_bayt_num - 1 else 0
                     end_ms = timestamps[global_bayt_num - 1] if len(timestamps) >= global_bayt_num else 0
             self.current_continuous_end_ms = end_ms
-            url = qt2.QUrl.fromLocalFile(audio_path)
             if self.media.source() != url:
                 self.pending_continuous_seek_ms = start_ms
                 self.media.setSource(url)
@@ -201,12 +197,7 @@ class MotonPlayerAudioMixin:
                 self.PPS.setText("إيقاف مؤقت")
                 qt2.QTimer.singleShot(80, lambda: (self.apply_speed(self.playback_speed), self.media.play()))
         else:
-            audio_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, self.matn_slug, f"{global_bayt_num}.mp3"))
-            if not os.path.exists(audio_path):
-                winsound.Beep(440, 200)
-                guiTools.speak("ملف صوت البيت غير موجود")
-                return
-            url = qt2.QUrl.fromLocalFile(audio_path)
+            url = get_moton_bayt_audio_url(self.current_reciter_slug, self.matn_slug, global_bayt_num)
             if self.media.source() != url:
                 self.media.setSource(url)
             self.PPS.setText("إيقاف مؤقت")

@@ -17,3 +17,4 @@ from .QCustomListDialog import QCustomListDialog
 from .speak import speak
 from .QNavigableLabel import QNavigableLabel
 from .QCustomContextMenu import QCustomContextMenu
+from .QCustomTabWidget import QCustomTabWidget, QCustomTabBar

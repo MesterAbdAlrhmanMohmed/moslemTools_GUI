@@ -8,6 +8,7 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 import custom_errors
 import guiTools
 from functions import audio_manager, text_actions
+from functions.moton_data import get_moton_bayt_audio_url, get_moton_continuous_audio_url
 
 class MotonAudioPlayerMixin:
     def init_audio_player(self):
@@ -151,26 +152,17 @@ class MotonAudioPlayerMixin:
             self.play_bayt_split_mode(global_bayt_num)
 
     def play_bayt_split_mode(self, global_bayt_num):
-        audio_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, self.matn_slug, f"{global_bayt_num}.mp3"))
-        if not os.path.exists(audio_path):
-            winsound.Beep(440, 200)
-            guiTools.speak("ملف الصوت غير متوفر محليا")
-            return
+        url = get_moton_bayt_audio_url(self.current_reciter_slug, self.matn_slug, global_bayt_num)
         self.current_playing_bayt = global_bayt_num
         self.media_progress.setVisible(True)
         self.time_label.setVisible(True)
-        url = qt2.QUrl.fromLocalFile(audio_path)
         if self.media.source() != url:
             self.media.setSource(url)
         qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))
         self.highlight_playing_bayt(global_bayt_num)
 
     def play_bayt_continuous_mode(self, global_bayt_num):
-        audio_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, f"{self.matn_slug}.mp3"))
-        if not os.path.exists(audio_path):
-            winsound.Beep(440, 200)
-            guiTools.speak("ملف الصوت غير متوفر محليا")
-            return
+        url = get_moton_continuous_audio_url(self.current_reciter_slug, self.matn_slug)
         dur_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, "Durations", f"{self.matn_slug}.txt"))
         timestamps = []
         if os.path.exists(dur_path):
@@ -196,11 +188,11 @@ class MotonAudioPlayerMixin:
         self.current_continuous_end_ms = end_ms
         self.media_progress.setVisible(True)
         self.time_label.setVisible(True)
-        curr_src = self.media.source().toLocalFile()
-        target_url = qt2.QUrl.fromLocalFile(audio_path)
-        if os.path.normpath(curr_src) != os.path.normpath(audio_path):
+        curr_src = self.media.source().toString()
+        target_src = url.toString()
+        if curr_src != target_src:
             self.pending_continuous_seek_ms = start_ms
-            self.media.setSource(target_url)
+            self.media.setSource(url)
         else:
             self.pending_continuous_seek_ms = None
             self.media.setPosition(start_ms)

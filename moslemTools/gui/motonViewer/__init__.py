@@ -1,1 +1,1 @@
-from .main import MotonViewer
+from .main import MotonViewer, moton_reciters

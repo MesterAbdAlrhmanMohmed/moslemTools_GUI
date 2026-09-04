@@ -10,11 +10,9 @@ from PyQt6.QtCore import Qt
 
 class settings(qt.QDialog):
     def __init__(self, p):
-        super().__init__(p)
-        self.setMinimumSize(1050, 500)
-        self.resize(1100, 560)
-        self.center()
+        super().__init__(p)                
         self.setWindowTitle("الإعدادات")
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         self.p = p
         layout = qt.QVBoxLayout()
         h_layout = qt.QHBoxLayout()
@@ -92,14 +90,6 @@ class settings(qt.QDialog):
         layout.addLayout(buttonsLayout)
         self.setLayout(layout)
         self.sectian.setCurrentRow(0)
-
-    def center(self):
-        primary_screen = qt1.QGuiApplication.primaryScreen()
-        if primary_screen:
-            frame_geometry = self.frameGeometry()
-            screen_center = primary_screen.availableGeometry().center()
-            frame_geometry.moveCenter(screen_center)
-            self.move(frame_geometry.topLeft())
 
     def fok(self):
         if self.userNameSettings.use_name_checkbox.isChecked():

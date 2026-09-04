@@ -89,7 +89,7 @@ class protcasts(qt.QWidget):
         self.is_scheduled_recording = False
         self.temp_wav_to_convert = None
 
-        self.brotcasts_tab = qt.QTabWidget()
+        self.brotcasts_tab = guiTools.QCustomTabWidget()
         self.brotcasts_tab.addTab(quran_brotcast(global_audio_output, self), "إذاعات القرآن الكريم")
         self.brotcasts_tab.addTab(brotcasts_of_reciters(global_audio_output, self), "إذاعات القراء")
         self.brotcasts_tab.addTab(brotcasts_of_tafseer(global_audio_output, self), "إذاعات التفاسير")

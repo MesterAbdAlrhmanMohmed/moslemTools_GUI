@@ -1,10 +1,12 @@
 import os
+import shutil
 import guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+from PyQt6.QtCore import Qt
 from settings import settings_handler
-from functions.moton_data import MotonDataLoader
+from functions.moton_data import MotonDataLoader, get_moton_appdata_dir
 
 
 class MotonRecitersSettings(qt.QWidget):
@@ -28,37 +30,9 @@ class MotonRecitersSettings(qt.QWidget):
         self.data_loader = MotonDataLoader()
         self.categories = self.data_loader.get_categories()
 
-        self.reader_idx_path = "data/DataMoton/DicQaseadReaderIndex"
-        self.reader_type_path = "data/DataMoton/DicQaseadReaderIndexN"
-        self.qari_ar_path = "data/DataMoton/ListQariArabic"
-        self.qari_en_path = "data/DataMoton/ListQariEnglish"
-
-        self.qari_ar_list = []
-        self.qari_en_list = []
-        if os.path.exists(self.qari_ar_path):
-            with open(self.qari_ar_path, "r", encoding="utf-8") as f:
-                self.qari_ar_list = [l.strip() for l in f if l.strip()]
-        if os.path.exists(self.qari_en_path):
-            with open(self.qari_en_path, "r", encoding="utf-8") as f:
-                self.qari_en_list = [l.strip() for l in f if l.strip()]
-
-        self.slug_to_ar = dict(zip(self.qari_en_list, self.qari_ar_list))
-
-        self.matn_to_reciters = {}
-        if os.path.exists(self.reader_idx_path):
-            with open(self.reader_idx_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    if ":" in line:
-                        k, v = line.strip().split(":", 1)
-                        self.matn_to_reciters[k] = [r.strip() for r in v.split(",") if r.strip()]
-
-        self.matn_to_types = {}
-        if os.path.exists(self.reader_type_path):
-            with open(self.reader_type_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    if ":" in line:
-                        k, v = line.strip().split(":", 1)
-                        self.matn_to_types[k] = [t.strip() for t in v.split(",") if t.strip()]
+        from functions.moton_data import get_all_moton_reciters, get_moton_reciters_for_matn
+        self.all_reciters_data = get_all_moton_reciters()
+        self.slug_to_ar = self.all_reciters_data.get("reciters", {})
 
         self.viewer_reciters_cache = {}
         self.player_reciters_cache = {}
@@ -122,6 +96,10 @@ class MotonRecitersSettings(qt.QWidget):
         self.reciter_combo = qt.QComboBox()
         self.reciter_combo.setFont(font)
         self.reciter_combo.setAccessibleName("القارئ")
+        self.reciter_combo.setAccessibleDescription("لحذف بيانات القارئ، نستخدم زر التطبيقات أو click الأيمن")
+        self.reciter_combo.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.reciter_combo.customContextMenuRequested.connect(lambda pos: self.on_delete(self.reciter_combo))
+        self.reciter_combo.installEventFilter(self)
         self.reciter_label = qt.QLabel("القارئ:")
         self.reciter_label.setFont(font)
         self.reciter_label.setAlignment(qt2.Qt.AlignmentFlag.AlignVCenter | qt2.Qt.AlignmentFlag.AlignRight)
@@ -130,7 +108,17 @@ class MotonRecitersSettings(qt.QWidget):
         reciter_layout.addStretch(1)
         layout.addLayout(reciter_layout)
 
+        self.default_notice_text = "لحذف قارئ، نستخدم زر التطبيقات أو click الأيمن على قائمة القراء"
+        self.delete_notice = guiTools.QNavigableLabel(self.default_notice_text)
+        self.delete_notice.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.delete_notice.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        layout.addSpacing(25)
+        layout.addWidget(self.delete_notice)
         layout.addStretch(1)
+
+        self.notice_timer = qt2.QTimer(self)
+        self.notice_timer.setSingleShot(True)
+        self.notice_timer.timeout.connect(self.reset_notice)
 
         self.category_combo.currentIndexChanged.connect(self.on_category_changed)
         self.matn_combo.currentIndexChanged.connect(self.on_matn_changed)
@@ -139,6 +127,61 @@ class MotonRecitersSettings(qt.QWidget):
 
         if self.categories:
             self.on_category_changed(0)
+
+    def eventFilter(self, obj, event):
+        if hasattr(self, 'reciter_combo') and obj == self.reciter_combo:
+            if event.type() == qt2.QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Menu:
+                self.on_delete(self.reciter_combo)
+                return True
+        return super().eventFilter(obj, event)
+
+    def reset_notice(self):
+        self.delete_notice.setText(self.default_notice_text)
+
+    def on_delete(self, combo):
+        reciter_slug = combo.currentData()
+        if not reciter_slug:
+            return
+        matn_name = self.matn_combo.currentText()
+        if not matn_name:
+            return
+        matn_slug = self.data_loader.get_matn_slug(matn_name)
+        if not matn_slug:
+            return
+
+        appdata_path = get_moton_appdata_dir(reciter_slug, matn_slug)
+        local_data_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", reciter_slug, matn_slug))
+
+        is_appdata_local = os.path.exists(appdata_path) and (len(os.listdir(appdata_path)) > 0 if os.path.isdir(appdata_path) else False)
+        is_data_local = os.path.exists(local_data_path) and (len(os.listdir(local_data_path)) > 0 if os.path.isdir(local_data_path) else False)
+
+        if not (is_appdata_local or is_data_local):
+            guiTools.speak("هذا القارئ غير موجود محليا")
+            self.delete_notice.setText("هذا القارئ غير موجود محليا")
+            self.notice_timer.stop()
+            self.notice_timer.start(3000)
+        else:
+            question = guiTools.QQuestionMessageBox.view(self, "تنبيه", "هل تريد حذف هذا القارئ", "نعم", "لا")
+            if question == 0:
+                deleted = False
+                if is_appdata_local:
+                    try:
+                        shutil.rmtree(appdata_path)
+                        deleted = True
+                    except Exception as e:
+                        print(f"Error deleting appdata folder: {e}")
+                if is_data_local:
+                    try:
+                        shutil.rmtree(local_data_path)
+                        deleted = True
+                    except Exception as e:
+                        print(f"Error deleting local data folder: {e}")
+                if deleted:
+                    guiTools.speak("تم الحذف")
+                    self.delete_notice.setText("تم الحذف بنجاح")
+                    self.notice_timer.stop()
+                    self.notice_timer.start(3000)
+
 
     def adjust_combo_width(self, combo):
         fm = combo.fontMetrics()
@@ -180,14 +223,12 @@ class MotonRecitersSettings(qt.QWidget):
         if not matn_name:
             return
         matn_slug = self.data_loader.get_matn_slug(matn_name)
-        reciter_slugs = self.matn_to_reciters.get(matn_slug, [])
-        reciter_types = self.matn_to_types.get(matn_slug, [])
+        from functions.moton_data import get_moton_reciters_for_matn
+        reciter_list = get_moton_reciters_for_matn(matn_slug)
 
         verse_reciters = []
-        for idx, r_slug in enumerate(reciter_slugs):
-            r_type = reciter_types[idx] if idx < len(reciter_types) else "N"
+        for r_ar, r_slug, r_type, r_url in reciter_list:
             if r_type == "N":
-                r_ar = self.slug_to_ar.get(r_slug, r_slug)
                 verse_reciters.append((r_ar, r_slug))
 
         self.reciter_combo.blockSignals(True)
