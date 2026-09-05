@@ -120,6 +120,7 @@ class sibha(qt.QWidget):
             self.limit_button.setText("فتح قائمة الحدود")
         else:
             self.limit_button.setText("تعيين حد أقصى لعدد التسبيحات")
+        self.limit_button.setShortcut("ctrl+shift+s")
 
     def show_athkar_context_menu(self, pos):
         menu = guiTools.QCustomContextMenu(self)
