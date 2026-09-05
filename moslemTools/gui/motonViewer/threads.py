@@ -176,7 +176,7 @@ class PreMergeCheckThread(qt2.QThread):
         try:
             merge_list = []
             verses_to_download = []
-            from functions.moton_data import get_moton_bayt_audio_path, get_moton_appdata_dir, get_moton_continuous_audio_path
+            from functions.moton_data import get_moton_bayt_audio_path, get_moton_appdata_dir, get_moton_continuous_audio_path, get_moton_bayt_audio_num
 
             if self.reciter_type != "N":
                 local_path = get_moton_continuous_audio_path(self.reciter_slug, self.matn_slug)
@@ -198,11 +198,12 @@ class PreMergeCheckThread(qt2.QThread):
                     b_num = v.get("global_num")
                     if b_num is None:
                         continue
+                    actual_b_num = get_moton_bayt_audio_num(self.matn_slug, self.reciter_slug, b_num)
                     filename = f"{b_num:04d}_{self.matn_name}_بيت_{b_num}.mp3" if total > 1 else f"{self.matn_name}_بيت_{b_num}.mp3"
                     local_path = get_moton_bayt_audio_path(self.reciter_slug, self.matn_slug, b_num)
                     if not local_path:
-                        local_path = os.path.join(get_moton_appdata_dir(self.reciter_slug, self.matn_slug), f"{b_num}.mp3")
-                    url = f"https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/{self.reciter_slug}/{self.matn_slug}/{b_num}.mp3"
+                        local_path = os.path.join(get_moton_appdata_dir(self.reciter_slug, self.matn_slug), f"{actual_b_num}.mp3")
+                    url = f"https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/{self.reciter_slug}/{self.matn_slug}/{actual_b_num}.mp3"
                     item_info = {
                         "index": idx,
                         "global_num": b_num,

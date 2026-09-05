@@ -16,13 +16,12 @@ from guiTools import QPushButton
 class NotesDialog(qt.QDialog):
     def __init__(self, p):
         super().__init__(p)
-        self.setWindowTitle("الملاحظات")
+        self.setWindowTitle("دفتر الملاحظات")
         qt1.QShortcut(qt1.QKeySequence("Delete"), self).activated.connect(self.handle_delete)
         qt1.QShortcut(qt1.QKeySequence("Ctrl+G"), self).activated.connect(self.handle_goto)
         qt1.QShortcut(qt1.QKeySequence("Ctrl+E"), self).activated.connect(self.handle_edit)
-        qt1.QShortcut(qt1.QKeySequence("Ctrl+O"), self).activated.connect(self.handle_view)
-        self.setMinimumSize(1130, 420)
-        self.resize(1130, 450)
+        qt1.QShortcut(qt1.QKeySequence("Ctrl+O"), self).activated.connect(self.handle_view)        
+        self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         layout = qt.QVBoxLayout(self)
         h_layout = qt.QHBoxLayout()
         self.sectian = guiTools.listBook()

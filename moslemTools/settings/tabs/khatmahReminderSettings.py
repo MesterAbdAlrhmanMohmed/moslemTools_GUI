@@ -9,10 +9,12 @@ class KhatmahReminderSettings(qt.QWidget):
         super().__init__(parent)
         self.p = parent
         layout = qt.QVBoxLayout(self)
-        layout.setSpacing(15)
+        layout.setSpacing(18)
         layout.setContentsMargins(20, 20, 20, 20)
         font = qt1.QFont()
         font.setBold(True)
+
+        layout.addStretch(1)
 
         self.enable_checkbox = qt.QCheckBox("تفعيل التنبيه اليومي بالختمة القرآنية")
         self.enable_checkbox.setFont(font)
@@ -20,11 +22,14 @@ class KhatmahReminderSettings(qt.QWidget):
         self.enable_checkbox.toggled.connect(self.toggle_controls)
         layout.addWidget(self.enable_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
-        time_box = qt.QGroupBox()
-        time_box.setFont(font)
-        time_box.setAccessibleName("")
-        time_layout = qt.QHBoxLayout(time_box)
-        time_layout.setSpacing(15)
+        self.time_box = qt.QWidget()
+        self.time_box.setFont(font)
+        self.time_box.setAccessibleName("")
+        self.time_box.setLayoutDirection(qt2.Qt.LayoutDirection.RightToLeft)
+        time_layout = qt.QHBoxLayout(self.time_box)
+        time_layout.setSpacing(25)
+        time_layout.setContentsMargins(0, 0, 0, 0)
+        time_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 
         self.hour_label = qt.QLabel("الساعة:")
         self.hour_label.setFont(font)
@@ -32,6 +37,7 @@ class KhatmahReminderSettings(qt.QWidget):
         self.hour_spin = qt.QSpinBox()
         self.hour_spin.setFont(font)
         self.hour_spin.setRange(1, 12)
+        self.hour_spin.setFixedWidth(80)
         self.hour_spin.setAccessibleName("الساعة")
         self.hour_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         try:
@@ -40,6 +46,7 @@ class KhatmahReminderSettings(qt.QWidget):
             self.hour_spin.setValue(8)
 
         hour_v = qt.QVBoxLayout()
+        hour_v.setSpacing(6)
         hour_v.addWidget(self.hour_label, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         hour_v.addWidget(self.hour_spin, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
@@ -49,6 +56,7 @@ class KhatmahReminderSettings(qt.QWidget):
         self.minute_spin = qt.QSpinBox()
         self.minute_spin.setFont(font)
         self.minute_spin.setRange(0, 59)
+        self.minute_spin.setFixedWidth(80)
         self.minute_spin.setAccessibleName("الدقيقة")
         self.minute_spin.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         try:
@@ -57,6 +65,7 @@ class KhatmahReminderSettings(qt.QWidget):
             self.minute_spin.setValue(0)
 
         minute_v = qt.QVBoxLayout()
+        minute_v.setSpacing(6)
         minute_v.addWidget(self.minute_label, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         minute_v.addWidget(self.minute_spin, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
@@ -65,6 +74,7 @@ class KhatmahReminderSettings(qt.QWidget):
         self.period_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.period_combo = qt.QComboBox()
         self.period_combo.setFont(font)
+        self.period_combo.setFixedWidth(95)
         self.period_combo.addItems(["صباحاً", "مساءً"])
         self.period_combo.setAccessibleName("الفترة")
         saved_period = settings_handler.get("khatmah_reminder", "period") or "صباحاً"
@@ -72,20 +82,22 @@ class KhatmahReminderSettings(qt.QWidget):
             self.period_combo.setCurrentText(saved_period)
 
         period_v = qt.QVBoxLayout()
+        period_v.setSpacing(6)
         period_v.addWidget(self.period_label, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
         period_v.addWidget(self.period_combo, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
         time_layout.addLayout(hour_v)
         time_layout.addLayout(minute_v)
         time_layout.addLayout(period_v)
-        layout.addWidget(time_box)
+        layout.addWidget(self.time_box, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
         self.missed_alert_checkbox = qt.QCheckBox("تنبيهي بفوات موعد الورد اليومي إذا كان البرنامج مغلقاً وقت التنبيه")
         self.missed_alert_checkbox.setFont(font)
         self.missed_alert_checkbox.setChecked(settings_handler.get("khatmah_reminder", "missed_alert") != "False")
         layout.addWidget(self.missed_alert_checkbox, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
-        self.time_box = time_box
+        layout.addStretch(1)
+
         self.toggle_controls(self.enable_checkbox.isChecked())
 
     def toggle_controls(self, enabled):

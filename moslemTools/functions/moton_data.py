@@ -309,13 +309,52 @@ def get_moton_appdata_dir(reciter_slug="", matn_slug=""):
     return base
 
 
+def get_moton_bayt_audio_num(matn_slug, reciter_slug, bayt_num):
+    if matn_slug == "hidayatmortab":
+        if bayt_num <= 30:
+            return bayt_num
+        if bayt_num <= 37:
+            return bayt_num + 1
+        if bayt_num <= 46:
+            return bayt_num + 2
+        if bayt_num <= 65:
+            return bayt_num + 3
+        if bayt_num <= 73:
+            return bayt_num + 4
+        if bayt_num <= 101:
+            return bayt_num + 5
+        if bayt_num <= 205:
+            return bayt_num + 6
+        if bayt_num <= 242:
+            return bayt_num + 7
+        if bayt_num == 243:
+            return 250
+        if bayt_num in (244, 245):
+            return 251
+        if bayt_num <= 261:
+            return bayt_num + 6
+        if bayt_num <= 302:
+            return bayt_num + 10
+        if bayt_num <= 344:
+            return bayt_num + 11
+        if bayt_num <= 380:
+            return bayt_num + 13
+        if bayt_num <= 402:
+            return bayt_num + 14
+        if bayt_num <= 428:
+            return bayt_num + 15
+        return bayt_num + 16
+    return bayt_num
+
+
 def get_moton_bayt_audio_path(reciter_slug, matn_slug, bayt_num):
     if not reciter_slug or not matn_slug:
         return None
-    appdata_path = os.path.join(get_moton_appdata_dir(reciter_slug, matn_slug), f"{bayt_num}.mp3")
+    actual_num = get_moton_bayt_audio_num(matn_slug, reciter_slug, bayt_num)
+    appdata_path = os.path.join(get_moton_appdata_dir(reciter_slug, matn_slug), f"{actual_num}.mp3")
     if os.path.exists(appdata_path) and os.path.getsize(appdata_path) > 0:
         return appdata_path
-    local_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", reciter_slug, matn_slug, f"{bayt_num}.mp3"))
+    local_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", reciter_slug, matn_slug, f"{actual_num}.mp3"))
     if os.path.exists(local_path) and os.path.getsize(local_path) > 0:
         return local_path
     return None
@@ -326,8 +365,10 @@ def get_moton_bayt_audio_url(reciter_slug, matn_slug, bayt_num):
     local_path = get_moton_bayt_audio_path(reciter_slug, matn_slug, bayt_num)
     if local_path:
         return QUrl.fromLocalFile(local_path)
-    online_url = f"https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/{reciter_slug}/{matn_slug}/{bayt_num}.mp3"
+    actual_num = get_moton_bayt_audio_num(matn_slug, reciter_slug, bayt_num)
+    online_url = f"https://huggingface.co/datasets/alcoder01/DataMoton/resolve/main/Qasaed/{reciter_slug}/{matn_slug}/{actual_num}.mp3"
     return QUrl(online_url)
+
 
 
 def get_moton_continuous_audio_path(reciter_slug, matn_slug):
