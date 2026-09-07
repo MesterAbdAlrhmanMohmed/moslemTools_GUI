@@ -5,13 +5,13 @@ import guiTools, os, tempfile, shutil, subprocess, threading, time, uuid
 from pathlib import Path
 
 try:
-    import sounddevice as sd
     import soundfile as sf
     import numpy as np
+    from proctap import ProcessAudioCapture
 except ImportError:
-    sd = None
     sf = None
     np = None
+    ProcessAudioCapture = None
 
 TMP_DIR = Path(tempfile.gettempdir()) / "radio_recordings_temp"
 TMP_DIR.mkdir(exist_ok=True)
@@ -26,80 +26,32 @@ class WasapiRecorder(qt2.QObject):
         self.ffmpeg_path = ffmpeg_path
         self._running = False
         self._paused = False
-        self._thread = None
-        self._stream = None
+        self._capture = None
         self._temp_wav_path = None
         self._sf_handle = None
         self._lock = threading.Lock()
-        self.samplerate = None
-        self.channels = None
-        self.device_id = None
+        self.samplerate = 48000
+        self.channels = 2
         self._is_ready = False
         self._stop_requested = False
         self.last_error = ""
         self.init_device()
 
     def init_device(self):
-        if sd is None or sf is None or np is None:
+        if sf is None or np is None or ProcessAudioCapture is None:
             self._is_ready = False
-            self.last_error = "مكتبات التسجيل غير مثبتة."
+            self.last_error = "المكتبات المطلوبة لتسجيل الصوت غير مثبتة (proc-tap, soundfile, numpy)."
             return False
 
         try:
-            devices = sd.query_devices()
-            hostapis = sd.query_hostapis()
-            found_device = False
-            target_names = ["stereo mix", "ستيريو", "what u hear"]
-
-            def is_valid_hostapi(dev):
-                host_idx = dev.get('hostapi', -1)
-                if 0 <= host_idx < len(hostapis):
-                    h_name = hostapis[host_idx].get('name', '').lower()
-                    if 'wdm' in h_name or 'kernel' in h_name:
-                        return False
-                return True
-
-            for i, device in enumerate(devices):
-                if device['max_input_channels'] > 0 and is_valid_hostapi(device):
-                    device_name_lower = device['name'].lower()
-                    if any(t in device_name_lower for t in target_names):
-                        sr = int(device['default_samplerate'])
-                        ch = min(device['max_input_channels'], 2)
-                        try:
-                            st = sd.InputStream(device=i, samplerate=sr, channels=ch)
-                            st.start()
-                            st.stop()
-                            st.close()
-                            self.device_id = i
-                            self.channels = ch
-                            self.samplerate = sr
-                            self._is_ready = True
-                            found_device = True
-                            break
-                        except Exception:
-                            continue
-
-            if not found_device:
-                msg = (
-                    "لتفعيل Stereo Mix اتبع الخطوات الآتية:\n\n"
-                    "1. افتح قائمة Run بالضغط على (Windows + R) واكتب هذا الأمر: mmsys.cpl\n"
-                    "2. قم بتحديد تبويبة تسجيل الصوت (Recording).\n"
-                    "3. اضغط على (Ctrl + Space) لإلغاء تحديد جميع الأجهزة.\n"
-                    "4. اضغط زر التطبيقات (أو click أيمن) واضغط على إظهار الأجهزة المعطلة (Show Disabled Devices).\n"
-                    "5. اضغط زر التطبيقات (أو كليك أيمن) على جهاز Stereo Mix واضغط على تفعيل (Enable).\n"
-                    "6. اضغط عليه مجدداً ثم قم بتحديده كجهاز افتراضي.\n"
-                    "7. قم بإعادة تشغيل برنامج moslem tools.\n"
-                    "8. إذا لم يقم بالتسجيل: قم بالعودة إلى إعدادات الصوت، ثم قف بزر التطبيقات (أو click الأيمن) على المايكروفون، وقم باختيار (خصائص Properties) ثم اختر تبويبة (المستويات Levels) ثم قم بإلغاء تحديد مربع كتم الصوت Mute."
-                )
-                self.last_error = msg
-                self._is_ready = False
-                return False
-
+            # التحقق من إمكانية تهيئة التقاط الصوت للعملية الحالية عبر WASAPI Process Loopback
+            test_cap = ProcessAudioCapture(pid=os.getpid())
+            self._is_ready = True
             self.last_error = ""
             return True
         except Exception as e:
             self._is_ready = False
-            self.last_error = f"خطأ غير متوقع: {e}"
+            self.last_error = f"تعذر تهيئة تسجيل الصوت عبر WASAPI: {e}"
             return False
 
     def is_ready(self):
@@ -107,51 +59,46 @@ class WasapiRecorder(qt2.QObject):
             self.init_device()
         return self._is_ready
 
-    def _callback(self, indata, frames, time_info, status):
+    def _on_data(self, data, frames):
         with self._lock:
             if self._running and not self._paused and self._sf_handle:
                 try:
-                    self._sf_handle.write(indata.copy())
+                    arr = np.frombuffer(data, dtype=np.float32).reshape(-1, self.channels)
+                    self._sf_handle.write(arr)
                 except Exception:
                     pass
 
-    def _run_stream(self):
-        try:
-            self._temp_wav_path = TMP_DIR / f"rec_{uuid.uuid4().hex}.wav"
-            self._sf_handle = sf.SoundFile(str(self._temp_wav_path), mode="w", samplerate=self.samplerate, channels=self.channels)
-        except Exception as e:
-            self.error.emit(f"فشل إنشاء ملف WAV: {e}")
-            return
-        try:
-            with sd.InputStream(samplerate=self.samplerate, channels=self.channels, dtype='float32', blocksize=2048, callback=self._callback, device=self.device_id) as self._stream:
-                while self._running:
-                    time.sleep(0.05)
-        except Exception as e:
-            self.error.emit(f"خطأ التسجيل: {e}")
-        with self._lock:
-            if self._sf_handle:
-                self._sf_handle.close()
-                self._sf_handle = None
-        if self._stop_requested:
-            temp_file = self._temp_wav_path
-            self._temp_wav_path = None
-            self._stop_requested = False
-            if not temp_file or not temp_file.exists():
-                self.error.emit("لم يتم العثور على ملف التسجيل.")
-                self.recording_stopped.emit("FAILED", "")
-                return
-            self.recording_stopped.emit("STOPPED", str(temp_file))
-
     def start(self):
-        if not self._is_ready:
+        if not self.is_ready():
             return
         with self._lock:
-            if self._running: return
+            if self._running:
+                return
             self._running = True
             self._paused = False
             self._stop_requested = False
-        self._thread = threading.Thread(target=self._run_stream, daemon=True)
-        self._thread.start()
+
+        try:
+            self._temp_wav_path = TMP_DIR / f"rec_{uuid.uuid4().hex}.wav"
+            self._sf_handle = sf.SoundFile(
+                str(self._temp_wav_path),
+                mode="w",
+                samplerate=self.samplerate,
+                channels=self.channels,
+                subtype="FLOAT",
+            )
+            self._capture = ProcessAudioCapture(pid=os.getpid(), on_data=self._on_data)
+            self._capture.start()
+        except Exception as e:
+            with self._lock:
+                self._running = False
+                if self._sf_handle:
+                    try:
+                        self._sf_handle.close()
+                    except Exception:
+                        pass
+                    self._sf_handle = None
+            self.error.emit(f"خطأ في بدء التسجيل: {e}")
 
     def pause(self):
         with self._lock:
@@ -163,19 +110,43 @@ class WasapiRecorder(qt2.QObject):
 
     def stop(self, cleanup_only=False):
         with self._lock:
-            if not self._running: return
+            if not self._running:
+                return
             self._running = False
             self._stop_requested = not cleanup_only
-        if self._thread:
-            self._thread.join(timeout=2.0)
-            self._thread = None
+
+        if self._capture:
+            try:
+                self._capture.stop()
+            except Exception:
+                pass
+            self._capture = None
+
+        with self._lock:
+            if self._sf_handle:
+                try:
+                    self._sf_handle.close()
+                except Exception:
+                    pass
+                self._sf_handle = None
+
         if cleanup_only:
             try:
                 if self._temp_wav_path and self._temp_wav_path.exists():
                     self._temp_wav_path.unlink(missing_ok=True)
             except Exception:
                 pass
+            self._temp_wav_path = None
             self.recording_stopped.emit("CLEANUP_ONLY", "")
+        else:
+            temp_file = self._temp_wav_path
+            self._temp_wav_path = None
+            self._stop_requested = False
+            if not temp_file or not temp_file.exists():
+                self.error.emit("لم يتم العثور على ملف التسجيل.")
+                self.recording_stopped.emit("FAILED", "")
+                return
+            self.recording_stopped.emit("STOPPED", str(temp_file))
 
     def convert_and_cleanup(self, temp_file_path, output_filename):
         temp_file = Path(temp_file_path)
@@ -184,8 +155,28 @@ class WasapiRecorder(qt2.QObject):
             return
         try:
             final_path = Path(output_filename)
-            cmd = [self.ffmpeg_path, "-hide_banner", "-loglevel", "error", "-y", "-i", str(temp_file), "-c:a", "libmp3lame", "-b:a", "192k", str(final_path)]
-            proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=600, text=True, encoding='utf-8')
+            cmd = [
+                self.ffmpeg_path,
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-y",
+                "-i",
+                str(temp_file),
+                "-c:a",
+                "libmp3lame",
+                "-b:a",
+                "192k",
+                str(final_path),
+            ]
+            proc = subprocess.run(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                timeout=600,
+                text=True,
+                encoding="utf-8",
+            )
             if proc.returncode != 0:
                 self.error.emit(f"فشل التحويل: {proc.stderr}")
                 return
@@ -193,8 +184,10 @@ class WasapiRecorder(qt2.QObject):
         except Exception as e:
             self.error.emit(str(e))
         finally:
-            try: temp_file.unlink(missing_ok=True)
-            except Exception: pass
+            try:
+                temp_file.unlink(missing_ok=True)
+            except Exception:
+                pass
 
 
 class SchedulingDialog(qt.QDialog):

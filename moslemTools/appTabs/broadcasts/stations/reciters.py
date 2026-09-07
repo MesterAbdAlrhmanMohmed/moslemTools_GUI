@@ -48,7 +48,6 @@ class brotcasts_of_reciters(qt.QWidget):
         self.list_of_reciters.addItem("القارئ مفتاح السلطني- رواية الدُوري عن الكِسائي")
         self.list_of_reciters.addItem("القارئ ياسر المزروعي قِراءة يعقوب")
         self.list_of_reciters.addItem("القارئ الشيخ العيون الكوشي - ورش عن نافع")
-        self.list_of_reciters.addItem("القارِء الشيخ سعد الغامدي")
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.list_of_reciters)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_reciters)

@@ -167,8 +167,10 @@ class protcasts(qt.QWidget):
         self.pauseBtn.setStyleSheet("background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;")
         self.stopBtn.setStyleSheet("background-color: #8B0000; color: white; min-height: 40px; font-size: 16px;")
         self.scheduleBtn.setStyleSheet("background-color: #4B0082; color: white; min-height: 40px; font-size: 16px;")
-        self.pauseBtn.setEnabled(False)
-        self.stopBtn.setEnabled(False)
+        self.pauseBtn.setVisible(False)
+        self.stopBtn.setVisible(False)
+        self.startBtn.setVisible(True)
+        self.scheduleBtn.setVisible(True)
         record_layout = qt.QHBoxLayout()
         record_layout.addWidget(self.startBtn)
         record_layout.addWidget(self.pauseBtn)
@@ -182,13 +184,13 @@ class protcasts(qt.QWidget):
         self.recorder.recording_stopped.connect(self.on_recording_stopped)
         self.recorder.error.connect(self.recordingError)
         self.start_shortcut = qt1.QShortcut(qt1.QKeySequence("Ctrl+R"), self)
-        self.start_shortcut.activated.connect(lambda: self.startRecording() if self.startBtn.isEnabled() else None)
+        self.start_shortcut.activated.connect(lambda: self.startRecording() if self.startBtn.isVisible() and self.startBtn.isEnabled() else None)
         self.pause_shortcut = qt1.QShortcut(qt1.QKeySequence("Ctrl+P"), self)
-        self.pause_shortcut.activated.connect(lambda: (self.pauseRecording() if self.pauseBtn.text() == "إيقاف مؤقت" else self.resumeRecording()) if self.pauseBtn.isEnabled() else None)
+        self.pause_shortcut.activated.connect(lambda: (self.pauseRecording() if self.pauseBtn.text() == "إيقاف مؤقت" else self.resumeRecording()) if self.pauseBtn.isVisible() and self.pauseBtn.isEnabled() else None)
         self.stop_shortcut = qt1.QShortcut(qt1.QKeySequence("Ctrl+S"), self)
-        self.stop_shortcut.activated.connect(lambda: self.stopRecording() if self.stopBtn.isEnabled() else None)
+        self.stop_shortcut.activated.connect(lambda: self.stopRecording() if self.stopBtn.isVisible() and self.stopBtn.isEnabled() else None)
         self.schedule_shortcut = qt1.QShortcut(qt1.QKeySequence("Ctrl+G"), self)
-        self.schedule_shortcut.activated.connect(lambda: self.scheduleRecording() if self.scheduleBtn.isEnabled() else None)
+        self.schedule_shortcut.activated.connect(lambda: self.scheduleRecording() if self.scheduleBtn.isVisible() and self.scheduleBtn.isEnabled() else None)
         player = get_global_player()
         if player:
             player.playbackStateChanged.connect(self.on_radio_state_changed)
@@ -430,7 +432,7 @@ class protcasts(qt.QWidget):
         if not self.check_is_playing(): return
         if not self.recorder.is_ready():
              err = self.recorder.last_error if self.recorder.last_error else "خطأ في تهيئة المسجل."
-             guiTools.qMessageBox.MessageBox.error(self, "عفوا يبدو أن مايكروفون Stereo Mix ليس هو الجهاز الافتراضي", err)
+             guiTools.qMessageBox.MessageBox.error(self, "خطأ في تسجيل الصوت", err)
              return
         if self.recorder._running:
              guiTools.qMessageBox.MessageBox.error(self, "خطأ", "التسجيل يعمل بالفعل.")
@@ -439,10 +441,13 @@ class protcasts(qt.QWidget):
         if result != 0: return
         self.is_scheduled_recording = False
         self.recorder.start()
-        self.startBtn.setEnabled(False)
-        self.scheduleBtn.setEnabled(False)
+        self.startBtn.setVisible(False)
+        self.scheduleBtn.setVisible(False)
+        self.pauseBtn.setVisible(True)
         self.pauseBtn.setEnabled(True)
+        self.stopBtn.setVisible(True)
         self.stopBtn.setEnabled(True)
+        self.pauseBtn.setFocus()
 
     def scheduleRecording(self):
         if self.countdown_timer.isActive():
@@ -454,7 +459,7 @@ class protcasts(qt.QWidget):
         if not self.check_is_playing(): return
         if not self.recorder.is_ready():
              err = self.recorder.last_error if self.recorder.last_error else "خطأ في تهيئة المسجل."
-             guiTools.qMessageBox.MessageBox.error(self, "عفوا يبدو أن مايكروفون Stereo Mix ليس هو الجهاز الافتراضي", err)
+             guiTools.qMessageBox.MessageBox.error(self, "خطأ في تسجيل الصوت", err)
              return
         dlg = SchedulingDialog(self)
         if dlg.exec() == qt.QDialog.DialogCode.Accepted:
@@ -466,11 +471,13 @@ class protcasts(qt.QWidget):
             if filePath:
                 self.scheduled_file_path = filePath
                 self.is_scheduled_recording = True
-                self.startBtn.setEnabled(False)
+                self.startBtn.setVisible(False)
+                self.pauseBtn.setVisible(False)
+                self.stopBtn.setVisible(False)
                 self.scheduleBtn.setText("إيقاف جدولة التسجيل")
+                self.scheduleBtn.setVisible(True)
                 self.scheduleBtn.setEnabled(True)
-                self.pauseBtn.setEnabled(False)
-                self.stopBtn.setEnabled(False)
+                self.scheduleBtn.setFocus()
                 self.updateCountdown()
                 self.countdown_timer.start(1000)
             else:
@@ -492,12 +499,17 @@ class protcasts(qt.QWidget):
         else:
             self.countdown_timer.stop()
             if not self.recorder.is_ready():
-                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "تعذر بدء التسجيل المجدول: الجهاز الافتراضي ليس Stereo Mix.")
+                guiTools.qMessageBox.MessageBox.error(self, "خطأ", "تعذر بدء التسجيل المجدول: خطأ في تهيئة مسجل الصوت.")
                 self.resetRecorderState()
                 return
             self.recorder.start()
+            self.startBtn.setVisible(False)
+            self.scheduleBtn.setVisible(False)
+            self.pauseBtn.setVisible(True)
             self.pauseBtn.setEnabled(True)
+            self.stopBtn.setVisible(True)
             self.stopBtn.setEnabled(True)
+            self.pauseBtn.setFocus()
             self.duration_timer.timeout.connect(self.updateDuration)
             self.duration_timer.start(1000)
 
@@ -587,7 +599,7 @@ class protcasts(qt.QWidget):
         self.restore_aud_text()
         self.recorder.stop(cleanup_only=True)
         msg = error_msg if error_msg else "حدث خطأ غير متوقع أثناء التسجيل."
-        guiTools.qMessageBox.MessageBox.error(self, "عفوا يبدو أن مايكروفون Stereo Mix ليس هو الجهاز الافتراضي", msg)
+        guiTools.qMessageBox.MessageBox.error(self, "خطأ في تسجيل الصوت", msg)
         self.resetRecorderState()
 
     def resetRecorderState(self):
@@ -604,10 +616,14 @@ class protcasts(qt.QWidget):
         self.duration_timer.stop()
         try: self.duration_timer.timeout.disconnect()
         except: pass
+        self.startBtn.setVisible(True)
         self.startBtn.setEnabled(True)
+        self.scheduleBtn.setVisible(True)
         self.scheduleBtn.setEnabled(True)
         self.scheduleBtn.setText("جدولة التسجيل")
+        self.pauseBtn.setVisible(False)
         self.pauseBtn.setEnabled(False)
+        self.stopBtn.setVisible(False)
         self.stopBtn.setEnabled(False)
         self.pauseBtn.setText("إيقاف مؤقت")
         self.pauseBtn.setStyleSheet("background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;")

@@ -72,7 +72,6 @@ ALL_STATIONS = {
     "القارئ مفتاح السلطني- رواية الدُوري عن الكِسائي": "https://Qurango.net/radio/muftah_alsaltany_aldorai",
     "القارئ ياسر المزروعي قِراءة يعقوب": "https://Qurango.net/radio/yasser_almazroyee",
     "القارئ الشيخ العيون الكوشي - ورش عن نافع": "http://live.mp3quran.net:9912/;",
-    "القارِء الشيخ سعد الغامدي": "https://qurango.net/radio/saad_alghamdi",
 
     # Tafseer
     "تفسير النابلسي": "http://206.72.199.179:9992/;stream.mp3",
@@ -87,7 +86,6 @@ ALL_STATIONS = {
     "أدعية وأذكار يومية": "https://radio.alukah.net/adiyyaha",
 
     # Other broadcasts
-    "تَكْبِيرَات العيد": "http://live.mp3quran.net:9728",
     "الرقية الشرعية": "http://live.mp3quran.net:9936",
     "إذاعة الصحابة": "http://s5.voscast.com:10130/;stream1603343063302/1",
     "فتاوى إبن باز": "https://qurango.net/radio/alaikhtiarat_alfiqhayh_bin_baz",
@@ -97,9 +95,7 @@ ALL_STATIONS = {
     "في ظِلال السيرة النبوية": "https://Qurango.net/radio/fi_zilal_alsiyra",
     "فتاوى ابن العُثيمين": "http://live.mp3quran.net:8014",
     "العاصمة أونلاين": "https://asima.out.airtime.pro/asima_a",
-    "الإحسان": "https://cdn.bmstudiopk.com/alehsaan/live/playlist.m3u8",
     "الإستقامى": "https://jmc-live.ercdn.net/alistiqama/alistiqama.m3u8",
-    "الفتح": "https://alfat7-q.com:5443/LiveApp/streams/986613792230697141226562.m3u8",
     "المرأة المسلمة": "https://radio.alukah.net/almarah",
     "اللغة العربية وعلومها": "https://radio.alukah.net/arabiyyah",
     "المهارات الحياتية والعلوم التربوية": "https://radio.alukah.net/maharat",
