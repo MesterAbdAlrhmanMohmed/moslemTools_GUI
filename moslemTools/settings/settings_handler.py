@@ -47,7 +47,8 @@ settingsConfig={
         "use_name_in_occasions":"False",
         "name_type":"custom_name",
         "theme":"dark",
-        "startup_tab":"0"
+        "startup_tab":"0",
+        "split_settings":"False"
     },
     "quran_reciters":{
         "researcher":"0",

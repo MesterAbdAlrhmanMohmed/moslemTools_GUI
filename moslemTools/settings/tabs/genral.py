@@ -95,7 +95,7 @@ class Genral(qt.QWidget):
         saved_theme = settings_handler.get("g", "theme") or "dark"
         if saved_theme != running_theme:
             target_name = "الوضع الفاتح" if saved_theme == "light" else "الوضع الداكن"
-            self.themeButton.setText(f"تم حفظ {target_name} (سيتفعل بعد إعادة التشغيل)")
+            self.themeButton.setText(f"تم حفظ {target_name} (سيتم تفعيله بعد إعادة التشغيل)")
             self.themeButton.setStyleSheet("""
                 QPushButton {
                     background-color: #0d47a1;

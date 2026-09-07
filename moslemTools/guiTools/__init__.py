@@ -1,4 +1,4 @@
-from .listBook import listBook
+from .listBook import listBook, DynamicStackedWidget
 from .exitApp import ExitApp
 from .textViewer import TextViewer
 from .send_notification import SendNotification

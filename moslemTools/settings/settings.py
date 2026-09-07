@@ -2,10 +2,83 @@ import guiTools,functions,gui,subprocess,os,sys,ctypes
 from ctypes import wintypes
 from . import settings_handler, app, tabs
 from .tabs import audioSettings
+from guiTools.listBook import DynamicStackedWidget
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtCore import Qt
+
+
+class SectionContainer(qt.QWidget):
+    def __init__(self, title, tabs_list, parent=None):
+        super().__init__(parent)
+        self.tabs_list = tabs_list
+        self.setStyleSheet("""
+            QLabel {
+                font-weight: bold;
+            }
+            QComboBox {
+                border: 1px solid #5c5c5c;
+                border-radius: 4px;
+                padding: 6px;
+                font-weight: bold;
+                min-height: 36px;
+            }
+        """)
+        layout = qt.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.header_layout = qt.QHBoxLayout()
+        self.header_layout.setContentsMargins(5, 5, 5, 10)
+        self.header_layout.setSpacing(10)
+        self.label = qt.QLabel("اختر الإعداد:")
+        self.combo = qt.QComboBox()
+        self.combo.setAccessibleName("اختر الإعداد")
+        self.label.setBuddy(self.combo)
+        for name, _ in self.tabs_list:
+            self.combo.addItem(name)
+        self.header_layout.addStretch()
+        self.header_layout.addWidget(self.label)
+        self.header_layout.addWidget(self.combo)
+        self.header_layout.addStretch()
+        layout.addLayout(self.header_layout)
+        self.sub_stack = DynamicStackedWidget()
+        layout.addWidget(self.sub_stack)
+        self.setLayout(layout)
+        self.setTabOrder(self.combo, self.sub_stack)
+        self.combo.currentIndexChanged.connect(self.on_combo_change)
+        self.adjust_combo_width()
+
+    def adjust_combo_width(self):
+        text = self.combo.currentText()
+        if not text:
+            return
+        fm = self.combo.fontMetrics()
+        width = fm.horizontalAdvance(text) + 65
+        self.combo.setFixedWidth(max(width, 160))
+
+    def on_combo_change(self, index):
+        self.adjust_combo_width()
+        if 0 <= index < self.sub_stack.count():
+            self.sub_stack.setCurrentIndex(index)
+            self.sub_stack.updateGeometry()
+            self.updateGeometry()
+            p = self.sub_stack.parentWidget()
+            while p:
+                if isinstance(p, qt.QScrollArea):
+                    p.verticalScrollBar().setValue(0)
+                    p.horizontalScrollBar().setValue(0)
+                    break
+                p = p.parentWidget()
+        p = self.parentWidget()
+        while p:
+            if hasattr(p, "update_tab_order"):
+                p.update_tab_order()
+                break
+            p = p.parentWidget()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.adjust_combo_width()
 
 
 class settings(qt.QDialog):
@@ -25,15 +98,119 @@ class settings(qt.QDialog):
         self.sectian.setFont(font)
         self.sectian.setMinimumWidth(360)
         h_layout.addWidget(self.sectian)
-        scroll_area = qt.QScrollArea()
-        scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
-        scroll_area.setWidget(self.sectian.w)
-        self.sectian.currentRowChanged.connect(lambda: scroll_area.verticalScrollBar().setValue(0))
-        h_layout.addWidget(scroll_area)
+        self.scroll_area = qt.QScrollArea()
+        self.scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+        self.scroll_area.setWidget(self.sectian.w)
+        self.sectian.currentRowChanged.connect(self.on_section_changed)
+        h_layout.addWidget(self.scroll_area)
         layout.addLayout(h_layout)
         self.update = tabs.Update(self)
+        self.layout1 = tabs.Genral(self)
+        self.startupTabSettings = tabs.StartupTabSettings(self)
+        self.userNameSettings = tabs.UserNameSettings()
+        self.fontSettings = tabs.FontSettings()
+        self.khatmahReminderSettings = tabs.KhatmahReminderSettings(self)
+        self.locationSettings = tabs.LocationSettings(self)
+        self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
+        self.quranRecitersSettings = tabs.QuranRecitersSettings(self)
+        self.tafaseerSettings = tabs.TafaseerSettings()
+        self.quranPlayerTimes = tabs.QuranPlayerSettings(self)
+        self.quranDisplaySettings = tabs.QuranDisplaySettings()
+        self.searchSettings = tabs.SearchSettings()
+        self.motonRecitersSettings = tabs.MotonRecitersSettings()
+        self.motonPlayerTimes = tabs.MotonPlayerSettings(self)
+        self.motonDisplaySettings = tabs.MotonDisplaySettings()
+        self.athkar = tabs.AthkarSettings()
+        self.fanarSettings = tabs.FanarSettings()
+        self.audioSettings = audioSettings.AudioSettings(self)
+        self.download = tabs.Download()
+        self.restoar = tabs.Restoar(self)
+
+        self.flat_tabs = [
+            ("الإعدادات العامة", self.layout1),
+            ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
+            ("إعدادات التذكير بالمناسبات واسم المستخدم", self.userNameSettings),
+            ("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings),
+            ("إعدادات التذكير بالورد اليومي", self.khatmahReminderSettings),
+            ("إعدادات تحديد الموقع الجغرافي لمواقيت الصلاة", self.locationSettings),
+            ("إعدادات الأذان", self.prayerTimesSettings),
+            ("إعدادات اختيار قارئ القرآن آية بآية", self.quranRecitersSettings),
+            ("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings),
+            ("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes),
+            ("إعدادات عرض الآيات في عارض القرآن الكريم", self.quranDisplaySettings),
+            ("إعدادات البحث", self.searchSettings),
+            ("إعدادات اختيار القارئ لتبويبة المتون الإسلامية المكتوبة", self.motonRecitersSettings),
+            ("إعدادات مشغل المتون لتبويبة المتون الإسلامية المكتوبة", self.motonPlayerTimes),
+            ("إعدادات عرض الأبيات في عارض المتون الإسلامية", self.motonDisplaySettings),
+            ("إعدادات الأذكار العشوائية", self.athkar),
+            ("إعدادات فنار (الذكاء الاصطناعي)", self.fanarSettings),
+            ("إعدادات تحديد كرت الصوت", self.audioSettings),
+            ("إعدادات التحديثات", self.update),
+            ("تحميل موارد", self.download),
+            ("النسخ الاحتياطي والاستعادة", self.restoar),
+        ]
+
+        self.sections_data = [
+            (
+                "الإعدادات الأساسية",
+                [
+                    ("الإعدادات العامة", self.layout1),
+                    ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
+                    ("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings),
+                    ("إعدادات تحديد كرت الصوت", self.audioSettings),
+                    ("إعدادات اختيار قارئ القرآن آية بآية", self.quranRecitersSettings),
+                    ("إعدادات البحث", self.searchSettings),
+                    ("إعدادات فنار (الذكاء الاصطناعي)", self.fanarSettings),
+                ]
+            ),
+            (
+                "إعدادات التذكيرات والأذكار",
+                [
+                    ("إعدادات التذكير بالمناسبات واسم المستخدم", self.userNameSettings),
+                    ("إعدادات التذكير بالورد اليومي", self.khatmahReminderSettings),
+                    ("إعدادات الأذكار العشوائية", self.athkar),
+                ]
+            ),
+            (
+                "إعدادات الأذان ومواقيت الصلاة",
+                [
+                    ("إعدادات تحديد الموقع الجغرافي لمواقيت الصلاة", self.locationSettings),
+                    ("إعدادات الأذان", self.prayerTimesSettings),
+                ]
+            ),
+            (
+                "إعدادات تبويبة القرآن الكريم مكتوب",
+                [
+                    ("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings),
+                    ("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes),
+                    ("إعدادات عرض الآيات في عارض القرآن الكريم", self.quranDisplaySettings),
+                ]
+            ),
+            (
+                "إعدادات تبويبة المتون الإسلامية المكتوبة",
+                [
+                    ("إعدادات اختيار القارئ لتبويبة المتون الإسلامية المكتوبة", self.motonRecitersSettings),
+                    ("إعدادات مشغل المتون لتبويبة المتون الإسلامية المكتوبة", self.motonPlayerTimes),
+                    ("إعدادات عرض الأبيات في عارض المتون الإسلامية", self.motonDisplaySettings),
+                ]
+            ),
+            (
+                "إعدادات التحديث والبيانات",
+                [
+                    ("إعدادات التحديثات", self.update),
+                    ("تحميل موارد", self.download),
+                    ("النسخ الاحتياطي والاستعادة", self.restoar),
+                ]
+            ),
+        ]
+
+        self.section_containers = []
+        for title, tabs_list in self.sections_data:
+            container = SectionContainer(title, tabs_list)
+            self.section_containers.append((title, container, tabs_list))
+
         buttonsLayout = qt.QHBoxLayout()
         self.ok = qt.QPushButton("موافق")
         self.ok.setDefault(True)
@@ -42,55 +219,147 @@ class settings(qt.QDialog):
         self.defolt = guiTools.QPushButton("استعادة الإعدادات الافتراضية")
         self.defolt.clicked.connect(self.default)
         self.defolt.setStyleSheet("background-color: #8B0000; color: #e0e0e0; padding: 12px; font-weight: bold;")
+        self.split_btn = guiTools.QPushButton("تصنيف الإعدادات")
+        self.split_btn.setCheckable(True)
         self.cancel = guiTools.QPushButton("إلغاء")
         self.cancel.clicked.connect(self.fcancel)
         self.cancel.setStyleSheet("background-color: #333333; color: #e0e0e0; padding: 12px; font-weight: bold;")
-        self.layout1 = tabs.Genral(self)
-        self.sectian.add("الإعدادات العامة", self.layout1)
-        self.startupTabSettings = tabs.StartupTabSettings(self)
-        self.sectian.add("إعدادات تبويبة بدء التشغيل", self.startupTabSettings)
-        self.userNameSettings = tabs.UserNameSettings()
-        self.sectian.add("إعدادات التذكير بالمناسبات واسم المستخدم", self.userNameSettings)
-        self.fontSettings = tabs.FontSettings()
-        self.sectian.add("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings)
-        self.khatmahReminderSettings = tabs.KhatmahReminderSettings(self)
-        self.sectian.add("إعدادات التذكير بالورد اليومي", self.khatmahReminderSettings)
-        self.locationSettings=tabs.LocationSettings(self)
-        self.sectian.add("إعدادات تحديد الموقع الجغرافي لمواقيت الصلاة",self.locationSettings)
-        self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
-        self.sectian.add("إعدادات الأذان", self.prayerTimesSettings)
-        self.quranRecitersSettings = tabs.QuranRecitersSettings(self)
-        self.sectian.add("إعدادات اختيار قارئ القرآن آية بآية", self.quranRecitersSettings)
-        self.tafaseerSettings = tabs.TafaseerSettings()
-        self.sectian.add("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings)
-        self.quranPlayerTimes = tabs.QuranPlayerSettings(self)
-        self.sectian.add("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes)
-        self.quranDisplaySettings = tabs.QuranDisplaySettings()
-        self.sectian.add("إعدادات عرض الآيات في عارض القرآن الكريم", self.quranDisplaySettings)
-        self.searchSettings = tabs.SearchSettings()
-        self.sectian.add("إعدادات البحث", self.searchSettings)
-        self.motonRecitersSettings = tabs.MotonRecitersSettings()
-        self.sectian.add("إعدادات اختيار القارئ لتبويبة المتون الإسلامية المكتوبة", self.motonRecitersSettings)
-        self.motonPlayerTimes = tabs.MotonPlayerSettings(self)
-        self.sectian.add("إعدادات مشغل المتون لتبويبة المتون الإسلامية المكتوبة", self.motonPlayerTimes)
-        self.motonDisplaySettings = tabs.MotonDisplaySettings()
-        self.sectian.add("إعدادات عرض الأبيات في عارض المتون الإسلامية", self.motonDisplaySettings)
-        self.athkar = tabs.AthkarSettings()
-        self.sectian.add("إعدادات الأذكار العشوائية", self.athkar)
-        self.fanarSettings = tabs.FanarSettings()
-        self.sectian.add("إعدادات فنار (الذكاء الاصطناعي)", self.fanarSettings)
-        self.audioSettings = audioSettings.AudioSettings(self)
-        self.sectian.add("إعدادات تحديد كرت الصوت", self.audioSettings)
-        self.sectian.add("إعدادات التحديثات", self.update)
-        self.sectian.add("تحميل موارد", tabs.Download())
-        restoar = tabs.Restoar(self)
-        self.sectian.add("النسخ الاحتياطي والاستعادة", restoar)
         buttonsLayout.addWidget(self.ok)
         buttonsLayout.addWidget(self.defolt)
+        buttonsLayout.addWidget(self.split_btn)
         buttonsLayout.addWidget(self.cancel)
         layout.addLayout(buttonsLayout)
         self.setLayout(layout)
-        self.sectian.setCurrentRow(0)
+
+        self.is_currently_split = None
+        split_val = settings_handler.get("g", "split_settings")
+        initial_split = True if split_val == "True" else False
+        self.split_btn.blockSignals(True)
+        self.split_btn.setChecked(initial_split)
+        self.split_btn.blockSignals(False)
+        self.update_split_btn_style(initial_split)
+        self.apply_mode(initial_split)
+        self.split_btn.toggled.connect(self.on_split_toggled)
+
+    def update_split_btn_style(self, checked):
+        if checked:
+            self.split_btn.setStyleSheet("QPushButton { background-color: #0056b3; color: white; padding: 12px; font-weight: bold; border-radius: 4px; } QPushButton:hover { background-color: #003d80; } QPushButton:pressed { background-color: #003d80; }")
+        else:
+            self.split_btn.setStyleSheet("QPushButton { background-color: #0000AA; color: #e0e0e0; padding: 12px; font-weight: bold; border-radius: 4px; } QPushButton:hover { background-color: #0000CC; } QPushButton:pressed { background-color: #000088; }")
+
+    def get_current_active_tab(self):
+        if self.is_currently_split:
+            row = self.sectian.currentRow()
+            if 0 <= row < len(self.section_containers):
+                _, container, tabs_list = self.section_containers[row]
+                sub_idx = container.combo.currentIndex()
+                if 0 <= sub_idx < len(tabs_list):
+                    return tabs_list[sub_idx][1]
+        else:
+            row = self.sectian.currentRow()
+            if 0 <= row < len(self.flat_tabs):
+                return self.flat_tabs[row][1]
+        return None
+
+    def on_split_toggled(self, checked):
+        self.update_split_btn_style(checked)
+        settings_handler.set("g", "split_settings", str(checked))
+        active_widget = self.get_current_active_tab()
+        self.apply_mode(checked, active_widget)
+        self.split_btn.setFocus()
+
+    def apply_mode(self, is_split, active_widget=None):
+        old_policy = self.sectian.focusPolicy()
+        self.sectian.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        self.sectian.blockSignals(True)
+        if self.sectian.selectionModel():
+            self.sectian.selectionModel().blockSignals(True)
+        self.sectian.clear()
+        while self.sectian.w.count() > 0:
+            w = self.sectian.w.widget(0)
+            self.sectian.w.removeWidget(w)
+        for _, container, _ in self.section_containers:
+            while container.sub_stack.count() > 0:
+                w = container.sub_stack.widget(0)
+                container.sub_stack.removeWidget(w)
+
+        if is_split:
+            target_section_row = 0
+            target_sub_idx = 0
+            found = False
+            for sec_idx, (title, container, tabs_list) in enumerate(self.section_containers):
+                for sub_name, widget in tabs_list:
+                    container.sub_stack.addWidget(widget)
+                self.sectian.add(title, container)
+                sub_sel = 0
+                if not found and active_widget is not None:
+                    for sub_idx, (_, widget) in enumerate(tabs_list):
+                        if widget == active_widget:
+                            target_section_row = sec_idx
+                            target_sub_idx = sub_idx
+                            sub_sel = sub_idx
+                            found = True
+                            break
+                container.combo.blockSignals(True)
+                container.combo.setCurrentIndex(sub_sel)
+                container.combo.blockSignals(False)
+                container.on_combo_change(sub_sel)
+            self.sectian.setCurrentRow(target_section_row)
+            self.sectian.w.setCurrentIndex(target_section_row)
+            if 0 <= target_section_row < len(self.section_containers):
+                _, container, _ = self.section_containers[target_section_row]
+                container.combo.blockSignals(True)
+                container.combo.setCurrentIndex(target_sub_idx)
+                container.combo.blockSignals(False)
+                container.on_combo_change(target_sub_idx)
+        else:
+            target_row = 0
+            for i, (title, widget) in enumerate(self.flat_tabs):
+                self.sectian.add(title, widget)
+                if active_widget is not None and widget == active_widget:
+                    target_row = i
+            self.sectian.setCurrentRow(target_row)
+            self.sectian.w.setCurrentIndex(target_row)
+
+        if self.sectian.selectionModel():
+            self.sectian.selectionModel().blockSignals(False)
+        self.sectian.blockSignals(False)
+        self.sectian.setFocusPolicy(old_policy)
+
+        self.is_currently_split = is_split
+        self.update_tab_order()
+
+    def on_section_changed(self, index):
+        self.scroll_area.verticalScrollBar().setValue(0)
+        self.update_tab_order()
+
+    def update_tab_order(self):
+        if self.is_currently_split:
+            row = self.sectian.currentRow()
+            if 0 <= row < len(self.section_containers):
+                _, container, _ = self.section_containers[row]
+                self.setTabOrder(self.sectian, container.combo)
+                current_tab = container.sub_stack.currentWidget()
+                if current_tab:
+                    self.setTabOrder(container.combo, current_tab)
+                    self.setTabOrder(current_tab, self.ok)
+                else:
+                    self.setTabOrder(container.combo, self.ok)
+        else:
+            current_tab = self.sectian.w.currentWidget()
+            if current_tab:
+                self.setTabOrder(self.sectian, current_tab)
+                self.setTabOrder(current_tab, self.ok)
+            else:
+                self.setTabOrder(self.sectian, self.ok)
+        self.setTabOrder(self.ok, self.defolt)
+        self.setTabOrder(self.defolt, self.split_btn)
+        self.setTabOrder(self.split_btn, self.cancel)
+        self.setTabOrder(self.cancel, self.sectian)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.sectian.setFocus()
 
     def fok(self):
         if self.userNameSettings.use_name_checkbox.isChecked():
@@ -194,6 +463,7 @@ class settings(qt.QDialog):
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
         settings_handler.set("g", "startup_tab", str(self.startupTabSettings.tab_list.currentRow()))
         settings_handler.set("g", "randomMessageAtStartup", str(self.layout1.randomMessageAtStartup.isChecked()))
+        settings_handler.set("g", "split_settings", str(self.split_btn.isChecked()))
         settings_handler.set("g", "use_name_in_occasions", str(self.userNameSettings.use_name_checkbox.isChecked()))
         settings_handler.set("g", "name_type", self.userNameSettings.get_selected_name_type())
         settings_handler.set("g", "user_name", self.userNameSettings.custom_name_input.text().strip())
