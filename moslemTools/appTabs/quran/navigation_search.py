@@ -1,4 +1,4 @@
-﻿import gui.translationViewer
+import gui.translationViewer
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
 import ujson as json
 from settings.app import appName
@@ -30,9 +30,9 @@ class QuranTabNavSearchMixin:
         self.onTypeChanged(self.type.currentIndex())
 
     def search(self, pattern, text_list):
-        tashkeel_pattern = re.compile(r'[\u064B-\u065F\u0670]')
-        normalized_pattern = tashkeel_pattern.sub('', pattern)
-        matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text)]
+        tashkeel_pattern = re.compile(r'[\u0610-\u061A\u0640\u064B-\u065F\u0670\u06D6-\u06ED\u08C9-\u08FF]')
+        normalized_pattern = tashkeel_pattern.sub('', pattern).replace('\u0671', '\u0627')
+        matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text).replace('\u0671', '\u0627')]
         return matches
 
     def onsearch(self):
