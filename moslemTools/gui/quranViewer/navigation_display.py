@@ -223,6 +223,13 @@ class NavigationDisplayMixin:
 
     def resume_after_action(self):
         if self.was_playing_before_action:
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.media.stop()
+                self.media_progress.setVisible(False)
+                self.time_label.setVisible(False)
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                self.was_playing_before_action = False
+                return
             self.media.play()
             self.was_playing_before_action = False
 

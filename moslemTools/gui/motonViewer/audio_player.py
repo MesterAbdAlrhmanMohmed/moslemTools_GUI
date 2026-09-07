@@ -26,6 +26,7 @@ class MotonAudioPlayerMixin:
         self.playback_speed = self.load_speed()
         self.media.setPlaybackRate(self.playback_speed)
         self.media.mediaStatusChanged.connect(self.on_media_status_changed)
+        self.media.errorOccurred.connect(self.on_media_error)
         self.media.positionChanged.connect(self.update_slider)
         self.media.durationChanged.connect(self.on_duration_changed)
         self.register_audio_shortcuts()
@@ -125,6 +126,10 @@ class MotonAudioPlayerMixin:
         target_global_num = bayt["global_num"]
 
         if getattr(self, "is_user_paused", False) and (self.current_playing_bayt == target_global_num):
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.stop_audio()
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                return
             self.is_user_paused = False
             resume_pos = getattr(self, "saved_pause_position", 0)
             if resume_pos > 0:
@@ -153,6 +158,10 @@ class MotonAudioPlayerMixin:
 
     def play_bayt_split_mode(self, global_bayt_num):
         url = get_moton_bayt_audio_url(self.current_reciter_slug, self.matn_slug, global_bayt_num)
+        if not url.isLocalFile() and not guiTools.check_internet():
+            self.stop_audio()
+            guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+            return
         self.current_playing_bayt = global_bayt_num
         self.media_progress.setVisible(True)
         self.time_label.setVisible(True)
@@ -163,6 +172,10 @@ class MotonAudioPlayerMixin:
 
     def play_bayt_continuous_mode(self, global_bayt_num):
         url = get_moton_continuous_audio_url(self.current_reciter_slug, self.matn_slug)
+        if not url.isLocalFile() and not guiTools.check_internet():
+            self.stop_audio()
+            guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+            return
         dur_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, "Durations", f"{self.matn_slug}.txt"))
         timestamps = []
         if os.path.exists(dur_path):
@@ -216,7 +229,11 @@ class MotonAudioPlayerMixin:
         verses_to_play = self.displayed_verses[start_idx:]
         if not verses_to_play:
             if was_playing:
-                self.media.play()
+                if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                    self.stop_audio()
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                else:
+                    self.media.play()
             return
         from ..motonPlayer import MotonPlayer
         player = MotonPlayer(
@@ -232,7 +249,11 @@ class MotonAudioPlayerMixin:
         )
         player.exec()
         if was_playing:
-            self.media.play()
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.stop_audio()
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+            else:
+                self.media.play()
 
     def playFromVersToVers(self):
         if hasattr(self, 'is_search_view') and self.is_search_view:
@@ -284,7 +305,19 @@ class MotonAudioPlayerMixin:
                     )
                     player.exec()
         if was_playing:
-            self.media.play()
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.stop_audio()
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+            else:
+                self.media.play()
+
+    def on_media_error(self, error=None, error_string=""):
+        if not self.media.source().isLocalFile():
+            self.stop_audio()
+            if not getattr(self, '_showing_network_error', False):
+                self._showing_network_error = True
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                self._showing_network_error = False
 
     def on_media_status_changed(self, status):
         if status in (QMediaPlayer.MediaStatus.LoadedMedia, QMediaPlayer.MediaStatus.BufferedMedia):
@@ -294,6 +327,13 @@ class MotonAudioPlayerMixin:
                 self.media.setPosition(seek_ms)
                 self.apply_speed()
                 self.media.play()
+        elif status == QMediaPlayer.MediaStatus.InvalidMedia:
+            if not self.media.source().isLocalFile():
+                self.stop_audio()
+                if not getattr(self, '_showing_network_error', False):
+                    self._showing_network_error = True
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    self._showing_network_error = False
         elif status == QMediaPlayer.MediaStatus.EndOfMedia:
             self.media_progress.setVisible(False)
             self.time_label.setVisible(False)

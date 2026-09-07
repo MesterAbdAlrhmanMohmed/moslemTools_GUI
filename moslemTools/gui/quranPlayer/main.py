@@ -54,6 +54,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerNavigationDisplayMixin, PlayerTa
         self.audioOutput.setDevice(audio_manager.get_audio_device("quran_player"))
         self.media.setAudioOutput(self.audioOutput)
         self.media.mediaStatusChanged.connect(self.on_state)
+        self.media.errorOccurred.connect(self.on_media_error)
         self.index=index
         self.quranText=text.split("\n")
         self.show_diacritics = True

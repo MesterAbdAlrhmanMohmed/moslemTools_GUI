@@ -137,6 +137,14 @@ class PlayerAudioMixin:
             if state in (QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.LoadedMedia):
                 self.pending_seek_resume = False
                 self.media.play()
+        elif state == QMediaPlayer.MediaStatus.InvalidMedia:
+            if not self.media.source().isLocalFile():
+                self.media.stop()
+                self.PPS.setText("تشغيل")
+                if not getattr(self, '_showing_network_error', False):
+                    self._showing_network_error = True
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    self._showing_network_error = False
         if state == QMediaPlayer.MediaStatus.EndOfMedia:
             dur_val = settings.settings_handler.get("quranPlayer","duration")
             duration_ms = int(dur_val if (dur_val and str(dur_val).isdigit()) else 0) * 1000
@@ -153,12 +161,31 @@ class PlayerAudioMixin:
                 self.currentTime+=1
                 qt2.QTimer.singleShot(duration_ms,qt2.Qt.TimerType.PreciseTimer,self.media.play)
 
+    def on_media_error(self, error=None, error_string=""):
+        if not self.media.source().isLocalFile():
+            self.media.stop()
+            self.PPS.setText("تشغيل")
+            if not getattr(self, '_showing_network_error', False):
+                self._showing_network_error = True
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                self._showing_network_error = False
+
     def on_play(self):
         if not self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-            if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],self.on_set())):
-                path=qt2.QUrl.fromLocalFile(os.path.join(os.getenv('appdata'),settings.app.appName,"reciters",reciters[self.getCurrentReciter()].split("/")[-3],self.on_set()))
-            else: path=qt2.QUrl(reciters[self.getCurrentReciter()] + self.on_set())
-            if not self.media.source()==path: self.media.setSource(path)
+            reciter_folder = reciters[self.getCurrentReciter()].split("/")[-3]
+            filename = self.on_set()
+            local_path = os.path.join(os.getenv('appdata'), settings.app.appName, "reciters", reciter_folder, filename)
+            if os.path.exists(local_path):
+                path = qt2.QUrl.fromLocalFile(local_path)
+            else:
+                if not guiTools.check_internet():
+                    self.media.stop()
+                    self.PPS.setText("تشغيل")
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    return
+                path = qt2.QUrl(reciters[self.getCurrentReciter()] + filename)
+            if not self.media.source() == path:
+                self.media.setSource(path)
             self.PPS.setText("إيقاف مؤقت")
             qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))
         else:
@@ -168,6 +195,11 @@ class PlayerAudioMixin:
 
     def resume_playback(self):
         if hasattr(self, 'was_playing') and self.was_playing and not self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState and not self.is_merging:
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.media.stop()
+                self.PPS.setText("تشغيل")
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                return
             self.media.play()
             self.PPS.setText("إيقاف مؤقت")
 

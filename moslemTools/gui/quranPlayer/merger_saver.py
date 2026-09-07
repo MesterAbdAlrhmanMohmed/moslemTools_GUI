@@ -179,6 +179,9 @@ class PlayerMergerSaverMixin:
         output_dir = os.path.dirname(self.current_merge_output_path) if not self.save_mode else self.current_merge_output_path
         next_item_to_download = next((item for item in self.merge_list if not os.path.exists(item["local_path"]) and item["url"] not in self.completed_merge_downloads), None)
         if next_item_to_download:
+            if not guiTools.check_internet():
+                self.on_merge_finished(False, "لا يوجد اتصال بالإنترنت")
+                return
             self.is_merging = True
             self.merge_phase = 'downloading'
             self.merge_action_button.hide()

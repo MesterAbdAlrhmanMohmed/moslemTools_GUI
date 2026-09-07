@@ -21,6 +21,7 @@ class MotonPlayerAudioMixin:
         self.playback_speed = self.load_speed()
         self.media.setPlaybackRate(self.playback_speed)
         self.media.mediaStatusChanged.connect(self.on_state)
+        self.media.errorOccurred.connect(self.on_media_error)
         self.media.positionChanged.connect(self.update_slider)
         self.media.durationChanged.connect(self.duration_changed)
         self.times = int(settings_handler.get("motonPlayer", "times") or 1)
@@ -42,6 +43,11 @@ class MotonPlayerAudioMixin:
 
     def resume_after_action(self):
         if self.was_playing_before_action:
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.stop_audio()
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                self.was_playing_before_action = False
+                return
             self.media.play()
             self.PPS.setText("إيقاف مؤقت")
             self.was_playing_before_action = False
@@ -141,6 +147,10 @@ class MotonPlayerAudioMixin:
         self._last_toggle_time = now
 
         if getattr(self, "is_user_paused", False):
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.stop_audio()
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                return
             self.is_user_paused = False
             resume_pos = getattr(self, "saved_pause_position", 0)
             if resume_pos > 0:
@@ -168,6 +178,10 @@ class MotonPlayerAudioMixin:
         is_continuous = (self.current_reciter_type == "Y")
         if is_continuous:
             url = get_moton_continuous_audio_url(self.current_reciter_slug, self.matn_slug)
+            if not url.isLocalFile() and not guiTools.check_internet():
+                self.stop_audio()
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                return
             dur_path = os.path.abspath(os.path.join("data", "DataMoton", "Qasaed", self.current_reciter_slug, "Durations", f"{self.matn_slug}.txt"))
             timestamps = []
             if os.path.exists(dur_path):
@@ -198,10 +212,22 @@ class MotonPlayerAudioMixin:
                 qt2.QTimer.singleShot(80, lambda: (self.apply_speed(self.playback_speed), self.media.play()))
         else:
             url = get_moton_bayt_audio_url(self.current_reciter_slug, self.matn_slug, global_bayt_num)
+            if not url.isLocalFile() and not guiTools.check_internet():
+                self.stop_audio()
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                return
             if self.media.source() != url:
                 self.media.setSource(url)
             self.PPS.setText("إيقاف مؤقت")
             qt2.QTimer.singleShot(80, lambda: (self.apply_speed(self.playback_speed), self.media.play()))
+
+    def on_media_error(self, error=None, error_string=""):
+        if not self.media.source().isLocalFile():
+            self.stop_audio()
+            if not getattr(self, '_showing_network_error', False):
+                self._showing_network_error = True
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                self._showing_network_error = False
 
     def on_state(self, state):
         if getattr(self, "is_closing", False):
@@ -213,6 +239,13 @@ class MotonPlayerAudioMixin:
                 self.media.setPosition(seek_ms)
                 self.PPS.setText("إيقاف مؤقت")
                 qt2.QTimer.singleShot(80, lambda: (self.apply_speed(self.playback_speed), self.media.play()))
+        elif state == QMediaPlayer.MediaStatus.InvalidMedia:
+            if not self.media.source().isLocalFile():
+                self.stop_audio()
+                if not getattr(self, '_showing_network_error', False):
+                    self._showing_network_error = True
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    self._showing_network_error = False
         elif state == QMediaPlayer.MediaStatus.EndOfMedia:
             self.is_user_paused = False
             self.saved_pause_position = 0

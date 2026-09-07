@@ -146,6 +146,9 @@ class QuranRangeMergerSaverMixin:
             return
         next_item_to_download = next((item for item in self.merge_list if not os.path.exists(item["local_path"]) and item["url"] not in self.completed_merge_downloads), None)
         if next_item_to_download:
+            if not guiTools.check_internet():
+                self.on_merge_finished(False, "لا يوجد اتصال بالإنترنت")
+                return
             self.merge_phase = 'downloading'
             self.merge_action_button.hide()
             total = len(self.merge_list)

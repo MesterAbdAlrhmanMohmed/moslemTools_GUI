@@ -38,6 +38,7 @@ class Albaheth(ResearcherContextMenuMixin, ResearcherActionsMixin, ResearcherSea
         self.init_ui()
         self.create_shortcuts()
         self.media_player.mediaStatusChanged.connect(self.on_media_state_changed)
+        self.media_player.errorOccurred.connect(self.on_media_error)
         self.media_player.durationChanged.connect(self.update_slider_and_time)
         self.media_player.positionChanged.connect(self.update_slider_and_time)
 

@@ -1,8 +1,10 @@
-﻿import PyQt6.QtWidgets as qt
+import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from PyQt6.QtMultimedia import QMediaPlayer
-from guiTools import speak
+from guiTools import speak, check_internet, MessageBox
+
+showing_network_error = False
 
 global_player = None
 global_audio_output = None
@@ -21,11 +23,40 @@ def get_global_current_url():
     return global_current_url
 
 
+def on_media_error(error, error_string=""):
+    global global_player, global_current_url, showing_network_error
+    if global_player:
+        global_player.stop()
+    global_current_url = None
+    if not showing_network_error:
+        showing_network_error = True
+        MessageBox.error(None, "خطأ", "لا يوجد اتصال بالإنترنت")
+        showing_network_error = False
+
+
+def on_media_status_changed(status):
+    global global_player, global_current_url, showing_network_error
+    if status == QMediaPlayer.MediaStatus.InvalidMedia:
+        if global_player:
+            global_player.stop()
+        global_current_url = None
+        if not showing_network_error:
+            showing_network_error = True
+            MessageBox.error(None, "خطأ", "لا يوجد اتصال بالإنترنت")
+            showing_network_error = False
+
+
 def set_globals(player, output, url):
     global global_player, global_audio_output, global_current_url
     global_player = player
     global_audio_output = output
     global_current_url = url
+    if global_player:
+        try:
+            global_player.errorOccurred.connect(on_media_error)
+            global_player.mediaStatusChanged.connect(on_media_status_changed)
+        except Exception:
+            pass
 
 
 ALL_STATIONS = {
@@ -125,6 +156,11 @@ def play_station_by_name(station_name):
             global_player.stop()
             global_current_url = None
         else:
+            if not check_internet():
+                global_player.stop()
+                global_current_url = None
+                MessageBox.error(None, "خطأ", "لا يوجد اتصال بالإنترنت")
+                return
             global_player.stop()
             global_player.setSource(url_to_play)
             global_player.play()

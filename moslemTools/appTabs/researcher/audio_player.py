@@ -26,6 +26,11 @@ class ResearcherAudioMixin:
         if os.path.exists(local_path):
             path = qt2.QUrl.fromLocalFile(local_path)
         else:
+            if not guiTools.check_internet():
+                self.media_player.stop()
+                self.player_widget.setVisible(False)
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                return
             path = qt2.QUrl(reciter_url + filename)
         self.media_player.setSource(path)
         self.player_widget.setVisible(True)
@@ -40,9 +45,23 @@ class ResearcherAudioMixin:
             if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                 self.media_player.pause()
             elif self.media_player.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+                if not self.media_player.source().isLocalFile() and not guiTools.check_internet():
+                    self.media_player.stop()
+                    self.player_widget.setVisible(False)
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    return
                 self.media_player.play()
         else:
             self.start_playback(selected_metadata)
+
+    def on_media_error(self, error=None, error_string=""):
+        if not self.media_player.source().isLocalFile():
+            self.media_player.stop()
+            self.player_widget.setVisible(False)
+            if not getattr(self, '_showing_network_error', False):
+                self._showing_network_error = True
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                self._showing_network_error = False
 
     def on_media_state_changed(self, state):
         if getattr(self, 'pending_seek_resume', False):
@@ -53,6 +72,14 @@ class ResearcherAudioMixin:
                 self.media_player.play()
         if state == QMediaPlayer.MediaStatus.EndOfMedia:
             self.player_widget.setVisible(False)
+        elif state == QMediaPlayer.MediaStatus.InvalidMedia:
+            if not self.media_player.source().isLocalFile():
+                self.media_player.stop()
+                self.player_widget.setVisible(False)
+                if not getattr(self, '_showing_network_error', False):
+                    self._showing_network_error = True
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    self._showing_network_error = False
 
     def update_slider_and_time(self):
         self.media_progress.blockSignals(True)

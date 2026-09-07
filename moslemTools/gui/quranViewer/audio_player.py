@@ -36,6 +36,13 @@ class AudioPlayerMixin:
                 qt2.QTimer.singleShot(150, self._check_seek_resume)
                 return
             if self.media.mediaStatus() in (QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.LoadedMedia):
+                if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                    self.pending_seek_resume = False
+                    self.media.stop()
+                    self.media_progress.setVisible(False)
+                    self.time_label.setVisible(False)
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    return
                 self.pending_seek_resume = False
                 self.media.play()
             elif self.media.mediaStatus() in (QMediaPlayer.MediaStatus.BufferingMedia, QMediaPlayer.MediaStatus.LoadingMedia, QMediaPlayer.MediaStatus.StalledMedia):
@@ -108,8 +115,6 @@ class AudioPlayerMixin:
         if self._is_invalid_search_line():
             self._handle_invalid_search_line_action()
             return
-        self.media_progress.setVisible(True)
-        self.time_label.setVisible(True)
         current_ayah_index = self.getCurrentAyah()
         if current_ayah_index < 0:
             return
@@ -122,6 +127,12 @@ class AudioPlayerMixin:
         if os.path.exists(local_file_path):
             path = qt2.QUrl.fromLocalFile(local_file_path)
         else:
+            if not guiTools.check_internet():
+                self.media.stop()
+                self.media_progress.setVisible(False)
+                self.time_label.setVisible(False)
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                return
             path = qt2.QUrl(reciters[reciter_key] + file_name)
         is_playing_this_verse = (self.media.playbackState() != QMediaPlayer.PlaybackState.StoppedState) and (self.media.source() == path)
         if is_playing_this_verse:
@@ -129,10 +140,20 @@ class AudioPlayerMixin:
             if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                 self.media.pause()
             elif self.media.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+                if not path.isLocalFile() and not guiTools.check_internet():
+                    self.media.stop()
+                    self.media_progress.setVisible(False)
+                    self.time_label.setVisible(False)
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    return
+                self.media_progress.setVisible(True)
+                self.time_label.setVisible(True)
                 self.media.play()
         else:
             self.pending_seek_resume = False
             self.media.stop()
+            self.media_progress.setVisible(True)
+            self.time_label.setVisible(True)
             self.media.setSource(path)
             qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))
 
@@ -147,7 +168,13 @@ class AudioPlayerMixin:
         text_for_player = self.original_quran_text if not self.is_search_view else self.quranText
         QuranPlayer(self, text_for_player, self.getCurrentAyah(), self.type, self.category).exec()
         if was_playing:
-            self.media.play()
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.media.stop()
+                self.media_progress.setVisible(False)
+                self.time_label.setVisible(False)
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+            else:
+                self.media.play()
 
     def playFromVersToVers(self):
         if self.is_search_view:
@@ -171,7 +198,13 @@ class AudioPlayerMixin:
                 QuranPlayer(self, "\n".join(verses), 0, self.type, self.category).exec()
                 self.text.setUpdatesEnabled(True)
         if was_playing:
-            self.media.play()
+            if not self.media.source().isLocalFile() and not guiTools.check_internet():
+                self.media.stop()
+                self.media_progress.setVisible(False)
+                self.time_label.setVisible(False)
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+            else:
+                self.media.play()
 
     def set_position_from_slider(self, value):
         duration = self.media.duration()
@@ -208,6 +241,25 @@ class AudioPlayerMixin:
         if state == QMediaPlayer.MediaStatus.EndOfMedia:
             self.media_progress.setVisible(False)
             self.time_label.setVisible(False)
+        elif state == QMediaPlayer.MediaStatus.InvalidMedia:
+            if not self.media.source().isLocalFile():
+                self.media.stop()
+                self.media_progress.setVisible(False)
+                self.time_label.setVisible(False)
+                if not getattr(self, '_showing_network_error', False):
+                    self._showing_network_error = True
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    self._showing_network_error = False
+
+    def on_media_error(self, error=None, error_string=""):
+        if not self.media.source().isLocalFile():
+            self.media.stop()
+            self.media_progress.setVisible(False)
+            self.time_label.setVisible(False)
+            if not getattr(self, '_showing_network_error', False):
+                self._showing_network_error = True
+                guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                self._showing_network_error = False
 
     def load_speed(self):
         try:

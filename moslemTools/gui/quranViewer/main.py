@@ -83,6 +83,7 @@ class QuranViewer(ContextMenuMixin, NavigationDisplayMixin, AudioPlayerMixin, Se
         time.sleep(0.5)
         self.media.stop()
         self.media.mediaStatusChanged.connect(self.on_state)
+        self.media.errorOccurred.connect(self.on_media_error)
         self.quranText=text
         self.setStyleSheet("""
             QPushButton#startButton, QPushButton#applySearchModeChangesButton {

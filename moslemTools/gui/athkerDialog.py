@@ -39,6 +39,7 @@ class AthkerDialog (qt.QDialog):
         self.media.durationChanged.connect(self.update_slider)
         self.media.positionChanged.connect(self.update_slider)
         self.media.mediaStatusChanged.connect(self.on_state)
+        self.media.errorOccurred.connect(self.on_media_error)
         self.media_progress.setAccessibleName("التحكم في تقدم المقطع")
         self.media_progress.setAccessibleDescription("يمكنك استخدام الاختصار control مع الأرقام من 1 إلى 9 للذهاب إلى نسبة مئوية من المقطع")
         self.time_label = qt.QLabel()
@@ -139,10 +140,25 @@ class AthkerDialog (qt.QDialog):
         self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | المدة الإجمالية: {duration_str}")
 
     def on_state(self, state):
-        if state == QMediaPlayer.MediaStatus.EndOfMedia:
+        if state in (QMediaPlayer.MediaStatus.EndOfMedia, QMediaPlayer.MediaStatus.InvalidMedia):
             self.media_progress.setVisible(False)
             self.time_label.setVisible(False)
             self.PPS.setText("تشغيل")
+            if state == QMediaPlayer.MediaStatus.InvalidMedia and not self.media.source().isLocalFile():
+                if not getattr(self, '_showing_network_error', False):
+                    self._showing_network_error = True
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    self._showing_network_error = False
+
+    def on_media_error(self, error, error_string=""):
+        self.media.stop()
+        self.media_progress.setVisible(False)
+        self.time_label.setVisible(False)
+        self.PPS.setText("تشغيل")
+        if not getattr(self, '_showing_network_error', False):
+            self._showing_network_error = True
+            guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+            self._showing_network_error = False
 
     def onPlay(self):
         if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -152,6 +168,12 @@ class AthkerDialog (qt.QDialog):
             if os.path.exists(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.windowTitle(),str(self.inex) + ".mp3")):
                 url=qt2.QUrl.fromLocalFile(os.path.join(os.getenv('appdata'),settings.app.appName,"athkar",self.windowTitle(),str(self.inex) + ".mp3"))
             else:
+                if not guiTools.check_internet():
+                    self.media_progress.setVisible(False)
+                    self.time_label.setVisible(False)
+                    self.PPS.setText("تشغيل")
+                    guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
+                    return
                 url=qt2.QUrl(self.athkerList[self.inex]["audio"])
             if url != self.media.source():
                 self.media.setSource(url)
