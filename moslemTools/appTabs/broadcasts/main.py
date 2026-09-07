@@ -437,7 +437,7 @@ class protcasts(qt.QWidget):
         if self.recorder._running:
              guiTools.qMessageBox.MessageBox.error(self, "خطأ", "التسجيل يعمل بالفعل.")
              return
-        result = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء التسجيل", "تنبيه هام: سيتم تسجيل جميع الأصوات الصادرة من النظام (الكمبيوتر) فقط، ولن يتم تسجيل أي صوت خارجي (الميكروفون).\n\nهل تريد البدء بالتسجيل الآن؟", "نعم", "لا")
+        result = guiTools.QQuestionMessageBox.view(self, "بدء التسجيل", "ملاحظة: سيتم تسجيل صوت الإذاعة فقط، ولن يتم التقاط أي صوت من المايكروفون أو إشعارات النظام والبرامج الأخرى.\n\nهل تريد البدء بالتسجيل الآن؟", "نعم", "لا")
         if result != 0: return
         self.is_scheduled_recording = False
         self.recorder.start()
@@ -466,7 +466,7 @@ class protcasts(qt.QWidget):
             sh, sm, ss, dh, dm, ds = dlg.get_values()
             self.remaining_seconds_to_start = (sh * 3600) + (sm * 60) + ss
             self.remaining_duration_seconds = (dh * 3600) + (dm * 60) + ds
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "سيتم تسجيل جميع الأصوات الصادرة من النظام (الكمبيوتر) فقط، ولن يتم تسجيل أي صوت خارجي (الميكروفون).\nإذا تم إيقاف الإذاعة قبل بدء التسجيل أو أثناءه، سيتم إلغاء العملية.")
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "ملاحظة: سيتم تسجيل صوت الإذاعة فقط، ولن يتم التقاط أي صوت من المايكروفون أو إشعارات النظام والبرامج الأخرى.\nإذا تم إيقاف الإذاعة قبل بدء التسجيل أو أثناءه، سيتم إلغاء العملية.")
             filePath, _ = qt.QFileDialog.getSaveFileName(self, "حفظ التسجيل", f"{self.get_current_station_name()}.mp3", "Audio Files (*.mp3);;All Files (*)")
             if filePath:
                 self.scheduled_file_path = filePath
