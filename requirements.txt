@@ -13,3 +13,6 @@ python-docx
 accessible_output3
 ujson
 pynput
+proc-tap
+soundfile
+numpy
