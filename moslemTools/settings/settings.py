@@ -141,8 +141,8 @@ class settings(qt.QDialog):
             ("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes),
             ("إعدادات عرض الآيات في عارض القرآن الكريم", self.quranDisplaySettings),
             ("إعدادات البحث", self.searchSettings),
-            ("إعدادات اختيار القارئ لتبويبة المتون الإسلامية المكتوبة", self.motonRecitersSettings),
-            ("إعدادات مشغل المتون لتبويبة المتون الإسلامية المكتوبة", self.motonPlayerTimes),
+            ("إعدادات اختيار القارئ للمتون الإسلامية", self.motonRecitersSettings),
+            ("إعدادات مشغل المتون الإسلامية", self.motonPlayerTimes),
             ("إعدادات عرض الأبيات في عارض المتون الإسلامية", self.motonDisplaySettings),
             ("إعدادات الأذكار العشوائية", self.athkar),
             ("إعدادات فنار (الذكاء الاصطناعي)", self.fanarSettings),
@@ -176,24 +176,24 @@ class settings(qt.QDialog):
             (
                 "إعدادات الأذان ومواقيت الصلاة",
                 [
-                    ("إعدادات تحديد الموقع الجغرافي لمواقيت الصلاة", self.locationSettings),
+                    ("إعدادات تحديد الموقع الجغرافي", self.locationSettings),
                     ("إعدادات الأذان", self.prayerTimesSettings),
                 ]
             ),
             (
                 "إعدادات تبويبة القرآن الكريم مكتوب",
                 [
-                    ("إعدادات التفسير والترجمة لتبويبة القرآن الكريم مكتوب", self.tafaseerSettings),
-                    ("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes),
-                    ("إعدادات عرض الآيات في عارض القرآن الكريم", self.quranDisplaySettings),
+                    ("إعدادات التفسير والترجمة", self.tafaseerSettings),
+                    ("إعدادات مشغل القرآن", self.quranPlayerTimes),
+                    ("إعدادات عرض الآيات", self.quranDisplaySettings),
                 ]
             ),
             (
                 "إعدادات تبويبة المتون الإسلامية المكتوبة",
                 [
-                    ("إعدادات اختيار القارئ لتبويبة المتون الإسلامية المكتوبة", self.motonRecitersSettings),
-                    ("إعدادات مشغل المتون لتبويبة المتون الإسلامية المكتوبة", self.motonPlayerTimes),
-                    ("إعدادات عرض الأبيات في عارض المتون الإسلامية", self.motonDisplaySettings),
+                    ("إعدادات اختيار القارئ", self.motonRecitersSettings),
+                    ("إعدادات مشغل المتون", self.motonPlayerTimes),
+                    ("إعدادات عرض الأبيات", self.motonDisplaySettings),
                 ]
             ),
             (
