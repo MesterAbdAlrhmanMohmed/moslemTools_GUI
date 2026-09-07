@@ -1,4 +1,5 @@
 import gui.translationViewer
+import gui.quranRange
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
 import ujson as json
 from settings.app import appName
@@ -29,11 +30,11 @@ class Quran(QuranTabContextMenuMixin, QuranTabNavSearchMixin, QuranTabActionsMix
         qt1.QShortcut("ctrl+f",self).activated.connect(self.onCategoryInfoTriggered)
         qt1.QShortcut("ctrl+alt+d", self).activated.connect(self.onMergeActionTriggered)
         qt1.QShortcut("ctrl+h", self).activated.connect(self.onSaveActionTriggered)
-        qt1.QShortcut("ctrl+1", self).activated.connect(lambda: guiTools.FromToSurahWidget(self, 0).exec())
-        qt1.QShortcut("ctrl+2", self).activated.connect(lambda: guiTools.FromToSurahWidget(self, 1).exec())
-        qt1.QShortcut("ctrl+3", self).activated.connect(lambda: guiTools.FromToSurahWidget(self, 2).exec())
-        qt1.QShortcut("ctrl+4", self).activated.connect(lambda: guiTools.FromToSurahWidget(self, 3).exec())
-        qt1.QShortcut("ctrl+5", self).activated.connect(lambda: guiTools.FromToSurahWidget(self, 4).exec())
+        qt1.QShortcut("ctrl+1", self).activated.connect(lambda: gui.quranRange.QuranRange(self, 0).exec())
+        qt1.QShortcut("ctrl+2", self).activated.connect(lambda: gui.quranRange.QuranRange(self, 1).exec())
+        qt1.QShortcut("ctrl+3", self).activated.connect(lambda: gui.quranRange.QuranRange(self, 2).exec())
+        qt1.QShortcut("ctrl+4", self).activated.connect(lambda: gui.quranRange.QuranRange(self, 3).exec())
+        qt1.QShortcut("ctrl+5", self).activated.connect(lambda: gui.quranRange.QuranRange(self, 4).exec())
         self.infoData = []
         self.ffmpeg_path = os.path.join("data", "bin", "ffmpeg.exe")
         self.merge_list = []

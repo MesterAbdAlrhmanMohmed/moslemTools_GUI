@@ -5,7 +5,6 @@ from .send_notification import SendNotification
 from .QPushButton import QPushButton
 from .QReadOnlyTextEdit import QReadOnlyTextEdit
 from .QListWidget import QListWidget
-from .fromToSurahWidget import FromToSurahWidget
 from . import messageHandler
 from .comboBook import ComboBook
 from .QInputDialog import QInputDialog

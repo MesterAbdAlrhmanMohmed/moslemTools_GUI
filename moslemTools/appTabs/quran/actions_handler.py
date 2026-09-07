@@ -1,4 +1,5 @@
 import gui.translationViewer
+import gui.quranRange
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
 import ujson as json
 from settings.app import appName
@@ -249,7 +250,7 @@ class QuranTabActionsMixin:
     def onCostumBTNRequested(self):
         categories=["من سورة إلى سورة", "من صفحة إلى صفحة", "من جزء إلى جزء", "من ربع إلى ربع", "من حزب إلى حزب"]
         index=categories.index(self.sender().text())
-        guiTools.FromToSurahWidget(self,index).exec()
+        gui.quranRange.QuranRange(self,index).exec()
 
     def _get_current_reciter_name(self):
         return list(reciters.keys())[self.currentReciter]

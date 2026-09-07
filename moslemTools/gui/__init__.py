@@ -2,7 +2,7 @@ from .athkerDialog import AthkerDialog
 from . quranViewer import QuranViewer,reciters
 from .hadeeth_viewer import hadeeth_viewer
 from .quranPlayer import QuranPlayer
-from . import download,islamicBooks
+from . import download,islamicBooks,quranRange
 from .adaanWindow import AdaanDialog
 from .after_azaan import AfterAdaan
 from .storyViewer import StoryViewer
@@ -12,3 +12,4 @@ from .translationViewer import translationViewer
 from .islamicTopicViewer import IslamicTopicViewer
 from .motonViewer import MotonViewer, moton_reciters
 from .motonPlayer import MotonPlayer
+from .quranRange import QuranRange

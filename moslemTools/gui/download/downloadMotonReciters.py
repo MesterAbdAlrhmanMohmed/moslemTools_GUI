@@ -175,6 +175,7 @@ class DownloadMotonReciters(qt.QDialog):
 
         self.run = None
         self.total_verses = 0
+        self.is_downloading = False
 
         layout = qt.QVBoxLayout(self)
         layout.setSpacing(15)
@@ -379,6 +380,7 @@ class DownloadMotonReciters(qt.QDialog):
         self.downloaded.setValue(0)
         self.downloaded.show()
 
+        self.is_downloading = True
         self.pause.setText("إيقاف مؤقت")
         self.pause.setAccessibleName("إيقاف مؤقت")
         self.pause.show()
@@ -432,6 +434,7 @@ class DownloadMotonReciters(qt.QDialog):
         guiTools.qMessageBox.MessageBox.error(self, "انقطاع الاتصال", msg)
 
     def on_finished(self, state):
+        self.is_downloading = False
         if state:
             guiTools.speak("تم التحميل بنجاح")
             guiTools.qMessageBox.MessageBox.view(self, "تم", "تم التحميل بنجاح")
@@ -442,6 +445,7 @@ class DownloadMotonReciters(qt.QDialog):
             self.reset_ui()
 
     def reset_ui(self):
+        self.is_downloading = False
         self.progress.hide()
         self.lay.hide()
         self.downloaded.hide()
@@ -457,16 +461,38 @@ class DownloadMotonReciters(qt.QDialog):
     def on_downloaded(self, count):
         self.downloaded.setValue(count)
 
+    def reject(self):
+        self.close()
+
     def closeEvent(self, event):
-        if self.run and self.run.isRunning():
-            self.run.cancel()
-            self.run.terminate()
-            self.run.wait(200)
-            if self.run.current_file and os.path.exists(self.run.current_file):
-                try:
-                    os.remove(self.run.current_file)
-                except Exception:
-                    pass
+        if self.is_downloading and self.run and self.run.isRunning():
+            was_paused = self.run.is_paused
+            if not was_paused:
+                self.run.pause()
+            msg = "عملية التحميل ما زالت جارية.\n\nإذا قمت بالخروج الآن:\n• سيتم إلغاء تحميل الملف الصوتي للبيت الحالي وحذفه لعدم اكتماله.\n• سيتم الاحتفاظ بجميع ملفات الأبيات التي تم تحميلها بنجاح.\n• عند العودة واختيار نفس القارئ لهذا المتن لاحقاً، سيتم استكمال التحميل تلقائياً من حيث توقفت.\n\nهل أنت متأكد من رغبتك في إيقاف التحميل والخروج؟"
+            result = guiTools.QQuestionMessageBox.view(
+                self,
+                "تأكيد إيقاف التحميل والخروج",
+                msg,
+                "نعم، إيقاف وخروج",
+                "لا، متابعة التحميل"
+            )
+            if result == 0:
+                self.is_downloading = False
+                self.run.cancel()
+                self.run.terminate()
+                self.run.wait(200)
+                if self.run.current_file and os.path.exists(self.run.current_file):
+                    try:
+                        os.remove(self.run.current_file)
+                    except Exception:
+                        pass
+                event.accept()
+            else:
+                if not was_paused:
+                    self.run.resume()
+                event.ignore()
+                return
         event.accept()
 
 

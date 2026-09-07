@@ -116,7 +116,7 @@ class MotonPlayerMergerSaverMixin:
                 confirm_message = ("البيت المحدد جاهز.\nستبدأ العملية الآن وسيتم تعطيل الواجهة. يمكنك إلغاء العملية ولكن لا يمكنك إغلاق البرنامج حتى الانتهاء.\n\nهل تريد المتابعة؟")
         else:
             if num_files_to_download > 0:
-                confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} أبيات غير موجودة.\n\nسيتم البدء بتحميل الأبيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\nهل أنت متأكد أنك تريد المتابعة؟")
+                confirm_message = (f"تنبيه: يتطلب الدمج تحميل {num_files_to_download} بيت غير موجود.\n\nسيتم البدء بتحميل الأبيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، ستبدأ مرحلة الدمج، وفيها يمكنك إلغاء عملية الدمج فقط.\n\nهل أنت متأكد أنك تريد المتابعة؟")
             else:
                 confirm_message = ("جميع الأبيات المحددة جاهزة للدمج.\nستبدأ عملية الدمج الآن وسيتم تعطيل الواجهة. يمكنك إلغاء عملية الدمج ولكن لا يمكنك إغلاق البرنامج حتى انتهاء العملية.\n\nهل تريد المتابعة؟")
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الدمج", confirm_message, "نعم", "لا")
@@ -146,17 +146,17 @@ class MotonPlayerMergerSaverMixin:
         total_verses = len(merge_list)
         if self.current_reciter_type != "N":
             if num_files_to_download > 0:
-                confirm_message = ("تنبيه: يتطلب حفظ المتن تحميل الملف الصوتي أولاً لأنه غير موجود بالقرص.\n\nسيتم البدء بتحميل الملف الصوتي، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، سيتم حفظ الملف في المكان المختار.\n\nهل أنت متأكد أنك تريد المتابعة؟")
+                confirm_message = ("تنبيه: يتطلب حفظ المتن تحميل الملف الصوتي أولاً لأنه غير موجود.\n\nسيتم البدء بتحميل الملف الصوتي، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، سيتم حفظ الملف في المجلد المختار.\n\nهل أنت متأكد أنك تريد المتابعة؟")
             else:
-                confirm_message = ("الملف الصوتي للمتن جاهز للحفظ.\nسيتم حفظ الملف الآن في المكان المختار.\n\nهل تريد المتابعة؟")
+                confirm_message = ("الملف الصوتي للمتن جاهز للحفظ.\nسيتم حفظ الملف الآن في المجلد المختار.\n\nهل تريد المتابعة؟")
         elif total_verses == 1:
             if num_files_to_download > 0:
-                confirm_message = ("تنبيه: يتطلب حفظ البيت تحميله أولاً لأنه غير موجود بالقرص.\n\nسيتم البدء بتحميل البيت، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، سيتم حفظ البيت في المكان المختار.\n\nهل أنت متأكد أنك تريد المتابعة؟")
+                confirm_message = ("تنبيه: يتطلب حفظ البيت تحميله أولاً لأنه غير موجود.\n\nسيتم البدء بتحميل البيت، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، سيتم حفظ البيت في المجلد المختار.\n\nهل أنت متأكد أنك تريد المتابعة؟")
             else:
-                confirm_message = ("البيت المحدد جاهز للحفظ.\nسيتم حفظ البيت الآن في المكان المختار.\n\nهل تريد المتابعة؟")
+                confirm_message = ("البيت المحدد جاهز للحفظ.\nسيتم حفظ البيت الآن في المجلد المختار.\n\nهل تريد المتابعة؟")
         else:
             if num_files_to_download > 0:
-                confirm_message = (f"تنبيه: يتطلب حفظ الأبيات تحميل {num_files_to_download} أبيات غير موجودة.\n\nسيتم البدء بتحميل الأبيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، سيتم حفظ الأبيات في المجلد المختار.\n\nهل أنت متأكد أنك تريد المتابعة؟")
+                confirm_message = (f"تنبيه: يتطلب حفظ الأبيات تحميل {num_files_to_download} بيت غير موجود.\n\nسيتم البدء بتحميل الأبيات، وخلال هذه المرحلة **لن تتمكن من إلغاء العملية أو إغلاق البرنامج**.\nبعد انتهاء التحميل، سيتم حفظ الأبيات في المجلد المختار.\n\nهل أنت متأكد أنك تريد المتابعة؟")
             else:
                 confirm_message = ("جميع الأبيات المحددة جاهزة للحفظ.\nسيتم حفظ الأبيات الآن في المجلد المختار.\n\nهل تريد المتابعة؟")
         reply = guiTools.QQuestionMessageBox.view(self, "تأكيد بدء الحفظ", confirm_message, "نعم", "لا")
@@ -282,7 +282,7 @@ class MotonPlayerMergerSaverMixin:
             try:
                 os.makedirs(os.path.dirname(os.path.abspath(dest)), exist_ok=True)
                 shutil.copy2(src, dest)
-                msg = "تم حفظ الملف الصوتي بنجاح." if self.current_reciter_type != "N" else "تم حفظ صوت البيت بنجاح."
+                msg = "تم حفظ الملف الصوتي بنجاح." if self.current_reciter_type != "N" else "تم حفظ البيت بنجاح."
                 self.on_save_finished(True, msg)
             except Exception as e:
                 self.on_save_finished(False, f"فشل حفظ الملف: {str(e)}")
@@ -331,14 +331,24 @@ class MotonPlayerMergerSaverMixin:
         self.is_merging = False
         self.merge_phase = 'idle'
         if self.cancellation_requested:
-            guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الدمج.")
+            title = "تم الإلغاء"
+            m = "تم إلغاء عملية الحفظ." if self.save_mode else "تم إلغاء عملية الدمج."
+            guiTools.qMessageBox.MessageBox.view(self, title, m)
             if hasattr(self, 'current_merge_output_path') and os.path.exists(self.current_merge_output_path):
                 try: os.remove(self.current_merge_output_path)
                 except: pass
         elif success:
-            guiTools.qMessageBox.MessageBox.view(self, "نجاح", "تم دمج وحفظ الأبيات بنجاح.")
+            title = "نجاح"
+            if self.save_mode:
+                if self.current_reciter_type != "N":
+                    m = "تم حفظ الملف الصوتي بنجاح."
+                else:
+                    m = "تم حفظ البيت بنجاح." if len(self.merge_list) == 1 else "تم حفظ الأبيات بنجاح."
+            else:
+                m = "تمت العملية بنجاح." if len(self.merge_list) == 1 else "تم دمج الأبيات بنجاح."
+            guiTools.qMessageBox.MessageBox.view(self, title, m)
         else:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ في الدمج", msg)
+            guiTools.qMessageBox.MessageBox.error(self, "فشل", msg)
 
         if not self.save_mode and self.files_to_delete_after_merge:
             reply = guiTools.QQuestionMessageBox.view(self, "تنظيف", "هل تريد حذف الملفات المؤقتة التي تم تحميلها لهذه العملية؟", "نعم", "لا")
@@ -363,9 +373,15 @@ class MotonPlayerMergerSaverMixin:
         if self.cancellation_requested:
             guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", "تم إلغاء عملية الحفظ.")
         elif success:
-            guiTools.qMessageBox.MessageBox.view(self, "نجاح", msg)
+            if self.current_reciter_type != "N":
+                m = "تم حفظ الملف الصوتي بنجاح."
+            elif len(self.merge_list) == 1:
+                m = "تم حفظ البيت بنجاح."
+            else:
+                m = "تم حفظ الأبيات بنجاح."
+            guiTools.qMessageBox.MessageBox.view(self, "نجاح", m)
         else:
-            guiTools.qMessageBox.MessageBox.error(self, "خطأ في الحفظ", msg)
+            guiTools.qMessageBox.MessageBox.error(self, "فشل", msg)
 
         self.set_ui_for_merge(False)
         self.cancellation_requested = False
