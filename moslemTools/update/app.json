@@ -1,6 +1,6 @@
 {
 "name": "moslem tools",
-"version": 14.0,
+"version": 15.0,
 "what is new": "الجديد للإصدار 15.0\nإتاحة تسجيل صوت الإذاعة فقط بدون استخدام مايكروفون Stereo Mix\nإضافة أطول وأقصر آية في معلومات الفئة في تبويبة القرآن الكريم مكتوب\nإصلاح أخطاء مهمة في البرنامج",
 "download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_15.0/moslem_tools_version_15.0.exe",
 "is_beta": false
