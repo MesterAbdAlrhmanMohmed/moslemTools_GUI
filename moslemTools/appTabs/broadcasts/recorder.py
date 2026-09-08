@@ -6,12 +6,29 @@ from pathlib import Path
 
 try:
     import soundfile as sf
-    import numpy as np
-    from proctap import ProcessAudioCapture
 except ImportError:
     sf = None
-    np = None
-    ProcessAudioCapture = None
+
+try:
+    from ._native import ProcessLoopback
+except (ImportError, ValueError):
+    try:
+        from _native import ProcessLoopback
+    except ImportError:
+        try:
+            import importlib.util
+            _native_path = Path(__file__).parent / "_native.cp311-win_amd64.pyd"
+            if not _native_path.exists():
+                _native_path = Path(__file__).parent / "_native.pyd"
+            if _native_path.exists():
+                _spec = importlib.util.spec_from_file_location("_native", str(_native_path))
+                _mod = importlib.util.module_from_spec(_spec)
+                _spec.loader.exec_module(_mod)
+                ProcessLoopback = _mod.ProcessLoopback
+            else:
+                ProcessLoopback = None
+        except Exception:
+            ProcessLoopback = None
 
 TMP_DIR = Path(tempfile.gettempdir()) / "radio_recordings_temp"
 TMP_DIR.mkdir(exist_ok=True)
@@ -27,6 +44,7 @@ class WasapiRecorder(qt2.QObject):
         self._running = False
         self._paused = False
         self._capture = None
+        self._worker_thread = None
         self._temp_wav_path = None
         self._sf_handle = None
         self._lock = threading.Lock()
@@ -38,14 +56,13 @@ class WasapiRecorder(qt2.QObject):
         self.init_device()
 
     def init_device(self):
-        if sf is None or np is None or ProcessAudioCapture is None:
+        if sf is None or ProcessLoopback is None:
             self._is_ready = False
-            self.last_error = "المكتبات المطلوبة لتسجيل الصوت غير مثبتة (proc-tap, soundfile, numpy)."
+            self.last_error = "المكتبات المطلوبة لتسجيل الصوت غير متوفرة."
             return False
 
         try:
-            # التحقق من إمكانية تهيئة التقاط الصوت للعملية الحالية عبر WASAPI Process Loopback
-            test_cap = ProcessAudioCapture(pid=os.getpid())
+            test_cap = ProcessLoopback(os.getpid())
             self._is_ready = True
             self.last_error = ""
             return True
@@ -59,14 +76,23 @@ class WasapiRecorder(qt2.QObject):
             self.init_device()
         return self._is_ready
 
-    def _on_data(self, data, frames):
-        with self._lock:
-            if self._running and not self._paused and self._sf_handle:
-                try:
-                    arr = np.frombuffer(data, dtype=np.float32).reshape(-1, self.channels)
-                    self._sf_handle.write(arr)
-                except Exception:
-                    pass
+    def _record_loop(self):
+        while self._running:
+            try:
+                if not self._capture:
+                    break
+                data = self._capture.read()
+            except Exception:
+                break
+            if not data:
+                time.sleep(0.001)
+                continue
+            with self._lock:
+                if self._running and not self._paused and self._sf_handle:
+                    try:
+                        self._sf_handle.buffer_write(data, dtype="float32")
+                    except Exception:
+                        pass
 
     def start(self):
         if not self.is_ready():
@@ -80,6 +106,10 @@ class WasapiRecorder(qt2.QObject):
 
         try:
             self._temp_wav_path = TMP_DIR / f"rec_{uuid.uuid4().hex}.wav"
+            self._capture = ProcessLoopback(os.getpid())
+            fmt = self._capture.get_format()
+            self.samplerate = fmt.get("sample_rate", 48000)
+            self.channels = fmt.get("channels", 2)
             self._sf_handle = sf.SoundFile(
                 str(self._temp_wav_path),
                 mode="w",
@@ -87,8 +117,9 @@ class WasapiRecorder(qt2.QObject):
                 channels=self.channels,
                 subtype="FLOAT",
             )
-            self._capture = ProcessAudioCapture(pid=os.getpid(), on_data=self._on_data)
             self._capture.start()
+            self._worker_thread = threading.Thread(target=self._record_loop, daemon=True)
+            self._worker_thread.start()
         except Exception as e:
             with self._lock:
                 self._running = False
@@ -98,7 +129,13 @@ class WasapiRecorder(qt2.QObject):
                     except Exception:
                         pass
                     self._sf_handle = None
-            self.error.emit(f"خطأ في بدء التسجيل: {e}")
+            if self._capture:
+                try:
+                    self._capture.stop()
+                except Exception:
+                    pass
+                self._capture = None
+            self.error.emit(f"حدث خطأ أثناء بدء التسجيل: {e}")
 
     def pause(self):
         with self._lock:
@@ -122,6 +159,13 @@ class WasapiRecorder(qt2.QObject):
                 pass
             self._capture = None
 
+        if self._worker_thread:
+            try:
+                self._worker_thread.join(timeout=1.0)
+            except Exception:
+                pass
+            self._worker_thread = None
+
         with self._lock:
             if self._sf_handle:
                 try:
@@ -143,7 +187,7 @@ class WasapiRecorder(qt2.QObject):
             self._temp_wav_path = None
             self._stop_requested = False
             if not temp_file or not temp_file.exists():
-                self.error.emit("لم يتم العثور على ملف التسجيل.")
+                self.error.emit("لم يتم العثور على ملف التسجيل المؤقت.")
                 self.recording_stopped.emit("FAILED", "")
                 return
             self.recording_stopped.emit("STOPPED", str(temp_file))
@@ -151,7 +195,7 @@ class WasapiRecorder(qt2.QObject):
     def convert_and_cleanup(self, temp_file_path, output_filename):
         temp_file = Path(temp_file_path)
         if not temp_file.exists():
-            self.error.emit("لم يتم العثور على ملف التسجيل المؤقت للتحويل.")
+            self.error.emit("لم يتم العثور على ملف التسجيل المؤقت.")
             return
         try:
             final_path = Path(output_filename)
