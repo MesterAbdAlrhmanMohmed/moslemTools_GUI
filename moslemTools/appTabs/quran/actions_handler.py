@@ -29,6 +29,7 @@ class QuranTabActionsMixin:
         cat_singular = {0: "سورة", 1: "صفحة", 2: "جزء", 3: "ربع", 4: "حزب"}
         title = f"معلومات {cat_singular.get(category_index, '')} {item_text}"
         info_text = ""
+        category_ayahs = []
         if category_index == 0:
             try:
                 s_num = self.infoData.index(item_text) + 1
@@ -36,6 +37,7 @@ class QuranTabActionsMixin:
                 if surah:
                     s_type = "مدنية" if s_num in medinan_surahs else "مكية"
                     ayahs = surah['ayahs']
+                    category_ayahs = [(surah['name'], a, s_num) for a in ayahs]
                     pages = [a['page'] for a in ayahs]
                     juzs = [a['juz'] for a in ayahs]
                     rubs = [a['hizbQuarter'] for a in ayahs]
@@ -56,10 +58,11 @@ class QuranTabActionsMixin:
         elif category_index == 1:
             p_num = int(item_text)
             matches = []
-            for s_v in data.values():
+            for s_k, s_v in data.items():
                 for a in s_v['ayahs']:
-                    if a['page'] == p_num: matches.append((s_v['name'], a))
+                    if a['page'] == p_num: matches.append((s_v['name'], a, int(s_k)))
             if matches:
+                category_ayahs = matches
                 surah_names = list(dict.fromkeys(m[0] for m in matches))
                 juz, rub = matches[0][1]['juz'], matches[0][1]['hizbQuarter']
                 info_text = (f"رقم الصفحة: {p_num}.\n"
@@ -74,10 +77,11 @@ class QuranTabActionsMixin:
         elif category_index == 2:
             j_num = int(item_text)
             matches = []
-            for s_v in data.values():
+            for s_k, s_v in data.items():
                 for a in s_v['ayahs']:
-                    if a['juz'] == j_num: matches.append((s_v['name'], a))
+                    if a['juz'] == j_num: matches.append((s_v['name'], a, int(s_k)))
             if matches:
+                category_ayahs = matches
                 surah_names = list(dict.fromkeys(m[0] for m in matches))
                 pages, rubs = [m[1]['page'] for m in matches], [m[1]['hizbQuarter'] for m in matches]
                 info_text = (f"رقم الجزء: {j_num}.\n"
@@ -92,10 +96,11 @@ class QuranTabActionsMixin:
         elif category_index == 3:
             r_num = int(item_text)
             matches = []
-            for s_v in data.values():
+            for s_k, s_v in data.items():
                 for a in s_v['ayahs']:
-                    if a['hizbQuarter'] == r_num: matches.append((s_v['name'], a))
+                    if a['hizbQuarter'] == r_num: matches.append((s_v['name'], a, int(s_k)))
             if matches:
+                category_ayahs = matches
                 surah_names = list(dict.fromkeys(m[0] for m in matches))
                 pages = [m[1]['page'] for m in matches]
                 hizb, juz = (r_num-1)//4+1, (r_num-1)//8+1
@@ -115,10 +120,11 @@ class QuranTabActionsMixin:
         elif category_index == 4:
             h_num = int(item_text)
             matches = []
-            for s_v in data.values():
+            for s_k, s_v in data.items():
                 for a in s_v['ayahs']:
-                    if (a['hizbQuarter']-1)//4+1 == h_num: matches.append((s_v['name'], a))
+                    if (a['hizbQuarter']-1)//4+1 == h_num: matches.append((s_v['name'], a, int(s_k)))
             if matches:
+                category_ayahs = matches
                 surah_names = list(dict.fromkeys(m[0] for m in matches))
                 pages, rubs = [m[1]['page'] for m in matches], [m[1]['hizbQuarter'] for m in matches]
                 juz, h_in_j_names = (h_num-1)//2+1, ["الأول", "الثاني"]
@@ -131,6 +137,30 @@ class QuranTabActionsMixin:
                              f"عدد السور في الحزب: {len(surah_names)}.\n"
                              f"عدد الآيات في الحزب: {len(matches)}.\n"
                              f"السور في الحزب: {', '.join(surah_names)}.")
+        if category_ayahs and info_text:
+            processed_ayahs = []
+            basmalah = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
+            for s_name, a, s_num in category_ayahs:
+                txt = a['text'].replace('\ufeff', '').strip()
+                if a['numberInSurah'] == 1 and s_num != 1 and txt.startswith(basmalah):
+                    txt = txt[len(basmalah):].strip()
+                clean_len = len(re.sub(r'[\u064B-\u065F\u0670\u06D6-\u06ED\s]', '', txt))
+                processed_ayahs.append((s_name, a['numberInSurah'], txt, clean_len))
+            if processed_ayahs:
+                longest = max(processed_ayahs, key=lambda x: x[3])
+                shortest = min(processed_ayahs, key=lambda x: x[3])
+                cat_names = {0: "السورة", 1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
+                cat_name = cat_names.get(category_index, "الفئة")
+                if category_index == 0:
+                    info_text += (f"\nأطول آية في {cat_name}: الآية {longest[1]}\n"
+                                  f"{longest[2]}\n"
+                                  f"أقصر آية في {cat_name}: الآية {shortest[1]}\n"
+                                  f"{shortest[2]}")
+                else:
+                    info_text += (f"\nأطول آية في {cat_name}: الآية {longest[1]} في سورة {longest[0]}\n"
+                                  f"{longest[2]}\n"
+                                  f"أقصر آية في {cat_name}: الآية {shortest[1]} في سورة {shortest[0]}\n"
+                                  f"{shortest[2]}")
         if info_text:
             guiTools.qMessageBox.MessageBox.view(self, title, info_text)
 
