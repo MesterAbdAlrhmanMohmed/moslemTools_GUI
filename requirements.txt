@@ -14,3 +14,4 @@ accessible_output3
 ujson
 pynput
 soundfile
+pyinstaller
