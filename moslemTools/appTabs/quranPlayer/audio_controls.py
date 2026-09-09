@@ -224,6 +224,7 @@ class PlayerAudioControlsMixin:
         current_volume = self.au.volume()
         new_volume = min(current_volume + 0.10, 1.0)
         self.au.setVolume(new_volume)
+        self.save_volume(new_volume)
         volume_percent = int(new_volume * 100)
         speak(f"نسبة الصوت {volume_percent}")
         self.duration.setText(f"نسبة الصوت: {volume_percent}%")
@@ -233,6 +234,7 @@ class PlayerAudioControlsMixin:
         current_volume = self.au.volume()
         new_volume = max(current_volume - 0.10, 0.0)
         self.au.setVolume(new_volume)
+        self.save_volume(new_volume)
         volume_percent = int(new_volume * 100)
         speak(f"نسبة الصوت {volume_percent}")
         self.duration.setText(f"نسبة الصوت: {volume_percent}%")
@@ -368,3 +370,30 @@ class PlayerAudioControlsMixin:
         self.mp.setPlaybackRate(speed)
         if hasattr(self.mp, 'setPitchCompensation'):
             self.mp.setPitchCompensation(True)
+
+    def load_volume(self):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "volume.json")
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    return json.load(f).get("quranPlayerTab", 1.0)
+        except Exception as e:
+            print(f"Handled exception: {e}")
+        return 1.0
+
+    def save_volume(self, volume):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "volume.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            data = {}
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                except Exception as e:
+                    print(f"Handled exception: {e}")
+            data["quranPlayerTab"] = round(volume, 2)
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f)
+        except Exception as e:
+            print(f"Handled exception: {e}")

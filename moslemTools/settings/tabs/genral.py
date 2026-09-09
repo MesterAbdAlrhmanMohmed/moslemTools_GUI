@@ -138,6 +138,7 @@ class Genral(qt.QWidget):
             """)
 
     def restart_app(self):
+        app.exit = False
         import subprocess
         try:
             shared = qt2.QSharedMemory("com.MTC.moslemTools")

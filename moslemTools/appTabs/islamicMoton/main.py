@@ -3,6 +3,7 @@ import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 import custom_errors
 import guiTools
+from settings import settings_handler
 from .data_loader import MotonDataLoader
 from .favorites_manager import MotonFavoritesManager
 from .category_widget import MotonCategoryWidget
@@ -18,13 +19,22 @@ class IslamicMoton(qt.QWidget):
 
     def init_ui(self):
         self.moton_tab = guiTools.QCustomTabWidget()
-        self.moton_tab.setStyleSheet(
-            "QTabWidget::pane { border: 1px solid #444; border-radius: 6px; background-color: #1e1e1e; } "
-            "QTabBar::tab { background: #2b2b2b; color: white; padding: 10px 20px; border: 1px solid #444; "
-            "border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; min-width: 100px; font-weight: bold; } "
-            "QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } "
-            "QTabBar::tab:hover { background: #3a3a3a; }"
-        )
+        if settings_handler.get("g", "theme") == "light":
+            self.moton_tab.setStyleSheet(
+                "QTabWidget::pane { border: 1px solid #ccc; border-radius: 6px; background-color: #f5f5f5; } "
+                "QTabBar::tab { background: #e0e0e0; color: #1e1e1e; padding: 10px 20px; border: 1px solid #ccc; "
+                "border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; min-width: 100px; font-weight: bold; } "
+                "QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } "
+                "QTabBar::tab:hover { background: #d0d0d0; }"
+            )
+        else:
+            self.moton_tab.setStyleSheet(
+                "QTabWidget::pane { border: 1px solid #444; border-radius: 6px; background-color: #1e1e1e; } "
+                "QTabBar::tab { background: #2b2b2b; color: white; padding: 10px 20px; border: 1px solid #444; "
+                "border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; min-width: 100px; font-weight: bold; } "
+                "QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } "
+                "QTabBar::tab:hover { background: #3a3a3a; }"
+            )
 
         categories = self.data_loader.get_categories()
         for idx, cat_name in enumerate(categories):

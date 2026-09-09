@@ -5,6 +5,7 @@ import PyQt6.QtCore as qt2
 from collections import defaultdict
 from guiTools import QListWidget, QCustomTabWidget
 from gui.islamicTopicViewer import IslamicTopicViewer
+from settings import settings_handler
 
 
 class IslamicTopicsTab(qt.QWidget):
@@ -27,32 +28,60 @@ class IslamicTopicsTab(qt.QWidget):
 
     def initUI(self):
         self.tabs = QCustomTabWidget()
-        self.tabs.setStyleSheet("""
-            QTabWidget::pane {
-                border: 1px solid #444;
-                border-radius: 6px;
-                background-color: #1e1e1e;
-            }
-            QTabBar::tab {
-                background: #2b2b2b;
-                color: white;
-                padding: 10px 20px;
-                border: 1px solid #444;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-                margin-right: 2px;
-                min-width: 100px;
-                font-weight: bold;
-            }
-            QTabBar::tab:selected {
-                background: #0078d7;
-                color: white;
-                border: 1px solid #0078d7;
-            }
-            QTabBar::tab:hover {
-                background: #3a3a3a;
-            }
-        """)
+        if settings_handler.get("g", "theme") == "light":
+            self.tabs.setStyleSheet("""
+                QTabWidget::pane {
+                    border: 1px solid #ccc;
+                    border-radius: 6px;
+                    background-color: #f5f5f5;
+                }
+                QTabBar::tab {
+                    background: #e0e0e0;
+                    color: #1e1e1e;
+                    padding: 10px 20px;
+                    border: 1px solid #ccc;
+                    border-top-left-radius: 8px;
+                    border-top-right-radius: 8px;
+                    margin-right: 2px;
+                    min-width: 100px;
+                    font-weight: bold;
+                }
+                QTabBar::tab:selected {
+                    background: #0078d7;
+                    color: white;
+                    border: 1px solid #0078d7;
+                }
+                QTabBar::tab:hover {
+                    background: #d0d0d0;
+                }
+            """)
+        else:
+            self.tabs.setStyleSheet("""
+                QTabWidget::pane {
+                    border: 1px solid #444;
+                    border-radius: 6px;
+                    background-color: #1e1e1e;
+                }
+                QTabBar::tab {
+                    background: #2b2b2b;
+                    color: white;
+                    padding: 10px 20px;
+                    border: 1px solid #444;
+                    border-top-left-radius: 8px;
+                    border-top-right-radius: 8px;
+                    margin-right: 2px;
+                    min-width: 100px;
+                    font-weight: bold;
+                }
+                QTabBar::tab:selected {
+                    background: #0078d7;
+                    color: white;
+                    border: 1px solid #0078d7;
+                }
+                QTabBar::tab:hover {
+                    background: #3a3a3a;
+                }
+            """)
         self.tabs.addTab(self.create_islamiyat_tab(), "إسلاميات")
         self.tabs.addTab(self.create_hajj_tab(), "الحج والعمرة")
         self.tabs.addTab(self.create_seerah_tab(), "السيرة النبوية")

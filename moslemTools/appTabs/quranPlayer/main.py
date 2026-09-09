@@ -138,6 +138,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.apply_speed()
         self.au = QAudioOutput()
         self.au.setDevice(audio_manager.get_audio_device("quran_audio"))
+        self.au.setVolume(self.load_volume())
         self.mp.setAudioOutput(self.au)
         self.openBookmarks = guiTools.QPushButton("العلامات المرجعية")
         self.openBookmarks.clicked.connect(self.onBookmarkOpened)

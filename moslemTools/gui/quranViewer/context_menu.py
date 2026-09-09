@@ -62,6 +62,10 @@ class ContextMenuMixin:
             action.setCheckable(True)
             action.setChecked(abs(current_speed - s) < 0.01)
             action.triggered.connect(lambda checked, val=s: self.change_speed(val))
+        volume_action = qt1.QAction("تحديد مستوى الصوت", self)
+        volume_action.setShortcut("ctrl+shift+m")
+        volume_action.triggered.connect(self.set_volume_dialog)
+        ayahOptions.addAction(volume_action)
         if self.is_search_view:
             goToAyahAction = qt1.QAction("الذهاب إلى موضع الآية والخروج من وضع البحث", self)
             goToAyahAction.setShortcut("ctrl+g")
