@@ -280,6 +280,8 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.surahListWidget.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.surahListWidget.customContextMenuRequested.connect(self.open_context_menu)
         self.cleanup_pending_deletions()
+        self.load_data()
+        self.is_loaded = True
 
     def showEvent(self, event):
         if not self.is_loaded:

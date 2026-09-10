@@ -359,6 +359,7 @@ class settings(qt.QDialog):
 
     def showEvent(self, event):
         super().showEvent(event)
+        self.update_tab_order()
         self.sectian.setFocus()
 
     def fok(self):

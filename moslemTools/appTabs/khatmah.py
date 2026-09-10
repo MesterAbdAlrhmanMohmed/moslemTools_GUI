@@ -154,7 +154,7 @@ class KhatmahTab(qt.QWidget):
 
         self.btn_manual_page = guiTools.QPushButton("تحديث الصفحة يدوياً")
         self.btn_manual_page.setFont(font_bold)
-        self.btn_manual_page.setStyleSheet("background-color: #0056b3; color: white;")
+        self.btn_manual_page.setStyleSheet("QPushButton {background-color: #0000AA; color: white;} QPushButton:hover {background-color: #0000CC;} QPushButton:pressed {background-color: #000088;}")
         self.btn_manual_page.setShortcut("ctrl+u")
         self.btn_manual_page.setAccessibleDescription("control plus u")
         self.btn_manual_page.clicked.connect(self.update_page_manually)

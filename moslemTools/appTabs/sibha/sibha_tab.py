@@ -112,7 +112,7 @@ class sibha(qt.QWidget):
         main_layout.addWidget(self.numbers)
         main_layout.addLayout(btn_layout)
         self.setLayout(main_layout)
-        self.setStyleSheet("QPushButton#resetButton {background-color: #8B0000; color: white; min-height: 40px; font-size: 16px;} QPushButton#addButton {background-color: #008000; color: white; min-height: 40px; font-size: 16px;} QPushButton#minusButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;} QPushButton#limitButton {background-color: #0056b3; color: white; min-height: 40px; font-size: 16px;} QComboBox, QLineEdit, QSpinBox {min-height: 40px; font-size: 16px;} QLabel {font-size: 16px;}")
+        self.setStyleSheet("QPushButton#resetButton {background-color: #8B0000; color: white; min-height: 40px; font-size: 16px;} QPushButton#addButton {background-color: #008000; color: white; min-height: 40px; font-size: 16px;} QPushButton#minusButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;} QPushButton#limitButton {background-color: #0000AA; color: white; min-height: 40px; font-size: 16px;} QPushButton#limitButton:hover {background-color: #0000CC;} QPushButton#limitButton:pressed {background-color: #000088;} QComboBox, QLineEdit, QSpinBox {min-height: 40px; font-size: 16px;} QLabel {font-size: 16px;}")
         self.update_limit_button_text()
 
     def update_limit_button_text(self):
