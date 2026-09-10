@@ -32,9 +32,9 @@ class NotesDialog(qt.QDialog):
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر فئة")
         self.sectian.setFont(font)
-        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة", "المتون الإسلامية"]
+        self.categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة", "المتون الإسلامية"]
         fm = self.sectian.fontMetrics()
-        max_w = max(fm.horizontalAdvance(cat) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(cat).width() for cat in categories)
+        max_w = max(fm.horizontalAdvance(cat) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(cat).width() for cat in self.categories)
         calc_w = max(340, max_w + 70)
         self.sectian.setMinimumWidth(calc_w)
         self.sectian.setMaximumWidth(calc_w + 40)
@@ -48,7 +48,7 @@ class NotesDialog(qt.QDialog):
         layout.addLayout(h_layout)
         self.tabs = []
         self.notes_lists = []
-        for i, category in enumerate(categories):
+        for i, category in enumerate(self.categories):
             tab = qt.QWidget()
             tab_layout = qt.QVBoxLayout(tab)
             search_label = qt.QLabel(f"البحث عن ملاحظة في فئة {category}")
@@ -71,6 +71,7 @@ class NotesDialog(qt.QDialog):
             notes_list.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
             notes_list.customContextMenuRequested.connect(lambda pos, idx=i: self.show_context_menu(pos, idx))
             notes_list.itemActivated.connect(lambda item, idx=i: self.on_item_activated(item, idx))
+        self.update_category_counts()
         self.dl_all_current = QPushButton("حذف كل الملاحظات من الفئة الحالية")
         self.dl_all_current.setAutoDefault(False)
         self.dl_all_current.clicked.connect(self.onRemoveAllCurrentCategory)
@@ -337,16 +338,18 @@ class NotesDialog(qt.QDialog):
         if confirm == 0:
             notesManager.removeNote(category_type, note_name)
             self.load_notes(tab_index)
+            self.update_category_counts()
             guiTools.speak("تم حذف الملاحظة")
 
     def onRemoveAllCurrentCategory(self):
         tab_index = self.sectian.currentRow()
         category_type = self.get_category_type(tab_index)
-        category_name = self.sectian.item(tab_index).text()
+        category_name = self.categories[tab_index]
         confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف", f"هل تريد حذف كل ملاحظات '{category_name}'؟", "نعم", "لا")
         if confirm == 0:
             notesManager.removeAllNotesForCategory(category_type)
             self.load_notes(tab_index)
+            self.update_category_counts()
             guiTools.speak(f"تم حذف جميع ملاحظات '{category_name}'")
 
     def onRemoveAllCategories(self):
@@ -354,7 +357,20 @@ class NotesDialog(qt.QDialog):
         if confirm == 0:
             notesManager.removeAllNotes()
             for i in range(len(self.tabs)): self.load_notes(i)
+            self.update_category_counts()
             guiTools.speak("تم حذف جميع الملاحظات")
+
+    def update_category_counts(self):
+        try:
+            notes_data = notesManager.openNotesFile()
+        except Exception:
+            notes_data = {}
+        category_keys = ["quran", "ahadeeth", "islamicBooks", "stories", "islamicTopics", "moton"]
+        for i, (cat, key) in enumerate(zip(self.categories, category_keys)):
+            count = len(notes_data.get(key, []))
+            text = f"{cat} ({count})" if count > 0 else cat
+            if i < self.sectian.count():
+                self.sectian.item(i).setText(text)
 
     def search_notes(self, pattern, note_list):
         tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')

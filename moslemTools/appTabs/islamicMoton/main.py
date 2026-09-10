@@ -40,7 +40,8 @@ class IslamicMoton(qt.QWidget):
         for idx, cat_name in enumerate(categories):
             cat_widget = MotonCategoryWidget(idx, self.data_loader, self.handle_favorite_toggle)
             self.category_widgets.append(cat_widget)
-            self.moton_tab.addTab(cat_widget, cat_name)
+            moton_count = cat_widget.moton_list.count()
+            self.moton_tab.addTab(cat_widget, f"{cat_name} ({moton_count})")
 
         self.favorites_widget = MotonFavoritesWidget(self.data_loader, self.fav_manager, self.handle_favorite_toggle)
 

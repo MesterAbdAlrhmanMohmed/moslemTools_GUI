@@ -22,9 +22,9 @@ class book_marcks(qt.QDialog):
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر فئة")
         self.sectian.setFont(font)
-        categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة", "المتون الإسلامية"]
+        self.categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة", "المتون الإسلامية"]
         fm = self.sectian.fontMetrics()
-        max_w = max(fm.horizontalAdvance(cat) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(cat).width() for cat in categories)
+        max_w = max(fm.horizontalAdvance(cat) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(cat).width() for cat in self.categories)
         calc_w = max(340, max_w + 70)
         self.sectian.setMinimumWidth(calc_w)
         self.sectian.setMaximumWidth(calc_w + 40)
@@ -38,8 +38,8 @@ class book_marcks(qt.QDialog):
         layout.addLayout(h_layout)
         self.tabs = []
         self.results_lists = []
-        self.bookMarks1 = [[] for _ in range(len(categories))]
-        for i, category in enumerate(categories):
+        self.bookMarks1 = [[] for _ in range(len(self.categories))]
+        for i, category in enumerate(self.categories):
             tab = qt.QWidget()
             tab_layout = qt.QVBoxLayout(tab)
             search_label = qt.QLabel(f"البحث عن علامة مرجعية في فئة {category}")
@@ -57,6 +57,7 @@ class book_marcks(qt.QDialog):
             self.sectian.add(category, tab)
             self.tabs.append(tab)
             self.results_lists.append(results)
+        self.update_category_counts()
         self.dl = guiTools.QPushButton("حذف العلامة المرجعية المحددة")
         self.dl.setAutoDefault(False)
         self.dl.clicked.connect(self.onRemove)
@@ -140,6 +141,7 @@ class book_marcks(qt.QDialog):
                         functions.bookMarksManager.removeMotonBookmark(item.text())
                     guiTools.speak("تم حذف العلامة المرجعية")
                     self.onCategoryChanged(tab_index)
+                    self.update_category_counts()
             else:
                 pass
         except Exception as e:
@@ -148,7 +150,7 @@ class book_marcks(qt.QDialog):
     def onRemoveAllCurrentCategory(self):
         try:
             tab_index = self.sectian.currentRow()
-            category_name = self.sectian.item(tab_index).text()
+            category_name = self.categories[tab_index]
             confirm = guiTools.QQuestionMessageBox.view(self, "تأكيد الحذف الكلي", f"هل تريد حذف كل علامات '{category_name}'؟", "نعم", "لا")
             if confirm == 0:
                 if tab_index == 0:
@@ -165,6 +167,7 @@ class book_marcks(qt.QDialog):
                     functions.bookMarksManager.removeAllMotonBookMarks()
                 guiTools.speak(f"تم حذف جميع العلامات المرجعية من فئة {category_name}")
                 self.onCategoryChanged(tab_index)
+                self.update_category_counts()
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ: {e}")
 
@@ -176,8 +179,21 @@ class book_marcks(qt.QDialog):
                 guiTools.speak("تم حذف جميع العلامات المرجعية")
                 for i in range(len(self.tabs)):
                     self.onCategoryChanged(i)
+                self.update_category_counts()
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", f"حدث خطأ: {e}")
+
+    def update_category_counts(self):
+        try:
+            bookMarksData = functions.bookMarksManager.openBookMarksFile()
+        except Exception:
+            bookMarksData = {}
+        category_keys = ["quran", "ahadeeth", "islamicBooks", "stories", "islamicTopics", "moton"]
+        for i, (cat, key) in enumerate(zip(self.categories, category_keys)):
+            count = len(bookMarksData.get(key, []))
+            text = f"{cat} ({count})" if count > 0 else cat
+            if i < self.sectian.count():
+                self.sectian.item(i).setText(text)
 
     def onCategoryChanged(self, index):
         results = self.results_lists[index]

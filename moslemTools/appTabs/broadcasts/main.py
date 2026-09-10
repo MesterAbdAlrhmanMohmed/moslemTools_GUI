@@ -3,17 +3,18 @@ import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from guiTools import speak
-import guiTools, os, tempfile, shutil, subprocess, threading, time, uuid
+import guiTools, os, tempfile, shutil, subprocess, threading, time, uuid, winsound
 import ujson as json
 from pathlib import Path
 from settings import settings_handler, app
 from functions import audio_manager
 from .recorder import WasapiRecorder, SchedulingDialog
 from .stations import (
+    ALL_STATIONS,
     quran_brotcast, brotcasts_of_reciters, brotcasts_of_tafseer,
     brotcasts_of_suplications, brotcasts_of_translations, other_brotcasts, set_globals,
     get_global_player, get_global_current_url, get_global_audio_output,
-    play_station_by_name
+    play_station_by_name, search_stations
 )
 
 
@@ -92,12 +93,19 @@ class protcasts(qt.QWidget):
         self.temp_wav_to_convert = None
 
         self.brotcasts_tab = guiTools.QCustomTabWidget()
-        self.brotcasts_tab.addTab(quran_brotcast(global_audio_output, self), "إذاعات القرآن الكريم")
-        self.brotcasts_tab.addTab(brotcasts_of_reciters(global_audio_output, self), "إذاعات القراء")
-        self.brotcasts_tab.addTab(brotcasts_of_tafseer(global_audio_output, self), "إذاعات التفاسير")
-        self.brotcasts_tab.addTab(brotcasts_of_suplications(global_audio_output, self), "إذاعات الأذكار والأدعية")
-        self.brotcasts_tab.addTab(brotcasts_of_translations(global_audio_output, self), "إذاعات ترجمات القرآن الكريم")
-        self.brotcasts_tab.addTab(other_brotcasts(global_audio_output, self), "إذاعات إسلامية أخرى")
+        quran_tab = quran_brotcast(global_audio_output, self)
+        reciters_tab = brotcasts_of_reciters(global_audio_output, self)
+        tafseer_tab = brotcasts_of_tafseer(global_audio_output, self)
+        adhkar_tab = brotcasts_of_suplications(global_audio_output, self)
+        translations_tab = brotcasts_of_translations(global_audio_output, self)
+        other_tab = other_brotcasts(global_audio_output, self)
+
+        self.brotcasts_tab.addTab(quran_tab, f"إذاعات القرآن الكريم ({len(quran_tab.all_stations)})")
+        self.brotcasts_tab.addTab(reciters_tab, f"إذاعات القراء ({len(reciters_tab.all_stations)})")
+        self.brotcasts_tab.addTab(tafseer_tab, f"إذاعات التفاسير ({len(tafseer_tab.all_stations)})")
+        self.brotcasts_tab.addTab(adhkar_tab, f"إذاعات الأذكار والأدعية ({len(adhkar_tab.all_stations)})")
+        self.brotcasts_tab.addTab(translations_tab, f"إذاعات ترجمات القرآن الكريم ({len(translations_tab.all_stations)})")
+        self.brotcasts_tab.addTab(other_tab, f"إذاعات إسلامية أخرى ({len(other_tab.all_stations)})")
         if settings_handler.get("g", "theme") == "light":
             self.brotcasts_tab.setStyleSheet("""QTabWidget::pane { border: 1px solid #ccc; border-radius: 6px; background-color: #f5f5f5; } QTabBar::tab { background: #e0e0e0; color: #1e1e1e; padding: 10px 20px; border: 1px solid #ccc; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; min-width: 100px; font-weight: bold; } QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } QTabBar::tab:hover { background: #d0d0d0; }""")
         else:
@@ -120,6 +128,18 @@ class protcasts(qt.QWidget):
         view_mode_container.setLayout(view_mode_v_layout)
         self.brotcasts_tab.setCornerWidget(view_mode_container, qt2.Qt.Corner.TopRightCorner)
 
+        bold_font = qt1.QFont()
+        bold_font.setBold(True)
+        self.fav_search_label = qt.QLabel("البحث عن إذاعة في المفضلة")
+        self.fav_search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.fav_search_label.setFont(bold_font)
+        self.fav_search_bar = qt.QLineEdit()
+        self.fav_search_bar.setFont(bold_font)
+        self.fav_search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.fav_search_bar.setPlaceholderText("البحث عن إذاعة في المفضلة")
+        self.fav_search_bar.setAccessibleName("البحث عن إذاعة في المفضلة")
+        self.fav_search_bar.textChanged.connect(self.on_fav_search)
+
         self.fav_list_widget = qt.QListWidget()
         self.fav_list_widget.setSpacing(3)
         self.fav_list_widget.setStyleSheet("QListWidget::item { font-weight: bold; font-size: 12pt; }")
@@ -133,7 +153,7 @@ class protcasts(qt.QWidget):
         self.volume_down_shortcut_fav = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.fav_list_widget)
         self.volume_down_shortcut_fav.activated.connect(self.decrease_volume_fav)
 
-        self.fav_info_label = guiTools.QNavigableLabel("يمكنكم إضافة إذاعة إلى قائمة المفضلة أو إزالتها بالضغط على click الأيمن أو زر التطبيقات على الإذاعة المحددة")
+        self.fav_info_label = guiTools.QNavigableLabel("لمزيد من خيارات الإذاعة، نستخدم زر التطبيقات أو click الأيمن على إذاعة من الإذاعات")
         self.fav_info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.fav_info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 
@@ -155,6 +175,8 @@ class protcasts(qt.QWidget):
 
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.brotcasts_tab)
+        layout.addWidget(self.fav_search_label)
+        layout.addWidget(self.fav_search_bar)
         layout.addWidget(self.fav_list_widget)
         layout.addSpacing(10)
         layout.addWidget(self.fav_info_label)
@@ -233,20 +255,35 @@ class protcasts(qt.QWidget):
 
     def update_favorites_list_widget(self):
         self.fav_list_widget.clear()
-        if self.favorites:
-            self.fav_list_widget.addItems(self.favorites)
+        query = self.fav_search_bar.text().strip() if hasattr(self, 'fav_search_bar') else ""
+        if query:
+            filtered = search_stations(query, self.favorites)
+            if filtered:
+                self.fav_list_widget.addItems(filtered)
+            else:
+                self.fav_list_widget.addItem("لا توجد نتائج مطابقة للبحث")
         else:
-            self.fav_list_widget.addItem("لا توجد إذاعات في قائمة المفضلة")
+            if self.favorites:
+                self.fav_list_widget.addItems(self.favorites)
+            else:
+                self.fav_list_widget.addItem("لا توجد إذاعات في قائمة المفضلة")
         if hasattr(self, 'view_mode_combo') and self.view_mode_combo.currentIndex() == 1:
             self.update_grid_size_for_widget(self.fav_list_widget)
+
+    def on_fav_search(self):
+        self.update_favorites_list_widget()
 
     def update_favorites_ui_state(self):
         self.update_favorites_list_widget()
         if self.show_favorites_only:
             self.brotcasts_tab.hide()
+            self.fav_search_label.show()
+            self.fav_search_bar.show()
             self.fav_list_widget.show()
             self.fav_btn.setText("عرض جميع الإذاعات")
         else:
+            self.fav_search_label.hide()
+            self.fav_search_bar.hide()
             self.fav_list_widget.hide()
             self.brotcasts_tab.show()
             self.fav_btn.setText("فتح قائمة المفضلة")
@@ -327,7 +364,7 @@ class protcasts(qt.QWidget):
                 lw.setSpacing(3)
 
     def toggle_station_favorite(self, station_name):
-        if station_name == "لا توجد إذاعات في قائمة المفضلة":
+        if station_name in ["لا توجد إذاعات في قائمة المفضلة", "لا توجد نتائج مطابقة للبحث"]:
             return
         if station_name in self.favorites:
             self.favorites.remove(station_name)
@@ -341,15 +378,71 @@ class protcasts(qt.QWidget):
 
     def play_fav_station(self):
         selected_item = self.fav_list_widget.currentItem()
-        if selected_item and selected_item.text() != "لا توجد إذاعات في قائمة المفضلة":
+        if selected_item and selected_item.text() not in ["لا توجد إذاعات في قائمة المفضلة", "لا توجد نتائج مطابقة للبحث"]:
             play_station_by_name(selected_item.text())
 
-    def on_fav_context_menu(self, pos):
-        item = self.fav_list_widget.itemAt(pos)
+    def copy_station_url(self, station_name):
+        url = ALL_STATIONS.get(station_name) or ALL_STATIONS.get(station_name.strip())
+        if url:
+            qt.QApplication.clipboard().setText(url)
+            try:
+                winsound.Beep(1000, 100)
+            except Exception:
+                pass
+            if station_name.startswith("إذاعة"):
+                station_text = station_name
+            else:
+                station_text = f"إذاعة {station_name}"
+            speak(f"تم نسخ رابط {station_text}")
+        else:
+            speak("لم يتم العثور على رابط لهذه الإذاعة")
+
+    def open_station_context_menu(self, list_widget, pos):
+        item = list_widget.itemAt(pos)
         if not item:
-            item = self.fav_list_widget.currentItem()
-        if item and item.text() != "لا توجد إذاعات في قائمة المفضلة":
-            self.toggle_station_favorite(item.text())
+            item = list_widget.currentItem()
+        if not item:
+            return
+        station_name = item.text()
+        if station_name in ["لا توجد إذاعات في قائمة المفضلة", "لا توجد نتائج مطابقة للبحث"]:
+            return
+
+        menu = guiTools.QCustomContextMenu(self)
+        menu.setAccessibleName("خيارات الإذاعة")
+        boldFont = menu.font()
+        boldFont.setBold(True)
+        menu.setFont(boldFont)
+
+        copy_action = qt1.QAction("نسخ رابط الإذاعة", self)
+        copy_action.triggered.connect(lambda: self.copy_station_url(station_name))
+        menu.addAction(copy_action)
+
+        if station_name in self.favorites:
+            remove_action = qt.QWidgetAction(self)
+            btn = guiTools.QPushButton("إزالة من المفضلة")
+            btn.setStyleSheet("background-color: #8B0000; color: white;")
+            btn.setFont(boldFont)
+            def remove_from_fav():
+                menu.close()
+                self.toggle_station_favorite(station_name)
+            btn.clicked.connect(remove_from_fav)
+            remove_action.triggered.connect(remove_from_fav)
+            remove_action.setDefaultWidget(btn)
+            menu.addAction(remove_action)
+        else:
+            add_action = qt1.QAction("إضافة إلى المفضلة", self)
+            add_action.triggered.connect(lambda: self.toggle_station_favorite(station_name))
+            menu.addAction(add_action)
+
+        if pos.x() < 0 or pos.y() < 0:
+            rect = list_widget.visualItemRect(item)
+            global_pos = list_widget.viewport().mapToGlobal(rect.center())
+        else:
+            global_pos = list_widget.viewport().mapToGlobal(pos)
+        menu.exec(global_pos)
+
+    def on_fav_context_menu(self, pos):
+        self.open_station_context_menu(self.fav_list_widget, pos)
 
     def load_volume(self):
         try:

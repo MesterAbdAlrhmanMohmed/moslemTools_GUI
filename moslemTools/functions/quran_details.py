@@ -185,20 +185,17 @@ def format_qiraat_section(section_text):
     if "@" not in text and "/" not in text:
         return text
     lines = []
-    raw_items = re.findall(r'@([^@]+)', text)
-    for raw in raw_items:
-        raw = raw.strip()
-        if not raw:
-            continue
+    raw_items = [r.strip() for r in re.findall(r'@([^@]+)', text) if r.strip()]
+    for idx, raw in enumerate(raw_items, 1):
         if "/" in raw:
             parts = raw.split("/", 1)
             reciters = parts[0].strip()
             ruling = parts[1].strip()
             if ruling.endswith("."):
                 ruling = ruling[:-1].strip()
-            lines.append(f"- {reciters}: {ruling}.")
+            lines.append(f"{idx}. {reciters}: {ruling}.")
         else:
-            lines.append(f"- {raw}")
+            lines.append(f"{idx}. {raw}")
     return "\n".join(lines) if lines else text
 
 

@@ -1,3 +1,4 @@
+import re
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
@@ -5,6 +6,21 @@ from PyQt6.QtMultimedia import QMediaPlayer
 from guiTools import speak, check_internet, MessageBox
 
 showing_network_error = False
+
+
+def search_stations(pattern, text_list):
+    tashkeel_pattern = re.compile(r'[\u0610-\u061A\u0640\u064B-\u065F\u0670\u06D6-\u06ED\u08C9-\u08FF]')
+    p = tashkeel_pattern.sub('', pattern).replace('\u0671', '\u0627').lower()
+    if not p:
+        return list(text_list)
+    matches = [text for text in text_list if p in tashkeel_pattern.sub('', text).replace('\u0671', '\u0627').lower()]
+    if matches:
+        return matches
+    def norm_alef(s):
+        return re.sub(r'[إأآٱ]', 'ا', s)
+    p_alef = norm_alef(p)
+    return [text for text in text_list if p_alef in norm_alef(tashkeel_pattern.sub('', text).lower())]
+
 
 global_player = None
 global_audio_output = None

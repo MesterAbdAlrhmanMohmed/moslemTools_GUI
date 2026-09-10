@@ -2,7 +2,7 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from guiTools import speak
-from .utils import play_station_by_name
+from .utils import play_station_by_name, search_stations
 
 
 class other_brotcasts(qt.QWidget):
@@ -10,6 +10,20 @@ class other_brotcasts(qt.QWidget):
         super().__init__()
         self.audio_output = audio_output_instance
         self.parent_widget = parent_widget
+        category_name = "إذاعات إسلامية أخرى"
+
+        font = qt1.QFont()
+        font.setBold(True)
+        self.search_label = qt.QLabel(f"البحث عن إذاعة في {category_name}")
+        self.search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.search_label.setFont(font)
+        self.search_bar = qt.QLineEdit()
+        self.search_bar.setFont(font)
+        self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.search_bar.setPlaceholderText(f"البحث عن إذاعة في {category_name}")
+        self.search_bar.setAccessibleName(f"البحث عن إذاعة في {category_name}")
+        self.search_bar.textChanged.connect(self.on_search)
+
         style_sheet = "QListWidget::item { font-weight: bold; font-size: 12pt; }"
         self.list_of_other = qt.QListWidget()
         self.list_of_other.setSpacing(3)
@@ -18,52 +32,64 @@ class other_brotcasts(qt.QWidget):
         self.list_of_other.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.list_of_other.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.list_of_other.customContextMenuRequested.connect(self.on_context_menu)
-        self.list_of_other.addItem("إذاعة الصحابة")
-        self.list_of_other.addItem("فتاوى إبن باز")
-        self.list_of_other.addItem("صور من حياة الصحابة")
-        self.list_of_other.addItem("إذاعة عمر عبد الكافي")
-        self.list_of_other.addItem("السُنَّة السلفية")
-        self.list_of_other.addItem("في ظِلال السيرة النبوية")
-        self.list_of_other.addItem("فتاوى ابن العُثيمين")
-        self.list_of_other.addItem("العاصمة أونلاين")
-        self.list_of_other.addItem("الإستقامى")
-        self.list_of_other.addItem("المرأة المسلمة")
-        self.list_of_other.addItem("اللغة العربية وعلومها")
-        self.list_of_other.addItem("المهارات الحياتية والعلوم التربوية")
-        self.list_of_other.addItem("السلوك والآداب والأخلاق ومحاسن الأعمال")
-        self.list_of_other.addItem("التوعية الاجتماعية")
-        self.list_of_other.addItem("الإذاعة الفقهية")
-        self.list_of_other.addItem("الحج")
-        self.list_of_other.addItem("رمضان المبارك")
-        self.list_of_other.addItem("التراجم والتاريخ والسير")
-        self.list_of_other.addItem("الفكر والدعوة وثقافة الإسلامية")
-        self.list_of_other.addItem("السيرة النبوية وقصص القرآن والأنبياء والصحابة")
-        self.list_of_other.addItem("الحديث وعلومه")
-        self.list_of_other.addItem("العقيدة والتوحيد")
-        self.list_of_other.addItem("راديو كبار العلماء")
-        self.list_of_other.addItem("الدكتور سعد الحميد")
-        self.list_of_other.addItem("الدكتور خالد الجريسي")
-        self.list_of_other.addItem("إذاعة صور من حياة الصحابة والتابعين رضوان الله عليهم")
-        self.list_of_other.addItem("المختصر في السيرة النبوية")
-        self.list_of_other.addItem("قصص الأنبياء")
-        self.list_of_other.addItem("الشمائل المحمدية")
-        self.list_of_other.addItem("رياض الصالحين")
-        self.list_of_other.addItem("صحيح البخاري")
-        self.list_of_other.addItem("صحيح مسلم")
-        self.list_of_other.addItem("فضل شهر رمضان")
+
+        self.all_stations = [
+            "إذاعة الصحابة",
+            "فتاوى إبن باز",
+            "صور من حياة الصحابة",
+            "إذاعة عمر عبد الكافي",
+            "السُنَّة السلفية",
+            "في ظِلال السيرة النبوية",
+            "فتاوى ابن العُثيمين",
+            "العاصمة أونلاين",
+            "الإستقامى",
+            "المرأة المسلمة",
+            "اللغة العربية وعلومها",
+            "المهارات الحياتية والعلوم التربوية",
+            "السلوك والآداب والأخلاق ومحاسن الأعمال",
+            "التوعية الاجتماعية",
+            "الإذاعة الفقهية",
+            "الحج",
+            "رمضان المبارك",
+            "التراجم والتاريخ والسير",
+            "الفكر والدعوة وثقافة الإسلامية",
+            "السيرة النبوية وقصص القرآن والأنبياء والصحابة",
+            "الحديث وعلومه",
+            "العقيدة والتوحيد",
+            "راديو كبار العلماء",
+            "الدكتور سعد الحميد",
+            "الدكتور خالد الجريسي",
+            "إذاعة صور من حياة الصحابة والتابعين رضوان الله عليهم",
+            "المختصر في السيرة النبوية",
+            "قصص الأنبياء",
+            "الشمائل المحمدية",
+            "رياض الصالحين",
+            "صحيح البخاري",
+            "صحيح مسلم",
+            "فضل شهر رمضان",
+        ]
+        self.list_of_other.addItems(self.all_stations)
+
         layout = qt.QVBoxLayout(self)
+        layout.addWidget(self.search_label)
+        layout.addWidget(self.search_bar)
         layout.addWidget(self.list_of_other)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_other)
         self.volume_up_shortcut.activated.connect(self.increase_volume)
         self.volume_down_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Down"), self.list_of_other)
         self.volume_down_shortcut.activated.connect(self.decrease_volume)
 
+    def on_search(self):
+        search_text = self.search_bar.text().lower()
+        self.list_of_other.clear()
+        results = search_stations(search_text, self.all_stations)
+        self.list_of_other.addItems(results)
+        if hasattr(self.parent_widget, 'view_mode_combo') and self.parent_widget.view_mode_combo.currentIndex() == 1:
+            self.parent_widget.update_grid_size_for_widget(self.list_of_other)
+
     def on_context_menu(self, pos):
-        item = self.list_of_other.itemAt(pos)
-        if not item:
-            item = self.list_of_other.currentItem()
-        if item:
-            self.parent_widget.toggle_station_favorite(item.text())
+        if hasattr(self.parent_widget, 'open_station_context_menu'):
+            self.parent_widget.open_station_context_menu(self.list_of_other, pos)
 
     def play(self):
         selected_item = self.list_of_other.currentItem()
