@@ -1,4 +1,4 @@
-﻿import PyQt6.QtWidgets as qt
+import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from guiTools import speak
@@ -23,6 +23,11 @@ class brotcasts_of_tafseer(qt.QWidget):
         self.list_of_tafseer.addItem("الله أكبر لتفسير الشعراوي")
         self.list_of_tafseer.addItem("المختصر في التفسير")
         self.list_of_tafseer.addItem("إذاعة التفسير")
+        self.list_of_tafseer.addItem("علوم القرآن الكريم")
+        self.list_of_tafseer.addItem("إذاعة تفسير القرآن الكريم")
+        self.list_of_tafseer.addItem("المختصر في تفسير القرآن الكريم")
+        self.list_of_tafseer.addItem("تفسير القران الكريم-الخلاصة من تفسير الطبري")
+        self.list_of_tafseer.addItem("تفسير غريب القرآن")
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.list_of_tafseer)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_tafseer)

@@ -1,4 +1,4 @@
-﻿import PyQt6.QtWidgets as qt
+import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from guiTools import speak
@@ -21,6 +21,8 @@ class brotcasts_of_suplications(qt.QWidget):
         self.list_of_adhkar.addItem("أذكار الصباح")
         self.list_of_adhkar.addItem("أذكار المساء")
         self.list_of_adhkar.addItem("أدعية وأذكار يومية")
+        self.list_of_adhkar.addItem("الرقية الشرعية")
+        self.list_of_adhkar.addItem("إذاعة الرقية الشرعية")
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.list_of_adhkar)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_adhkar)

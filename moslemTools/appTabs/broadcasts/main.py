@@ -11,7 +11,7 @@ from functions import audio_manager
 from .recorder import WasapiRecorder, SchedulingDialog
 from .stations import (
     quran_brotcast, brotcasts_of_reciters, brotcasts_of_tafseer,
-    brotcasts_of_suplications, other_brotcasts, set_globals,
+    brotcasts_of_suplications, brotcasts_of_translations, other_brotcasts, set_globals,
     get_global_player, get_global_current_url, get_global_audio_output,
     play_station_by_name
 )
@@ -95,6 +95,7 @@ class protcasts(qt.QWidget):
         self.brotcasts_tab.addTab(brotcasts_of_reciters(global_audio_output, self), "إذاعات القراء")
         self.brotcasts_tab.addTab(brotcasts_of_tafseer(global_audio_output, self), "إذاعات التفاسير")
         self.brotcasts_tab.addTab(brotcasts_of_suplications(global_audio_output, self), "إذاعات الأذكار والأدعية")
+        self.brotcasts_tab.addTab(brotcasts_of_translations(global_audio_output, self), "إذاعات ترجمات القرآن الكريم")
         self.brotcasts_tab.addTab(other_brotcasts(global_audio_output, self), "إذاعات إسلامية أخرى")
         if settings_handler.get("g", "theme") == "light":
             self.brotcasts_tab.setStyleSheet("""QTabWidget::pane { border: 1px solid #ccc; border-radius: 6px; background-color: #f5f5f5; } QTabBar::tab { background: #e0e0e0; color: #1e1e1e; padding: 10px 20px; border: 1px solid #ccc; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; min-width: 100px; font-weight: bold; } QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } QTabBar::tab:hover { background: #d0d0d0; }""")
@@ -279,6 +280,8 @@ class protcasts(qt.QWidget):
                 widgets.append(tab_widget.list_of_tafseer)
             elif hasattr(tab_widget, 'list_of_adhkar'):
                 widgets.append(tab_widget.list_of_adhkar)
+            elif hasattr(tab_widget, 'list_of_translations'):
+                widgets.append(tab_widget.list_of_translations)
             elif hasattr(tab_widget, 'list_of_other'):
                 widgets.append(tab_widget.list_of_other)
         if hasattr(self, 'fav_list_widget'):

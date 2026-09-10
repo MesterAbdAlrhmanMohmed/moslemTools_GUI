@@ -1,4 +1,4 @@
-﻿import PyQt6.QtWidgets as qt
+import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from guiTools import speak
@@ -28,6 +28,14 @@ class quran_brotcast(qt.QWidget):
         self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من مصر")
         self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من فَلَسطين")
         self.list_of_quran_brotcasts.addItem("إذاعة تراتيل")
+        self.list_of_quran_brotcasts.addItem("الإذاعة العامة - إذاعة متنوعة لمختلف القراء")
+        self.list_of_quran_brotcasts.addItem("إذاعة سورة البقرة - لعدد من القراء")
+        self.list_of_quran_brotcasts.addItem("إذاعة تلاوات خاشعة")
+        self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم - السعودية")
+        self.list_of_quran_brotcasts.addItem("إذاعة القرآن الكريم من السعودية (رابط 2)")
+        self.list_of_quran_brotcasts.addItem("تراتيل قصيرة متميزة")
+        self.list_of_quran_brotcasts.addItem("آيات السكينة")
+        self.list_of_quran_brotcasts.addItem("سورة الملك")
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.list_of_quran_brotcasts)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_quran_brotcasts)

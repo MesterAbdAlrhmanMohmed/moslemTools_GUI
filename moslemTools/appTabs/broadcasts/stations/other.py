@@ -1,4 +1,4 @@
-﻿import PyQt6.QtWidgets as qt
+import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from guiTools import speak
@@ -18,7 +18,6 @@ class other_brotcasts(qt.QWidget):
         self.list_of_other.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.list_of_other.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.list_of_other.customContextMenuRequested.connect(self.on_context_menu)
-        self.list_of_other.addItem("الرقية الشرعية")
         self.list_of_other.addItem("إذاعة الصحابة")
         self.list_of_other.addItem("فتاوى إبن باز")
         self.list_of_other.addItem("صور من حياة الصحابة")
@@ -41,10 +40,17 @@ class other_brotcasts(qt.QWidget):
         self.list_of_other.addItem("السيرة النبوية وقصص القرآن والأنبياء والصحابة")
         self.list_of_other.addItem("الحديث وعلومه")
         self.list_of_other.addItem("العقيدة والتوحيد")
-        self.list_of_other.addItem("علوم القرآن الكريم")
         self.list_of_other.addItem("راديو كبار العلماء")
         self.list_of_other.addItem("الدكتور سعد الحميد")
         self.list_of_other.addItem("الدكتور خالد الجريسي")
+        self.list_of_other.addItem("إذاعة صور من حياة الصحابة والتابعين رضوان الله عليهم")
+        self.list_of_other.addItem("المختصر في السيرة النبوية")
+        self.list_of_other.addItem("قصص الأنبياء")
+        self.list_of_other.addItem("الشمائل المحمدية")
+        self.list_of_other.addItem("رياض الصالحين")
+        self.list_of_other.addItem("صحيح البخاري")
+        self.list_of_other.addItem("صحيح مسلم")
+        self.list_of_other.addItem("فضل شهر رمضان")
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.list_of_other)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_other)
