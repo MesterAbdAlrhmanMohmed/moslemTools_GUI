@@ -1,6 +1,6 @@
 import os,shutil
 
-ROOT = r"D:\alcoder\moslem tools\moslemTools"
+ROOT = r"C:\Users\alcoder\Documents\GitHub\moslemTools_GUI\moslemTools"
 
 deleted = 0
 

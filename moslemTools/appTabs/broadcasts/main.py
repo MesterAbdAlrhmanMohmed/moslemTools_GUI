@@ -87,6 +87,7 @@ class protcasts(qt.QWidget):
         self.remaining_duration_seconds = 0
         self.scheduled_file_path = ""
         self.is_scheduled_recording = False
+        self.pause_countdown_on_recording_pause = False
         self.temp_wav_to_convert = None
 
         self.brotcasts_tab = guiTools.QCustomTabWidget()
@@ -466,7 +467,9 @@ class protcasts(qt.QWidget):
              return
         dlg = SchedulingDialog(self)
         if dlg.exec() == qt.QDialog.DialogCode.Accepted:
-            sh, sm, ss, dh, dm, ds = dlg.get_values()
+            values = dlg.get_values()
+            sh, sm, ss, dh, dm, ds = values[:6]
+            self.pause_countdown_on_recording_pause = values[6] if len(values) > 6 else False
             self.remaining_seconds_to_start = (sh * 3600) + (sm * 60) + ss
             self.remaining_duration_seconds = (dh * 3600) + (dm * 60) + ds
             guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "ملاحظة: سيتم تسجيل صوت الإذاعة فقط، ولن يتم التقاط أي صوت من المايكروفون أو إشعارات النظام والبرامج الأخرى.\nإذا تم إيقاف الإذاعة قبل بدء التسجيل أو أثناءه، سيتم إلغاء العملية.")
@@ -520,6 +523,8 @@ class protcasts(qt.QWidget):
         player = get_global_player()
         if not player or player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
             self.handle_scheduled_recording_stop_due_to_radio()
+            return
+        if getattr(self, 'pause_countdown_on_recording_pause', False) and self.recorder._paused:
             return
         if self.remaining_duration_seconds > 0:
             self.remaining_duration_seconds -= 1
@@ -614,6 +619,7 @@ class protcasts(qt.QWidget):
             self.temp_wav_to_convert = None
         self.scheduled_file_path = ""
         self.is_scheduled_recording = False
+        self.pause_countdown_on_recording_pause = False
         self.convert_thread_worker = None
         self.countdown_timer.stop()
         self.duration_timer.stop()

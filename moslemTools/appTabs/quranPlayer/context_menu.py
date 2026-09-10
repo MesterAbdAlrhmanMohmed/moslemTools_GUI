@@ -200,7 +200,8 @@ class PlayerContextMenuMixin:
         delete_option = self.check_current_surah_downloaded()
         if delete_option:
             menu.addAction(delete_option)
-        addNewBookmarkAction = qt1.QAction("إضافة علامة مرجعية", self)
-        menu.addAction(addNewBookmarkAction)
-        addNewBookmarkAction.triggered.connect(self.onAddNewBookmark)
+        if self.mp.duration() > 0:
+            addNewBookmarkAction = qt1.QAction("إضافة علامة مرجعية", self)
+            menu.addAction(addNewBookmarkAction)
+            addNewBookmarkAction.triggered.connect(self.onAddNewBookmark)
         menu.exec(self.surahListWidget.viewport().mapToGlobal(position))

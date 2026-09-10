@@ -225,7 +225,63 @@ def format_qiraat_string(raw_qiraat):
         output_parts.append("[عند الوصل]:\n" + format_qiraat_section(wasl_part))
     if surah_wasl_part:
         output_parts.append("[عند وصل السورة]:\n" + format_qiraat_section(surah_wasl_part))
-    return "\n\n".join(output_parts)
+    return "\n".join(output_parts)
+
+
+_qiraat_diff_set = None
+_sajda_asbab_cache = None
+
+
+def get_qiraat_verses_cache():
+    global _qiraat_diff_set
+    if _qiraat_diff_set is None:
+        try:
+            from settings import app
+            app_dir = os.path.join(os.getenv('appdata'), app.appName)
+            qiraat_path = os.path.join(app_dir, "qiraat_verses.json")
+            if os.path.exists(qiraat_path):
+                with open(qiraat_path, "r", encoding="utf-8") as f:
+                    qiraat_list = json.load(f)
+                    _qiraat_diff_set = {(int(item["surah_number"]), int(item["ayah_number"])) for item in qiraat_list}
+        except Exception:
+            _qiraat_diff_set = None
+        if _qiraat_diff_set is None:
+            wbw = _load_word_by_word_data()
+            _qiraat_diff_set = {k for k, words in wbw.items() if any("@" in w.get("qiraat", "") for w in words)}
+    return _qiraat_diff_set
+
+
+def has_ayah_qiraat_differences(surah_no, ayah_no):
+    diff_set = get_qiraat_verses_cache()
+    return (int(surah_no), int(ayah_no)) in diff_set
+
+
+def get_sajda_and_asbab_cache():
+    global _sajda_asbab_cache
+    if _sajda_asbab_cache is None:
+        try:
+            from settings import app
+            app_dir = os.path.join(os.getenv('appdata'), app.appName)
+            sajda_asbab_path = os.path.join(app_dir, "sajda_and_asbab.json")
+            if os.path.exists(sajda_asbab_path):
+                with open(sajda_asbab_path, "r", encoding="utf-8") as f:
+                    _sajda_asbab_cache = json.load(f)
+        except Exception:
+            _sajda_asbab_cache = None
+        if _sajda_asbab_cache is None:
+            s_set = []
+            a_set = []
+            functions.quranJsonControl._load_data()
+            for s_str, s_val in functions.quranJsonControl._data.items():
+                s_int = int(s_str)
+                s_name = s_val["name"]
+                for a in s_val["ayahs"]:
+                    if a.get("sajda"):
+                        s_set.append({"surah_number": s_int, "surah_name": s_name, "ayah_number": a["numberInSurah"], "number": a["number"]})
+                    if a.get("asbab_alnozole"):
+                        a_set.append({"surah_number": s_int, "surah_name": s_name, "ayah_number": a["numberInSurah"], "number": a["number"]})
+            _sajda_asbab_cache = {"sajda": s_set, "asbab_alnozole": a_set}
+    return _sajda_asbab_cache
 
 
 def get_single_ayah_qiraat(surah_no, ayah_no, ayah_text=None):
@@ -256,4 +312,4 @@ def get_range_qiraat(ayah_text_list, category=None, type=None):
             output_blocks.append(qiraat)
         except Exception:
             output_blocks.append(f"{line}\n\nتعذر جلب بيانات القراءات.")
-    return "\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."
+    return "\n\n\n".join(output_blocks) if output_blocks else "لا توجد بيانات متاحة."

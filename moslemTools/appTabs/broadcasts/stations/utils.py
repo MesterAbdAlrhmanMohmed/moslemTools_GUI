@@ -63,7 +63,7 @@ ALL_STATIONS = {
     # Quran broadcasts
     "إذاعة القرآن الكريم من نابلِس": "http://www.quran-radio.org:8002/;stream.mp3",
     "إذاعة القرآن الكريم من القاهرة": "http://n0e.radiojar.com/8s5u5tpdtwzuv?rj-ttl=5&rj-tok=AAABeel-l8gApvlPoJcG2WWz8A",
-    "إذاعة القرآن الكريم من السعودية": "https://stream.radiojar.com/4wqre23fytzuv",
+    "إذاعة القرآن الكريم من السعودية": "http://stream.radiojar.com/4wqre23fytzuv",
     "إذاعة دُبَيْ للقرآن الكريم": "http://uk5.internet-radio.com:8079/stream",
     "تلاوات خاشعة": "http://live.mp3quran.net:9992",
     "إذاعة القرآن الكريم من أستراليا": "http://listen.qkradio.com.au:8382/listen.mp3",

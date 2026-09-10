@@ -191,6 +191,9 @@ class PlayerPlaybackModesMixin:
         gui.book_marcks(self, "quran").exec()
 
     def onAddNewBookmark(self):
+        if self.mp.duration() <= 0:
+            guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يوجد مقطع مشغل حالياً، يجب تشغيل مقطع أولاً")
+            return
         name, ok = guiTools.QInputDialog.getText(self, "إضافة علامة مرجعية", "أكتب اسم العلامة المرجعية")
         if ok and name:
             type = self.recitersListWidget.currentRow()

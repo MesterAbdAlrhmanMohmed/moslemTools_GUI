@@ -386,5 +386,6 @@ class QuranViewer(ContextMenuMixin, NavigationDisplayMixin, AudioPlayerMixin, Se
             self.is_counting_asbab_alnozole = False
             if hasattr(self, 'asbab_thread') and self.asbab_thread.isRunning():
                 self.asbab_thread.terminate()
+        self.save_volume(self.audioOutput.volume())
         self.media.stop()
         super().closeEvent(event)

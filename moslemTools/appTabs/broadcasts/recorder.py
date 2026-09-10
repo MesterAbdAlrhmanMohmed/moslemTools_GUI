@@ -237,8 +237,8 @@ class WasapiRecorder(qt2.QObject):
 class SchedulingDialog(qt.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setMinimumSize(780, 335)
-        self.resize(780, 335)
+        self.setMinimumSize(780, 345)
+        self.resize(780, 345)
         self.setWindowTitle("جدولة التسجيل")
         
         main_dialog_layout = qt.QVBoxLayout(self)
@@ -336,9 +336,20 @@ class SchedulingDialog(qt.QDialog):
         line2.setFrameShadow(qt.QFrame.Shadow.Sunken)
         layout.addWidget(line2)
         
-        self.warning_label = guiTools.QNavigableLabel("تنبيه: إذا تم إيقاف الإذاعة، سيتم إلغاء جدولة التسجيل.")                        
+        self.pause_countdown_cb = qt.QCheckBox("إيقاف العد التنازلي للتسجيل مؤقتاً عند إيقاف التسجيل مؤقتاً")
+        self.pause_countdown_cb.setAccessibleName("إيقاف العد التنازلي للتسجيل مؤقتاً عند إيقاف التسجيل مؤقتاً")
+        self.pause_countdown_cb.setStyleSheet("QCheckBox { margin: 0px; padding: 0px; }")
+        self.warning_label = guiTools.QNavigableLabel("تنبيه: إذا تم إيقاف الإذاعة، سيتم إلغاء جدولة التسجيل.")
         self.warning_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.warning_label)
+        self.warning_label.setFixedHeight(24)
+        options_widget = qt.QWidget()
+        options_layout = qt.QVBoxLayout(options_widget)
+        options_layout.setContentsMargins(0, 0, 0, 0)
+        options_layout.setSpacing(6)
+        options_layout.addWidget(self.pause_countdown_cb, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        options_layout.addWidget(self.warning_label, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        options_widget.setSizePolicy(qt.QSizePolicy.Policy.Preferred, qt.QSizePolicy.Policy.Fixed)
+        layout.addWidget(options_widget)
         
         self.OKBTN = guiTools.QPushButton("موافق")
         self.OKBTN.clicked.connect(self.validate_and_accept)
@@ -373,4 +384,8 @@ class SchedulingDialog(qt.QDialog):
 
     def get_values(self):
         return (self.start_h_spin.value(), self.start_m_spin.value(), self.start_s_spin.value(),
-                self.dur_h_spin.value(), self.dur_m_spin.value(), self.dur_s_spin.value())
+                self.dur_h_spin.value(), self.dur_m_spin.value(), self.dur_s_spin.value(),
+                self.pause_countdown_cb.isChecked())
+
+    def should_pause_countdown_on_pause(self):
+        return self.pause_countdown_cb.isChecked()

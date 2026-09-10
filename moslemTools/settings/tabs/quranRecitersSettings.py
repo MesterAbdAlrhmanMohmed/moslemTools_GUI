@@ -26,7 +26,7 @@ class QuranRecitersSettings(qt.QWidget):
         self.combos = []
         self.reciters_list = list(gui.reciters.keys())
         self.viewer_combo = self.create_row("تحديد القارئ الافتراضي لعارض القرآن الكريم", "تحديد القارئ الافتراضي لعارض القرآن الكريم")
-        self.player_combo = self.create_row("تحديد القارئ الافتراضي لمشغل القرآن الكريم", "تحديد القارئ الافتراضي لمشغل القرآن الكريم")
+        self.player_combo = self.create_row("تحديد القارئ الافتراضي لمشغل القرآن الكريم لتبويبة القرآن الكريم مكتوب", "تحديد القارئ الافتراضي لمشغل القرآن الكريم لتبويبة القرآن الكريم مكتوب")
         self.researcher_combo = self.create_row("تحديد القارئ الافتراضي للباحث", "تحديد القارئ الافتراضي للباحث")
 
         self.default_notice_text = "لحذف قارئ، نستخدم زر التطبيقات أو click الأيمن على أي قائمة من قوائم القراء"
