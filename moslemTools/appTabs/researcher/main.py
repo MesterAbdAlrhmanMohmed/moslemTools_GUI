@@ -28,6 +28,7 @@ class Albaheth(ResearcherContextMenuMixin, ResearcherActionsMixin, ResearcherSea
         self.apply_speed()
         self.audio_output = QAudioOutput(self)
         self.audio_output.setDevice(functions.audio_manager.get_audio_device("researcher"))
+        self.audio_output.setVolume(self.load_volume())
         self.media_player.setAudioOutput(self.audio_output)
         self.was_playing_before_action = False
         self.current_search_thread = None

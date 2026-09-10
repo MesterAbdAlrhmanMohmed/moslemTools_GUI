@@ -43,7 +43,7 @@ class PlayerBatchAndMergeMixin:
         if not selected_reciter_item or not selected_surah_item:
             return
         reciter = selected_reciter_item.text()
-        surah = selected_surah_item.text()
+        surah = self.get_surah_name(selected_surah_item)
         surah_info = {"reciter": reciter, "surah": surah, "url": self.reciters_data[reciter][surah]}
         self.merge_list.append(surah_info)
         self.update_merge_ui()
@@ -87,7 +87,7 @@ class PlayerBatchAndMergeMixin:
         self.cancel_download_batch()
         self.cancel_download_start()
         self.first_merge_selection_index = self.surahListWidget.currentRow()
-        speak(f"تم تحديد {self.surahListWidget.currentItem().text()} كبداية للدمج")
+        speak(f"تم تحديد {self.get_surah_name(self.surahListWidget.currentItem())} كبداية للدمج")
 
     def cancel_merge_start(self):
         self.first_merge_selection_index = None
@@ -106,7 +106,7 @@ class PlayerBatchAndMergeMixin:
         for i in range(start_index, end_index + 1):
             surah_item = self.surahListWidget.item(i)
             if surah_item:
-                surah = surah_item.text()
+                surah = self.get_surah_name(surah_item)
                 surah_info = {"reciter": reciter, "surah": surah, "url": self.reciters_data[reciter][surah]}
                 self.merge_list.append(surah_info)
         self.first_merge_selection_index = None
@@ -124,7 +124,7 @@ class PlayerBatchAndMergeMixin:
              return
         self.batch_download_target = target
         self.first_download_selection_index = self.surahListWidget.currentRow()
-        speak(f"تم تحديد {self.surahListWidget.currentItem().text()} كبداية للتحميل")
+        speak(f"تم تحديد {self.get_surah_name(self.surahListWidget.currentItem())} كبداية للتحميل")
 
     def cancel_download_start(self):
         self.first_download_selection_index = None
@@ -147,7 +147,7 @@ class PlayerBatchAndMergeMixin:
         for i in range(start_index, end_index + 1):
             surah_item = self.surahListWidget.item(i)
             if surah_item:
-                surah = surah_item.text()
+                surah = self.get_surah_name(surah_item)
                 if target == 'app':
                     local_path = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter, f"{surah}.mp3")
                     if os.path.exists(local_path):
@@ -355,7 +355,7 @@ class PlayerBatchAndMergeMixin:
         if not selected_reciter_item or not selected_surah_item:
             return
         reciter = selected_reciter_item.text()
-        surah = selected_surah_item.text()
+        surah = self.get_surah_name(selected_surah_item)
         if self.download_batch_list:
             if self.download_batch_list[0]["reciter"] != reciter:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لا يمكنك إضافة سور من قراء مختلفين في دفعة واحدة. سيتم إلغاء الدفعة السابقة.")

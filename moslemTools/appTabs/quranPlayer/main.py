@@ -186,6 +186,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.duration.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.duration.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.mp.mediaStatusChanged.connect(self.handle_media_status_changed)
+        self.mp.playbackStateChanged.connect(lambda state: self.update_playing_surah_item() if hasattr(self, 'update_playing_surah_item') else None)
         self.dl_all_app = guiTools.QPushButton("تحميل جميع السور المتاحة لهذا القارئ في التطبيق")
         self.dl_all_app.clicked.connect(self.download_all_audios_to_app)
         self.dl_all = guiTools.QPushButton("تحميل جميع السور المتاحة لهذا القارئ في الجهاز")

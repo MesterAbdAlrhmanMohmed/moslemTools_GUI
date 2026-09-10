@@ -29,6 +29,9 @@ class PlayerContextMenuMixin:
             action.setCheckable(True)
             action.setChecked(abs(current_speed - s) < 0.01)
             action.triggered.connect(lambda checked, val=s: self.change_speed(val))
+        volume_action = qt1.QAction("تحديد مستوى الصوت", self)
+        volume_action.triggered.connect(self.set_volume_dialog)
+        menu.addAction(volume_action)
         is_merging_active = self.merge_list or self.first_merge_selection_index is not None
         is_batch_download_active = bool(self.download_batch_list) or self.first_download_selection_index is not None
         if not is_batch_download_active:
@@ -60,7 +63,7 @@ class PlayerContextMenuMixin:
                     merge_menu.addAction(set_start_action)
                 else:
                     current_index = self.surahListWidget.currentRow()
-                    start_item_text = self.surahListWidget.item(self.first_merge_selection_index).text()
+                    start_item_text = self.get_surah_name(self.surahListWidget.item(self.first_merge_selection_index))
                     merge_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
                     if current_index != self.first_merge_selection_index:
                         merge_range_action = qt1.QAction("الدمج من البداية المحددة إلى هنا", self)
@@ -105,7 +108,7 @@ class PlayerContextMenuMixin:
                     else:
                         current_index = self.surahListWidget.currentRow()
                         if self.batch_download_target == 'app':
-                            start_item_text = self.surahListWidget.item(self.first_download_selection_index).text()
+                            start_item_text = self.get_surah_name(self.surahListWidget.item(self.first_download_selection_index))
                             batch_download_app_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
                             if current_index != self.first_download_selection_index:
                                 download_range_action = qt1.QAction("التحميل من البداية المحددة إلى هنا", self)
@@ -148,7 +151,7 @@ class PlayerContextMenuMixin:
                     else:
                         current_index = self.surahListWidget.currentRow()
                         if self.batch_download_target == 'device':
-                            start_item_text = self.surahListWidget.item(self.first_download_selection_index).text()
+                            start_item_text = self.get_surah_name(self.surahListWidget.item(self.first_download_selection_index))
                             batch_download_device_menu.addAction(f"البداية المحددة: {start_item_text}").setEnabled(False)
                             if current_index != self.first_download_selection_index:
                                 download_range_action = qt1.QAction("التحميل من البداية المحددة إلى هنا", self)
@@ -184,7 +187,7 @@ class PlayerContextMenuMixin:
         menu.addAction(play_action)
         selected_item = self.surahListWidget.currentItem()
         if selected_item:
-            surah_name = selected_item.text()
+            surah_name = self.get_surah_name(selected_item)
             selected_reciter_item = self.recitersListWidget.currentItem()
             if not selected_reciter_item:
                 return

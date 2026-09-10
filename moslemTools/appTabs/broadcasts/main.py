@@ -63,7 +63,8 @@ class protcasts(qt.QWidget):
         global_audio_output = QAudioOutput()
         global_audio_output.setDevice(audio_manager.get_audio_device("broadcasts"))
         global_player.setAudioOutput(global_audio_output)
-        global_audio_output.setVolume(1.0)
+        loaded_volume = self.load_volume()
+        global_audio_output.setVolume(loaded_volume)
         global_current_url = None
         set_globals(global_player, global_audio_output, global_current_url)
 
@@ -136,8 +137,9 @@ class protcasts(qt.QWidget):
         self.fav_info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.fav_info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 
+        initial_vol_percent = int(round(loaded_volume * 100))
         self.aud = guiTools.QNavigableLabel()
-        self.original_aud_text = "لرفع أو خفض الصوت: اضغط في القائمة ثم استخدم Shift + الأسهم، أعلى وأسفل"
+        self.original_aud_text = f"لرفع أو خفض الصوت: اضغط في القائمة ثم استخدم Shift + الأسهم، أعلى وأسفل: نسبة الصوت الحالية {initial_vol_percent}%"
         self.current_status_text = self.original_aud_text
         self.aud.setText(self.original_aud_text)
         self.aud.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
@@ -349,16 +351,51 @@ class protcasts(qt.QWidget):
         if item and item.text() != "لا توجد إذاعات في قائمة المفضلة":
             self.toggle_station_favorite(item.text())
 
+    def load_volume(self):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "volume.json")
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    return data.get("broadcastsTab", data.get("broadcasts", 1.0))
+        except Exception as e:
+            print(f"Handled exception: {e}")
+        return 1.0
+
+    def save_volume(self, volume):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "volume.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            data = {}
+            if os.path.exists(path):
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                except Exception as e:
+                    print(f"Handled exception: {e}")
+            data["broadcastsTab"] = round(volume, 2)
+            data["broadcasts"] = round(volume, 2)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+        except Exception as e:
+            print(f"Handled exception: {e}")
+
+    def update_aud_status_text(self, volume_percent):
+        self.original_aud_text = f"لرفع أو خفض الصوت: اضغط في القائمة ثم استخدم Shift + الأسهم، أعلى وأسفل: نسبة الصوت الحالية {volume_percent}%"
+        self.current_status_text = self.original_aud_text
+
     def increase_volume_fav(self):
         output = get_global_audio_output()
         if output:
             current_volume = output.volume()
             new_volume = min(1.0, current_volume + 0.1)
             output.setVolume(new_volume)
-            volume_percent = int(new_volume * 100)
+            self.save_volume(new_volume)
+            volume_percent = int(round(new_volume * 100))
+            self.update_aud_status_text(volume_percent)
             speak(f"نسبة الصوت {volume_percent}")
             self.aud.setText(f"نسبة الصوت: {volume_percent}%")
-            self.volume_timer.start(1000)
+            self.volume_timer.start(3000)
 
     def decrease_volume_fav(self):
         output = get_global_audio_output()
@@ -366,10 +403,12 @@ class protcasts(qt.QWidget):
             current_volume = output.volume()
             new_volume = max(0.0, current_volume - 0.1)
             output.setVolume(new_volume)
-            volume_percent = int(new_volume * 100)
+            self.save_volume(new_volume)
+            volume_percent = int(round(new_volume * 100))
+            self.update_aud_status_text(volume_percent)
             speak(f"نسبة الصوت {volume_percent}")
             self.aud.setText(f"نسبة الصوت: {volume_percent}%")
-            self.volume_timer.start(1000)
+            self.volume_timer.start(3000)
 
     def on_radio_state_changed(self, state):
         player = get_global_player()

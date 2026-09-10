@@ -261,3 +261,59 @@ class ResearcherAudioMixin:
             self.currentReciter = dlg.recitersListWidget.currentRow()
             self.manual_reciter_selected = True
         self.resume_after_action()
+
+    def load_volume(self):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "volume.json")
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    return data.get("researcherTab", data.get("researcher", 1.0))
+        except Exception as e:
+            print(f"Handled exception: {e}")
+        return 1.0
+
+    def save_volume(self, volume):
+        try:
+            path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "volume.json")
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            data = {}
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                except Exception as e:
+                    print(f"Handled exception: {e}")
+            data["researcherTab"] = round(volume, 2)
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=4)
+        except Exception as e:
+            print(f"Handled exception: {e}")
+
+    def show_volume_feedback(self, volume):
+        vol_percent = int(round(volume * 100))
+        guiTools.speak(f"{vol_percent}%")
+
+    def set_volume_dialog(self):
+        current_volume_percent = int(round(self.audio_output.volume() * 100))
+        vol, ok = guiTools.QInputDialog.getInt(self, "تحديد مستوى الصوت", "أدخل مستوى الصوت من 0 إلى 100:", current_volume_percent, 0, 100)
+        if ok:
+            new_volume = vol / 100.0
+            self.audio_output.setVolume(new_volume)
+            self.save_volume(new_volume)
+            self.show_volume_feedback(new_volume)
+
+    def volume_up(self):
+        volume = round(self.audio_output.volume(), 2)
+        new_volume = min(1.0, round(volume + 0.10, 2))
+        self.audio_output.setVolume(new_volume)
+        self.save_volume(new_volume)
+        self.show_volume_feedback(new_volume)
+
+    def volume_down(self):
+        volume = round(self.audio_output.volume(), 2)
+        new_volume = max(0.0, round(volume - 0.10, 2))
+        self.audio_output.setVolume(new_volume)
+        self.save_volume(new_volume)
+        self.show_volume_feedback(new_volume)
+

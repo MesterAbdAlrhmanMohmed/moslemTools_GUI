@@ -130,7 +130,12 @@ class PlayerFavoritesAndSearchMixin:
         else:
             surah_list = []
         result = self.search(search_text, surah_list)
-        self.surahListWidget.addItems(result)
+        for s in result:
+            item = qt.QListWidgetItem(s)
+            item.setData(qt2.Qt.ItemDataRole.UserRole, s)
+            self.surahListWidget.addItem(item)
+        if hasattr(self, 'update_playing_surah_item'):
+            self.update_playing_surah_item()
 
     def load_reciters(self):
         file_path = "data/json/reciters.json"

@@ -85,6 +85,9 @@ class PlayerPlaybackModesMixin:
                 self.play_next_in_list()
             elif self.play_all_to_start.isChecked():
                 self.play_previous_in_list()
+            else:
+                self.current_playing_surah = None
+                self.update_playing_surah_item()
 
     def play_next_in_list(self):
         current_row = self.surahListWidget.currentRow()
@@ -93,6 +96,8 @@ class PlayerPlaybackModesMixin:
             self.play_selected_audio()
         else:
             self.play_all_to_end.setChecked(False)
+            self.current_playing_surah = None
+            self.update_playing_surah_item()
 
     def play_previous_in_list(self):
         current_row = self.surahListWidget.currentRow()
@@ -101,6 +106,37 @@ class PlayerPlaybackModesMixin:
             self.play_selected_audio()
         else:
             self.play_all_to_start.setChecked(False)
+            self.current_playing_surah = None
+            self.update_playing_surah_item()
+
+    def get_surah_name(self, item_or_text):
+        if hasattr(item_or_text, 'data'):
+            val = item_or_text.data(qt2.Qt.ItemDataRole.UserRole)
+            if val:
+                return val
+        if hasattr(item_or_text, 'text'):
+            text = item_or_text.text()
+        else:
+            text = str(item_or_text) if item_or_text is not None else ""
+        if ": نسبة الصوت" in text:
+            text = text.split(": نسبة الصوت")[0].strip()
+        elif " - نسبة الصوت" in text:
+            text = text.split(" - نسبة الصوت")[0].strip()
+        elif "(نسبة الصوت" in text:
+            text = text.split("(نسبة الصوت")[0].strip()
+        return text
+
+    def update_playing_surah_item(self):
+        is_playing = self.mp.playbackState() != QMediaPlayer.PlaybackState.StoppedState
+        playing_surah = getattr(self, 'current_playing_surah', None)
+        vol_percent = int(round(self.au.volume() * 100))
+        for i in range(self.surahListWidget.count()):
+            item = self.surahListWidget.item(i)
+            orig_name = self.get_surah_name(item)
+            if is_playing and playing_surah and orig_name == playing_surah:
+                item.setText(f"{orig_name}: نسبة الصوت {vol_percent}%")
+            else:
+                item.setText(orig_name)
 
     def play_selected_audio(self):
         self.repeatFromPositionToPosition = False
@@ -112,15 +148,19 @@ class PlayerPlaybackModesMixin:
             reciter = selected_reciter_item.text()
             selected_item = self.surahListWidget.currentItem()
             if selected_item:
+                surah_name = self.get_surah_name(selected_item)
+                self.current_playing_surah = surah_name
+                self.current_playing_reciter = reciter
                 audio_folder = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter)
-                audio_path = os.path.join(audio_folder, selected_item.text() + ".mp3")
+                audio_path = os.path.join(audio_folder, surah_name + ".mp3")
                 if os.path.exists(audio_path):
                     self.mp.setSource(qt2.QUrl.fromLocalFile(audio_path))
-                    qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.mp.play()))
+                    qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.mp.play(), self.update_playing_surah_item()))
                 else:
-                    url = self.reciters_data[reciter][selected_item.text()]
+                    url = self.reciters_data[reciter][surah_name]
                     self.mp.setSource(qt2.QUrl(url))
-                    qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.mp.play()))
+                    qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.mp.play(), self.update_playing_surah_item()))
+                self.update_playing_surah_item()
                 is_manual_playback = not self.play_all_to_end.isChecked() and not self.play_all_to_start.isChecked()
                 self.repeat_surah_button.setEnabled(is_manual_playback)
         except Exception as e:
@@ -129,6 +169,7 @@ class PlayerPlaybackModesMixin:
     def on_reciter_selected(self):
         self.paused_position = None
         self.mp.stop()
+        self.current_playing_surah = None
         self.surahListWidget.clear()
         self.cancel_merge()
         self.cancel_download_batch()
@@ -138,7 +179,10 @@ class PlayerPlaybackModesMixin:
             self.merge_all_from_end_button.setVisible(True)
             reciter = selected_reciter_item.text()
             for surah, link in self.reciters_data[reciter].items():
-                self.surahListWidget.addItem(surah)
+                item = qt.QListWidgetItem(surah)
+                item.setData(qt2.Qt.ItemDataRole.UserRole, surah)
+                self.surahListWidget.addItem(item)
+            self.update_playing_surah_item()
             self.check_all_surahs_downloaded()
         else:
             self.merge_all_from_start_button.setVisible(False)

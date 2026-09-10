@@ -52,17 +52,25 @@ class brotcasts_of_tafseer(qt.QWidget):
             current_volume = self.audio_output.volume()
             new_volume = min(1.0, current_volume + 0.1)
             self.audio_output.setVolume(new_volume)
-            volume_percent = int(new_volume * 100)
+            if hasattr(self.parent_widget, 'save_volume'):
+                self.parent_widget.save_volume(new_volume)
+            volume_percent = int(round(new_volume * 100))
+            if hasattr(self.parent_widget, 'update_aud_status_text'):
+                self.parent_widget.update_aud_status_text(volume_percent)
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
-            self.parent_widget.volume_timer.start(1000)
+            self.parent_widget.volume_timer.start(3000)
 
     def decrease_volume(self):
         if self.audio_output:
             current_volume = self.audio_output.volume()
             new_volume = max(0.0, current_volume - 0.1)
             self.audio_output.setVolume(new_volume)
-            volume_percent = int(new_volume * 100)
+            if hasattr(self.parent_widget, 'save_volume'):
+                self.parent_widget.save_volume(new_volume)
+            volume_percent = int(round(new_volume * 100))
+            if hasattr(self.parent_widget, 'update_aud_status_text'):
+                self.parent_widget.update_aud_status_text(volume_percent)
             speak(f"نسبة الصوت {volume_percent}")
             self.parent_widget.aud.setText(f"نسبة الصوت: {volume_percent}%")
-            self.parent_widget.volume_timer.start(1000)
+            self.parent_widget.volume_timer.start(3000)

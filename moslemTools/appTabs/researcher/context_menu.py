@@ -48,6 +48,9 @@ class ResearcherContextMenuMixin:
                     action.setCheckable(True)
                     action.setChecked(abs(current_speed - s) < 0.01)
                     action.triggered.connect(lambda checked, val=s: self.change_speed(val))
+                volume_action = qt1.QAction("تحديد مستوى الصوت", self)
+                volume_action.triggered.connect(self.set_volume_dialog)
+                ayah_menu.addAction(volume_action)
                 current_media_src = self.media_player.source().fileName().split('/')[-1]
                 expected_filename = f'{str(metadata["surah_number"]).zfill(3)}{str(metadata["ayah_number_in_surah"]).zfill(3)}.mp3'
                 is_playing_this_verse = getattr(self, 'was_playing_before_action', False) and (current_media_src == expected_filename)

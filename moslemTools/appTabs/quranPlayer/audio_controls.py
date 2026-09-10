@@ -28,6 +28,9 @@ class PlayerAudioControlsMixin:
         self.paused_position = None
         self.mp.stop()
         self.mp.setSource(qt2.QUrl())
+        self.current_playing_surah = None
+        if hasattr(self, 'update_playing_surah_item'):
+            self.update_playing_surah_item()
         self.startingPosition = None
         self.endingPosition = None
         self.repeatFromPositionToPosition = False
@@ -225,20 +228,20 @@ class PlayerAudioControlsMixin:
         new_volume = min(current_volume + 0.10, 1.0)
         self.au.setVolume(new_volume)
         self.save_volume(new_volume)
-        volume_percent = int(new_volume * 100)
+        volume_percent = int(round(new_volume * 100))
         speak(f"نسبة الصوت {volume_percent}")
-        self.duration.setText(f"نسبة الصوت: {volume_percent}%")
-        self.volume_timer.start(1000)
+        if hasattr(self, 'update_playing_surah_item'):
+            self.update_playing_surah_item()
 
     def decrease_volume(self):
         current_volume = self.au.volume()
         new_volume = max(current_volume - 0.10, 0.0)
         self.au.setVolume(new_volume)
         self.save_volume(new_volume)
-        volume_percent = int(new_volume * 100)
+        volume_percent = int(round(new_volume * 100))
         speak(f"نسبة الصوت {volume_percent}")
-        self.duration.setText(f"نسبة الصوت: {volume_percent}%")
-        self.volume_timer.start(1000)
+        if hasattr(self, 'update_playing_surah_item'):
+            self.update_playing_surah_item()
 
     def increase_speed(self):
         speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0]
@@ -376,7 +379,8 @@ class PlayerAudioControlsMixin:
             path = os.path.join(os.getenv('appdata'), "moslemTools_GUI", "volume.json")
             if os.path.exists(path):
                 with open(path, 'r', encoding='utf-8') as f:
-                    return json.load(f).get("quranPlayerTab", 1.0)
+                    data = json.load(f)
+                    return data.get("quranPlayerTab", data.get("quranPlayer", 1.0))
         except Exception as e:
             print(f"Handled exception: {e}")
         return 1.0
@@ -393,7 +397,20 @@ class PlayerAudioControlsMixin:
                 except Exception as e:
                     print(f"Handled exception: {e}")
             data["quranPlayerTab"] = round(volume, 2)
+            data["quranPlayer"] = round(volume, 2)
             with open(path, 'w', encoding='utf-8') as f:
-                json.dump(data, f)
+                json.dump(data, f, indent=4)
         except Exception as e:
             print(f"Handled exception: {e}")
+
+    def set_volume_dialog(self):
+        current_volume_percent = int(round(self.au.volume() * 100))
+        vol, ok = guiTools.QInputDialog.getInt(self, "تحديد مستوى الصوت", "أدخل مستوى الصوت من 0 إلى 100:", current_volume_percent, 0, 100)
+        if ok:
+            new_volume = vol / 100.0
+            self.au.setVolume(new_volume)
+            self.save_volume(new_volume)
+            volume_percent = int(round(new_volume * 100))
+            speak(f"نسبة الصوت {volume_percent}")
+            if hasattr(self, 'update_playing_surah_item'):
+                self.update_playing_surah_item()

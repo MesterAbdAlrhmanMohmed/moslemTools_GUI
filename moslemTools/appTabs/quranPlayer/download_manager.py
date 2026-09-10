@@ -1,4 +1,4 @@
-﻿import guiTools, requests, os, winsound, gui, functions, subprocess, shutil
+import guiTools, requests, os, winsound, gui, functions, subprocess, shutil
 import ujson as json
 from guiTools import TextViewer
 from guiTools import speak
@@ -75,7 +75,7 @@ class PlayerDownloadManagerMixin:
         selected_item = self.surahListWidget.currentItem()
         if not selected_item:
             return
-        surah_name = selected_item.text()
+        surah_name = self.get_surah_name(selected_item)
         surah_path = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter, f"{surah_name}.mp3")
         if os.path.exists(surah_path):
             action = qt.QWidgetAction(self)
@@ -95,12 +95,13 @@ class PlayerDownloadManagerMixin:
             reciter = selected_reciter_item.text()
             selected_item = self.surahListWidget.currentItem()
             if selected_item:
-                url = self.reciters_data[reciter][selected_item.text()]
+                surah_name = self.get_surah_name(selected_item)
+                url = self.reciters_data[reciter][surah_name]
                 audio_folder = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter)
                 os.makedirs(audio_folder, exist_ok=True)
-                filepath = os.path.join(audio_folder, f"{selected_item.text()}.mp3")
+                filepath = os.path.join(audio_folder, f"{surah_name}.mp3")
                 if self.is_audio_downloaded(filepath):
-                    guiTools.qMessageBox.MessageBox.view(self, "تنبيه", f"سورة {selected_item.text()} تم تحميلها بالفعل.")
+                    guiTools.qMessageBox.MessageBox.view(self, "تنبيه", f"سورة {surah_name} تم تحميلها بالفعل.")
                     return
                 self.set_ui_enabled(False)
                 self.progressBar.setVisible(True)
@@ -109,7 +110,7 @@ class PlayerDownloadManagerMixin:
                 self.pause_download_button.setText("إيقاف مؤقت")
                 self.pause_download_button.setVisible(True)
                 self.cancel_download_button.setVisible(True)
-                self.current_download_filename = selected_item.text()
+                self.current_download_filename = surah_name
                 self.current_download_reciter = reciter
                 self.download_thread = DownloadThread(self, url, filepath)
                 self.download_thread.progress.connect(self.progressBar.setValue)
@@ -455,8 +456,9 @@ class PlayerDownloadManagerMixin:
             reciter = selected_reciter_item.text()
             selected_item = self.surahListWidget.currentItem()
             if selected_item:
-                url = self.reciters_data[reciter][selected_item.text()]
-                filepath, _ = qt.QFileDialog.getSaveFileName(self, "save surah", "", "Audio Files (*.mp3)")
+                surah_name = self.get_surah_name(selected_item)
+                url = self.reciters_data[reciter][surah_name]
+                filepath, _ = qt.QFileDialog.getSaveFileName(self, "save surah", f"{surah_name}.mp3", "Audio Files (*.mp3)")
                 if filepath:
                     self.set_ui_enabled(False)
                     self.progressBar.setVisible(True)
