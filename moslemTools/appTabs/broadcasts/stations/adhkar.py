@@ -36,8 +36,7 @@ class brotcasts_of_suplications(qt.QWidget):
         self.all_stations = [
             "أذكار الصباح",
             "أذكار المساء",
-            "أدعية وأذكار يومية",
-            "الرقية الشرعية",
+            "أدعية وأذكار يومية",            
             "إذاعة الرقية الشرعية",
         ]
         self.list_of_adhkar.addItems(self.all_stations)

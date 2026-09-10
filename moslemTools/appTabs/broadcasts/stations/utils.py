@@ -132,8 +132,7 @@ ALL_STATIONS = {
     "أذكار المساء": "https://qurango.net/radio/athkar_masa",
     "أدعية وأذكار يومية": "https://radio.alukah.net/adiyyaha",
 
-    # Other broadcasts
-    "الرقية الشرعية": "http://live.mp3quran.net:9936",
+    # Other broadcasts    
     "إذاعة الصحابة": "http://s5.voscast.com:10130/;stream1603343063302/1",
     "فتاوى إبن باز": "https://qurango.net/radio/alaikhtiarat_alfiqhayh_bin_baz",
     "صور من حياة الصحابة": "http://live.mp3quran.net:8028",
