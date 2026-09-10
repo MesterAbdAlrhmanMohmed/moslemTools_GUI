@@ -1,5 +1,5 @@
 #define MyAppName "moslem tools, alcoder"
-#define MyAppVersion "16.0"
+#define MyAppVersion "17.0"
 #define MyAppPublisher "abd alrhman mohamed alcoder"
 #define MyAppURL "https://github.com/MesterAbdAlrhmanMohmed"
 #define MyAppExeName "moslem_tools.exe"
@@ -18,7 +18,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 ChangesAssociations=yes
 DisableProgramGroupPage=yes
-OutputBaseFilename=moslem_tools_version_16.0
+OutputBaseFilename=moslem_tools_version_17.0
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
