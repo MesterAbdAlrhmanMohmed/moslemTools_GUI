@@ -220,6 +220,7 @@ class WasapiRecorder(qt2.QObject):
                 timeout=600,
                 text=True,
                 encoding="utf-8",
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
             )
             if proc.returncode != 0:
                 self.error.emit(f"فشل التحويل: {proc.stderr}")
