@@ -58,7 +58,7 @@ class QuranTabContextMenuMixin:
             category_idx = self.type.currentIndex()
             if category_idx == 0:
                 clean_name = re.sub(r'^\d+[\s\.\-]*', '', current_item.text())
-                info_action_text = f"معلومات سورة: {clean_name}"
+                info_action_text = f"معلومات سورة {clean_name}"
             else:
                 cat_map = {1: "الصفحة", 2: "الجزء", 3: "الربع", 4: "الحزب"}
                 info_action_text = f"معلومات {cat_map.get(category_idx, '')}"

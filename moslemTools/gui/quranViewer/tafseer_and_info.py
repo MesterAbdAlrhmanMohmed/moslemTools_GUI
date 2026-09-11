@@ -280,7 +280,9 @@ class TafseerAndInfoMixin:
         self.is_counting_sajdas = False
         self.info.setText(self.original_info_text)
         if not sajda_verses:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا توجد آيات تحتوي على سجدة في هذه الفئة.")
+            category_phrases = {0: "هذه السورة", 1: "هذه الصفحة", 2: "هذا الجزء", 3: "هذا الربع", 4: "هذا الحزب", 5: "هذا العرض المخصص"}
+            cat_phrase = category_phrases.get(self.type, "هذه الفئة")
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", f"لا توجد آيات تحتوي على سجدة في {cat_phrase}.")
             return
         items = []
         selected_index = -1
@@ -318,7 +320,9 @@ class TafseerAndInfoMixin:
         self.is_counting_asbab_alnozole = False
         self.info.setText(self.original_info_text)
         if not asbab_verses:
-            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", "لا توجد آيات تحتوي على أسباب نزول في هذه الفئة.")
+            category_phrases = {0: "هذه السورة", 1: "هذه الصفحة", 2: "هذا الجزء", 3: "هذا الربع", 4: "هذا الحزب", 5: "هذا العرض المخصص"}
+            cat_phrase = category_phrases.get(self.type, "هذه الفئة")
+            guiTools.qMessageBox.MessageBox.view(self, "تنبيه", f"لا توجد آيات تحتوي على أسباب نزول في {cat_phrase}.")
             return
         items = []
         selected_index = -1
