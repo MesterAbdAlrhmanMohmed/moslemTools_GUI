@@ -1,387 +1,296 @@
----
-language:
-- ar
-- en
-license: mit
-task_categories:
-- question-answering
-- text-generation
-- text-retrieval
-- fill-mask
-pretty_name: Athar Islamic QA Datasets
-tags:
-- islamic-studies
-- quran
-- hadith
-- fiqh
-- arabic
-- rag
-- multi-agent
-- citation-grounded
-dataset_info:
-  features:
-  - name: content
-    dtype: string
-  - name: content_type
-    dtype: string
-  - name: book_id
-    dtype: int64
-  - name: book_title
-    dtype: string
-  - name: category
-    dtype: string
-  - name: author
-    dtype: string
-  - name: author_death
-    dtype: int64
-  - name: collection
-    dtype: string
-  - name: page_number
-    dtype: int64
-  - name: section_title
-    dtype: string
-  - name: hierarchy
-    sequence: string
-  - name: title
-    dtype: string
-  - name: chapter
-    dtype: string
-  - name: section
-    dtype: string
-  - name: page
-    dtype: int64
-  splits:
-  - name: train
-    num_examples: 18701966
-  download_size: 40000000000
-  dataset_size: 40000000000
----
+# برنامج moslem tools (منصة إسلامية ضخمة ومتكاملة لنظام ويندوز)
 
-# 🕌 Athar Islamic QA Datasets
+![أيقونة moslem tools](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/moslem_tools_icon.png)
 
-> **18.7M passages from classical Islamic books spanning 1,400 years of scholarship**
+## ما هو moslem tools؟
 
-A comprehensive collection of Islamic texts covering Quran, Hadith, Fiqh, Tafsir, Aqeedah, Seerah, and more — sourced from the Shamela library and enriched with scholarly metadata for RAG-based Islamic QA systems.
+**moslem tools** هو برنامج إسلامي متكامل يعمل على نظام **Windows**، ويهدف إلى جمع مجموعة واسعة من الأدوات والمحتوى الإسلامي في مكان واحد، ضمن تجربة استخدام بسيطة ومنظمة وسهلة الوصول.
 
-**Based on the Fanar-Sadiq Architecture** for grounded, citation-backed Islamic question answering.
+يضم البرنامج **17 تبويبة وأداة** تساعد المسلم في الوصول إلى القرآن الكريم، والأحاديث، والأذكار، ومواقيت الصلاة، والكتب والمتون الإسلامية، وغيرها من الأدوات والمحتويات الإسلامية.
+
+تم تطوير البرنامج مع الاهتمام بسهولة الاستخدام وإمكانية الوصول، ليكون منصة إسلامية متكاملة على سطح المكتب.
 
 ---
 
-## 📊 Dataset Summary
+## الميزات الرئيسية
 
-| Metric | Value |
-|--------|-------|
-| **Total Passages** | 18,701,966 |
-| **Total Size** | ~40 GB |
-| **Collections** | 10 |
-| **Source** | ElShamela Library (المكتبة الشاملة) |
-| **Languages** | Arabic (primary), English (metadata) |
-| **Time Span** | 0-1400 AH (7th-21st century CE) |
+يوفر البرنامج مجموعة كبيرة من الميزات والأدوات، ومنها:
 
----
-
-## 📚 Collections
-
-| # | Collection | Passages | Size | Description |
-|---|------------|----------|------|-------------|
-| 1 | `hadith_passages` | 5,059,547 | 11 GB | Prophetic traditions (Sahih Bukhari, Muslim, etc.) |
-| 2 | `general_islamic` | 3,410,436 | 6.1 GB | General Islamic knowledge, spirituality, ethics |
-| 3 | `fiqh_passages` | 2,397,988 | 6.6 GB | Islamic jurisprudence (Hanafi, Maliki, Shafi'i, Hanbali) |
-| 4 | `islamic_history_passages` | 2,850,288 | 5.6 GB | Islamic history (Prophetic to Ottoman era) |
-| 5 | `quran_tafsir` | 2,128,606 | 4.9 GB | Quranic exegesis (Tabari, Qurtubi, Ibn Kathir, etc.) |
-| 6 | `arabic_language_passages` | 1,015,311 | 2.2 GB | Arabic grammar, linguistics, rhetoric |
-| 7 | `aqeedah_passages` | 738,003 | 1.7 GB | Islamic creed and theology |
-| 8 | `spirituality_passages` | 438,776 | 1.1 GB | Sufism, tasawwuf, purification of the heart |
-| 9 | `usul_fiqh` | 368,388 | 874 MB | Principles of Islamic jurisprudence |
-| 10 | `seerah_passages` | 294,623 | 755 MB | Prophet Muhammad's biography |
+- مواقيت الصلاة والتاريخ مع الأذان والوقت المتبقي على الصلاة القادمة.
+- القرآن الكريم مكتوب مع إمكانيات متعددة للتصفح والبحث والتعامل مع الآيات.
+- القرآن الكريم صوتي.
+- متابعة الختمة القرآنية.
+- الأحاديث النبوية والقدسية.
+- البحث في القرآن الكريم والأحاديث.
+- طرح الأسئلة والاستفادة من الذكاء الاصطناعي.
+- لعبة الأسئلة الإسلامية.
+- مجموعة من الكتب الإسلامية مع إمكانية الاحتفاظ بالكتاب والبحث في كامل محتواه.
+- المتون الإسلامية المكتوبة.
+- إذاعات الراديو الإسلامية.
+- الأذكار والأدعية.
+- السبحة الإلكترونية.
+- أسماء الله الحسنى.
+- القصص الإسلامية.
+- مواضيع إسلامية مختلفة.
+- محول التاريخ.
+- مجموعة من الإعدادات وخيارات تخصيص البرنامج.
+- دعم اختصارات لوحة المفاتيح في العديد من الوظائف.
+- الاهتمام بإمكانية الوصول وسهولة الاستخدام.
+- وغير ذلك الكثير.
 
 ---
 
-## 📋 Schema
+## لقطات الشاشة
 
-Each passage contains the following fields:
+### 1. مواقيت الصلاة والتاريخ
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `content` | string | Main passage text (Arabic) |
-| `content_type` | string | Type of content |
-| `book_id` | int64 | Unique book identifier |
-| `book_title` | string | Title of the source book |
-| `category` | string | Category (e.g., "العقيدة", "الفقه") |
-| `author` | string | Author name |
-| `author_death` | int64 | Author's death year (Hijri) |
-| `collection` | string | Collection name |
-| `page_number` | int64 | Page number in source |
-| `section_title` | string | Section heading |
-| `hierarchy` | list | Hierarchical path [book, chapter, section] |
-| `title` | string | Passage title |
-| `chapter` | string | Chapter name |
-| `section` | string | Section name |
-| `page` | int64 | Page number |
+تتيح هذه التبويبة للمستخدم معرفة مواقيت الصلاة اليومية بحسب موقعه، مع عرض الوقت المتبقي على الصلاة القادمة، بالإضافة إلى التاريخ الميلادي والهجري، كما توفر أذانًا لكل صلاة.
 
-### Example Entry
+![تبويبة مواقيت الصلاة والتاريخ](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D9%85%D9%88%D8%A7%D9%82%D9%8A%D8%AA%20%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9%20%D9%88%D8%A7%D9%84%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE.png)
 
-```json
-{
-  "content": "الحمد لله نحمده ونستعينه ونستغفره، ونعوذ بالله من شرور أنفسنا...",
-  "book_id": 1234,
-  "book_title": "الفوائد العذاب في الرد على من لم يحكم السنة والكتاب",
-  "category": "العقيدة",
-  "author": "حمد بن ناصر آل معمر",
-  "author_death": 1225,
-  "collection": "aqeedah_passages",
-  "page_number": 1,
-  "section_title": "مقدمة المحقق",
-  "hierarchy": ["الفوائد العذاب", "مقدمة المحقق"],
-  "title": "مقدمة المحقق",
-  "chapter": null,
-  "section": null,
-  "page": 1
-}
+### 2. القرآن الكريم مكتوب
+
+توفر هذه التبويبة نسخة مكتوبة من القرآن الكريم، مع إمكانية تصفح السور والصفحات والأجزاء والأرباع والأحزاب، والبحث عن السور ومحتواها، بالإضافة إلى مجموعة متنوعة من الخيارات المتعلقة بالآيات.
+
+![تبويبة القرآن الكريم مكتوب](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D8%A7%D9%84%D9%83%D8%B1%D9%8A%D9%85%20%D9%85%D9%83%D8%AA%D9%88%D8%A8.png)
+
+#### التصفح المخصص
+
+تتيح ميزة التصفح المخصص الانتقال مباشرة إلى الموضع المطلوب في القرآن الكريم، سواء من سورة إلى سورة، أو من صفحة إلى صفحة، أو من جزء إلى جزء، أو من ربع إلى ربع، أو من حزب إلى حزب.
+
+![زر التصفح المخصص في تبويبة القرآن الكريم مكتوب](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%B2%D8%B1%20%D8%A7%D9%84%D8%AA%D8%B5%D9%81%D8%AD%20%D8%A7%D9%84%D9%85%D8%AE%D8%B5%D8%B5%20%D9%81%D9%8A%20%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D8%A7%D9%84%D9%83%D8%B1%D9%8A%D9%85%20%D9%85%D9%83%D8%AA%D9%88%D8%A8.png)
+
+#### خيارات الآية
+
+توفر التبويبة مجموعة من الخيارات المتعلقة بالآية التي يركز عليها المستخدم.
+
+![خيارات الآية المركز عليها في تبويبة القرآن الكريم مكتوب](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AE%D9%8A%D8%A7%D8%B1%D8%A7%D8%AA%20%D8%A7%D9%84%D8%A2%D9%8A%D8%A9%20%D8%A7%D9%84%D9%85%D8%B1%D9%83%D8%B2%20%D8%B9%D9%84%D9%8A%D9%87%D8%A7%20%D9%81%D9%8A%20%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D8%A7%D9%84%D9%83%D8%B1%D9%8A%D9%85%20%D9%85%D9%83%D8%AA%D9%88%D8%A8.png)
+
+#### خيارات الفئة المعروضة
+
+تتيح هذه الخيارات التحكم في الفئة التي يتم استعراض محتواها داخل التبويبة.
+
+![خيارات الفئة المعروضة في تبويبة القرآن الكريم مكتوب](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AE%D9%8A%D8%A7%D8%B1%D8%A7%D8%AA%20%D8%A7%D9%84%D9%81%D8%A6%D8%A9%20%D8%A7%D9%84%D9%85%D8%B9%D8%B1%D9%88%D8%B6%D8%A9%20%D9%81%D9%8A%20%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D8%A7%D9%84%D9%83%D8%B1%D9%8A%D9%85%20%D9%85%D9%83%D8%AA%D9%88%D8%A8.png)
+
+### 3. القرآن الكريم صوتي
+
+توفر هذه التبويبة إمكانية الاستماع إلى القرآن الكريم صوتيًا والتعامل مع التلاوة من خلال الواجهة المخصصة لذلك.
+
+![تبويبة القرآن الكريم صوتي](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D8%A7%D9%84%D9%83%D8%B1%D9%8A%D9%85%20%D8%B5%D9%88%D8%AA%D9%8A.png)
+
+### 4. متابع الختمة القرآنية
+
+تساعد هذه التبويبة المستخدم على متابعة تقدمه في ختم القرآن الكريم وتنظيم مسار القراءة.
+
+![تبويبة متابع الختمة القرآنية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D9%85%D8%AA%D8%A7%D8%A8%D8%B9%20%D8%A7%D9%84%D8%AE%D8%AA%D9%85%D8%A9%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%D9%8A%D8%A9.png)
+
+### 5. الأحاديث النبوية والقدسية
+
+توفر هذه التبويبة إمكانية الوصول إلى الأحاديث النبوية والقدسية وعرض محتواها بطريقة منظمة.
+
+![تبويبة الأحاديث النبوية والقدسية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A3%D8%AD%D8%A7%D8%AF%D9%8A%D8%AB%20%D8%A7%D9%84%D9%86%D8%A8%D9%88%D9%8A%D8%A9%20%D9%88%D8%A7%D9%84%D9%82%D8%AF%D8%B3%D9%8A%D8%A9.png)
+
+### 6. الباحث في القرآن والأحاديث
+
+توفر هذه التبويبة أداة للبحث في القرآن الكريم والأحاديث، لتسهيل الوصول إلى النتائج المتعلقة بموضوع البحث.
+
+![تبويبة الباحث في القرآن والأحاديث](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A8%D8%A7%D8%AD%D8%AB%20%D9%81%D9%8A%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D9%88%D8%A7%D9%84%D8%A3%D8%AD%D8%A7%D8%AF%D9%8A%D8%AB.png)
+
+#### خيارات نتيجة البحث عن آية
+
+توفر نتائج البحث مجموعة من الخيارات للتعامل مع الآية التي تم العثور عليها.
+
+![خيارات نتيجة البحث عن آية في تبويبة الباحث في القرآن والأحاديث](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AE%D9%8A%D8%A7%D8%B1%D8%A7%D8%AA%20%D9%86%D8%AA%D9%8A%D8%AC%D8%A9%20%D8%A7%D9%84%D8%A8%D8%AD%D8%AB%20%D8%B9%D9%86%20%D8%A2%D9%8A%D8%A9%20%D9%81%D9%8A%20%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A8%D8%A7%D8%AD%D8%AB%20%D9%81%D9%8A%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20%D9%88%D8%A7%D9%84%D8%A3%D8%AD%D8%A7%D8%AF%D9%8A%D8%AB.png)
+
+### 7. اسأل الذكاء الاصطناعي
+
+توفر هذه التبويبة واجهة مخصصة لطرح الأسئلة والاستفادة من الذكاء الاصطناعي.
+
+![تبويبة اسأل الذكاء الاصطناعي](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A5%D8%B3%D8%A3%D9%84%20%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1%20%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A.png)
+
+### 8. لعبة الأسئلة الإسلامية
+
+تقدم هذه التبويبة لعبة أسئلة إسلامية تتيح للمستخدم اختبار معلوماته بطريقة تفاعلية.
+
+![تبويبة لعبة الأسئلة الإسلامية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D9%84%D8%B9%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A3%D8%B3%D8%A6%D9%84%D8%A9%20%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9.png)
+
+### 9. الكتب الإسلامية
+
+تتيح هذه التبويبة الوصول إلى مجموعة من الكتب الإسلامية وقراءتها من داخل البرنامج.
+
+![تبويبة الكتب الإسلامية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%83%D8%AA%D8%A8%20%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9.png)
+
+#### إمكانية الاحتفاظ بالكتاب
+
+يمكن للمستخدم الاحتفاظ بالكتاب للرجوع إليه والاستفادة منه لاحقًا.
+
+![إمكانية الاحتفاظ بالكتاب](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%A5%D9%85%D9%83%D8%A7%D9%86%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A7%D8%AD%D8%AA%D9%81%D8%A7%D8%B8%20%D8%A8%D8%A7%D9%84%D9%83%D8%AA%D8%A7%D8%A8.png)
+
+#### إمكانية البحث في كامل الكتاب
+
+يمكن للمستخدم البحث في محتوى الكتاب للوصول بسرعة إلى المواضع والكلمات المطلوبة.
+
+![إمكانية البحث في كامل الكتاب](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%A5%D9%85%D9%83%D8%A7%D9%86%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A8%D8%AD%D8%AB%20%D9%81%D9%8A%20%D9%83%D8%A7%D9%85%D9%84%20%D8%A7%D9%84%D9%83%D8%AA%D8%A7%D8%A8.png)
+
+### 10. المتون الإسلامية المكتوبة
+
+توفر هذه التبويبة مجموعة من المتون الإسلامية المكتوبة مع إمكانية استعراض محتواها والتنقل بين أجزائها.
+
+![تبويبة المتون الإسلامية المكتوبة](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%85%D8%AA%D9%88%D9%86%20%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9%20%D8%A7%D9%84%D9%85%D9%83%D8%AA%D9%88%D8%A8%D8%A9.png)
+
+#### خيارات البيت
+
+توفر التبويبة خيارات متعلقة بالبيت المحدد أثناء قراءة المتن.
+
+![خيارات البيت في تبويبة المتون الإسلامية المكتوبة](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AE%D9%8A%D8%A7%D8%B1%D8%A7%D8%AA%20%D8%A7%D9%84%D8%A8%D9%8A%D8%AA%20%D9%81%D9%8A%20%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%85%D8%AA%D9%88%D9%86%20%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9%20%D8%A7%D9%84%D9%85%D9%83%D8%AA%D9%88%D8%A8%D8%A9.png)
+
+#### خيارات الباب أو المتن
+
+توفر التبويبة خيارات مرتبطة بالباب أو المتن المعروض.
+
+![خيارات الباب أو المتن في تبويبة المتون الإسلامية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AE%D9%8A%D8%A7%D8%B1%D8%A7%D8%AA%20%D8%A7%D9%84%D8%A8%D8%A7%D8%A8%20%D8%A3%D9%88%20%D8%A7%D9%84%D9%85%D8%AA%D9%86%20%D9%81%D9%8A%20%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%85%D8%AA%D9%88%D9%86%20%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9.png)
+
+### 11. إذاعات الراديو الإسلامية
+
+توفر هذه التبويبة مجموعة من الإذاعات والقنوات الصوتية الإسلامية للاستماع إليها من داخل البرنامج.
+
+![تبويبة إذاعات الراديو الإسلامية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A5%D8%B0%D8%A7%D8%B9%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B1%D8%A7%D8%AF%D9%8A%D9%88%20%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9.png)
+
+### 12. الأذكار والأدعية
+
+توفر هذه التبويبة مجموعة من الأذكار والأدعية مع واجهة مخصصة لاستعراضها.
+
+![تبويبة الأذكار والأدعية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A3%D8%B0%D9%83%D8%A7%D8%B1%20%D9%88%D8%A7%D9%84%D8%A3%D8%AF%D8%B9%D9%8A%D8%A9.png)
+
+#### عرض وتصفح الأذكار
+
+يمكن للمستخدم اختيار الأذكار وتصفح محتواها والانتقال بينها.
+
+![عرض وتصفح الأذكار في تبويبة الأذكار والأدعية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%B9%D8%B1%D8%B6%20%D9%88%D8%AA%D8%B5%D9%81%D8%AD%20%D8%A7%D9%84%D8%A3%D8%B0%D9%83%D8%A7%D8%B1%20%D9%81%D9%8A%20%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D8%A3%D8%B0%D9%83%D8%A7%D8%B1%20%D9%88%D8%A7%D9%84%D8%A3%D8%AF%D8%B9%D9%8A%D8%A9.png)
+
+### 13. السبحة الإلكترونية
+
+توفر هذه التبويبة سبحة إلكترونية للتسبيح والذكر، مع إمكانية اختيار الذكر وتحديد الحدود المناسبة للتسبيح.
+
+![تبويبة السبحة الإلكترونية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D8%B3%D8%A8%D8%AD%D8%A9%20%D8%A7%D9%84%D8%A5%D9%84%D9%83%D8%AA%D8%B1%D9%88%D9%86%D9%8A%D8%A9.png)
+
+#### قائمة الأذكار الافتراضية
+
+تتضمن السبحة قائمة من الأذكار الافتراضية التي يمكن اختيار الذكر المطلوب منها.
+
+![قائمة الأذكار الافتراضية في السبحة الإلكترونية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D9%82%D8%A7%D8%A6%D9%85%D8%A9%20%D8%A7%D9%84%D8%A3%D8%B0%D9%83%D8%A7%D8%B1%20%D8%A7%D9%84%D8%A7%D9%81%D8%AA%D8%B1%D8%A7%D8%B6%D9%8A%D8%A9%20%D9%81%D9%8A%20%D8%A7%D9%84%D8%B3%D8%A8%D8%AD%D8%A9%20%D8%A7%D9%84%D8%A5%D9%84%D9%83%D8%AA%D8%B1%D9%88%D9%86%D9%8A%D8%A9.png)
+
+#### إضافة حد للتسبيح
+
+يمكن للمستخدم إضافة حد مخصص لعدد مرات التسبيح.
+
+![إضافة حد للتسبيح](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%A5%D8%B6%D8%A7%D9%81%D8%A9%20%D8%AD%D8%AF%20%D9%84%D9%84%D8%AA%D8%B3%D8%A8%D9%8A%D8%AD.png)
+
+#### قائمة الحدود
+
+توفر السبحة قائمة بالحدود المضافة لاختيار الحد المطلوب أثناء التسبيح.
+
+![قائمة الحدود في تبويبة السبحة الإلكترونية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D9%82%D8%A7%D8%A6%D9%85%D8%A9%20%D8%A7%D9%84%D8%AD%D8%AF%D9%88%D8%AF%20%D9%81%D9%8A%20%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D8%B3%D8%A8%D8%AD%D8%A9%20%D8%A7%D9%84%D8%A5%D9%84%D9%83%D8%AA%D8%B1%D9%88%D9%86%D9%8A%D8%A9.png)
+
+### 14. أسماء الله الحسنى
+
+توفر هذه التبويبة إمكانية استعراض أسماء الله الحسنى ضمن واجهة مخصصة ومنظمة.
+
+![تبويبة أسماء الله الحسنى](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A3%D8%B3%D9%85%D8%A7%D8%A1%20%D8%A7%D9%84%D9%84%D9%87%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D9%89.png)
+
+### 15. القصص الإسلامية
+
+تتيح هذه التبويبة الوصول إلى مجموعة من القصص الإسلامية وقراءتها من داخل البرنامج.
+
+![تبويبة القصص الإسلامية](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%82%D8%B5%D8%B5%20%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9.png)
+
+### 16. مواضيع إسلامية مختلفة
+
+توفر هذه التبويبة مجموعة متنوعة من المواضيع الإسلامية في مكان واحد.
+
+![تبويبة مواضيع إسلامية مختلفة](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D9%85%D9%88%D8%A7%D8%B6%D9%8A%D8%B9%20%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%8A%D8%A9%20%D9%85%D8%AE%D8%AA%D9%84%D9%81%D8%A9.png)
+
+### 17. محول التاريخ
+
+توفر هذه الأداة إمكانية التعامل مع التواريخ والتحويل بينها من خلال واجهة مخصصة.
+
+![تبويبة محول التاريخ](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%A8%D9%88%D9%8A%D8%A8%D8%A9%20%D9%85%D8%AD%D9%88%D9%84%20%D8%A7%D9%84%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE.png)
+
+---
+
+## المزيد من الخيارات
+
+يوفر البرنامج قائمة إضافية للوصول إلى مجموعة من الخيارات والأدوات والإعدادات الأخرى.
+
+![قائمة المزيد من الخيارات](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D9%82%D8%A7%D8%A6%D9%85%D8%A9%20%D8%A7%D9%84%D9%85%D8%B2%D9%8A%D8%AF%20%D9%85%D9%86%20%D8%A7%D9%84%D8%AE%D9%8A%D8%A7%D8%B1%D8%A7%D8%AA.png)
+
+### إعدادات البرنامج
+
+يحتوي البرنامج على قسم مخصص للإعدادات للتحكم في الإعدادات المتاحة وتخصيص تجربة الاستخدام.
+
+![إعدادات البرنامج](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%A5%D8%B9%D8%AF%D8%A7%D8%AF%D8%A7%D8%AA%20%D8%A7%D9%84%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC.png)
+
+#### تصنيف الإعدادات
+
+تم تنظيم إعدادات البرنامج ضمن تصنيفات لتسهيل الوصول إلى الإعداد المطلوب.
+
+![تصنيف الإعدادات](https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/raw/main/moslemTools/Screenshots/%D8%AA%D8%B5%D9%86%D9%8A%D9%81%20%D8%A7%D9%84%D8%A5%D8%B9%D8%AF%D8%A7%D8%AF%D8%A7%D8%AA.png)
+
+---
+
+## إمكانية الوصول
+
+تم تطوير البرنامج مع الاهتمام بسهولة الاستخدام وإمكانية الوصول، بحيث تكون الأدوات والمحتويات المختلفة متاحة من خلال واجهات واضحة ومنظمة، مع الاعتماد على اختصارات لوحة المفاتيح في العديد من الوظائف.
+
+---
+
+## بناء البرنامج من الكود المصدري
+
+إذا كنت مطورًا وترغب في تجربة البرنامج أو المساهمة في تطويره، يمكنك استنساخ المستودع من GitHub وتشغيله من الكود المصدري.
+
+### المتطلبات
+
+- Python
+- Windows
+- Git
+- الحزم الموجودة في `requirements.txt`
+
+### تثبيت المتطلبات
+
+```bash
+pip install -r requirements.txt
+```
+
+### تشغيل البرنامج
+
+```bash
+python main.py
 ```
 
 ---
 
-## 📊 Collection Breakdown
+## معلومات تقنية
 
-### Passages Distribution
-
-```
-hadith_passages              ████████████████████████████████  5,059,547 (27%)
-general_islamic              ████████████████████             3,410,436 (18%)
-fiqh_passages                ██████████████                    2,397,988 (13%)
-islamic_history_passages     ██████████████                    2,850,288 (15%)
-quran_tafsir                 ████████████                      2,128,606 (11%)
-arabic_language_passages     ██████                            1,015,311 (5%)
-aqeedah_passages             ████                               738,003 (4%)
-spirituality_passages        ██                                 438,776 (2%)
-usul_fiqh                    █                                  368,388 (2%)
-seerah_passages              █                                  294,623 (2%)
-```
+- لغة البرمجة: **Python**
+- الواجهة الرسومية: **PyQt6**
+- النظام المستهدف: **Windows**
 
 ---
 
-## 🔧 How to Load
+## إخلاء المسؤولية
 
-### Using HuggingFace Datasets
-
-```python
-from datasets import load_dataset
-
-# Load full dataset
-ds = load_dataset("Kandil7/Athar-Datasets")
-
-# Access specific collection
-for row in ds['train']:
-    if row['collection'] == 'fiqh_passages':
-        print(row['content'][:200])
-        break
-
-# Filter by collection
-hadith_ds = ds['train'].filter(lambda x: x['collection'] == 'hadith_passages')
-```
-
-### Streaming Mode (Memory Efficient)
-
-```python
-from datasets import load_dataset
-
-# Stream without downloading
-ds = load_dataset("Kandil7/Athar-Datasets", split="train", streaming=True)
-
-for i, passage in enumerate(ds):
-    if i >= 5:
-        break
-    print(f"{passage['collection']}: {passage['title']}")
-```
-
-### Direct JSONL Access
-
-```python
-import json
-
-# Load specific collection
-with open('hadith_passages.jsonl', 'r', encoding='utf-8') as f:
-    passages = [json.loads(line) for line in f]
-
-print(f"Loaded {len(passages):,} hadith passages")
-```
+المحتوى الإسلامي الموجود داخل البرنامج مأخوذ من مصادر مختلفة، ويُرجى الرجوع إلى المصادر الأصلية والتحقق من المعلومات عند الحاجة.
 
 ---
 
-## 💡 Usage Examples
+## الترخيص
 
-### Example 1: Semantic Search with RAG
-
-```python
-from sentence_transformers import SentenceTransformer
-import numpy as np
-import json
-
-# Load embedding model
-model = SentenceTransformer('BAAI/bge-m3')
-
-# Load a sample collection
-with open('fiqh_passages.jsonl', 'r', encoding='utf-8') as f:
-    passages = [json.loads(line) for line in f][:1000]
-
-# Create embeddings
-texts = [p['content'] for p in passages]
-embeddings = model.encode(texts)
-
-# Search
-query = "ما حكم صلاة الجماعة؟"
-query_embedding = model.encode([query])[0]
-
-# Find most similar
-scores = np.dot(embeddings, query_embedding)
-top_idx = np.argsort(scores)[-5:][::-1]
-
-for idx in top_idx:
-    print(f"Score: {scores[idx]:.3f}")
-    print(passages[idx]['content'][:200])
-    print("---")
-```
-
-### Example 2: Filter by Era
-
-```python
-# Filter classical era scholars (200-500 AH)
-classical_passages = [
-    p for p in passages
-    if 200 <= p.get('author_death', 0) <= 500
-]
-
-# Filter by author
-imam_bukhari = [
-    p for p in hadith_passages
-    if 'Bukhari' in p.get('author', '')
-]
-```
-
-### Example 3: Citation-Enhanced QA with Athar
-
-```python
-# Use the Athar system for grounded answers
-# See: https://github.com/Kandil7/Athar
-
-from Athar import FiqhAgent
-
-agent = FiqhAgent()
-result = await agent.execute(
-    query="ما حكم صلاة الجماعة؟",
-    filters={"era": "classical"}
-)
-
-# Result includes citations
-for citation in result.citations:
-    print(citation.source)
-    print(citation.text)
-```
+راجع ملف `LICENSE` الموجود في المستودع لمعرفة شروط استخدام المشروع وإعادة توزيعه.
 
 ---
 
-## 📖 Source: ElShamela Library (المكتبة الشاملة)
+## شكر وتقدير
 
-This dataset is derived from **ElShamela Library** (المكتبة الشاملة) — the largest comprehensive digital library of Islamic texts.
+جزيل الشكر لكل من ساهم في تطوير المشروع أو اختباره أو تقديم الملاحظات والاقتراحات التي ساعدت في تحسينه.
 
-### About ElShamela
-
-**ElShamela** (المكتبة الشاملة) is a free, open-access digital library that has been digitizing and preserving classical Islamic texts for over two decades.
-
-**Website:** https://shamela.ws/
-
-### Processing Pipeline
-
-1. **Extracted** books from ElShamela Library format
-2. **Converted** from proprietary Shamela format to plain text
-3. **Split** into pages and passages for granular retrieval
-4. **Enriched** with metadata:
-   - Author names and death years (Hijri)
-   - Book titles and categories
-   - Chapter and section headings
-   - Page numbers
-5. **Organized** into 10 scholarly collections
-
----
-
-## 🏗️ Scholarly Eras
-
-| Era | Range (AH) | Range (CE) | Description |
-|-----|-----------|-----------|-------------|
-| **Prophetic** | 0-100 | 622-718 | Companions of Prophet ﷺ |
-| **Tabi'un** | 100-200 | 718-815 | Successors |
-| **Classical** | 200-500 | 815-1106 | Golden age of Islamic scholarship |
-| **Medieval** | 500-900 | 1106-1496 | Post-classical period |
-| **Ottoman** | 900-1300 | 1496-1883 | Ottoman era |
-| **Modern** | 1300+ | 1883+ | Modern period |
-
----
-
-## 🤝 Related Projects
-
-- **[Athar](https://github.com/Kandil7/Athar)** — Production-ready Islamic QA system using this dataset
-- **[Fanar-Sadiq Architecture](docs/Fanar-Sadiq%20A%20Multi-Agent%20Architecture%20for%20Grounded%20Islamic%20QA.pdf)** — Research paper
-
----
-
-## 📝 Citation
-
-```bibtex
-@misc{athar-datasets-2026,
-  title={Athar Islamic QA Datasets},
-  author={Kandil, Ahmed},
-  year={2026},
-  url={https://huggingface.co/datasets/Kandil7/Athar-Datasets},
-  note={18.7M passages from 10 Islamic collections}
-}
-```
-
----
-
-## ⚠️ Usage Notes
-
-1. **Scholarly Context:** These texts represent classical Islamic scholarship. Always consult qualified scholars for religious rulings.
-
-2. **Hadith Authenticity:** Hadith passages include chains of narration (esnad). Use authenticity grading to evaluate reliability.
-
-3. **Fiqh Diversity:** The fiqh collection represents multiple schools of thought (Hanafi, Maliki, Shafi'i, Hanbali).
-
-4. **Language:** Primary content is in Classical Arabic. Metadata includes English translations.
-
-5. **Licensing:** MIT License — free for research and commercial use.
-
----
-
-## 📁 File Structure
-
-```
-Athar-Datasets/
-├── hadith_passages.jsonl              # 5,059,547 passages (11 GB)
-├── general_islamic.jsonl              # 3,410,436 passages (6.1 GB)
-├── fiqh_passages.jsonl                # 2,397,988 passages (6.6 GB)
-├── islamic_history_passages.jsonl     # 2,850,288 passages (5.6 GB)
-├── quran_tafsir.jsonl                 # 2,128,606 passages (4.9 GB)
-├── arabic_language_passages.jsonl      # 1,015,311 passages (2.2 GB)
-├── aqeedah_passages.jsonl             # 738,003 passages (1.7 GB)
-├── spirituality_passages.jsonl         # 438,776 passages (1.1 GB)
-├── usul_fiqh.jsonl                    # 368,388 passages (874 MB)
-└── seerah_passages.jsonl              # 294,623 passages (755 MB)
-```
-
----
-
-## 📞 Contact & Support
-
-- **GitHub:** https://github.com/Kandil7/Athar
-- **HuggingFace:** https://huggingface.co/Kandil7
-
----
-
-<div align="center">
-
-**Built with ❤️ for the Muslim community**
-
-🕌 Athar Islamic QA • 18.7M passages • 10 collections • 1,400 years of scholarship
-
-</div>
+جزاكم الله خيرًا.
