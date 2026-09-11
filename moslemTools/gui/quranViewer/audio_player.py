@@ -134,7 +134,7 @@ class AudioPlayerMixin:
                 guiTools.MessageBox.error(self, "خطأ", "لا يوجد اتصال بالإنترنت")
                 return
             path = qt2.QUrl(reciters[reciter_key] + file_name)
-        is_playing_this_verse = (self.media.playbackState() != QMediaPlayer.PlaybackState.StoppedState) and (self.media.source() == path)
+        is_playing_this_verse = (self.media.playbackState() != QMediaPlayer.PlaybackState.StoppedState) and (self.media.source() == path) and (self.media.mediaStatus() != QMediaPlayer.MediaStatus.EndOfMedia)
         if is_playing_this_verse:
             self.pending_seek_resume = False
             if self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -154,7 +154,9 @@ class AudioPlayerMixin:
             self.media.stop()
             self.media_progress.setVisible(True)
             self.time_label.setVisible(True)
-            self.media.setSource(path)
+            if self.media.source() != path:
+                self.media.setSource(path)
+            self.media.setPosition(0)
             qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.media.play()))
 
     def onPlayToEnd(self):
@@ -239,6 +241,8 @@ class AudioPlayerMixin:
                 self.pending_seek_resume = False
                 self.media.play()
         if state == QMediaPlayer.MediaStatus.EndOfMedia:
+            self.media.stop()
+            self.media.setPosition(0)
             self.media_progress.setVisible(False)
             self.time_label.setVisible(False)
         elif state == QMediaPlayer.MediaStatus.InvalidMedia:
