@@ -119,6 +119,12 @@ def show_random_quote_message(parent=None):
 
 def run_startup_checks():
     try:
+        from functions.telemetry import record_device_async
+        record_device_async()
+    except Exception as e:
+        print(f"Error recording device telemetry: {e}")
+
+    try:
         check_missed_khatmah_alert(None)
     except Exception as e:
         print(f"Error in khatmah startup alert: {e}")
