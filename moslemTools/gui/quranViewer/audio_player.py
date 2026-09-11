@@ -22,6 +22,18 @@ with open("data/json/files/all_reciters.json", "r", encoding="utf-8-sig") as fil
 
 class AudioPlayerMixin:
     def seek_position(self, new_position):
+        duration = self.media.duration()
+        if duration > 0 and new_position >= duration:
+            self.pending_seek_resume = False
+            self.media.stop()
+            self.media.setPosition(0)
+            self.media_progress.blockSignals(True)
+            self.media_progress.setValue(0)
+            self.media_progress.blockSignals(False)
+            self.update_time_label(0, duration)
+            self.media_progress.setVisible(False)
+            self.time_label.setVisible(False)
+            return
         is_playing = self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState
         if is_playing:
             self.media.pause()
@@ -34,6 +46,9 @@ class AudioPlayerMixin:
         if getattr(self, 'pending_seek_resume', False):
             if hasattr(self, 'media_progress') and self.media_progress.isSliderDown():
                 qt2.QTimer.singleShot(150, self._check_seek_resume)
+                return
+            if self.media.mediaStatus() == QMediaPlayer.MediaStatus.EndOfMedia:
+                self.pending_seek_resume = False
                 return
             if self.media.mediaStatus() in (QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.LoadedMedia):
                 if not self.media.source().isLocalFile() and not guiTools.check_internet():
@@ -234,19 +249,27 @@ class AudioPlayerMixin:
         self.time_label.setText(f"الوقت المنقضي: {position_str} | الوقت المتبقي: {remaining_str} | مدة الآية: {duration_str}")
 
     def on_state(self, state):
+        if state == QMediaPlayer.MediaStatus.EndOfMedia:
+            duration = self.media.duration()
+            self.pending_seek_resume = False
+            self.media.stop()
+            self.media.setPosition(0)
+            self.media_progress.blockSignals(True)
+            self.media_progress.setValue(0)
+            self.media_progress.blockSignals(False)
+            self.update_time_label(0, duration)
+            self.media_progress.setVisible(False)
+            self.time_label.setVisible(False)
+            return
         if getattr(self, 'pending_seek_resume', False):
             if hasattr(self, 'media_progress') and self.media_progress.isSliderDown():
                 return
             if state in (QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.LoadedMedia):
                 self.pending_seek_resume = False
                 self.media.play()
-        if state == QMediaPlayer.MediaStatus.EndOfMedia:
-            self.media.stop()
-            self.media.setPosition(0)
-            self.media_progress.setVisible(False)
-            self.time_label.setVisible(False)
         elif state == QMediaPlayer.MediaStatus.InvalidMedia:
             if not self.media.source().isLocalFile():
+                self.pending_seek_resume = False
                 self.media.stop()
                 self.media_progress.setVisible(False)
                 self.time_label.setVisible(False)
@@ -257,6 +280,7 @@ class AudioPlayerMixin:
 
     def on_media_error(self, error=None, error_string=""):
         if not self.media.source().isLocalFile():
+            self.pending_seek_resume = False
             self.media.stop()
             self.media_progress.setVisible(False)
             self.time_label.setVisible(False)
