@@ -105,7 +105,7 @@ class TafseerAndInfoMixin:
                              f"تنتهي في الحزب: {(max(rubs)-1)//4+1}.\n"
                              f"تبدأ في الربع: {min(rubs)}.\n"
                              f"تنتهي في الربع: {max(rubs)}.")
-                guiTools.qMessageBox.MessageBox.view(self, f"معلومات سورة: {item_text}", info_text)
+                guiTools.qMessageBox.MessageBox.view(self, f"معلومات سورة {item_text}", info_text)
             else:
                 guiTools.qMessageBox.MessageBox.error(self, "خطأ", "لم يتم العثور على معلومات.")
         except Exception as e:

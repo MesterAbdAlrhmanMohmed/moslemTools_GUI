@@ -226,7 +226,7 @@ class ContextMenuMixin:
             if self.type == 0:
                 surah_name_clean = re.sub(r'^\d+[\s\.\-]*', '', str(self.category))
                 cat_target_label = f"سورة {surah_name_clean}"
-                info_action_text = f"معلومات سورة: {surah_name_clean}"
+                info_action_text = f"معلومات سورة {surah_name_clean}"
                 category_menu_title = f"خيارات سورة {surah_name_clean}"
                 tafseer_action_text = f"تفسير سورة {surah_name_clean}"
                 iarab_action_text = f"إعراب سورة {surah_name_clean}"
@@ -234,7 +234,7 @@ class ContextMenuMixin:
             else:
                 cat_name_dyn = "صفحة" if self.type == 1 else category_name_al
                 cat_target_label = f"{cat_name_dyn} {self.category}"
-                info_action_text = f"معلومات {category_name_al}: {self.category}"
+                info_action_text = f"معلومات {category_name_al} {self.category}"
                 category_menu_title = f"خيارات {category_name_al}"
                 tafseer_action_text = f"تفسير {category_name_al}"
                 iarab_action_text = f"إعراب {category_name_al}"
@@ -281,7 +281,7 @@ class ContextMenuMixin:
         except Exception:
             surah_name = None
         if surah_name and (self.type != 0 or self.is_search_view or self.type == 5):
-            currentSurahInfoAction = qt1.QAction(f"معلومات سورة: {surah_name}", self)
+            currentSurahInfoAction = qt1.QAction(f"معلومات سورة {surah_name}", self)
             currentSurahInfoAction.setShortcut("ctrl+alt+f")
             currentSurahInfoAction.triggered.connect(self.show_current_surah_info)
             surahOption.addAction(currentSurahInfoAction)
