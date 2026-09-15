@@ -217,18 +217,18 @@ class settings(qt.QDialog):
         self.ok.clicked.connect(self.fok)
         self.ok.setStyleSheet("""
             QPushButton {
-                background-color: #006400;
-                color: #e0e0e0;
+                background-color: #008000;
+                color: white;
                 padding: 12px;
                 font-weight: bold;
                 border-radius: 4px;
                 font-size: 14px;
             }
             QPushButton:hover {
-                background-color: #008000;
+                background-color: #006600;
             }
             QPushButton:pressed {
-                background-color: #004d00;
+                background-color: #006600;
             }
         """)
         self.defolt = guiTools.QPushButton("استعادة الإعدادات الافتراضية")

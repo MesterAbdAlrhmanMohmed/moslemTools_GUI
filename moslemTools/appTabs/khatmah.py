@@ -109,18 +109,18 @@ class KhatmahTab(qt.QWidget):
         self.btn_start.setFont(font_bold)
         self.btn_start.setStyleSheet("""
             QPushButton {
-                background-color: #006400;
-                color: #e0e0e0;
+                background-color: #008000;
+                color: white;
                 padding: 8px 16px;
                 font-weight: bold;
                 border-radius: 4px;
                 font-size: 14px;
             }
             QPushButton:hover {
-                background-color: #008000;
+                background-color: #006600;
             }
             QPushButton:pressed {
-                background-color: #004d00;
+                background-color: #006600;
             }
         """)
         self.btn_start.setMinimumWidth(180)
@@ -164,18 +164,18 @@ class KhatmahTab(qt.QWidget):
         self.btn_mark_today.setFont(font_bold)
         self.btn_mark_today.setStyleSheet("""
             QPushButton {
-                background-color: #006400;
-                color: #e0e0e0;
+                background-color: #008000;
+                color: white;
                 padding: 8px 16px;
                 font-weight: bold;
                 border-radius: 4px;
                 font-size: 14px;
             }
             QPushButton:hover {
-                background-color: #008000;
+                background-color: #006600;
             }
             QPushButton:pressed {
-                background-color: #004d00;
+                background-color: #006600;
             }
         """)
         self.btn_mark_today.setShortcut("ctrl+t")
