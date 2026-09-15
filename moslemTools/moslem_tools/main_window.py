@@ -1,5 +1,5 @@
 from custom_errors import *
-import sys, traceback, threading, random, os, shutil, datetime, webbrowser, requests, pyperclip, winsound, ctypes
+import sys, subprocess, traceback, threading, random, os, shutil, datetime, webbrowser, requests, pyperclip, winsound, ctypes
 from ctypes import wintypes
 import ujson as json
 from pynput import keyboard as p_key
@@ -25,6 +25,8 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
     audio_sig = qt2.pyqtSignal()
     text_sig = qt2.pyqtSignal()
     toggle_sig = qt2.pyqtSignal()
+    exit_app_sig = qt2.pyqtSignal()
+    restart_app_sig = qt2.pyqtSignal()
 
     def __init__(self, startup_window_shown=False):
         super().__init__()
@@ -34,7 +36,15 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
         self.audio_sig.connect(self.random_audio_theker)
         self.text_sig.connect(self.show_random_theker)
         self.toggle_sig.connect(self.toggle_visibility)
-        self.hk_listener = p_key.GlobalHotKeys({'<alt>+<cmd>+p': self.audio_sig.emit, '<alt>+<cmd>+l': self.text_sig.emit, '<cmd>+<alt>+h': self.toggle_sig.emit})
+        self.exit_app_sig.connect(self.exit_application)
+        self.restart_app_sig.connect(self.restart_application)
+        self.hk_listener = p_key.GlobalHotKeys({
+            '<alt>+<cmd>+p': self.audio_sig.emit,
+            '<alt>+<cmd>+l': self.text_sig.emit,
+            '<cmd>+<alt>+h': self.toggle_sig.emit,
+            '<cmd>+<alt>+c': self.exit_app_sig.emit,
+            '<cmd>+<alt>+r': self.restart_app_sig.emit
+        })
         self.hk_listener.start()
         self.info_update_timer = qt2.QTimer(self)
         self.info_update_timer.timeout.connect(self.viewInfoTextEdit)
@@ -205,7 +215,7 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
         self.show_action = qt1.QAction("إخفاء البرنامج")
         self.show_action.triggered.connect(self.toggle_visibility)
         self.close_action = qt1.QAction("إغلاق البرنامج")
-        self.close_action.triggered.connect(lambda: qt.QApplication.quit())
+        self.close_action.triggered.connect(self.exit_application)
         self.tray_menu.addAction(self.random_thecker_audio)
         self.tray_menu.addAction(self.random_thecker_text)
         self.tray_menu.addAction(self.show_action)
@@ -234,4 +244,31 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
             except Exception as e:
                 print(e)
         threading.Thread(target=run, daemon=True).start()
+
+    def exit_application(self):
+        app.exit = False
+        app_instance = qt.QApplication.instance()
+        if app_instance:
+            app_instance.quit()
+        import os
+        os._exit(0)
+
+    def restart_application(self):
+        app.exit = False
+        try:
+            shared = qt2.QSharedMemory("com.MTC.moslemTools")
+            shared.attach()
+            shared.detach()
+        except Exception:
+            pass
+        if getattr(sys, 'frozen', False):
+            args = [sys.executable] + sys.argv[1:]
+        else:
+            args = [sys.executable] + sys.argv
+        subprocess.Popen(args)
+        app_instance = qt.QApplication.instance()
+        if app_instance:
+            app_instance.quit()
+        import os
+        os._exit(0)
 

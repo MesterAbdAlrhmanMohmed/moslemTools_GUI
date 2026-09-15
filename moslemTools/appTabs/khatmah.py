@@ -107,7 +107,22 @@ class KhatmahTab(qt.QWidget):
 
         self.btn_start = guiTools.QPushButton("بدء ختمة جديدة")
         self.btn_start.setFont(font_bold)
-        self.btn_start.setStyleSheet("background-color: #008000; color: white;")
+        self.btn_start.setStyleSheet("""
+            QPushButton {
+                background-color: #006400;
+                color: #e0e0e0;
+                padding: 8px 16px;
+                font-weight: bold;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #008000;
+            }
+            QPushButton:pressed {
+                background-color: #004d00;
+            }
+        """)
         self.btn_start.setMinimumWidth(180)
         self.btn_start.clicked.connect(self.start_new_khatmah)
 
@@ -147,7 +162,22 @@ class KhatmahTab(qt.QWidget):
 
         self.btn_mark_today = guiTools.QPushButton("تسجيل إتمام ورد اليوم")
         self.btn_mark_today.setFont(font_bold)
-        self.btn_mark_today.setStyleSheet("background-color: #008000; color: white;")
+        self.btn_mark_today.setStyleSheet("""
+            QPushButton {
+                background-color: #006400;
+                color: #e0e0e0;
+                padding: 8px 16px;
+                font-weight: bold;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #008000;
+            }
+            QPushButton:pressed {
+                background-color: #004d00;
+            }
+        """)
         self.btn_mark_today.setShortcut("ctrl+t")
         self.btn_mark_today.setAccessibleDescription("control plus t")
         self.btn_mark_today.clicked.connect(self.mark_today_completed)

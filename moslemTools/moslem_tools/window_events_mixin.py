@@ -51,16 +51,28 @@ class WindowEventsMixin:
             self.show_action.setText("إخفاء البرنامج")
 
     def closeEvent(self, event):
-        if app.exit:
-            if settings_handler.get("g", "exitDialog") == "True":
-                m = guiTools.ExitApp(self)
-                m.exec()
-                if m:
-                    event.ignore()
-            else:
-                self.close()
+        if not app.exit:
+            if event:
+                event.accept()
+            return
+
+        if settings_handler.get("g", "exitDialog") == "True":
+            m = guiTools.ExitApp(self)
+            m.exec()
+            if event:
+                event.ignore()
         else:
-            self.close()
+            if event:
+                event.accept()
+            if hasattr(self, "exit_application"):
+                self.exit_application()
+            else:
+                app.exit = False
+                app_instance = qt.QApplication.instance()
+                if app_instance:
+                    app_instance.quit()
+                import os
+                os._exit(0)
 
     def open_developers_window(self):
         self.developers_window = AboutDeveloper()

@@ -27,6 +27,7 @@ class FontSettings(qt.QWidget):
         ("checkForUpdate", "نافذة ما الجديد في التحديثات"),
         ("motonViewer", "عارض المتون الإسلامية"),
         ("motonPlayer", "مشغل المتون الإسلامية"),
+        ("exitApp", "نافذة خيارات تشغيل البرنامج"),
     ]
 
     def __init__(self):
