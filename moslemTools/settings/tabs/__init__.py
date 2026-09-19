@@ -18,5 +18,6 @@ from .motonPlayerSettings import MotonPlayerSettings
 from .motonDisplaySettings import MotonDisplaySettings
 from .motonRecitersSettings import MotonRecitersSettings
 from .quranRecitersSettings import QuranRecitersSettings
+from .page_turn_sound_settings import PageTurnSoundSettings
 
 

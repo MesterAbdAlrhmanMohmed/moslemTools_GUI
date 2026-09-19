@@ -1,0 +1,1 @@
+from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit as QNavigableTextEdit

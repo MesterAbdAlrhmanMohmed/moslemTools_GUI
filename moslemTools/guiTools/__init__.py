@@ -17,4 +17,6 @@ from .speak import speak
 from .QNavigableLabel import QNavigableLabel
 from .QCustomContextMenu import QCustomContextMenu
 from .QCustomTabWidget import QCustomTabWidget, QCustomTabBar
+from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit
+from .QNavigableTextEdit import QNavigableTextEdit
 from .internet import check_internet

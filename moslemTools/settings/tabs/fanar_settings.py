@@ -46,7 +46,7 @@ class FanarSettings(qt.QWidget):
         self.get_api_button.setAutoDefault(False)
         self.get_api_button.clicked.connect(lambda: webbrowser.open("https://api.fanar.qa/request/ar"))
         main_layout.addWidget(self.get_api_button)
-        self.instructions_view = guiTools.QReadOnlyTextEdit()
+        self.instructions_view = guiTools.QNavigableLabelAsTextEdit()
         instructions_text = (
             "للحصول على مفتاح الـ API، اتبع التعليمات الآتية:\n\n"
             "قم بالضغط على الزر أعلاه، وسيتم توجيهك إلى صفحة ويب لكتابة بياناتك.\n"

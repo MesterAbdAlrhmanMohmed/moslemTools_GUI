@@ -246,6 +246,12 @@ class NavigationDisplayMixin:
         if not hasattr(self, 'context_menu_active') or not self.context_menu_active:
             self.text.setText(self.saved_text)
             self.update_font_size()
+            target_ayah = getattr(self, '_target_ayah_after_load', None)
+            if target_ayah is not None:
+                self._go_to_specific_ayah(target_ayah)
+                self._target_ayah_after_load = None
+            elif hasattr(self, 'initial_ayah_index') and self.initial_ayah_index:
+                self._go_to_specific_ayah(self.initial_ayah_index)
 
     def removeTashkeelForAyah(self, cursor_pos=None):
         if self._is_invalid_search_line():
@@ -478,7 +484,8 @@ class NavigationDisplayMixin:
         new_text = self.typeResult[indexs][1]
         self._update_view_for_new_content(new_text)
         self.update_nav_buttons_text()
-        winsound.PlaySound("data/sounds/next_page.wav",1)
+        if settings.settings_handler.get("page_turn_sound", "quranViewer") != "False":
+            winsound.PlaySound("data/sounds/next_page.wav", 1)
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
         self.resume_after_action()
@@ -495,7 +502,8 @@ class NavigationDisplayMixin:
         new_text = self.typeResult[indexs][1]
         self._update_view_for_new_content(new_text)
         self.update_nav_buttons_text()
-        winsound.PlaySound("data/sounds/previous_page.wav",1)
+        if settings.settings_handler.get("page_turn_sound", "quranViewer") != "False":
+            winsound.PlaySound("data/sounds/previous_page.wav", 1)
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
         self.resume_after_action()
@@ -532,8 +540,67 @@ class NavigationDisplayMixin:
             self.update_nav_buttons_text()
         self.resume_after_action()
 
+    def _get_current_ayah_details(self, cat_type, category, ayah_index):
+        data = functions.quranJsonControl.data
+        cat_str = str(category)
+        if cat_type == 0:
+            m = re.match(r"^(\d+)", cat_str)
+            s_key = m.group(1) if m else cat_str
+            if s_key in data and 0 <= ayah_index < len(data[s_key]["ayahs"]):
+                a = data[s_key]["ayahs"][ayah_index]
+                return {
+                    "surah_num": int(s_key),
+                    "ayah_in_surah": a["numberInSurah"],
+                    "page": a["page"],
+                    "juz": a["juz"],
+                    "quarter": a["hizbQuarter"],
+                    "hizb": (a["hizbQuarter"] - 1) // 4 + 1,
+                    "global_num": a["number"]
+                }
+        else:
+            matching = []
+            for s_key, s_val in data.items():
+                for a in s_val["ayahs"]:
+                    if cat_type == 1 and str(a["page"]) == cat_str:
+                        matching.append((s_key, a))
+                    elif cat_type == 2 and str(a["juz"]) == cat_str:
+                        matching.append((s_key, a))
+                    elif cat_type == 3 and str(a["hizbQuarter"]) == cat_str:
+                        matching.append((s_key, a))
+                    elif cat_type == 4 and str((a["hizbQuarter"] - 1) // 4 + 1) == cat_str:
+                        matching.append((s_key, a))
+            if 0 <= ayah_index < len(matching):
+                s_key, a = matching[ayah_index]
+                return {
+                    "surah_num": int(s_key),
+                    "ayah_in_surah": a["numberInSurah"],
+                    "page": a["page"],
+                    "juz": a["juz"],
+                    "quarter": a["hizbQuarter"],
+                    "hizb": (a["hizbQuarter"] - 1) // 4 + 1,
+                    "global_num": a["number"]
+                }
+        current_line = self._get_line_text_for_action(ayah_index)
+        if current_line:
+            try:
+                Ayah, surah, juz_info, page, AyahNumber = functions.quranJsonControl.getAyah(current_line, category, cat_type)
+                quarter = int(juz_info[2])
+                return {
+                    "surah_num": int(surah),
+                    "ayah_in_surah": int(Ayah),
+                    "page": int(page),
+                    "juz": int(juz_info[0]),
+                    "quarter": quarter,
+                    "hizb": (quarter - 1) // 4 + 1,
+                    "global_num": int(AyahNumber)
+                }
+            except Exception:
+                pass
+        return None
+
     def onChangeCategory(self):
         self.pause_for_action()
+        self._pending_category_change_ayah_index = self.getCurrentAyah()
         categories=["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"]
         menu=guiTools.QCustomContextMenu("اختر فئة",self)
         menu.setAccessibleName("اختر فئة")
@@ -555,26 +622,104 @@ class NavigationDisplayMixin:
     def ONChangeCategoryRequested(self):
         self.pause_for_action()
         categories=["سور", "صفحات", "أجزاء", "أرباع", "أحزاب"]
-        index=categories.index(self.sender().text())
-        self.type=index
-        if index==0:
-            result=functions.quranJsonControl.getSurahs()
-        elif index==1:
-            result=functions.quranJsonControl.getPage()
-        elif index==2:
-            result=functions.quranJsonControl.getJuz()
-        elif index==3:
-            result=functions.quranJsonControl.getHezb()
-        elif index==4:
-            result=functions.quranJsonControl.getHizb()
-        self.typeResult=result
-        self.CurrentIndex=0
-        indexs=list(self.typeResult.keys())[self.CurrentIndex]
+        sender_text = self.sender().text()
+        if sender_text not in categories:
+            self.resume_after_action()
+            return
+        index = categories.index(sender_text)
+        old_type = self.type
+        old_category = self.category
+        old_ayah_index = getattr(self, '_pending_category_change_ayah_index', None)
+        if old_ayah_index is None or old_ayah_index < 0:
+            old_ayah_index = self.getCurrentAyah()
+        if old_ayah_index < 0:
+            old_ayah_index = 0
+
+        ayah_info = self._get_current_ayah_details(old_type, old_category, old_ayah_index)
+
+        self.type = index
+        if index == 0:
+            result = functions.quranJsonControl.getSurahs()
+        elif index == 1:
+            result = functions.quranJsonControl.getPage()
+        elif index == 2:
+            result = functions.quranJsonControl.getJuz()
+        elif index == 3:
+            result = functions.quranJsonControl.getHezb()
+        elif index == 4:
+            result = functions.quranJsonControl.getHizb()
+        self.typeResult = result
+
+        target_index = 0
+        target_line = 0
+        if ayah_info:
+            data = functions.quranJsonControl.data
+            if index == 0:
+                target_index = ayah_info["surah_num"] - 1
+                first_global = data[str(ayah_info["surah_num"])]["ayahs"][0]["number"]
+            elif index == 1:
+                target_index = ayah_info["page"] - 1
+                first_global = None
+                for s_val in data.values():
+                    for a in s_val["ayahs"]:
+                        if a["page"] == ayah_info["page"]:
+                            first_global = a["number"]
+                            break
+                    if first_global is not None:
+                        break
+            elif index == 2:
+                target_index = ayah_info["juz"] - 1
+                first_global = None
+                for s_val in data.values():
+                    for a in s_val["ayahs"]:
+                        if a["juz"] == ayah_info["juz"]:
+                            first_global = a["number"]
+                            break
+                    if first_global is not None:
+                        break
+            elif index == 3:
+                target_index = ayah_info["quarter"] - 1
+                first_global = None
+                for s_val in data.values():
+                    for a in s_val["ayahs"]:
+                        if a["hizbQuarter"] == ayah_info["quarter"]:
+                            first_global = a["number"]
+                            break
+                    if first_global is not None:
+                        break
+            elif index == 4:
+                target_index = ayah_info["hizb"] - 1
+                first_global = None
+                for s_val in data.values():
+                    for a in s_val["ayahs"]:
+                        if (a["hizbQuarter"] - 1) // 4 + 1 == ayah_info["hizb"]:
+                            first_global = a["number"]
+                            break
+                    if first_global is not None:
+                        break
+
+            if first_global is not None:
+                target_line = ayah_info["global_num"] - first_global
+
+        if target_index < 0 or target_index >= len(self.typeResult):
+            target_index = 0
+
+        self.CurrentIndex = target_index
+        indexs = list(self.typeResult.keys())[self.CurrentIndex]
+        self.category = indexs
         formatted_name = self.format_category_name(self.type, indexs)
         self.info.setText(formatted_name)
         new_text = self.typeResult[indexs][1]
+        self.initial_ayah_index = target_line
+        self._target_ayah_after_load = target_line
         self._update_view_for_new_content(new_text)
         self.update_nav_buttons_text()
+        if target_line < 40 or len(new_text.split('\n')) <= 40:
+            self._go_to_specific_ayah(target_line)
+            if len(new_text.split('\n')) <= 40:
+                self._target_ayah_after_load = None
+        else:
+            qt2.QTimer.singleShot(505, lambda: self._go_to_specific_ayah(target_line))
         self.resume_after_action()
 
     def onChangeRecitersContextMenuRequested(self):

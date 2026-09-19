@@ -111,6 +111,7 @@ class settings(qt.QDialog):
         self.startupTabSettings = tabs.StartupTabSettings(self)
         self.userNameSettings = tabs.UserNameSettings()
         self.fontSettings = tabs.FontSettings()
+        self.pageTurnSoundSettings = tabs.PageTurnSoundSettings()
         self.khatmahReminderSettings = tabs.KhatmahReminderSettings(self)
         self.locationSettings = tabs.LocationSettings(self)
         self.prayerTimesSettings = tabs.PrayerTimesSettings(self)
@@ -133,6 +134,7 @@ class settings(qt.QDialog):
             ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
             ("إعدادات التذكير بالمناسبات واسم المستخدم", self.userNameSettings),
             ("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings),
+            ("إعدادات صوت تقليب الصفحات في العارضات", self.pageTurnSoundSettings),
             ("إعدادات التذكير بالورد اليومي", self.khatmahReminderSettings),
             ("إعدادات تحديد الموقع الجغرافي لمواقيت الصلاة", self.locationSettings),
             ("إعدادات الأذان", self.prayerTimesSettings),
@@ -159,6 +161,7 @@ class settings(qt.QDialog):
                     ("الإعدادات العامة", self.layout1),
                     ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
                     ("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings),
+                    ("إعدادات صوت تقليب الصفحات في العارضات", self.pageTurnSoundSettings),
                     ("إعدادات تحديد كرت الصوت", self.audioSettings),
                     ("إعدادات اختيار قارئ القرآن آية بآية", self.quranRecitersSettings),
                     ("إعدادات البحث", self.searchSettings),
@@ -555,6 +558,7 @@ class settings(qt.QDialog):
             settings_handler.set("font_wrap", key, new_v_wrap)
             if original_viewer_wraps.get(key) != new_v_wrap:
                 font_changed = True
+        self.pageTurnSoundSettings.save()
         if font_changed:
             restart_required = 1
         new_use_name = str(self.userNameSettings.use_name_checkbox.isChecked())

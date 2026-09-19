@@ -8,7 +8,7 @@ import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 
 import gui
-from guiTools import speak, QReadOnlyTextEdit, QNavigableLabel
+from guiTools import speak, QReadOnlyTextEdit, QNavigableLabel, QNavigableLabelAsTextEdit
 from guiTools.qMessageBox import MessageBox
 from settings import settings_handler
 from functions import audio_manager
@@ -65,7 +65,7 @@ class prayer_times(qt.QWidget):
         self.worning.setFont(font)
         self.worning1.setFont(font)
         self.worning2.setFont(font)
-        self.worning0 = QReadOnlyTextEdit()
+        self.worning0 = QNavigableLabelAsTextEdit()
         self.worning0.setText("قال رسولُ اللهِ صلَّى الله عليه وسلَّم:\n«إنَّ العهدَ الذي بيننا وبينهم الصلاةُ، فمَن تركها فقد كفر».\nفلا تتركوا أيَّ صلاةٍ مفروضةٍ لأيِّ سبب.")
         self.worning0.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.worning0.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)

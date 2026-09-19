@@ -249,7 +249,8 @@ class IslamicTopicViewer(qt.QDialog):
         self.text.setText(content)
         self.update_font_size()
         self.info.setText(self.current_title)
-        winsound.PlaySound("data/sounds/next_page.wav", winsound.SND_ASYNC)
+        if settings.settings_handler.get("page_turn_sound", "islamicTopicViewer") != "False":
+            winsound.PlaySound("data/sounds/next_page.wav", winsound.SND_ASYNC)
         guiTools.speak(self.current_title)
 
     def font_size_changed(self, value):

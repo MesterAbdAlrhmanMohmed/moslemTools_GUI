@@ -318,7 +318,8 @@ class hadeeth_viewer(qt.QDialog):
         self.update_font_size()
         guiTools.speak(str(self.index + 1))
         self.show_hadeeth_number.setText(f"{self.index + 1} من {len(self.data)}")
-        winsound.PlaySound("data/sounds/next_page.wav", 1)
+        if settings.settings_handler.get("page_turn_sound", "hadeethViewer") != "False":
+            winsound.PlaySound("data/sounds/next_page.wav", 1)
 
     def previous_hadeeth(self):
         if self.index == 0:
@@ -329,7 +330,8 @@ class hadeeth_viewer(qt.QDialog):
         self.update_font_size()
         guiTools.speak(str(self.index + 1))
         self.show_hadeeth_number.setText(f"{self.index + 1} من {len(self.data)}")
-        winsound.PlaySound("data/sounds/previous_page.wav", 1)
+        if settings.settings_handler.get("page_turn_sound", "hadeethViewer") != "False":
+            winsound.PlaySound("data/sounds/previous_page.wav", 1)
 
     def go_to_hadeeth(self):
         hadeeth, OK = guiTools.QInputDialog.getInt(self, "الذهاب إلى حديث", "أكتب رقم الحديث", self.index + 1, 1, len(self.data))

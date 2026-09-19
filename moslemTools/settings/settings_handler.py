@@ -157,6 +157,16 @@ settingsConfig={
         "minute": "0",
         "period": "صباحاً",
         "missed_alert": "True"
+    },
+    "page_turn_sound": {
+        "all": "True",
+        "quranViewer": "True",
+        "bookViewer": "True",
+        "hadeethViewer": "True",
+        "athkerDialog": "True",
+        "motonViewer": "True",
+        "storyViewer": "True",
+        "islamicTopicViewer": "True"
     }
 }
 if not os.path.exists(cpath):

@@ -1,4 +1,4 @@
-﻿from guiTools import note_dialog
+from guiTools import note_dialog
 import functions.notesManager as notesManager
 import guiTools, pyperclip, winsound, functions, settings
 import PyQt6.QtWidgets as qt
@@ -15,7 +15,8 @@ class BookNavigationDisplayMixin:
         if self.is_search_view:
             if hasattr(self, 'total_result_pages') and self.total_result_pages > 1:
                 next_page = 1 if self.current_result_page >= self.total_result_pages else self.current_result_page + 1
-                winsound.PlaySound("data/sounds/next_page.wav", 1)
+                if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
+                    winsound.PlaySound("data/sounds/next_page.wav", 1)
                 self.fetch_result_page(next_page)
             return
         self.index = 0 if self.index == len(self.data) - 1 else self.index + 1
@@ -23,13 +24,15 @@ class BookNavigationDisplayMixin:
         self.update_font_size()
         guiTools.speak(str(self.index + 1))
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
-        winsound.PlaySound("data/sounds/next_page.wav", 1)
+        if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
+            winsound.PlaySound("data/sounds/next_page.wav", 1)
 
     def previous_book(self):
         if self.is_search_view:
             if hasattr(self, 'total_result_pages') and self.total_result_pages > 1:
                 prev_page = self.total_result_pages if self.current_result_page <= 1 else self.current_result_page - 1
-                winsound.PlaySound("data/sounds/previous_page.wav", 1)
+                if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
+                    winsound.PlaySound("data/sounds/previous_page.wav", 1)
                 self.fetch_result_page(prev_page)
             return
         self.index = len(self.data) - 1 if self.index == 0 else self.index - 1
@@ -37,7 +40,8 @@ class BookNavigationDisplayMixin:
         self.update_font_size()
         guiTools.speak(str(self.index + 1))
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
-        winsound.PlaySound("data/sounds/previous_page.wav", 1)
+        if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
+            winsound.PlaySound("data/sounds/previous_page.wav", 1)
 
     def go_to_book(self):
         if self.is_search_view:

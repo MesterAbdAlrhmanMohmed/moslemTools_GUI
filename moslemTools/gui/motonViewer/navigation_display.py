@@ -348,6 +348,8 @@ class MotonNavigationDisplayMixin:
             self.resume_after_action()
 
     def play_next_sound(self):
+        if settings_handler.get("page_turn_sound", "motonViewer") == "False":
+            return
         next_wav = os.path.join("data", "sounds", "next_page.wav")
         if os.path.exists(next_wav):
             winsound.PlaySound(next_wav, winsound.SND_FILENAME | winsound.SND_ASYNC)
@@ -355,6 +357,8 @@ class MotonNavigationDisplayMixin:
             winsound.Beep(1200, 50)
 
     def play_previous_sound(self):
+        if settings_handler.get("page_turn_sound", "motonViewer") == "False":
+            return
         prev_wav = os.path.join("data", "sounds", "previous_page.wav")
         if os.path.exists(prev_wav):
             winsound.PlaySound(prev_wav, winsound.SND_FILENAME | winsound.SND_ASYNC)
