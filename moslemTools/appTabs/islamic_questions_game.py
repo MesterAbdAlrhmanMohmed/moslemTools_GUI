@@ -264,14 +264,15 @@ class IslamicQuestionsGame(qt.QWidget):
                 return
             u_qs, seen = [], set()
             for q in self.questions:
-                if q.get("q") not in seen:
+                q_key = q.get("id") if q.get("id") is not None else q.get("q")
+                if q_key not in seen:
                     u_qs.append(q)
-                    seen.add(q.get("q"))
+                    seen.add(q_key)
             self.questions = u_qs
-            temp_qs = [q for q in self.questions if q.get("q") not in self.asked_questions]
+            temp_qs = [q for q in self.questions if (q.get("id") if q.get("id") is not None else q.get("q")) not in self.asked_questions]
             if temp_qs: self.questions = temp_qs
             else:
-                for q in self.questions: self.asked_questions.discard(q.get("q"))
+                for q in self.questions: self.asked_questions.discard(q.get("id") if q.get("id") is not None else q.get("q"))
                 try:
                     with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
                 except Exception as e:
@@ -350,8 +351,9 @@ class IslamicQuestionsGame(qt.QWidget):
             qt2.QTimer.singleShot(10, self.first_cat_btn.setFocus)
             return
         q_data = self.questions[self.current_question_index]
-        if q_data.get("q") not in self.asked_questions:
-            self.asked_questions.add(q_data.get("q"))
+        q_key = q_data.get("id") if q_data.get("id") is not None else q_data.get("q")
+        if q_key not in self.asked_questions:
+            self.asked_questions.add(q_key)
             try:
                 with open(self.asked_file, "w", encoding="utf-8") as f: json.dump(list(self.asked_questions), f, ensure_ascii=False)
             except Exception as e:

@@ -160,12 +160,17 @@ class settings(qt.QDialog):
                 [
                     ("الإعدادات العامة", self.layout1),
                     ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
-                    ("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings),
-                    ("إعدادات صوت تقليب الصفحات في العارضات", self.pageTurnSoundSettings),
                     ("إعدادات تحديد كرت الصوت", self.audioSettings),
                     ("إعدادات اختيار قارئ القرآن آية بآية", self.quranRecitersSettings),
                     ("إعدادات البحث", self.searchSettings),
                     ("إعدادات فنار (الذكاء الاصطناعي)", self.fanarSettings),
+                ]
+            ),
+            (
+                "إعدادات العارضات",
+                [
+                    ("إعدادات نوع الخط وحجمه", self.fontSettings),
+                    ("إعدادات صوت تقليب الصفحات", self.pageTurnSoundSettings),
                 ]
             ),
             (
