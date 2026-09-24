@@ -67,6 +67,12 @@ class ResearcherShortcutsUIMixin:
         self.ahadeeth.addItems(ahadeeth_items)
         self.ahadeeth.setFont(font_combo)
         self.ahadeeth.setAccessibleName("اختيار الكتاب")
+        self.ahadeeth_chapter_label = qt.QLabel("اختيار الباب")
+        self.ahadeeth_chapter_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.ahadeeth_chapter = qt.QComboBox()
+        self.ahadeeth_chapter.setFont(font_combo)
+        self.ahadeeth_chapter.setAccessibleName("اختيار الباب")
+        self.ahadeeth_chapter.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.surahsList = functions.quranJsonControl.getSurahs()
         self.surahs_laybol = qt.QLabel("ابحث في")
         self.surahs_laybol.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -85,7 +91,8 @@ class ResearcherShortcutsUIMixin:
         self.current_scope = None
         self.serch.currentIndexChanged.connect(self.toggle_ahadeeth_visibility)
         self.serch.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.serch))
-        self.ahadeeth.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.ahadeeth))
+        self.ahadeeth.currentIndexChanged.connect(self.on_ahadeeth_book_changed)
+        self.ahadeeth_chapter.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.ahadeeth_chapter))
         self.surahs.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.surahs))
         self.specific_scope_combo.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.specific_scope_combo))
         self.serch_laibol_content = qt.QLabel("أكتب محتوى البحث")
@@ -179,8 +186,25 @@ class ResearcherShortcutsUIMixin:
 
         ahadeeth_layout_top = qt.QVBoxLayout()
         ahadeeth_layout_top.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        ahadeeth_layout_top.addWidget(self.ahadeeth_laibol, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
-        ahadeeth_layout_top.addWidget(self.ahadeeth, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
+        ahadeeth_combos_hbox = qt.QHBoxLayout()
+        ahadeeth_combos_hbox.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        ahadeeth_combos_hbox.setSpacing(15)
+
+        ahadeeth_book_vbox = qt.QVBoxLayout()
+        ahadeeth_book_vbox.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        ahadeeth_book_vbox.addWidget(self.ahadeeth_laibol, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        ahadeeth_book_vbox.addWidget(self.ahadeeth, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
+        ahadeeth_chap_vbox = qt.QVBoxLayout()
+        ahadeeth_chap_vbox.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        ahadeeth_chap_vbox.addWidget(self.ahadeeth_chapter_label, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        ahadeeth_chap_vbox.addWidget(self.ahadeeth_chapter, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+
+        ahadeeth_combos_hbox.addLayout(ahadeeth_book_vbox)
+        ahadeeth_combos_hbox.addLayout(ahadeeth_chap_vbox)
+
+        ahadeeth_layout_top.addLayout(ahadeeth_combos_hbox)
 
         quran_scope_layout = qt.QHBoxLayout()
         quran_scope_layout.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -227,8 +251,38 @@ class ResearcherShortcutsUIMixin:
         main_layout.addLayout(bottom_layout)
         self.ahadeeth_laibol.hide()
         self.ahadeeth.hide()
+        self.ahadeeth_chapter_label.hide()
+        self.ahadeeth_chapter.hide()
         self.update_font_size()
         self.adjust_all_combos_width()
+
+    def on_ahadeeth_book_changed(self):
+        self.adjust_combo_width(self.ahadeeth)
+        if self.serch.currentText() == "الأحاديث" and self.ahadeeth.currentIndex() > 0:
+            book_name_ar = self.ahadeeth.currentText()
+            file_name = functions.ahadeeth.ahadeeths.get(book_name_ar)
+            self.ahadeeth_chapter.blockSignals(True)
+            self.ahadeeth_chapter.clear()
+            self.ahadeeth_chapter.addItem("البحث في كل الكتاب", None)
+            if file_name:
+                full_path = os.path.join(os.getenv("appdata"), settings.app.appName, "ahadeeth", file_name)
+                if os.path.exists(full_path):
+                    try:
+                        with open(full_path, "r", encoding="utf-8") as f:
+                            d = json.load(f)
+                        if isinstance(d, dict):
+                            for c in d.get("chapters", []):
+                                self.ahadeeth_chapter.addItem(c.get("arabic", "").strip(), c.get("id"))
+                    except Exception:
+                        pass
+            self.ahadeeth_chapter.setCurrentIndex(0)
+            self.ahadeeth_chapter.blockSignals(False)
+            self.ahadeeth_chapter_label.show()
+            self.ahadeeth_chapter.show()
+            self.adjust_combo_width(self.ahadeeth_chapter)
+        else:
+            self.ahadeeth_chapter_label.hide()
+            self.ahadeeth_chapter.hide()
 
     def closeEvent(self, event):
         if getattr(self, 'is_saving', False):

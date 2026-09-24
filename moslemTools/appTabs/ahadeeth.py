@@ -264,7 +264,10 @@ class hadeeth(qt.QWidget):
     def open(self):
         item = self.list_of_ahadeeth.currentItem()
         if item and item.text() not in ["جاري تحميل قائمة الكتب...", "لا توجد كتب أحاديث في قائمة المفضلة"]:
-            gui.hadeeth_viewer(self, functions.ahadeeth.ahadeeths[item.text()]).exec()
+            book_file = functions.ahadeeth.ahadeeths[item.text()]
+            dialog = gui.SelectBabDialog(self, book_file, book_name_ar=item.text())
+            if dialog.exec() == qt.QDialog.DialogCode.Accepted:
+                gui.hadeeth_viewer(self, book_file, chapter_id=dialog.selected_chapter_id, chapter_name=dialog.selected_raw_chapter_name).exec()
 
     def refresh(self):
         functions.ahadeeth.reload_ahadeeths()

@@ -73,7 +73,10 @@ class ResearcherSearchEngineMixin:
             else:
                 stype = ['page', 'juz', 'quarter', 'hizb'][scope_index-2]
                 self.current_scope = (stype, int(item))
-        self.current_search_thread = SearchThread(self, search_type, search_text, self.current_scope, ahadeeth_text, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols)
+        ahadeeth_chapter_id = None
+        if search_type == 1 and self.ahadeeth.currentIndex() > 0 and self.ahadeeth_chapter.isVisible() and self.ahadeeth_chapter.currentIndex() > 0:
+            ahadeeth_chapter_id = self.ahadeeth_chapter.currentData()
+        self.current_search_thread = SearchThread(self, search_type, search_text, self.current_scope, ahadeeth_text, self.ignore_tashkeel, self.ignore_hamza, self.ignore_symbols, ahadeeth_chapter_id=ahadeeth_chapter_id)
         self.current_search_thread.searchFinished.connect(self.onSearchFinished)
         self.current_search_thread.start()
 
@@ -169,6 +172,12 @@ class ResearcherSearchEngineMixin:
         if self.serch.currentText() == "الأحاديث":
             self.ahadeeth_laibol.show()
             self.ahadeeth.show()
+            if self.ahadeeth.currentIndex() > 0:
+                self.ahadeeth_chapter_label.show()
+                self.ahadeeth_chapter.show()
+            else:
+                self.ahadeeth_chapter_label.hide()
+                self.ahadeeth_chapter.hide()
             self.surahs_laybol.hide()
             self.surahs.hide()
             self.specific_scope_label.hide()
@@ -176,6 +185,8 @@ class ResearcherSearchEngineMixin:
         else:
             self.ahadeeth_laibol.hide()
             self.ahadeeth.hide()
+            self.ahadeeth_chapter_label.hide()
+            self.ahadeeth_chapter.hide()
             self.surahs_laybol.show()
             self.surahs.show()
             if self.surahs.currentIndex() != 0:
@@ -194,6 +205,6 @@ class ResearcherSearchEngineMixin:
         combo.setFixedWidth(text_width + extra_padding)
 
     def adjust_all_combos_width(self):
-        for combo in (self.serch, self.ahadeeth, self.surahs, self.specific_scope_combo):
+        for combo in (self.serch, self.ahadeeth, self.ahadeeth_chapter, self.surahs, self.specific_scope_combo):
             if combo.count() > 0:
                 self.adjust_combo_width(combo)

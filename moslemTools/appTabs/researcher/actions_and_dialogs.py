@@ -290,7 +290,7 @@ class ResearcherActionsMixin:
 
     def set_ui_for_save(self, is_active):
         self.is_saving = is_active
-        widgets_to_disable = [self.serch, self.ahadeeth, self.surahs, self.specific_scope_combo, self.serch_input, self.search_mode_button, self.start, self.results, self.clear_results_button]
+        widgets_to_disable = [self.serch, self.ahadeeth, self.ahadeeth_chapter, self.surahs, self.specific_scope_combo, self.serch_input, self.search_mode_button, self.start, self.results, self.clear_results_button]
         for widget in widgets_to_disable:
             widget.setEnabled(not is_active)
         self.save_widget.setVisible(is_active)
