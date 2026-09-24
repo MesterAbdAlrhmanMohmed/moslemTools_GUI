@@ -1,4 +1,4 @@
-﻿import gui.translationViewer
+import gui.translationViewer
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
 import ujson as json
 from settings.app import appName

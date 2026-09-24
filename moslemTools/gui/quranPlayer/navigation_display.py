@@ -1,4 +1,4 @@
-﻿from ..changeReciter import ChangeReciter
+from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
 from ..tafaseerViewer import TafaseerViewer
 import time,os,requests,subprocess,shutil,re,traceback

@@ -1,4 +1,4 @@
-﻿from guiTools import note_dialog
+from guiTools import note_dialog
 import functions.notesManager as notesManager
 from ..changeReciter import ChangeReciter
 from ..translationViewer import translationViewer
