@@ -31,7 +31,7 @@ class Download(qt.QDialog):
         if index == 0:
             self.show_dialog(gui.download.SelectItem, ("all_tafaseers.json", "tafaseer"))
         elif index == 1:
-            self.show_dialog(gui.download.SelectItem, ("all_translater.json", "Quran Translations"))
+            self.show_dialog(gui.download.SelectTranslationItem, ("all_translater.json", "Quran Translations"))
         elif index == 2:
             self.show_dialog(gui.download.SelectItem, ("all_ahadeeth.json", "ahadeeth"))
         elif index == 3:

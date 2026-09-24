@@ -124,11 +124,7 @@ class SelectItem(qt.QDialog):
 
 		self.item.itemActivated.connect(self.on_item_clicked)
 
-		self.shortcut_start = qt1.QShortcut(qt1.QKeySequence("Ctrl+B"), self)
-		self.shortcut_start.activated.connect(self.set_as_start)
 
-		self.shortcut_range = qt1.QShortcut(qt1.QKeySequence("Ctrl+D"), self)
-		self.shortcut_range.activated.connect(self.download_from_start_to_here)
 
 		self.loading_label = guiTools.QNavigableLabel("جاري تحميل البيانات، يرجى الانتظار...")
 		self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
