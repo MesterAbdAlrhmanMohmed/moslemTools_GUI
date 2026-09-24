@@ -41,6 +41,11 @@ if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"reciters")):
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"tafaseer")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"tafaseer"))
     shutil.copy("data/json/tafaseer/muyassar.json",os.path.join(os.getenv('appdata'),appName,"tafaseer","muyassar.json"))
+if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"tafaseer","muyassar.json")):
+    try:
+        shutil.copy("data/json/tafaseer/muyassar.json",os.path.join(os.getenv('appdata'),appName,"tafaseer","muyassar.json"))
+    except Exception as e:
+        print(f"Handled tafaseer copy exception: {e}")
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"ahadeeth")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"ahadeeth"))
     shutil.copy("data/json/ahadeeth/nawawi40.json",os.path.join(os.getenv('appdata'),appName,"ahadeeth","nawawi40.json"))

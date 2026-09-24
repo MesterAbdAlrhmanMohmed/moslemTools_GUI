@@ -48,7 +48,10 @@ def getTafaseer(tafaseerName:str,From:int,to:int):
         for index, ayah in enumerate(data, 1):
             if index>=From and index<=to:
                 ayahText=functions.quranJsonControl.getAyahTextByNumber(index)
-                result.append(ayahText + "\n" + ayah)
+                content = ayah.strip() if ayah else ""
+                if not content:
+                    content = "(لم يذكر المؤلف تفسيراً لهذه الآية في هذا الكتاب)"
+                result.append(ayahText + "\n" + content)
         return "\n".join(result)
     except:
-        return ("لم يتم العثور على تفاسير متاحة , الرجاء تحميل تفسير واحد على الأقل")
+        return ("لا توجد بيانات لهذا التفسير , الرجاء اعادة تحميل هذا التفسير")

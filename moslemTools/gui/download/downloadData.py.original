@@ -43,43 +43,14 @@ class DataLoaderThread(qt2.QThread):
 
 	def run(self):
 		try:
+			url = "https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/refs/heads/main/moslemTools/data/json/files/" + self.fileName
 			headers = {
 				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
 			}
-			jsonContent = None
-			
-			# 1. Try GitHub raw
-			url = "https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/refs/heads/main/moslemTools/data/json/files/" + self.fileName
-			try:
-				r = requests.get(url, timeout=10, headers=headers)
-				if r.status_code == 200:
-					jsonContent = r.json()
-			except Exception:
-				pass
-
-			# 2. If all_tafaseers.json, try Hugging Face dataset if GitHub failed or has only 9
-			if self.fileName == "all_tafaseers.json":
-				if jsonContent is None or len(jsonContent) <= 9:
-					try:
-						hf_url = "https://huggingface.co/datasets/alcoder01/Quran_Tafaseer/resolve/main/all_tafaseers.json"
-						r_hf = requests.get(hf_url, timeout=10, headers=headers)
-						if r_hf.status_code == 200:
-							jsonContent = r_hf.json()
-					except Exception:
-						pass
-
-			# 3. Fallback to local files if available and has more entries
-			local_map_path = os.path.join("data", "json", "files", self.fileName)
-			if os.path.exists(local_map_path):
-				try:
-					with open(local_map_path, "r", encoding="utf-8") as file:
-						local_c = json.load(file)
-					if jsonContent is None or (isinstance(local_c, dict) and len(local_c) > len(jsonContent)):
-						jsonContent = local_c
-				except Exception:
-					pass
-
-			if jsonContent is not None:
+			r = requests.get(url, timeout=30, headers=headers)
+			if r.status_code == 200:
+				jsonContent = r.json()
+				local_map_path = os.path.join("data", "json", "files", self.fileName)
 				os.makedirs(os.path.dirname(local_map_path), exist_ok=True)
 				with open(local_map_path, "w", encoding="utf-8") as file:
 					json.dump(jsonContent, file, ensure_ascii=False, indent=4)
@@ -97,10 +68,12 @@ class DataLoaderThread(qt2.QThread):
 						del jsonContent[data]
 				self.data_loaded.emit(jsonContent)
 			else:
-				self.loading_error.emit("تعذر تحميل البيانات من الخادم أو الملفات المحلية")
+				self.loading_error.emit(f"Status code {r.status_code} - فشل تحميل الخريطة من جيت هاب")
 		except Exception as e:
 			log_error("DataLoaderThread.run", e)
 			self.loading_error.emit(str(e))
+
+
 class SelectItem(qt.QDialog):
 	def __init__(self, p, fileName: str, dirName):
 		super().__init__(p)
@@ -389,7 +362,6 @@ class DownloadThread(qt2.QThread):
 		github_base_url = "https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/refs/heads/main/moslemTools/data/json/"
 		translater_archive_url = "https://archive.org/download/dv.divehi/"
 		ahadeeth_archive_url = "https://ia803201.us.archive.org/17/items/bukhari_202511/"
-		tafaseer_hf_url = "https://huggingface.co/datasets/alcoder01/Quran_Tafaseer/resolve/main/"
 		tafaseer_archive_url = "https://ia803201.us.archive.org/17/items/tabary_202511/"
 		books_archive_url = "https://archive.org/download/0072_20251110/"
 		dir_lower = self.DIRName.strip().lower().replace(" ", "")
@@ -398,7 +370,7 @@ class DownloadThread(qt2.QThread):
 		elif "ahadeeth" in dir_lower or "hadith" in dir_lower:
 			url = ahadeeth_archive_url + self.fileName
 		elif "tafseer" in dir_lower or "tafaseer" in dir_lower:
-			url = tafaseer_hf_url + self.fileName
+			url = tafaseer_archive_url + self.fileName
 		elif "book" in dir_lower:
 			url = books_archive_url + self.fileName
 		else:
