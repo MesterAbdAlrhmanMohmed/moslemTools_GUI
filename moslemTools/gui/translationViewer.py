@@ -7,7 +7,7 @@ from PyQt6.QtCore import QTimer
 
 
 class ChangeTranslationDialog(qt.QDialog):
-    ALL_LANGS_LABEL = "عرض جميع اللغات المتاحة"
+    ALL_LANGS_LABEL = "عرض جميع اللغات والترجمات المتاحة"
 
     def __init__(self, parent, current_index: str):
         super().__init__(parent)
