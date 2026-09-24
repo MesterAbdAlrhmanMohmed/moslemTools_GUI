@@ -124,8 +124,7 @@ class SelectItem(qt.QDialog):
 
 		layout = qt.QVBoxLayout(self)
 
-		search_label = guiTools.QNavigableLabel("بحث")
-		search_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+		search_label = guiTools.QNavigableLabel("بحث")		
 		search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(search_label)
 

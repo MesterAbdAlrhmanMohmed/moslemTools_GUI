@@ -637,7 +637,7 @@ class hadeeth_viewer(qt.QDialog):
         self.update_font_size()
         self.update_labels()
         if settings.settings_handler.get("page_turn_sound", "hadeethViewer") != "False":
-            winsound.PlaySound("data/sounds/next_page.wav", 1)
+            guiTools.play_page_turn_sound("next")
         chapter_changed = False
         new_chap_name = ""
         if self.current_chapter_id is None and self.hadith_chapter_info:
@@ -665,7 +665,7 @@ class hadeeth_viewer(qt.QDialog):
         self.update_font_size()
         self.update_labels()
         if settings.settings_handler.get("page_turn_sound", "hadeethViewer") != "False":
-            winsound.PlaySound("data/sounds/previous_page.wav", 1)
+            guiTools.play_page_turn_sound("previous")
         chapter_changed = False
         new_chap_name = ""
         if self.current_chapter_id is None and self.hadith_chapter_info:

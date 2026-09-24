@@ -202,7 +202,7 @@ class AthkerDialog (qt.QDialog):
         self.athkerViewer.setText(self.athkerList[self.inex]["text"])
         self.update_font_size()
         if settings.settings_handler.get("page_turn_sound", "athkerDialog") != "False":
-            winsound.PlaySound("data/sounds/next_page.wav", 1)
+            guiTools.play_page_turn_sound("next")
 
     def onPreviousThker(self):
         self.media.stop()
@@ -217,7 +217,7 @@ class AthkerDialog (qt.QDialog):
         self.athkerViewer.setText(self.athkerList[self.inex]["text"])
         self.update_font_size()
         if settings.settings_handler.get("page_turn_sound", "athkerDialog") != "False":
-            winsound.PlaySound("data/sounds/previous_page.wav", 1)
+            guiTools.play_page_turn_sound("previous")
 
     def OnContextMenu(self):
         self.was_playing = self.media.playbackState() == QMediaPlayer.PlaybackState.PlayingState

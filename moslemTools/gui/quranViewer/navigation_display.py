@@ -485,7 +485,7 @@ class NavigationDisplayMixin:
         self._update_view_for_new_content(new_text)
         self.update_nav_buttons_text()
         if settings.settings_handler.get("page_turn_sound", "quranViewer") != "False":
-            winsound.PlaySound("data/sounds/next_page.wav", 1)
+            guiTools.play_page_turn_sound("next")
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
         self.resume_after_action()
@@ -503,7 +503,7 @@ class NavigationDisplayMixin:
         self._update_view_for_new_content(new_text)
         self.update_nav_buttons_text()
         if settings.settings_handler.get("page_turn_sound", "quranViewer") != "False":
-            winsound.PlaySound("data/sounds/previous_page.wav", 1)
+            guiTools.play_page_turn_sound("previous")
         guiTools.speak(str(formatted_name))
         self.info.setText(formatted_name)
         self.resume_after_action()

@@ -306,7 +306,7 @@ class StoryViewer(qt.QDialog):
         self.update_font_size()
         self.info.setText(self.category)
         if settings.settings_handler.get("page_turn_sound", "storyViewer") != "False":
-            winsound.PlaySound("data/sounds/next_page.wav", 1)
+            guiTools.play_page_turn_sound("next")
         guiTools.speak(self.category)
 
     def onPreviouse(self):
@@ -316,7 +316,7 @@ class StoryViewer(qt.QDialog):
         self.update_font_size()
         self.info.setText(self.category)
         if settings.settings_handler.get("page_turn_sound", "storyViewer") != "False":
-            winsound.PlaySound("data/sounds/next_page.wav", 1)
+            guiTools.play_page_turn_sound("previous")
         guiTools.speak(self.category)
 
     def onDeleteNoteShortcut(self):

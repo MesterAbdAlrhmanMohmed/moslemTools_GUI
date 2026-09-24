@@ -16,7 +16,7 @@ class BookNavigationDisplayMixin:
             if hasattr(self, 'total_result_pages') and self.total_result_pages > 1:
                 next_page = 1 if self.current_result_page >= self.total_result_pages else self.current_result_page + 1
                 if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
-                    winsound.PlaySound("data/sounds/next_page.wav", 1)
+                    guiTools.play_page_turn_sound("next")
                 self.fetch_result_page(next_page)
             return
         self.index = 0 if self.index == len(self.data) - 1 else self.index + 1
@@ -25,14 +25,14 @@ class BookNavigationDisplayMixin:
         guiTools.speak(str(self.index + 1))
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
-            winsound.PlaySound("data/sounds/next_page.wav", 1)
+            guiTools.play_page_turn_sound("next")
 
     def previous_book(self):
         if self.is_search_view:
             if hasattr(self, 'total_result_pages') and self.total_result_pages > 1:
                 prev_page = self.total_result_pages if self.current_result_page <= 1 else self.current_result_page - 1
                 if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
-                    winsound.PlaySound("data/sounds/previous_page.wav", 1)
+                    guiTools.play_page_turn_sound("previous")
                 self.fetch_result_page(prev_page)
             return
         self.index = len(self.data) - 1 if self.index == 0 else self.index - 1
@@ -41,7 +41,7 @@ class BookNavigationDisplayMixin:
         guiTools.speak(str(self.index + 1))
         self.show_book_number.setText(f"{self.index + 1} من {len(self.data)}")
         if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
-            winsound.PlaySound("data/sounds/previous_page.wav", 1)
+            guiTools.play_page_turn_sound("previous")
 
     def go_to_book(self):
         if self.is_search_view:

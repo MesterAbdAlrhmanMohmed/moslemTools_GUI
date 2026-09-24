@@ -203,7 +203,7 @@ class BookSearchMixin:
             self.text.ensureCursorVisible()
 
         if settings.settings_handler.get("page_turn_sound", "bookViewer") != "False":
-            winsound.PlaySound("data/sounds/next_page.wav", 1)
+            guiTools.play_page_turn_sound("next")
         guiTools.speak(f"الصفحة {self.index + 1}")
 
     def go_to_search_result_page(self):
