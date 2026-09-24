@@ -119,14 +119,6 @@ def show_random_quote_message(parent=None):
 
 def run_startup_checks():
     try:
-        update_dir = os.path.join(os.getenv('appdata'), settings_handler.appName, "update")
-        if os.path.exists(update_dir):
-            import shutil
-            shutil.rmtree(update_dir, ignore_errors=True)
-    except Exception as e:
-        print(f"Error removing update dir: {e}")
-
-    try:
         from functions.telemetry import record_device_async
         record_device_async()
     except Exception as e:

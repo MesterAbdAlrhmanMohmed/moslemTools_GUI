@@ -28,14 +28,7 @@ if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"athkar")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"athkar"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"Quran Translations")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"Quran Translations"))
-    try:
-        src_itani = "data/json/Quran Translations/en.itani.json"
-        if not os.path.exists(src_itani):
-            src_itani = "data/json/Quran Translations/الإنجليزية English/en.itani/en.itani.json"
-        if os.path.exists(src_itani):
-            shutil.copy(src_itani, os.path.join(os.getenv('appdata'), appName, "Quran Translations", "en.itani.json"))
-    except Exception as e:
-        print(f"Handled translation copy exception: {e}")
+    shutil.copy("data/json/Quran Translations/en.itani.json",os.path.join(os.getenv('appdata'),appName,"Quran Translations","en.itani.json"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"reciters")):
     os.mkdir(os.path.join(os.getenv('appdata'),appName,"reciters"))
 if not os.path.exists(os.path.join(os.getenv('appdata'),appName,"tafaseer")):
