@@ -220,7 +220,17 @@ class translationViewer(qt.QDialog):
         qt1.QShortcut("ctrl+g", self).activated.connect(self.on_change_translation)
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings.settings_handler.get("font", "size"))
-        self.index = settings.settings_handler.get("translation", "translation")
+        functions.translater.reload_translations()
+        default_index = settings.settings_handler.get("translation", "translation")
+        available_indices = list(functions.translater.translations.values())
+        if default_index in available_indices:
+            self.index = default_index
+        elif "en.itani.json" in available_indices:
+            self.index = "en.itani.json"
+        elif available_indices:
+            self.index = available_indices[0]
+        else:
+            self.index = default_index
         self.context_menu_active = False
         self.saved_text = ""
         self.From = From
@@ -306,12 +316,8 @@ class translationViewer(qt.QDialog):
 
     def on_translation_changed(self, name: str):
         new_index = functions.translater.translations.get(name)
-        if new_index is not None:
+        if new_index is not None and self.index != new_index:
             self.index = new_index
-            try:
-                settings.settings_handler.set("translation", "translation", self.index)
-            except Exception:
-                pass
             self.current_translation_label.setText(f"الترجمة المحددة هي: {functions.translater.gettranslationByIndex(self.index)}")
             self.getResult()
 

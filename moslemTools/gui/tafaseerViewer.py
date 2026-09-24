@@ -119,7 +119,17 @@ class TafaseerViewer(qt.QDialog):
         qt1.QShortcut("ctrl+g", self).activated.connect(self.on_change_tafaseer)
         self.font_is_bold = settings.settings_handler.get("font", "bold") == "True"
         self.font_size = int(settings.settings_handler.get("font", "size"))
-        self.index = settings.settings_handler.get("tafaseer", "tafaseer")
+        functions.tafseer.reload_tafaseers()
+        default_index = settings.settings_handler.get("tafaseer", "tafaseer")
+        available_indices = list(functions.tafseer.tafaseers.values())
+        if default_index in available_indices:
+            self.index = default_index
+        elif "muyassar.json" in available_indices:
+            self.index = "muyassar.json"
+        elif available_indices:
+            self.index = available_indices[0]
+        else:
+            self.index = default_index
         self.context_menu_active = False
         self.saved_text = ""
         self.From = From
@@ -207,10 +217,6 @@ class TafaseerViewer(qt.QDialog):
         new_index = functions.tafseer.tafaseers.get(name)
         if new_index is not None and self.index != new_index:
             self.index = new_index
-            try:
-                settings.settings_handler.set("tafaseer", "tafaseer", self.index)
-            except Exception:
-                pass
             self.current_tafaseer_label.setText(f"التفسير المحدد هو: {functions.tafseer.getTafaseerByIndex(self.index)}")
             self.getResult()
 

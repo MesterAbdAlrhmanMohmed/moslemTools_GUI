@@ -9,6 +9,8 @@ import PyQt6.QtCore as qt2
 class TafaseerSettings(qt.QWidget):
     def __init__(self):
         super().__init__()
+        tafseer.reload_tafaseers()
+        translater.reload_translations()
         self.setStyleSheet("""
             QComboBox, QLineEdit, QLabel {
                 color: #e0e0e0;
@@ -40,7 +42,11 @@ class TafaseerSettings(qt.QWidget):
         self.selectTafaseer_laybol = qt.QLabel("اختر تفسير للقرآن الكريم")
         self.selectTafaseer = qt.QComboBox()
         self.selectTafaseer.addItems(tafseer.tafaseers.keys())
-        self.selectTafaseer.setCurrentText(tafseer.getTafaseerByIndex(settings_handler.get("tafaseer", "tafaseer")))
+        current_taf = tafseer.getTafaseerByIndex(settings_handler.get("tafaseer", "tafaseer"))
+        if current_taf and current_taf in tafseer.tafaseers:
+            self.selectTafaseer.setCurrentText(current_taf)
+        elif self.selectTafaseer.count() > 0:
+            self.selectTafaseer.setCurrentIndex(0)
         self.selectTafaseer.setAccessibleName("اختر تفسير للقرآن الكريم")
         tafaseer_layout.addWidget(self.selectTafaseer)
         tafaseer_layout.addWidget(self.selectTafaseer_laybol)
@@ -51,7 +57,11 @@ class TafaseerSettings(qt.QWidget):
         self.selecttranslation_laybol = qt.QLabel("اختر ترجمة لمعاني القرآن الكريم")
         self.selecttranslation = qt.QComboBox()
         self.selecttranslation.addItems(translater.translations.keys())
-        self.selecttranslation.setCurrentText(translater.gettranslationByIndex(settings_handler.get("translation", "translation")))
+        current_trans = translater.gettranslationByIndex(settings_handler.get("translation", "translation"))
+        if current_trans and current_trans in translater.translations:
+            self.selecttranslation.setCurrentText(current_trans)
+        elif self.selecttranslation.count() > 0:
+            self.selecttranslation.setCurrentIndex(0)
         self.selecttranslation.setAccessibleName("اختر ترجمة لمعاني القرآن الكريم")
         translation_layout.addWidget(self.selecttranslation)
         translation_layout.addWidget(self.selecttranslation_laybol)
