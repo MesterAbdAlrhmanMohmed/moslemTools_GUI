@@ -70,10 +70,11 @@ class DataLoaderThread(qt2.QThread):
 			elif self.fileName == "all_ahadeeth.json":
 				if jsonContent is None:
 					try:
-						hf_url = "https://huggingface.co/datasets/alcoder01/Hadith_Books/resolve/main/all_ahadeeth.json"
-						r_hf = requests.get(hf_url, timeout=10, headers=headers)
-						if r_hf.status_code == 200:
-							jsonContent = r_hf.json()
+						hf_url = "https://huggingface.co/datasets/alcoder01/database_of_ahadeeth/resolve/main/all_ahadeeth.json"
+						if hf_url:
+							r_hf = requests.get(hf_url, timeout=10, headers=headers)
+							if r_hf.status_code == 200:
+								jsonContent = r_hf.json()
 					except Exception:
 						pass
 
@@ -396,8 +397,8 @@ class DownloadThread(qt2.QThread):
 		os.makedirs(directory, exist_ok=True)
 		github_base_url = "https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/refs/heads/main/moslemTools/data/json/"
 		translater_archive_url = "https://archive.org/download/dv.divehi/"
-		ahadeeth_hf_url = "https://huggingface.co/datasets/alcoder01/Hadith_Books/resolve/main/"
-		ahadeeth_archive_url = "https://ia803201.us.archive.org/17/items/bukhari_202511/"
+		ahadeeth_hf_url = "https://huggingface.co/datasets/alcoder01/database_of_ahadeeth/resolve/main/"
+		ahadeeth_archive_url = ""
 		tafaseer_hf_url = "https://huggingface.co/datasets/alcoder01/Quran_Tafaseer/resolve/main/"
 		tafaseer_archive_url = "https://ia803201.us.archive.org/17/items/tabary_202511/"
 		books_archive_url = "https://archive.org/download/0072_20251110/"
@@ -405,13 +406,16 @@ class DownloadThread(qt2.QThread):
 		if "translat" in dir_lower:
 			url = translater_archive_url + self.fileName
 		elif "ahadeeth" in dir_lower or "hadith" in dir_lower:
-			url = ahadeeth_hf_url + self.fileName
+			url = (ahadeeth_hf_url + self.fileName) if ahadeeth_hf_url else ""
 		elif "tafseer" in dir_lower or "tafaseer" in dir_lower:
 			url = tafaseer_hf_url + self.fileName
 		elif "book" in dir_lower:
 			url = books_archive_url + self.fileName
 		else:
 			url = github_base_url + self.DIRName + "/" + self.fileName
+		if not url:
+			self.network_error.emit("لم يتم تعيين رابط تنزيل كتب الأحاديث بعد، يرجى تعيين الرابط الجديد.")
+			return
 		while not self.is_cancelled:
 			if self.is_paused:
 				self.msleep(200)
