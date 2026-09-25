@@ -41,7 +41,7 @@ class Download(qt.QDialog):
         elif index == 5:
             self.show_dialog(gui.download.SelectAthkar, ())
         elif index == 6:
-            self.show_dialog(gui.download.SelectItem, ("all_islamic_books.json", "islamicBooks"))
+            self.show_dialog(gui.download.SelectIslamicBookItem, ("all_islamic_books.json", "islamicBooks"))
 
     def show_dialog(self, dialog_class, args):
         if args:

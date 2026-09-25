@@ -329,19 +329,93 @@ class IslamicBooks(qt.QWidget):
         except Exception:
             pass
 
+    def get_book_categories(self, book_name):
+        cats = []
+        rel = functions.islamicBooks.books.get(book_name, "")
+        if rel:
+            norm = rel.replace("\\", "/")
+            parts = norm.split("/")
+            if len(parts) > 1 and parts[0]:
+                cats.append(parts[0])
+            elif "shabah" in rel.lower() or book_name == "حياة الصحابة":
+                cats.append("السيرة والشمائل")
+
+        custom_cats = self.book_map.get(book_name, [])
+        for c in custom_cats:
+            if c not in cats:
+                cats.append(c)
+        return cats
+
+    def get_current_category(self):
+        if hasattr(self, 'category_tabs') and self.category_tabs.count() > 0:
+            data = self.category_tabs.tabData(self.category_tabs.currentIndex())
+            if data:
+                return str(data)
+            txt = self.category_tabs.tabText(self.category_tabs.currentIndex())
+            clean = re.sub(r'[\s:(]+\d+[\s)]*$', '', txt).strip()
+            return clean if clean else "كل الكتب"
+        return "كل الكتب"
+
     def update_categories_ui(self):
         if len(self.categories) == 0:
             self.cat_btn.setText("إضافة فئة")
-            self.category_tabs.setVisible(False)
         else:
             self.cat_btn.setText("خيارات فئات الكتب")
-            self.category_tabs.setVisible(not self.show_favorites_only)
+        self.category_tabs.setVisible(not self.show_favorites_only)
+
+        prev_cat = self.get_current_category()
+
         self.category_tabs.blockSignals(True)
         while self.category_tabs.count() > 0:
             self.category_tabs.removeTab(0)
-        self.category_tabs.addTab("كل الكتب")
+
+        all_books = list(functions.islamicBooks.books.keys())
+        total_books_count = len(all_books)
+
+        # حساب عدد الكتب المحملة في كل فئة
+        cat_counts = {}
+        inherent_categories = set()
+        for b_name in all_books:
+            cats = self.get_book_categories(b_name)
+            for c in cats:
+                cat_counts[c] = cat_counts.get(c, 0) + 1
+            rel = functions.islamicBooks.books.get(b_name, "")
+            if rel:
+                norm = rel.replace("\\", "/")
+                parts = norm.split("/")
+                if len(parts) > 1 and parts[0]:
+                    inherent_categories.add(parts[0])
+                elif "shabah" in rel.lower() or b_name == "حياة الصحابة":
+                    inherent_categories.add("السيرة والشمائل")
+
+        # 1. تبويبة كل الكتب مع عدد الكتب الكلي
+        all_title = f"كل الكتب: {total_books_count}"
+        idx = self.category_tabs.addTab(all_title)
+        self.category_tabs.setTabData(idx, "كل الكتب")
+
+        # 2. فئات الكتب الموجودة والمحملة فعلياً مع عدد كتب كل فئة
+        for cat in sorted(inherent_categories):
+            cnt = cat_counts.get(cat, 0)
+            cat_title = f"{cat}: {cnt}"
+            idx = self.category_tabs.addTab(cat_title)
+            self.category_tabs.setTabData(idx, cat)
+
+        # 3. الفئات المخصصة التي أنشأها المستخدم مع عدد كتب كل فئة
         for cat in self.categories:
-            self.category_tabs.addTab(cat)
+            if cat not in inherent_categories:
+                cnt = cat_counts.get(cat, 0)
+                cat_title = f"{cat}: {cnt}"
+                idx = self.category_tabs.addTab(cat_title)
+                self.category_tabs.setTabData(idx, cat)
+
+        # استعادة التبويبة المحددة سابقاً
+        restore_idx = 0
+        for i in range(self.category_tabs.count()):
+            if self.category_tabs.tabData(i) == prev_cat:
+                restore_idx = i
+                break
+        self.category_tabs.setCurrentIndex(restore_idx)
+
         self.category_tabs.blockSignals(False)
         if self.is_loaded:
             self.apply_filter()
@@ -432,7 +506,7 @@ class IslamicBooks(qt.QWidget):
         else:
             self.fav_btn.setText("فتح قائمة المفضلة")
             if hasattr(self, 'category_tabs'):
-                self.category_tabs.setVisible(len(self.categories) > 0)
+                self.category_tabs.setVisible(True)
             if hasattr(self, 'cat_btn'):
                 self.cat_btn.setVisible(True)
 
@@ -457,6 +531,7 @@ class IslamicBooks(qt.QWidget):
 
     def on_data_loaded(self, book_list):
         self.is_loaded = True
+        self.update_categories_ui()
         self.update_favorites_ui_state()
         self.apply_filter()
 
@@ -471,6 +546,7 @@ class IslamicBooks(qt.QWidget):
             thread.start()
 
     def handle_data_ready(self, book_list):
+        self.update_categories_ui()
         self.apply_filter()
 
     def start_threaded_delete(self, itemText):
@@ -485,6 +561,7 @@ class IslamicBooks(qt.QWidget):
 
     def handle_deletion_complete(self, success):
         if success:
+            self.update_categories_ui()
             self.apply_filter()
             guiTools.speak("تم الحذف")
         else:
@@ -507,7 +584,7 @@ class IslamicBooks(qt.QWidget):
                 self.book_map[book_name] = []
             self.book_map[book_name].append(cat_name)
             self.save_categories()
-            self.apply_filter()
+            self.update_categories_ui()
             guiTools.MessageBox.view(self, "تمت الإضافة", f"تم إضافة الكتاب '{book_name}' إلى الفئة '{cat_name}'.")
 
     def remove_book_from_specific_category(self, book_name):
@@ -523,7 +600,7 @@ class IslamicBooks(qt.QWidget):
                     if not self.book_map[book_name]:
                         del self.book_map[book_name]
                     self.save_categories()
-                    self.apply_filter()
+                    self.update_categories_ui()
                     guiTools.MessageBox.view(self, "تمت الإزالة", f"تم إزالة الكتاب '{book_name}' من الفئة '{cat_name}'.")
 
     def remove_book_from_current_category(self, book_name, cat_name):
@@ -534,7 +611,7 @@ class IslamicBooks(qt.QWidget):
                 if not self.book_map[book_name]:
                     del self.book_map[book_name]
                 self.save_categories()
-                self.apply_filter()
+                self.update_categories_ui()
                 guiTools.MessageBox.view(self, "تمت الإزالة", f"تم إزالة الكتاب '{book_name}' من الفئة '{cat_name}'.")
 
     def open_context_menu(self, pos):
@@ -556,9 +633,7 @@ class IslamicBooks(qt.QWidget):
             act.triggered.connect(lambda: self.toggle_item_favorite(book_name, True))
         menu.addAction(act)
 
-        current_tab_text = "كل الكتب"
-        if hasattr(self, 'category_tabs') and self.category_tabs.count() > 0:
-            current_tab_text = self.category_tabs.tabText(self.category_tabs.currentIndex())
+        current_tab_text = self.get_current_category()
 
         if self.categories:
             add_cat_act = qt1.QAction("إضافة إلى فئة", self)
@@ -567,7 +642,7 @@ class IslamicBooks(qt.QWidget):
 
             book_cats = self.book_map.get(book_name, [])
 
-            if current_tab_text == "كل الكتب":
+            if current_tab_text == "كل الكتب" or current_tab_text not in self.categories:
                 if book_cats:
                     rem_action = qt.QWidgetAction(self)
                     rem_btn = guiTools.QPushButton("إزالة من فئة معينة")
@@ -613,9 +688,9 @@ class IslamicBooks(qt.QWidget):
             if itemText in ["جاري تحميل قائمة الكتب...", "لا توجد كتب في قائمة المفضلة", "لا توجد كتب في هذه الفئة"]:
                 return
             if itemText=="حياة الصحابة":
-                guiTools.qMessageBox.MessageBox.error(self,"تنبيه","لا يمكنك حذف هذا الكتاب ")
+                guiTools.qMessageBox.MessageBox.error(self,"خطأ","لا يمكن حذف هذا الكتاب ")
             else:
-                question=guiTools.QQuestionMessageBox.view(self,"تنبيه","هل تريد حذف هذا الكتاب","نعم","لا")
+                question=guiTools.QQuestionMessageBox.view(self,"تأكيد","هل تريد حذف هذا الكتاب ؟","نعم","لا")
                 if question==0:
                     self.start_threaded_delete(itemText)
 
@@ -640,7 +715,7 @@ class IslamicBooks(qt.QWidget):
         self.start_threaded_refresh()
 
     def search(self,pattern,text_list):
-        tashkeel_pattern=re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+        tashkeel_pattern=re.compile(r'[ؗ-ًؚ-ْٰ]')
         normalized_pattern=tashkeel_pattern.sub('', pattern)
         matches=[
             text for text in text_list
@@ -660,9 +735,7 @@ class IslamicBooks(qt.QWidget):
         if text is None:
             text = self.search_bar.text()
         search_text = text.lower().strip()
-        current_tab_text = "كل الكتب"
-        if hasattr(self, 'category_tabs') and self.category_tabs.count() > 0:
-            current_tab_text = self.category_tabs.tabText(self.category_tabs.currentIndex())
+        current_tab_text = self.get_current_category()
         if self.show_favorites_only:
             prompt = "البحث في المفضلة"
         elif current_tab_text == "كل الكتب":
@@ -680,7 +753,7 @@ class IslamicBooks(qt.QWidget):
                 if book not in self.favorites:
                     continue
             elif current_tab_text != "كل الكتب":
-                book_cats = self.book_map.get(book, [])
+                book_cats = self.get_book_categories(book)
                 if current_tab_text not in book_cats:
                     continue
             if search_text:
