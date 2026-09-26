@@ -116,7 +116,8 @@
         ],
         "Adab": [
             "منظومة الألبيري",
-            "لامية ابن الوردي"
+            "لامية ابن الوردي",
+            "ضادية ابن زيدون"
         ]
     },
     "dic_moton_english": {
@@ -208,7 +209,8 @@
         ],
         "Adab": [
             "alberi",
-            "lamiaibnwardi"
+            "lamiaibnwardi",
+            "dadia"
         ]
     },
     "matn_lengths": {
@@ -277,7 +279,8 @@
         "almorshedalmoeen": 1002,
         "nehaya": 996,
         "alberi": 115,
-        "lamiaibnwardi": 77
+        "lamiaibnwardi": 77,
+        "dadia": 46
     },
     "arabic_to_slug": {
         "تحفة الأطفال": "tohfa",
@@ -345,6 +348,7 @@
         "المرشد المعين على الضروري من علوم الدين": "almorshedalmoeen",
         "نهاية التدريب في نظم غاية التقريب": "nehaya",
         "منظومة الألبيري": "alberi",
-        "لامية ابن الوردي": "lamiaibnwardi"
+        "لامية ابن الوردي": "lamiaibnwardi",
+        "ضادية ابن زيدون": "dadia"
     }
 }
