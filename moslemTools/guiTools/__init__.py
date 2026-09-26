@@ -11,13 +11,11 @@ from .QInputDialog import QInputDialog
 from .qMessageBox import MessageBox
 from .qMessageBoxForGame import MessageBoxForGame
 from .QQuestionMessageBox import QQuestionMessageBox
-from .note_dialog import NoteDialog
 from .QCustomListDialog import QCustomListDialog
 from .speak import speak
 from .QNavigableLabel import QNavigableLabel
 from .QCustomContextMenu import QCustomContextMenu
 from .QCustomTabWidget import QCustomTabWidget, QCustomTabBar
 from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit
-from .QNavigableTextEdit import QNavigableTextEdit
 from .internet import check_internet
 from .sound_player import play_page_turn_sound

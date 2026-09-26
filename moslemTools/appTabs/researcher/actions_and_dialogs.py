@@ -5,8 +5,8 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from gui.quranViewer import QuranViewer
-from gui.tafaseerViewer import TafaseerViewer
-from gui.translationViewer import translationViewer
+from gui.tafaseer import TafaseerViewer
+from gui.translations import translationViewer
 from gui.changeReciter import ChangeReciter
 from .search_worker import DownloadThread, SearchModeDialog, SearchThread, RemainingThread
 

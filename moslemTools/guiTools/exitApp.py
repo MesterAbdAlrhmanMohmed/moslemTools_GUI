@@ -4,9 +4,9 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from settings import app
-from .QReadOnlyTextEdit import QReadOnlyTextEdit
-if not isinstance(QReadOnlyTextEdit, type):
-    QReadOnlyTextEdit = QReadOnlyTextEdit.QReadOnlyTextEdit
+from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit
+if not isinstance(QNavigableLabelAsTextEdit, type):
+    QNavigableLabelAsTextEdit = QNavigableLabelAsTextEdit.QNavigableLabelAsTextEdit
 from .QPushButton import QPushButton
 if not isinstance(QPushButton, type):
     QPushButton = QPushButton.QPushButton
@@ -22,7 +22,6 @@ class ExitApp(qt.QDialog):
         self.setWindowTitle("خيارات تشغيل البرنامج")
         self.center()
         layout = qt.QVBoxLayout(self)
-        self.text_edit = QReadOnlyTextEdit(viewer_name="exitApp")
         content = (
             "خيارات تشغيل البرنامج:\n\n"
             "1. إيقاف تشغيل البرنامج:\n"
@@ -32,7 +31,7 @@ class ExitApp(qt.QDialog):
             "3. إعادة تشغيل البرنامج:\n"
             "يُستخدم لإعادة تشغيل البرنامج في حالة اكتشاف أي أخطاء تتطلب إعادة التشغيل."
         )
-        self.text_edit.setText(content)
+        self.text_edit = QNavigableLabelAsTextEdit(content)
         layout.addWidget(self.text_edit)
         buttons_layout = qt.QHBoxLayout()
         self.btn_exit = QPushButton("إيقاف تشغيل البرنامج")

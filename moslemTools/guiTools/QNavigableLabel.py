@@ -35,6 +35,35 @@ class QNavigableLabel(QLineEdit):
             event.accept()
             return
 
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            window = self.window()
+            if window:
+                from PyQt6.QtWidgets import QPushButton, QDialog
+                default_btn = None
+                buttons = window.findChildren(QPushButton)
+                for btn in buttons:
+                    if btn.isEnabled() and btn.isDefault():
+                        default_btn = btn
+                        break
+                if not default_btn and isinstance(window, QDialog):
+                    for btn in buttons:
+                        if btn.isEnabled() and btn.autoDefault():
+                            default_btn = btn
+                            break
+                if not default_btn and hasattr(window, "OKBTN") and isinstance(window.OKBTN, QPushButton) and window.OKBTN.isEnabled():
+                    default_btn = window.OKBTN
+                if not default_btn and buttons:
+                    for btn in buttons:
+                        if btn.isEnabled():
+                            default_btn = btn
+                            break
+                if default_btn:
+                    default_btn.click()
+                    event.accept()
+                    return
+            event.ignore()
+            return
+
         navigation_keys = {
             Qt.Key.Key_Left,
             Qt.Key.Key_Right,

@@ -3,7 +3,7 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from settings import app
 import functions.notesManager as notesManager
-import guiTools.note_dialog as note_dialog
+import gui.note_dialog as note_dialog
 import functions.quranJsonControl as quranJsonControl
 from gui import quranViewer, hadeeth_viewer, storyViewer
 from gui.islamicBooks import book_viewer

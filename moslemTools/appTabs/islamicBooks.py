@@ -357,6 +357,7 @@ class IslamicBooks(qt.QWidget):
         return "كل الكتب"
 
     def update_categories_ui(self):
+        self.load_categories()
         if len(self.categories) == 0:
             self.cat_btn.setText("إضافة فئة")
         else:
@@ -396,15 +397,14 @@ class IslamicBooks(qt.QWidget):
         # 2. فئات الكتب الموجودة والمحملة فعلياً مع عدد كتب كل فئة
         for cat in sorted(inherent_categories):
             cnt = cat_counts.get(cat, 0)
-            cat_title = f"{cat}: {cnt}"
+            cat_title = f"{cat}: {cnt}" if cnt > 0 else cat
             idx = self.category_tabs.addTab(cat_title)
             self.category_tabs.setTabData(idx, cat)
 
-        # 3. الفئات المخصصة التي أنشأها المستخدم مع عدد كتب كل فئة
         for cat in self.categories:
             if cat not in inherent_categories:
                 cnt = cat_counts.get(cat, 0)
-                cat_title = f"{cat}: {cnt}"
+                cat_title = f"{cat}: {cnt}" if cnt > 0 else cat
                 idx = self.category_tabs.addTab(cat_title)
                 self.category_tabs.setTabData(idx, cat)
 

@@ -1,4 +1,4 @@
-from guiTools import note_dialog
+from gui import note_dialog
 import functions.notesManager as notesManager
 import guiTools, pyperclip, winsound, functions, settings
 import PyQt6.QtWidgets as qt

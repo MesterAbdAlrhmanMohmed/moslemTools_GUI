@@ -1,8 +1,8 @@
-from guiTools import note_dialog
+from gui import note_dialog
 import functions.notesManager as notesManager
 from ..changeReciter import ChangeReciter
-from ..translationViewer import translationViewer
-from ..tafaseerViewer import TafaseerViewer
+from ..translations import translationViewer
+from ..tafaseer import TafaseerViewer
 from ..quranPlayer import QuranPlayer
 import time, winsound, pyperclip, os, re, requests, subprocess, shutil, traceback
 import ujson as json

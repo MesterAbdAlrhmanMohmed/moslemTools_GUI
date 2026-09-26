@@ -166,7 +166,7 @@ class IslamicQuestionsGame(qt.QWidget):
         top_layout.addWidget(self.progress_label, 1)
         top_layout.addStretch()
         game_layout.addLayout(top_layout)
-        self.question_edit = guiTools.QReadOnlyTextEdit(viewer_name="islamicQuestionsGame")
+        self.question_edit = guiTools.QNavigableLabelAsTextEdit()
         self.question_edit.setMinimumHeight(120)
         self.question_edit.setStyleSheet("padding: 10px;")
         game_layout.addWidget(self.question_edit)

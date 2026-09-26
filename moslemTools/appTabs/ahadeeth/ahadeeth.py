@@ -1,4 +1,5 @@
-import gui, guiTools, functions, os, re
+import gui, guiTools, functions, os, re, json
+from .selectBabDialog import SelectBabDialog
 from settings import settings_handler, app
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -46,7 +47,6 @@ class hadeeth(qt.QWidget):
         serch = qt.QLabel("البحث عن كتاب حديث")
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_bar = qt.QLineEdit()
-        self.search_bar.setPlaceholderText("البحث عن كتاب حديث")
         self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         search_v_layout.addWidget(serch)
@@ -265,7 +265,7 @@ class hadeeth(qt.QWidget):
         item = self.list_of_ahadeeth.currentItem()
         if item and item.text() not in ["جاري تحميل قائمة الكتب...", "لا توجد كتب أحاديث في قائمة المفضلة"]:
             book_file = functions.ahadeeth.ahadeeths[item.text()]
-            dialog = gui.SelectBabDialog(self, book_file, book_name_ar=item.text())
+            dialog = SelectBabDialog(self, book_file, book_name_ar=item.text())
             if dialog.exec() == qt.QDialog.DialogCode.Accepted:
                 gui.hadeeth_viewer(self, book_file, chapter_id=dialog.selected_chapter_id, chapter_name=dialog.selected_raw_chapter_name).exec()
 

@@ -5,9 +5,9 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtCore import Qt
-from .QReadOnlyTextEdit import QReadOnlyTextEdit
-if not isinstance(QReadOnlyTextEdit, type):
-    QReadOnlyTextEdit = QReadOnlyTextEdit.QReadOnlyTextEdit
+from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit
+if not isinstance(QNavigableLabelAsTextEdit, type):
+    QNavigableLabelAsTextEdit = QNavigableLabelAsTextEdit.QNavigableLabelAsTextEdit
 import winsound
 
 
@@ -19,8 +19,7 @@ class MessageBoxForGame(qt.QDialog):
         self.setWindowTitle(title)
         self.center()
         layout = qt.QVBoxLayout(self)
-        self.label = QReadOnlyTextEdit(viewer_name="qMessageBox")
-        self.label.setText(label)
+        self.label = QNavigableLabelAsTextEdit(label)
         layout.addWidget(self.label)
         self.OKBTN = QPushButton("موافق")
         self.OKBTN.clicked.connect(self.accept)

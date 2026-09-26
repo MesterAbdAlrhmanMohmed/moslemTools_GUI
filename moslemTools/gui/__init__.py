@@ -1,15 +1,18 @@
 from .athkerDialog import AthkerDialog
 from . quranViewer import QuranViewer,reciters
-from .hadeeth_viewer import hadeeth_viewer, SelectBabDialog
+from .hadeeth_viewer import hadeeth_viewer
 from .quranPlayer import QuranPlayer
-from . import download,islamicBooks,quranRange
+from . import download,islamicBooks,quranRange,tafaseer,translations
 from .adaanWindow import AdaanDialog
 from .after_azaan import AfterAdaan
 from .storyViewer import StoryViewer
 from .book_marks import book_marcks
-from .tafaseerViewer import TafaseerViewer
-from .translationViewer import translationViewer
+from .tafaseer import TafaseerViewer, ChangeTafseerDialog
+from .translations import translationViewer, ChangeTranslationDialog
 from .islamicTopicViewer import IslamicTopicViewer
 from .motonViewer import MotonViewer, moton_reciters
 from .motonPlayer import MotonPlayer
 from .quranRange import QuranRange
+
+from .note_dialog import NoteDialog
+from . import note_dialog

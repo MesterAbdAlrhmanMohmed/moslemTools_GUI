@@ -17,7 +17,7 @@ class NamesOfAllah(qt.QWidget):
         self.setFont(font)
         self.is_loaded = False
         layout = qt.QVBoxLayout(self)
-        self.information = guiTools.QReadOnlyTextEdit(viewer_name="namesOfAllah")
+        self.information = guiTools.QNavigableLabelAsTextEdit()
         self.information.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.information.customContextMenuRequested.connect(self.OnContextMenu)
         bottom_layout = qt.QHBoxLayout()

@@ -1,6 +1,6 @@
 import winsound
 import guiTools
-from guiTools import note_dialog
+from gui import note_dialog
 import functions.notesManager as notesManager
 import functions.bookMarksManager as bookMarksManager
 

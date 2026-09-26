@@ -39,7 +39,6 @@ class PartSelection(qt.QDialog):
         layout.addWidget(self.label)
 
         self.search_bar = qt.QLineEdit()
-        self.search_bar.setPlaceholderText("ابحث في الأجزاء...")
         self.search_bar.setAccessibleName("ابحث في الأجزاء")
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_bar.setMinimumHeight(32)
@@ -71,9 +70,19 @@ class PartSelection(qt.QDialog):
         buttons_layout.addWidget(self.cancel_button)
         layout.addLayout(buttons_layout)
 
+        self.select_button.setDefault(True)
+        self.search_bar.returnPressed.connect(self.openPart)
         qt1.QShortcut(qt1.QKeySequence("escape"), self).activated.connect(self.reject)
-        qt1.QShortcut(qt1.QKeySequence("return"), self).activated.connect(self.openPart)
-        qt1.QShortcut(qt1.QKeySequence("enter"), self).activated.connect(self.openPart)
+
+    def keyPressEvent(self, event):
+        if event.key() in (qt2.Qt.Key.Key_Return, qt2.Qt.Key.Key_Enter):
+            if self.cancel_button.hasFocus():
+                self.cancel_button.click()
+                return
+            else:
+                self.openPart()
+                return
+        super().keyPressEvent(event)
 
     def normalize(self, text):
         t = re.sub(r'[\u0617-\u061A\u064B-\u0652\u0670]', '', text)

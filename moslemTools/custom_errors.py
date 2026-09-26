@@ -1,4 +1,4 @@
-import traceback, os, ctypes, datetime, sys
+import traceback, os, ctypes, datetime, sys, threading
 
 def log_error_to_file(error_msg):
     try:
@@ -64,3 +64,13 @@ def handle_exception(e=None, custom_msg=""):
         ctypes.windll.user32.MessageBoxW(None, error_message, "Error", 0x10)
 
 sys.excepthook = my_excepthook
+
+def threading_excepthook(args):
+    my_excepthook(args.exc_type, args.exc_value, args.exc_traceback)
+
+threading.excepthook = threading_excepthook
+
+def unraisable_hook(unraisable):
+    my_excepthook(unraisable.exc_type, unraisable.exc_value, unraisable.exc_traceback)
+
+sys.unraisablehook = unraisable_hook

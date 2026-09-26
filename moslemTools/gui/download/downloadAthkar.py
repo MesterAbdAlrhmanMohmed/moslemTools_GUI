@@ -1,4 +1,4 @@
-import json,os,requests,re,time,socket
+import json,os,requests,re,time,socket,custom_errors
 import guiTools,settings,settings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -12,7 +12,6 @@ class SelectAthkar(qt.QDialog):
         serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(serch)
         self.search_bar=qt.QLineEdit()        
-        self.search_bar.setPlaceholderText("البحث عن فئة أذكار")
         self.search_bar.textChanged.connect(self.onsearch)        
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)
@@ -57,12 +56,18 @@ class downloadThread(qt2.QThread):
         self.is_paused=False
         self.is_cancelled=False
         self.current_file=None
+        self.response=None
         self.objects.pauseDownloading.connect(self.cancel)
     def resume(self):
         self.is_paused=False
     def cancel(self):
         self.is_cancelled=True
         self.is_paused=False
+        if self.response:
+            try:
+                self.response.close()
+            except Exception:
+                pass
     def run(self):
         try:
             count=0
@@ -86,6 +91,7 @@ class downloadThread(qt2.QThread):
                         return
                     try:
                         with requests.get(item["audio"],stream=True,timeout=(5,5)) as r:
+                            self.response=r
                             if r.status_code!=200:
                                 self.objects.finch.emit(False)
                                 return
@@ -128,7 +134,7 @@ class downloadThread(qt2.QThread):
             if not self.is_cancelled:
                 self.objects.finch.emit(True)
         except Exception as e:
-            print(e)
+            custom_errors.handle_exception(e)
             self.objects.finch.emit(False)
 class DownloadReciter(qt.QDialog):
     def __init__(self,p,url,name):
@@ -141,6 +147,8 @@ class DownloadReciter(qt.QDialog):
         self.downloaded.setRange(0,7000)
         self.downloaded.setReadOnly(True)
         self.pause=guiTools.QPushButton("إيقاف مؤقت")
+        self.pause.setAutoDefault(False)
+        self.pause.setDefault(False)
         self.pause.setStyleSheet("background-color: #0000AA; color: white;")
         layout=qt.QVBoxLayout(self)
         layout.addWidget(self.progress)
@@ -190,8 +198,10 @@ class DownloadReciter(qt.QDialog):
     def closeEvent(self,event):
         if self.run and self.run.isRunning():
             self.run.cancel()
-            self.run.terminate()
-            self.run.wait(200)
+            self.run.quit()
+            if not self.run.wait(2000):
+                self.run.terminate()
+                self.run.wait(1000)
             if self.run.current_file and os.path.exists(self.run.current_file):
                 try:
                     os.remove(self.run.current_file)

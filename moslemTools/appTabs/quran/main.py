@@ -1,4 +1,4 @@
-import gui.translationViewer
+import gui.translations
 import gui.quranRange
 import gui, guiTools, functions, re, os, requests, subprocess, shutil, traceback
 import ujson as json

@@ -2,6 +2,7 @@ import os
 import re
 import socket
 import requests
+import custom_errors
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -27,6 +28,7 @@ class DownloadMotonThread(qt2.QThread):
         self.is_paused = False
         self.is_cancelled = False
         self.current_file = None
+        self.response = None
         self.objects.pauseDownloading.connect(self.cancel)
 
     def pause(self):
@@ -38,6 +40,11 @@ class DownloadMotonThread(qt2.QThread):
     def cancel(self):
         self.is_cancelled = True
         self.is_paused = False
+        if self.response:
+            try:
+                self.response.close()
+            except Exception:
+                pass
 
     def run(self):
         try:
@@ -69,6 +76,7 @@ class DownloadMotonThread(qt2.QThread):
 
                     try:
                         with requests.get(base_url + file_name, stream=True, timeout=(5, 5)) as r:
+                            self.response = r
                             if r.status_code != 200:
                                 self.objects.finch.emit(False)
                                 return
@@ -116,7 +124,7 @@ class DownloadMotonThread(qt2.QThread):
             if not self.is_cancelled:
                 self.objects.finch.emit(True)
         except Exception as e:
-            print(f"Error in DownloadMotonThread: {e}")
+            custom_errors.handle_exception(e, "Error in DownloadMotonThread")
             self.objects.finch.emit(False)
 
 
@@ -480,8 +488,10 @@ class DownloadMotonReciters(qt.QDialog):
             if result == 0:
                 self.is_downloading = False
                 self.run.cancel()
-                self.run.terminate()
-                self.run.wait(200)
+                self.run.quit()
+                if not self.run.wait(2000):
+                    self.run.terminate()
+                    self.run.wait(1000)
                 if self.run.current_file and os.path.exists(self.run.current_file):
                     try:
                         os.remove(self.run.current_file)

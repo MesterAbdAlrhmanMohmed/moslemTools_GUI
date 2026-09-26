@@ -30,7 +30,7 @@ class AboutDeveloper(qt.QDialog):
         self.info_text.setText("اللهم اجعل عملنا هذا في ميزان حسناتنا وصدقة جارية لنا")
         self.info_text.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info_text.setFont(font)
-        self.info_text1 = guiTools.QReadOnlyTextEdit()
+        self.info_text1 = guiTools.QNavigableLabelAsTextEdit(parent=self)
         self.info_text1.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.info_text1.setText("اللهم اجعل ثواب هذا البرنامج صدقة جارية عني،\nوعن كل مَن اغتبته أو آذيته، أو أخطأت في حقه بقصد أو بغير قصد،\nواغفر لي ولهم")
         self.info_text1.setFont(font)

@@ -1,4 +1,4 @@
-import os, requests, re, guiTools, functions, settings, shutil, time, urllib.parse, custom_errors
+import os, requests, re, guiTools, functions, settings, custom_errors
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -20,7 +20,7 @@ def format_item_count(count):
 	elif 3 <= count <= 10:
 		return f"{count} عناصر"
 	else:
-		return f"{count} عنصر"
+		return f"{count} عنصراً"
 
 
 def format_file_count(count):
@@ -31,138 +31,110 @@ def format_file_count(count):
 	elif 3 <= count <= 10:
 		return f"{count} ملفات"
 	else:
-		return f"{count} ملف"
+		return f"{count} ملفاً"
 
 
-class IslamicBookDataLoaderThread(qt2.QThread):
+class TafaseerDataLoaderThread(qt2.QThread):
 	data_loaded = qt2.pyqtSignal(object)
 	loading_error = qt2.pyqtSignal(str)
 
-	def __init__(self, fileName: str, parent=None):
+	def __init__(self, fileName: str = "all_tafaseers.json", parent=None):
 		super().__init__(parent)
 		self.fileName = fileName
 
 	def run(self):
 		try:
+			headers = {
+				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+			}
 			jsonContent = None
-			# 1. Try local file first (ensures offline reliability)
+
 			local_map_path = os.path.join("data", "json", "files", self.fileName)
 			if os.path.exists(local_map_path):
 				try:
 					with open(local_map_path, "r", encoding="utf-8") as file:
-						jsonContent = json.load(file)
-				except Exception as e:
-					log_error("IslamicBookDataLoaderThread.local_read", e)
+						local_c = json.load(file)
+					if isinstance(local_c, dict):
+						jsonContent = local_c
+				except Exception:
+					pass
 
-			# 2. Try remote if local not found
-			if not jsonContent:
-				url = "https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/refs/heads/main/moslemTools/data/json/files/" + self.fileName
-				headers = {
-					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-				}
-				r = requests.get(url, timeout=15, headers=headers)
+			url = "https://raw.githubusercontent.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/refs/heads/main/moslemTools/data/json/files/" + self.fileName
+			try:
+				r = requests.get(url, timeout=10, headers=headers)
 				if r.status_code == 200:
-					jsonContent = r.json()
-					try:
-						os.makedirs(os.path.dirname(local_map_path), exist_ok=True)
-						with open(local_map_path, "w", encoding="utf-8") as file:
-							json.dump(jsonContent, file, ensure_ascii=False, indent=4)
-					except Exception:
-						pass
+					fetched = r.json()
+					if jsonContent is None or (isinstance(fetched, dict) and len(fetched) > len(jsonContent)):
+						jsonContent = fetched
+			except Exception:
+				pass
 
-			if jsonContent:
-				# Remove already downloaded books from available list
-				downloadedData = list(functions.islamicBooks.books.keys())
+			if jsonContent is None or len(jsonContent) <= 9:
+				try:
+					hf_url = "https://huggingface.co/datasets/alcoder01/Quran_Tafaseer/resolve/main/all_tafaseers.json"
+					r_hf = requests.get(hf_url, timeout=10, headers=headers)
+					if r_hf.status_code == 200:
+						fetched_hf = r_hf.json()
+						if jsonContent is None or (isinstance(fetched_hf, dict) and len(fetched_hf) > len(jsonContent)):
+							jsonContent = fetched_hf
+				except Exception:
+					pass
+
+			if jsonContent is not None:
+				try:
+					os.makedirs(os.path.dirname(local_map_path), exist_ok=True)
+					with open(local_map_path, "w", encoding="utf-8") as file:
+						json.dump(jsonContent, file, ensure_ascii=False, indent=4)
+				except Exception:
+					pass
+
+				functions.tafseer.reload_tafaseers()
+				downloadedData = list(functions.tafseer.tafaseers.keys())
 				for data in downloadedData:
 					if data in jsonContent:
 						del jsonContent[data]
 				self.data_loaded.emit(jsonContent)
 			else:
-				self.loading_error.emit("تعذر تحميل قائمة الكتب المتاحة")
+				self.loading_error.emit("تعذر تحميل البيانات من الخادم أو الملفات المحلية")
 		except Exception as e:
-			log_error("IslamicBookDataLoaderThread.run", e)
+			log_error("TafaseerDataLoaderThread.run", e)
 			self.loading_error.emit(str(e))
 
 
-class SelectIslamicBookItem(qt.QDialog):
-	def __init__(self, p, fileName: str, dirName: str):
+class SelectTafaseerItem(qt.QDialog):
+	def __init__(self, p=None, fileName: str = "all_tafaseers.json", dirName: str = "tafaseer"):
 		super().__init__(p)
-		self.setMinimumSize(650, 450)
-		self.resize(980, 580)
+		self.setMinimumSize(600, 400)
+		self.resize(950, 550)
 		self.center()
-		self.all_data = {}  # { display_name: rel_path }
-		self.cat_groups = {}  # { cat_folder: { display_name: rel_path } }
-		self.current_filtered_data = {}
+		self.setWindowTitle("تحميل كتب التفسير")
+		self.data = {}
 		self.dirName = dirName
 		self.start_selection_index = None
 		self.custom_download_list = []
 		self.fileName = fileName
 
 		layout = qt.QVBoxLayout(self)
-		layout.setSpacing(8)
 
-		font_bold = qt1.QFont()
-		font_bold.setBold(True)
-
-		# 0. Category Search Bar before Category Combo Box
-		cat_search_label = qt.QLabel("بحث في فئات الكتب:")
-		cat_search_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
-		cat_search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		cat_search_label.setFont(font_bold)
-		layout.addWidget(cat_search_label)
-
-		self.cat_search_bar = qt.QLineEdit()
-		self.cat_search_bar.setAccessibleName("بحث في فئات الكتب")
-		self.cat_search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		self.cat_search_bar.setMinimumHeight(32)
-		self.cat_search_bar.textChanged.connect(self.on_search_category)
-		layout.addWidget(self.cat_search_bar)
-
-		cat_header_layout = qt.QHBoxLayout()
-		cat_header_layout.setSpacing(10)
-		cat_header_layout.addStretch(1)
-
-		self.category_combo = qt.QComboBox()
-		self.category_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
-		self.category_combo.setSizePolicy(qt.QSizePolicy.Policy.Minimum, qt.QSizePolicy.Policy.Fixed)
-		self.category_combo.setAccessibleName("اختيار الفئة")
-		self.category_combo.setMinimumHeight(35)
-		self.category_combo.setStyleSheet("QComboBox { padding: 4px 15px; font-weight: bold; font-size: 13px; }")
-		self.category_combo.currentIndexChanged.connect(self.on_category_changed)
-		cat_header_layout.addWidget(self.category_combo)
-
-		self.cat_label = qt.QLabel("اختيار الفئة:")
-		self.cat_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
-		self.cat_label.setAlignment(qt2.Qt.AlignmentFlag.AlignVCenter)
-		self.cat_label.setFont(font_bold)
-		cat_header_layout.addWidget(self.cat_label)
-
-		cat_header_layout.addStretch(1)
-		layout.addLayout(cat_header_layout)
-
-		# 2. Search bar
-		search_label = qt.QLabel("بحث في الكتب:")
-		search_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		search_label = qt.QLabel("البحث عن كتاب تفسير")
 		search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		search_label.setFont(font_bold)
 		layout.addWidget(search_label)
 
 		self.search_bar = qt.QLineEdit()
-		self.search_bar.setAccessibleName("بحث في الكتب")
+		self.search_bar.setAccessibleName("البحث عن كتاب تفسير")
 		self.search_bar.textChanged.connect(self.onsearch)
 		self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		self.search_bar.setMinimumHeight(32)
 		layout.addWidget(self.search_bar)
 
-		# 3. Book Items List
 		self.item = guiTools.QListWidget()
 		self.item.setSpacing(3)
 		self.item.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
 		self.item.customContextMenuRequested.connect(self.show_context_menu)
-		self.item.setFont(font_bold)
+		font = qt1.QFont()
+		font.setBold(True)
+		self.item.setFont(font)
 		layout.addWidget(self.item)
 
-		# 4. Info and Selection Status Labels
 		self.info_label = guiTools.QNavigableLabel("لمزيد من خيارات التحميل، قم بالضغط على عنصر من القائمة باستخدام زر التطبيقات أو click الأيمن")
 		self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.info_label.setStyleSheet("color: white; font-weight: bold; font-size: 13px; margin: 5px;")
@@ -179,7 +151,7 @@ class SelectIslamicBookItem(qt.QDialog):
 
 		self.item.itemActivated.connect(self.on_item_clicked)
 
-		self.loading_label = guiTools.QNavigableLabel("جاري تحميل الكتب المتاحة، يرجى الانتظار...")
+		self.loading_label = guiTools.QNavigableLabel("جاري تحميل البيانات، يرجى الانتظار...")
 		self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.loading_label)
@@ -192,131 +164,6 @@ class SelectIslamicBookItem(qt.QDialog):
 		screen_center = qt1.QGuiApplication.primaryScreen().availableGeometry().center()
 		frame_geometry.moveCenter(screen_center)
 		self.move(frame_geometry.topLeft())
-
-	def onLoad(self):
-		self.loader_thread = IslamicBookDataLoaderThread(self.fileName)
-		self.loader_thread.data_loaded.connect(self.onDataLoaded)
-		self.loader_thread.loading_error.connect(self.onLoadingError)
-		self.loader_thread.start()
-
-	def normalize_cat(self, text):
-		t = re.sub(r'[ؗ-ًؚ-ْٰ]', '', text)
-		t = re.sub(r'[إأآ]', 'ا', t)
-		return t.replace('ى', 'ي').strip().lower()
-
-	def populate_categories(self, search_text=""):
-		prev_selected = self.category_combo.currentData()
-		self.category_combo.blockSignals(True)
-		self.category_combo.clear()
-
-		q = self.normalize_cat(search_text) if search_text else ""
-
-		# Add matching categories
-		for cat_folder in sorted(self.cat_groups.keys()):
-			if not q or q in self.normalize_cat(cat_folder):
-				count = len(self.cat_groups[cat_folder])
-				self.category_combo.addItem(f"{cat_folder} ({count})", cat_folder)
-
-		# Add the final item: "كل الكتب" with total count
-		total_count = len(self.all_data)
-		if not q or q in self.normalize_cat("كل الكتب") or "كل" in q or "جميع" in q:
-			self.category_combo.addItem(f"كل الكتب ({total_count})", "ALL")
-
-		# Restore previous selection or default to 0
-		if prev_selected:
-			restore_idx = self.category_combo.findData(prev_selected)
-			if restore_idx >= 0:
-				self.category_combo.setCurrentIndex(restore_idx)
-			elif self.category_combo.count() > 0:
-				self.category_combo.setCurrentIndex(0)
-		elif self.category_combo.count() > 0:
-			self.category_combo.setCurrentIndex(0)
-
-		self.category_combo.blockSignals(False)
-		self.update_filtered_books()
-
-	def on_search_category(self):
-		self.populate_categories(self.cat_search_bar.text())
-
-	def onDataLoaded(self, jsonContent):
-		self.all_data = jsonContent  # { display_name: rel_path }
-		self.cat_groups = {}
-
-		# Group by category folder name
-		for display_name, rel_path in self.all_data.items():
-			norm_path = rel_path.replace("\\", "/")
-			parts = norm_path.split("/")
-			if len(parts) > 1 and parts[0]:
-				cat_folder = parts[0]
-			elif "shabah" in rel_path.lower() or display_name == "حياة الصحابة":
-				cat_folder = "السيرة والشمائل"
-			else:
-				cat_folder = "أخرى"
-			self.cat_groups.setdefault(cat_folder, {})[display_name] = rel_path
-
-		self.populate_categories(self.cat_search_bar.text())
-
-		self.loading_label.setVisible(False)
-		self.item.setVisible(True)
-		self.info_label.setVisible(True)
-
-	def onLoadingError(self, error_message):
-		log_error("onLoad", error_message)
-		guiTools.qMessageBox.MessageBox.error(self, "خطأ", "تعذر تحميل قائمة الكتب")
-		self.accept()
-
-	def closeEvent(self, a0):
-		if hasattr(self, 'loader_thread') and self.loader_thread and self.loader_thread.isRunning():
-			self.loader_thread.quit()
-			self.loader_thread.wait(1000)
-		a0.accept()
-
-	def on_category_changed(self):
-		self.start_selection_index = None
-		self.custom_download_list.clear()
-		self.update_selection_ui()
-		self.update_filtered_books()
-
-	def update_filtered_books(self):
-		selected_data = self.category_combo.currentData()
-		if selected_data == "ALL" or not selected_data:
-			self.current_filtered_data = dict(self.all_data)
-		else:
-			self.current_filtered_data = dict(self.cat_groups.get(selected_data, {}))
-
-		# Apply search filter if active
-		search_text = self.search_bar.text().lower()
-		self.item.clear()
-		if search_text:
-			result = self.search(search_text, list(self.current_filtered_data.keys()))
-			self.item.addItems(result)
-		else:
-			self.item.addItems(self.current_filtered_data.keys())
-
-	def search(self, pattern, text_list):
-		try:
-			tashkeel_pattern = re.compile(r'[ؗ-ًؚ-ْٰ]')
-			normalized_pattern = tashkeel_pattern.sub('', pattern)
-			matches = [
-				text for text in text_list
-				if normalized_pattern in tashkeel_pattern.sub('', text).lower()
-			]
-			return matches
-		except Exception as e:
-			log_error("search", e)
-			return text_list
-
-	def onsearch(self):
-		try:
-			self.start_selection_index = None
-			self.custom_download_list.clear()
-			self.update_selection_ui()
-			search_text = self.search_bar.text().lower()
-			self.item.clear()
-			result = self.search(search_text, list(self.current_filtered_data.keys()))
-			self.item.addItems(result)
-		except Exception as e:
-			log_error("onsearch", e)
 
 	def show_context_menu(self, position):
 		if self.item.count() == 0:
@@ -401,12 +248,12 @@ class SelectIslamicBookItem(qt.QDialog):
 	def download_custom_list(self):
 		if not self.custom_download_list:
 			return
-		file_keys = [self.all_data[text] for text in self.custom_download_list if text in self.all_data]
-		display_names = [text for text in self.custom_download_list if text in self.all_data]
+		file_keys = [self.data[text] for text in self.custom_download_list if text in self.data]
+		display_names = [text for text in self.custom_download_list if text in self.data]
 		self.custom_download_list.clear()
 		self.update_selection_ui()
 		if file_keys:
-			StartDownloadingIslamicBooks(self, file_keys, self.dirName, display_names).exec()
+			StartDownloadingTafaseer(self, file_keys, self.dirName, display_names).exec()
 			self.refresh_after_download()
 
 	def cancel_custom_list(self):
@@ -442,13 +289,13 @@ class SelectIslamicBookItem(qt.QDialog):
 		display_names = []
 		for i in range(start_index, end_index + 1):
 			it = self.item.item(i)
-			if it and it.text() in self.all_data:
-				file_keys.append(self.all_data[it.text()])
+			if it and it.text() in self.data:
+				file_keys.append(self.data[it.text()])
 				display_names.append(it.text())
 		self.start_selection_index = None
 		self.update_selection_ui()
 		if file_keys:
-			StartDownloadingIslamicBooks(self, file_keys, self.dirName, display_names).exec()
+			StartDownloadingTafaseer(self, file_keys, self.dirName, display_names).exec()
 			self.refresh_after_download()
 
 	def update_selection_ui(self):
@@ -469,27 +316,77 @@ class SelectIslamicBookItem(qt.QDialog):
 				self.download_custom_list()
 			else:
 				curr = self.item.currentItem()
-				if curr and curr.text() in self.all_data:
-					StartDownloadingIslamicBooks(self, self.all_data[curr.text()], self.dirName, curr.text()).exec()
+				if curr and curr.text() in self.data:
+					StartDownloadingTafaseer(self, self.data[curr.text()], self.dirName, curr.text()).exec()
 					self.refresh_after_download()
 		except Exception as e:
-			log_error("SelectIslamicBookItem.on_item_clicked", e)
+			log_error("SelectTafaseerItem.on_item_clicked", e)
 
 	def refresh_after_download(self):
-		functions.islamicBooks.reload_books()
-		downloadedData = list(functions.islamicBooks.books.keys())
+		functions.tafseer.reload_tafaseers()
+		downloadedData = list(functions.tafseer.tafaseers.keys())
 		for d in downloadedData:
-			if d in self.all_data:
-				del self.all_data[d]
-		self.onDataLoaded(self.all_data)
+			if d in self.data:
+				del self.data[d]
+		self.item.clear()
+		self.item.addItems(self.data.keys())
+
+	def onLoad(self):
+		self.loader_thread = TafaseerDataLoaderThread(self.fileName)
+		self.loader_thread.data_loaded.connect(self.onDataLoaded)
+		self.loader_thread.loading_error.connect(self.onLoadingError)
+		self.loader_thread.start()
+
+	def onDataLoaded(self, jsonContent):
+		self.data = jsonContent
+		self.item.addItems(self.data.keys())
+		self.loading_label.setVisible(False)
+		self.item.setVisible(True)
+		self.info_label.setVisible(True)
+
+	def onLoadingError(self, error_message):
+		log_error("onLoad", error_message)
+		guiTools.qMessageBox.MessageBox.error(self, "تنبيه", "حدث خطأ أثناء تحميل البيانات")
+		self.accept()
+
+	def closeEvent(self, a0):
+		if hasattr(self, 'loader_thread') and self.loader_thread and self.loader_thread.isRunning():
+			self.loader_thread.quit()
+			self.loader_thread.wait(1000)
+		a0.accept()
+
+	def search(self, pattern, text_list):
+		try:
+			tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+			normalized_pattern = tashkeel_pattern.sub('', pattern)
+			matches = [
+				text for text in text_list
+				if normalized_pattern in tashkeel_pattern.sub('', text)
+			]
+			return matches
+		except Exception as e:
+			log_error("search", e)
+			return text_list
+
+	def onsearch(self):
+		try:
+			self.start_selection_index = None
+			self.custom_download_list.clear()
+			self.update_selection_ui()
+			search_text = self.search_bar.text().lower()
+			self.item.clear()
+			result = self.search(search_text, list(self.data.keys()))
+			self.item.addItems(result)
+		except Exception as e:
+			log_error("onsearch", e)
 
 
-class IslamicBookDownloadThread(qt2.QThread):
+class TafaseerDownloadThread(qt2.QThread):
 	progress = qt2.pyqtSignal(int)
 	finished = qt2.pyqtSignal(bool)
 	network_error = qt2.pyqtSignal(str)
 
-	def __init__(self, fileName: str = "", DIRName: str = ""):
+	def __init__(self, fileName: str = "", DIRName: str = "tafaseer"):
 		super().__init__()
 		self.fileName = fileName
 		self.DIRName = DIRName
@@ -506,8 +403,8 @@ class IslamicBookDownloadThread(qt2.QThread):
 		self.is_cancelled = True
 
 
-class StartDownloadingIslamicBooks(qt.QDialog):
-	def __init__(self, p, FileName, DIRName: str, display_name=None):
+class StartDownloadingTafaseer(qt.QDialog):
+	def __init__(self, p, FileName, DIRName: str = "tafaseer", display_name=None):
 		super().__init__(p)
 		if isinstance(FileName, list):
 			self.files = FileName
@@ -586,38 +483,6 @@ class StartDownloadingIslamicBooks(qt.QDialog):
 		frame_geometry.moveCenter(screen_center)
 		self.move(frame_geometry.topLeft())
 
-	def save_book_category(self, current_file, current_display):
-		try:
-			if current_file:
-				norm_path = current_file.replace("\\", "/")
-				parts = norm_path.split("/")
-				if len(parts) > 1 and parts[0]:
-					cat_folder = parts[0]
-				elif "shabah" in current_file.lower() or current_display == "حياة الصحابة":
-					cat_folder = "السيرة والشمائل"
-				else:
-					cat_folder = "أخرى"
-				cat_file_path = os.path.join(os.getenv('appdata'), settings.app.appName, "book_categories.json")
-				cat_data = {"categories": [], "book_map": {}}
-				if os.path.exists(cat_file_path):
-					with open(cat_file_path, "r", encoding="utf-8") as f:
-						cat_data = json.load(f)
-				cats = cat_data.get("categories", [])
-				book_map = cat_data.get("book_map", {})
-				if cat_folder not in cats:
-					cats.append(cat_folder)
-				if current_display not in book_map:
-					book_map[current_display] = []
-				if cat_folder not in book_map[current_display]:
-					book_map[current_display].append(cat_folder)
-				cat_data["categories"] = cats
-				cat_data["book_map"] = book_map
-				os.makedirs(os.path.dirname(cat_file_path), exist_ok=True)
-				with open(cat_file_path, "w", encoding="utf-8") as f:
-					json.dump(cat_data, f, ensure_ascii=False, indent=2)
-		except Exception as e:
-			log_error("save_book_category", e)
-
 	def start_next_file(self):
 		if self.current_index < self.total_count:
 			current_file = self.files[self.current_index]
@@ -638,30 +503,8 @@ class StartDownloadingIslamicBooks(qt.QDialog):
 			os.makedirs(directory, exist_ok=True)
 			self.current_save_path = save_path
 
-			local_src = os.path.join("data", "json", "islamicBooks", current_file)
-			if not os.path.exists(local_src):
-				fname = os.path.basename(current_file)
-				for root, dirs, files in os.walk(os.path.join("data", "json", "islamicBooks")):
-					if fname in files:
-						local_src = os.path.join(root, fname)
-						break
-
-			if os.path.exists(local_src):
-				try:
-					shutil.copy2(local_src, save_path)
-					self.progressBar.setValue(100)
-					self.save_book_category(current_file, current_display)
-					functions.islamicBooks.reload_books()
-					self.successful_count += 1
-					self.current_index += 1
-					qt2.QTimer.singleShot(0, self.start_next_file)
-					return
-				except Exception as e:
-					log_error("StartDownloadingIslamicBooks.local_copy", e)
-
 			self.downloaded_size = os.path.getsize(save_path) if os.path.exists(save_path) else 0
-			encoded_filename = urllib.parse.quote(current_file.replace("\\", "/"), safe="/")
-			url_str = f"https://huggingface.co/datasets/alcoder01/Islamic_Books/resolve/main/{encoded_filename}"
+			url_str = "https://huggingface.co/datasets/alcoder01/Quran_Tafaseer/resolve/main/" + current_file
 			request = QNetworkRequest(QUrl(url_str))
 			request.setAttribute(QNetworkRequest.Attribute.RedirectPolicyAttribute, QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy)
 			request.setRawHeader(b"User-Agent", b"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
@@ -681,7 +524,7 @@ class StartDownloadingIslamicBooks(qt.QDialog):
 			self.reply.readyRead.connect(self.on_ready_read)
 			self.reply.finished.connect(self.on_reply_finished)
 		else:
-			functions.islamicBooks.reload_books()
+			functions.tafseer.reload_tafaseers()
 			if self.total_count == 1 and self.successful_count == 1:
 				current_display = self.display_names[0] if self.display_names else self.files[0]
 				guiTools.qMessageBox.MessageBox.view(self, "تم", f"تم تحميل {current_display}")
@@ -728,18 +571,10 @@ class StartDownloadingIslamicBooks(qt.QDialog):
 		reply.deleteLater()
 
 		if error == QNetworkReply.NetworkError.NoError and status_code in (200, 206):
-			current_file = self.files[self.current_index]
-			current_display = self.display_names[self.current_index] if self.current_index < len(self.display_names) else current_file
-			self.save_book_category(current_file, current_display)
-			functions.islamicBooks.reload_books()
 			self.successful_count += 1
 			self.current_index += 1
 			qt2.QTimer.singleShot(0, self.start_next_file)
 		elif status_code == 416:
-			current_file = self.files[self.current_index]
-			current_display = self.display_names[self.current_index] if self.current_index < len(self.display_names) else current_file
-			self.save_book_category(current_file, current_display)
-			functions.islamicBooks.reload_books()
 			self.successful_count += 1
 			self.current_index += 1
 			qt2.QTimer.singleShot(0, self.start_next_file)
@@ -761,8 +596,7 @@ class StartDownloadingIslamicBooks(qt.QDialog):
 			current_file = self.files[self.current_index]
 			save_path = self.current_save_path
 			self.downloaded_size = os.path.getsize(save_path) if os.path.exists(save_path) else 0
-			encoded_filename = urllib.parse.quote(current_file.replace("\\", "/"), safe="/")
-			url_str = f"https://huggingface.co/datasets/alcoder01/Islamic_Books/resolve/main/{encoded_filename}"
+			url_str = "https://huggingface.co/datasets/alcoder01/Quran_Tafaseer/resolve/main/" + current_file
 			request = QNetworkRequest(QUrl(url_str))
 			request.setAttribute(QNetworkRequest.Attribute.RedirectPolicyAttribute, QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy)
 			request.setRawHeader(b"User-Agent", b"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
@@ -836,7 +670,7 @@ class StartDownloadingIslamicBooks(qt.QDialog):
 					functions.removeManager.addNewFile(os.path.join(os.getenv('appdata'), settings.app.appName, self.DIRName, current_file))
 				except Exception as e:
 					log_error("cancel_all", e)
-			functions.islamicBooks.reload_books()
+			functions.tafseer.reload_tafaseers()
 			guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", f"تم إلغاء عملية التحميل. تم حفظ {format_file_count(self.successful_count)} بنجاح.")
 			self.accept()
 
@@ -859,7 +693,7 @@ class StartDownloadingIslamicBooks(qt.QDialog):
 						functions.removeManager.addNewFile(os.path.join(os.getenv('appdata'), settings.app.appName, self.DIRName, current_file))
 					except Exception:
 						pass
-				functions.islamicBooks.reload_books()
+				functions.tafseer.reload_tafaseers()
 				a0.accept()
 			else:
 				a0.ignore()

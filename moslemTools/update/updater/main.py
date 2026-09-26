@@ -26,8 +26,7 @@ class DownloadUpdateGUI (qt .QDialog ):
 
         self .downloading =qt .QProgressBar ()
         self .downloading .setFocusPolicy (qt2 .Qt .FocusPolicy .StrongFocus )
-        self .downloading .setRange (0 ,100 )
-        self .downloading .setAccessibleName ("حالة التحميل")
+        self .downloading .setRange (0 ,100 )        
         self .downloading .setValue (0 )
         layout .addWidget (self .downloading )
 

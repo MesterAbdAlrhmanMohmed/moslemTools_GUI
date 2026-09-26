@@ -4,9 +4,9 @@ if not isinstance(QPushButton, type):
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from PyQt6.QtCore import Qt
-from .QReadOnlyTextEdit import QReadOnlyTextEdit
-if not isinstance(QReadOnlyTextEdit, type):
-    QReadOnlyTextEdit = QReadOnlyTextEdit.QReadOnlyTextEdit
+from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit
+if not isinstance(QNavigableLabelAsTextEdit, type):
+    QNavigableLabelAsTextEdit = QNavigableLabelAsTextEdit.QNavigableLabelAsTextEdit
 import winsound
 
 
@@ -20,8 +20,7 @@ class QQuestionMessageBox(qt.QDialog):
         self.center()
         self.setWindowIcon(self.style().standardIcon(qt.QStyle.StandardPixmap.SP_MessageBoxQuestion))
         main_layout = qt.QVBoxLayout(self)
-        self.label = QReadOnlyTextEdit(viewer_name="qMessageBox")
-        self.label.setText(label)
+        self.label = QNavigableLabelAsTextEdit(label)
         main_layout.addWidget(self.label)
         buttons_widget = qt.QWidget()
         buttons_layout = qt.QHBoxLayout(buttons_widget)

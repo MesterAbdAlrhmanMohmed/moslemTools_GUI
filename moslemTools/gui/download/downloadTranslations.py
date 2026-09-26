@@ -1,14 +1,15 @@
-import os, requests, re, guiTools, functions, settings, shutil, time, urllib.parse
+import os, requests, re, guiTools, functions, settings, shutil, time, urllib.parse, custom_errors
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
+from PyQt6.QtCore import QUrl
 from guiTools.QCustomListDialog import QCustomListDialog
 
 
 def log_error(func_name, error):
-	error_message = f"!!! خطأ في {func_name}: {str(error)}"
-	print(error_message)
+	custom_errors.handle_exception(error, f"خطأ في {func_name}")
 
 
 def format_item_count(count):
@@ -62,9 +63,12 @@ class TranslationDataLoaderThread(qt2.QThread):
 				r = requests.get(url, timeout=15, headers=headers)
 				if r.status_code == 200:
 					jsonContent = r.json()
-					os.makedirs(os.path.dirname(local_map_path), exist_ok=True)
-					with open(local_map_path, "w", encoding="utf-8") as file:
-						json.dump(jsonContent, file, ensure_ascii=False, indent=4)
+					try:
+						os.makedirs(os.path.dirname(local_map_path), exist_ok=True)
+						with open(local_map_path, "w", encoding="utf-8") as file:
+							json.dump(jsonContent, file, ensure_ascii=False, indent=4)
+					except Exception:
+						pass
 
 			if jsonContent:
 				# Remove already downloaded translations from available list
@@ -108,23 +112,15 @@ class SelectTranslationItem(qt.QDialog):
 		layout.addWidget(lang_search_label)
 
 		self.lang_search_bar = qt.QLineEdit()
-		self.lang_search_bar.setPlaceholderText("ابحث عن لغة...")
 		self.lang_search_bar.setAccessibleName("بحث في اللغات")
 		self.lang_search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.lang_search_bar.setMinimumHeight(32)
 		self.lang_search_bar.textChanged.connect(self.on_search_language)
 		layout.addWidget(self.lang_search_bar)
 
-		# 1. Language Combo Box (centered with label beside it)
 		lang_header_layout = qt.QHBoxLayout()
 		lang_header_layout.setSpacing(10)
 		lang_header_layout.addStretch(1)
-
-		self.lang_label = qt.QLabel("اختيار اللغة:")
-		self.lang_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
-		self.lang_label.setAlignment(qt2.Qt.AlignmentFlag.AlignVCenter)
-		self.lang_label.setFont(font_bold)
-		lang_header_layout.addWidget(self.lang_label)
 
 		self.language_combo = qt.QComboBox()
 		self.language_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
@@ -134,6 +130,12 @@ class SelectTranslationItem(qt.QDialog):
 		self.language_combo.setStyleSheet("QComboBox { padding: 4px 15px; font-weight: bold; font-size: 13px; }")
 		self.language_combo.currentIndexChanged.connect(self.on_language_changed)
 		lang_header_layout.addWidget(self.language_combo)
+
+		self.lang_label = qt.QLabel("اختيار اللغة:")
+		self.lang_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		self.lang_label.setAlignment(qt2.Qt.AlignmentFlag.AlignVCenter)
+		self.lang_label.setFont(font_bold)
+		lang_header_layout.addWidget(self.lang_label)
 
 		lang_header_layout.addStretch(1)
 		layout.addLayout(lang_header_layout)
@@ -146,7 +148,6 @@ class SelectTranslationItem(qt.QDialog):
 		layout.addWidget(search_label)
 
 		self.search_bar = qt.QLineEdit()
-		self.search_bar.setPlaceholderText("اكتب للبحث...")
 		self.search_bar.setAccessibleName("بحث في الترجمات")
 		self.search_bar.textChanged.connect(self.onsearch)
 		self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
@@ -259,6 +260,12 @@ class SelectTranslationItem(qt.QDialog):
 		guiTools.qMessageBox.MessageBox.error(self, "خطأ", "تعذر تحميل قائمة الترجمات")
 		self.accept()
 
+	def closeEvent(self, a0):
+		if hasattr(self, 'loader_thread') and self.loader_thread and self.loader_thread.isRunning():
+			self.loader_thread.quit()
+			self.loader_thread.wait(1000)
+		a0.accept()
+
 	def on_language_changed(self):
 		self.start_selection_index = None
 		self.custom_download_list.clear()
@@ -327,6 +334,8 @@ class SelectTranslationItem(qt.QDialog):
 
 				act_can = qt.QWidgetAction(self)
 				btn_can = guiTools.QPushButton("إلغاء التحميل")
+				btn_can.setAutoDefault(False)
+				btn_can.setDefault(False)
 				btn_can.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
 				btn_can.clicked.connect(self.cancel_custom_list)
 				btn_can.clicked.connect(menu.close)
@@ -352,6 +361,8 @@ class SelectTranslationItem(qt.QDialog):
 
 				act_can_start = qt.QWidgetAction(self)
 				btn_can_start = guiTools.QPushButton("إلغاء تحديد بداية التحميل")
+				btn_can_start.setAutoDefault(False)
+				btn_can_start.setDefault(False)
 				btn_can_start.setStyleSheet("background-color: #8B0000; color: white; font-weight: bold;")
 				btn_can_start.clicked.connect(self.cancel_start_selection)
 				btn_can_start.clicked.connect(menu.close)
@@ -473,7 +484,7 @@ class TranslationDownloadThread(qt2.QThread):
 	finished = qt2.pyqtSignal(bool)
 	network_error = qt2.pyqtSignal(str)
 
-	def __init__(self, fileName: str, DIRName: str):
+	def __init__(self, fileName: str = "", DIRName: str = ""):
 		super().__init__()
 		self.fileName = fileName
 		self.DIRName = DIRName
@@ -488,101 +499,6 @@ class TranslationDownloadThread(qt2.QThread):
 
 	def cancel(self):
 		self.is_cancelled = True
-
-	def run(self):
-		save_path = os.path.join(os.getenv('appdata'), settings.app.appName, self.DIRName, self.fileName)
-		directory = os.path.dirname(save_path)
-		os.makedirs(directory, exist_ok=True)
-
-		# 1. First priority: if file exists locally in data/json/Quran Translations (offline copy)
-		local_src = os.path.join("data", "json", "Quran Translations", self.fileName)
-		if not os.path.exists(local_src):
-			fname = os.path.basename(self.fileName)
-			for root, dirs, files in os.walk(os.path.join("data", "json", "Quran Translations")):
-				if fname in files:
-					local_src = os.path.join(root, fname)
-					break
-
-		if not os.path.exists(local_src):
-			alt_base = r"D:\alcoder\Quran_Unique_Translations"
-			if os.path.exists(alt_base):
-				fname = os.path.basename(self.fileName)
-				for root, dirs, files in os.walk(alt_base):
-					if fname in files:
-						local_src = os.path.join(root, fname)
-						break
-
-		if os.path.exists(local_src):
-			try:
-				total_size = os.path.getsize(local_src)
-				copied = 0
-				with open(local_src, "rb") as src_f, open(save_path, "wb") as dst_f:
-					while not self.is_cancelled:
-						while self.is_paused and not self.is_cancelled:
-							self.msleep(200)
-						if self.is_cancelled:
-							return
-						chunk = src_f.read(64 * 1024)
-						if not chunk:
-							break
-						dst_f.write(chunk)
-						copied += len(chunk)
-						if total_size > 0:
-							self.progress.emit(min(100, int((copied / total_size) * 100)))
-						self.msleep(15)  # smooth visual feedback
-
-				if not self.is_cancelled:
-					functions.translater.reload_translations()
-					self.finished.emit(True)
-					return
-			except Exception as e:
-				log_error("TranslationDownloadThread.local_copy", e)
-
-		# 2. Remote download from Hugging Face dataset
-		encoded_filename = urllib.parse.quote(self.fileName.replace("\\", "/"), safe="/")
-		url = f"https://huggingface.co/datasets/alcoder01/Quran_Translations/resolve/main/{encoded_filename}"
-		headers = {
-			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-		}
-		while not self.is_cancelled:
-			if self.is_paused:
-				self.msleep(200)
-				continue
-			downloaded_size = os.path.getsize(save_path) if os.path.exists(save_path) else 0
-			if downloaded_size > 0:
-				headers['Range'] = f'bytes={downloaded_size}-'
-			try:
-				r = requests.get(url, stream=True, timeout=15, headers=headers)
-				if r.status_code in (200, 206):
-					content_range = r.headers.get('content-range')
-					if content_range:
-						total_size = int(content_range.split('/')[-1])
-					elif 'content-length' in r.headers:
-						total_size = downloaded_size + int(r.headers['content-length'])
-					else:
-						total_size = 0
-					mode = "ab" if (downloaded_size > 0 and r.status_code == 206) else "wb"
-					with open(save_path, mode) as file:
-						for chunk in r.iter_content(chunk_size=1024):
-							while self.is_paused and not self.is_cancelled:
-								self.msleep(200)
-							if self.is_cancelled:
-								return
-							if chunk:
-								file.write(chunk)
-								downloaded_size += len(chunk)
-								if total_size > 0:
-									self.progress.emit(int((downloaded_size / total_size) * 100))
-					functions.translater.reload_translations()
-					self.finished.emit(True)
-					return
-				else:
-					self.finished.emit(False)
-					return
-			except (requests.exceptions.RequestException, Exception) as e:
-				log_error("TranslationDownloadThread.run", e)
-				self.is_paused = True
-				self.network_error.emit("تم انقطاع الاتصال بالإنترنت وتم إيقاف التحميل مؤقتاً. يرجى التأكد من الاتصال ثم الضغط على زر الاستئناف.")
 
 
 class StartDownloadingTranslations(qt.QDialog):
@@ -603,7 +519,14 @@ class StartDownloadingTranslations(qt.QDialog):
 		self.total_count = len(self.files)
 		self.current_index = 0
 		self.successful_count = 0
-		self.thread = None
+
+		self.manager = QNetworkAccessManager(self)
+		self.reply = None
+		self.current_file_handle = None
+		self.is_paused = False
+		self.is_cancelled = False
+		self.downloaded_size = 0
+		self.current_save_path = None
 
 		self.setMinimumSize(550, 250)
 		self.resize(750, 320)
@@ -625,16 +548,22 @@ class StartDownloadingTranslations(qt.QDialog):
 
 		btns_layout = qt.QHBoxLayout()
 		self.pause_button = guiTools.QPushButton("إيقاف مؤقت")
+		self.pause_button.setAutoDefault(False)
+		self.pause_button.setDefault(False)
 		self.pause_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #0000CC;}")
 		self.pause_button.clicked.connect(self.toggle_pause)
 		btns_layout.addWidget(self.pause_button)
 
 		self.cancel = guiTools.QPushButton("إلغاء تحميل الملف" if self.total_count == 1 else "إلغاء الملف الحالي")
+		self.cancel.setAutoDefault(False)
+		self.cancel.setDefault(False)
 		self.cancel.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #A52A2A;}")
 		self.cancel.clicked.connect(self.cancel_current_file)
 		btns_layout.addWidget(self.cancel)
 
 		self.cancel_all_button = guiTools.QPushButton("إلغاء المتبقي")
+		self.cancel_all_button.setAutoDefault(False)
+		self.cancel_all_button.setDefault(False)
 		self.cancel_all_button.setStyleSheet("QPushButton {background-color: #550000; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #770000;}")
 		self.cancel_all_button.clicked.connect(self.cancel_all)
 		btns_layout.addWidget(self.cancel_all_button)
@@ -664,12 +593,66 @@ class StartDownloadingTranslations(qt.QDialog):
 				self.status_label.setText(f"تم تحميل {sc_str} من إجمالي {tot_str} (جاري تحميل الملف {self.current_index + 1})")
 			self.progressBar.setValue(0)
 			self.pause_button.setText("إيقاف مؤقت")
-			self.thread = TranslationDownloadThread(current_file, self.DIRName)
-			self.thread.finished.connect(self.onFinished)
-			self.thread.progress.connect(self.onProgreesBarChanged)
-			self.thread.network_error.connect(self.on_network_error)
-			self.thread.start()
+			self.is_paused = False
+			self.is_cancelled = False
+
+			save_path = os.path.join(os.getenv('appdata'), settings.app.appName, self.DIRName, current_file)
+			directory = os.path.dirname(save_path)
+			os.makedirs(directory, exist_ok=True)
+			self.current_save_path = save_path
+
+			local_src = os.path.join("data", "json", "Quran Translations", current_file)
+			if not os.path.exists(local_src):
+				fname = os.path.basename(current_file)
+				for root, dirs, files in os.walk(os.path.join("data", "json", "Quran Translations")):
+					if fname in files:
+						local_src = os.path.join(root, fname)
+						break
+
+			if not os.path.exists(local_src):
+				alt_base = r"D:\alcoder\Quran_Unique_Translations"
+				if os.path.exists(alt_base):
+					fname = os.path.basename(current_file)
+					for root, dirs, files in os.walk(alt_base):
+						if fname in files:
+							local_src = os.path.join(root, fname)
+							break
+
+			if os.path.exists(local_src):
+				try:
+					shutil.copy2(local_src, save_path)
+					self.progressBar.setValue(100)
+					functions.translater.reload_translations()
+					self.successful_count += 1
+					self.current_index += 1
+					qt2.QTimer.singleShot(0, self.start_next_file)
+					return
+				except Exception as e:
+					log_error("StartDownloadingTranslations.local_copy", e)
+
+			self.downloaded_size = os.path.getsize(save_path) if os.path.exists(save_path) else 0
+			encoded_filename = urllib.parse.quote(current_file.replace("\\", "/"), safe="/")
+			url_str = f"https://huggingface.co/datasets/alcoder01/Quran_Translations/resolve/main/{encoded_filename}"
+			request = QNetworkRequest(QUrl(url_str))
+			request.setAttribute(QNetworkRequest.Attribute.RedirectPolicyAttribute, QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy)
+			request.setRawHeader(b"User-Agent", b"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+			if self.downloaded_size > 0:
+				request.setRawHeader(b"Range", f"bytes={self.downloaded_size}-".encode("utf-8"))
+
+			mode = "ab" if self.downloaded_size > 0 else "wb"
+			try:
+				self.current_file_handle = open(save_path, mode)
+			except Exception as e:
+				custom_errors.handle_exception(e)
+				self.on_network_error(str(e))
+				return
+
+			self.reply = self.manager.get(request)
+			self.reply.downloadProgress.connect(self.on_download_progress)
+			self.reply.readyRead.connect(self.on_ready_read)
+			self.reply.finished.connect(self.on_reply_finished)
 		else:
+			functions.translater.reload_translations()
 			if self.total_count == 1 and self.successful_count == 1:
 				current_display = self.display_names[0] if self.display_names else self.files[0]
 				guiTools.qMessageBox.MessageBox.view(self, "تم", f"تم تحميل {current_display}")
@@ -677,49 +660,148 @@ class StartDownloadingTranslations(qt.QDialog):
 				guiTools.qMessageBox.MessageBox.view(self, "تم", f"اكتملت عملية التحميل بنجاح ({format_file_count(self.successful_count)} من إجمالي {format_file_count(self.total_count)})")
 			self.accept()
 
+	def on_ready_read(self):
+		if self.reply and self.current_file_handle:
+			data = self.reply.readAll()
+			if data:
+				self.current_file_handle.write(data.data())
+
+	def on_download_progress(self, bytes_received, bytes_total):
+		if bytes_total > 0:
+			total = self.downloaded_size + bytes_total
+			current = self.downloaded_size + bytes_received
+			self.progressBar.setValue(min(100, int((current / total) * 100)))
+
+	def on_reply_finished(self):
+		if not self.reply:
+			return
+		reply = self.reply
+		self.reply = None
+		if self.current_file_handle:
+			try:
+				data = reply.readAll()
+				if data:
+					self.current_file_handle.write(data.data())
+			except Exception:
+				pass
+			try:
+				self.current_file_handle.close()
+			except Exception:
+				pass
+			self.current_file_handle = None
+
+		if self.is_cancelled or self.is_paused:
+			reply.deleteLater()
+			return
+
+		error = reply.error()
+		status_code = reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
+		reply.deleteLater()
+
+		if error == QNetworkReply.NetworkError.NoError and status_code in (200, 206):
+			functions.translater.reload_translations()
+			self.successful_count += 1
+			self.current_index += 1
+			qt2.QTimer.singleShot(0, self.start_next_file)
+		elif status_code == 416:
+			functions.translater.reload_translations()
+			self.successful_count += 1
+			self.current_index += 1
+			qt2.QTimer.singleShot(0, self.start_next_file)
+		else:
+			self.is_paused = True
+			qt2.QTimer.singleShot(0, lambda: self.on_network_error("تم انقطاع الاتصال بالإنترنت وتم إيقاف التحميل مؤقتاً. يرجى التأكد من الاتصال ثم الضغط على زر الاستئناف."))
+
 	def toggle_pause(self):
-		if self.thread and self.thread.isRunning():
-			if self.thread.is_paused:
-				self.pause_button.setText("إيقاف مؤقت")
-				guiTools.speak("تم استئناف التحميل")
-				self.thread.resume()
-			else:
-				self.pause_button.setText("استئناف")
-				guiTools.speak("تم إيقاف التحميل مؤقتاً")
-				self.thread.pause()
+		if self.is_paused:
+			self.pause_button.setText("إيقاف مؤقت")
+			guiTools.speak("تم استئناف التحميل")
+			self.is_paused = False
+			if self.current_file_handle:
+				try:
+					self.current_file_handle.close()
+				except Exception:
+					pass
+				self.current_file_handle = None
+			current_file = self.files[self.current_index]
+			save_path = self.current_save_path
+			self.downloaded_size = os.path.getsize(save_path) if os.path.exists(save_path) else 0
+			encoded_filename = urllib.parse.quote(current_file.replace("\\", "/"), safe="/")
+			url_str = f"https://huggingface.co/datasets/alcoder01/Quran_Translations/resolve/main/{encoded_filename}"
+			request = QNetworkRequest(QUrl(url_str))
+			request.setAttribute(QNetworkRequest.Attribute.RedirectPolicyAttribute, QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy)
+			request.setRawHeader(b"User-Agent", b"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+			if self.downloaded_size > 0:
+				request.setRawHeader(b"Range", f"bytes={self.downloaded_size}-".encode("utf-8"))
+			mode = "ab" if self.downloaded_size > 0 else "wb"
+			try:
+				self.current_file_handle = open(save_path, mode)
+			except Exception as e:
+				custom_errors.handle_exception(e)
+				self.on_network_error(str(e))
+				return
+			self.reply = self.manager.get(request)
+			self.reply.downloadProgress.connect(self.on_download_progress)
+			self.reply.readyRead.connect(self.on_ready_read)
+			self.reply.finished.connect(self.on_reply_finished)
+		else:
+			self.pause_button.setText("استئناف")
+			guiTools.speak("تم إيقاف التحميل مؤقتاً")
+			self.is_paused = True
+			if self.reply and self.reply.isRunning():
+				self.reply.abort()
+			if self.current_file_handle:
+				try:
+					self.current_file_handle.close()
+				except Exception:
+					pass
+				self.current_file_handle = None
 
 	def on_network_error(self, msg):
 		self.pause_button.setText("استئناف")
 		guiTools.speak("تم إيقاف التحميل مؤقتاً بسبب انقطاع الاتصال بالإنترنت")
-		guiTools.MessageBox.error(self, "انقطاع الاتصال", msg)
+		guiTools.qMessageBox.MessageBox.error(self, "انقطاع الاتصال", msg)
 
 	def cancel_current_file(self):
 		if self.current_index < self.total_count:
 			result = guiTools.QQuestionMessageBox.view(self, "تأكيد", "هل تريد إلغاء تحميل الملف الحالي؟", "نعم", "لا")
 			if result == 0:
-				if self.thread and self.thread.isRunning():
-					self.thread.cancel()
-					self.thread.terminate()
+				self.is_cancelled = True
+				if self.reply and self.reply.isRunning():
+					self.reply.abort()
+				if self.current_file_handle:
+					try:
+						self.current_file_handle.close()
+					except Exception:
+						pass
+					self.current_file_handle = None
 				current_file = self.files[self.current_index]
 				try:
 					functions.removeManager.addNewFile(os.path.join(os.getenv('appdata'), settings.app.appName, self.DIRName, current_file))
 				except Exception as e:
 					log_error("cancel_current_file", e)
 				self.current_index += 1
-				self.start_next_file()
+				qt2.QTimer.singleShot(0, self.start_next_file)
 
 	def cancel_all(self):
 		result = guiTools.QQuestionMessageBox.view(self, "تأكيد الإلغاء", "هل تريد إلغاء تحميل المتبقي بالكامل؟ (سيتم الاحتفاظ بالملفات التي تم تحميلها بالفعل)", "نعم", "لا")
 		if result == 0:
-			if self.thread and self.thread.isRunning():
-				self.thread.cancel()
-				self.thread.terminate()
+			self.is_cancelled = True
+			if self.reply and self.reply.isRunning():
+				self.reply.abort()
+			if self.current_file_handle:
+				try:
+					self.current_file_handle.close()
+				except Exception:
+					pass
+				self.current_file_handle = None
 			if self.current_index < self.total_count:
 				current_file = self.files[self.current_index]
 				try:
 					functions.removeManager.addNewFile(os.path.join(os.getenv('appdata'), settings.app.appName, self.DIRName, current_file))
 				except Exception as e:
 					log_error("cancel_all", e)
+			functions.translater.reload_translations()
 			guiTools.qMessageBox.MessageBox.view(self, "تم الإلغاء", f"تم إلغاء عملية التحميل. تم حفظ {format_file_count(self.successful_count)} بنجاح.")
 			self.accept()
 
@@ -727,27 +809,25 @@ class StartDownloadingTranslations(qt.QDialog):
 		try:
 			result = guiTools.QQuestionMessageBox.view(self, "تنبيه", "هل تريد إلغاء عملية التحميل بالكامل؟ (سيتم الاحتفاظ بالملفات المكتملة)", "نعم", "لا")
 			if result == 0:
-				if self.thread and self.thread.isRunning():
-					self.thread.cancel()
-					self.thread.terminate()
+				self.is_cancelled = True
+				if self.reply and self.reply.isRunning():
+					self.reply.abort()
+				if self.current_file_handle:
+					try:
+						self.current_file_handle.close()
+					except Exception:
+						pass
+					self.current_file_handle = None
 				if self.current_index < self.total_count:
 					current_file = self.files[self.current_index]
 					try:
 						functions.removeManager.addNewFile(os.path.join(os.getenv('appdata'), settings.app.appName, self.DIRName, current_file))
 					except Exception:
 						pass
+				functions.translater.reload_translations()
 				a0.accept()
 			else:
 				a0.ignore()
 		except Exception as e:
 			log_error("closeEvent", e)
 			a0.accept()
-
-	def onFinished(self, state):
-		if state:
-			self.successful_count += 1
-		self.current_index += 1
-		self.start_next_file()
-
-	def onProgreesBarChanged(self, value):
-		self.progressBar.setValue(value)

@@ -1,7 +1,7 @@
-from .downloadData import SelectItem
+from .downloadTafaseer import SelectTafaseerItem
+from .downloadAhadeeth import SelectAhadeethItem
 from .downloadReciters import SelectReciter
 from .downloadAthkar import SelectAthkar
 from .downloadMotonReciters import DownloadMotonReciters, SelectMotonReciter
 from .downloadTranslations import SelectTranslationItem
-
 from .downloadIslamicBooks import SelectIslamicBookItem

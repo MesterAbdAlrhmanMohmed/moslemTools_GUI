@@ -16,24 +16,16 @@ class Download(qt.QDialog):
         self.types.setFont(font)
         self.types.clicked.connect(self.onItemClicked)
         self.types.setSpacing(3)
-        self.adminstration = guiTools.QNavigableLabel()
-        self.adminstration.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.adminstration.setText("تنبيه هام , لتثبيت موارد خارجية, يجب أولا منح صلاحيات المشرف للبرنامج")
-        self.adminstration.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.admin_help = guiTools.QNavigableLabelAsTextEdit()
-        self.admin_help.setText("طرق تشغيل البرنامج كمشرف (كمسؤول):\n\nالطريقة الأولى:\n1. افتح نافذة التشغيل Run بالضغط على اختصار Windows + R.\n2. اكتب الأمر mt في المربع.\n3. اضغط على اختصار Ctrl + Shift + Enter لتشغيل البرنامج كمشرف.\n\nالطريقة الثانية:\nاضغط بزر الفأرة الأيمن أو زر التطبيقات على أيقونة البرنامج أو اختصاره، ثم اختر تشغيل كمسؤول (Run as administrator).\n\nالطريقة الثالثة: تشغيل البرنامج كمسؤول دائما:\nاضغط بزر الفأرة الأيمن أو مفتاح التطبيقات على اختصار البرنامج ثم اختر خصائص (Properties)، وانتقل لتبويبة التوافق (Compatibility)، وقم بتفعيل خيار تشغيل هذا البرنامج كمسؤول (Run this program as an administrator)، ثم اضغط على موافق (OK).\nملاحظة هامة: في حالة ضبط البرنامج للتشغيل كمسؤول دائماً، لن يستطيع النظام تشغيله تلقائياً عند بدء تشغيل الويندوز، حتى وإن كان خيار التشغيل مع النظام مفعلاً في الإعدادات.")        
         layout.addWidget(self.types)
-        layout.addWidget(self.adminstration)
-        layout.addWidget(self.admin_help)
 
     def onItemClicked(self):
         index = self.types.currentRow()
         if index == 0:
-            self.show_dialog(gui.download.SelectItem, ("all_tafaseers.json", "tafaseer"))
+            self.show_dialog(gui.download.SelectTafaseerItem, ("all_tafaseers.json", "tafaseer"))
         elif index == 1:
             self.show_dialog(gui.download.SelectTranslationItem, ("all_translater.json", "Quran Translations"))
         elif index == 2:
-            self.show_dialog(gui.download.SelectItem, ("all_ahadeeth.json", "ahadeeth"))
+            self.show_dialog(gui.download.SelectAhadeethItem, ("all_ahadeeth.json", "ahadeeth"))
         elif index == 3:
             self.show_dialog(gui.download.SelectReciter, ())
         elif index == 4:
