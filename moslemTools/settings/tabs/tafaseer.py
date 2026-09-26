@@ -1,6 +1,6 @@
 from functions import tafseer, translater
 from settings import settings_handler, app
-import os, shutil, json, guiTools
+import os, shutil, json, re, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -38,10 +38,21 @@ class TafaseerSettings(qt.QWidget):
         group_layout.setSpacing(15)
         group_layout.setContentsMargins(12, 15, 12, 15)
 
-        tafaseer_layout = qt.QHBoxLayout()
-        tafaseer_layout.setSpacing(10)
+        font = qt1.QFont()
+        font.setBold(True)
+
+        tafaseer_container = qt.QWidget()
+        tafaseer_layout = qt.QVBoxLayout(tafaseer_container)
+        tafaseer_layout.setContentsMargins(0, 0, 0, 0)
+        tafaseer_layout.setSpacing(6)
+        self.search_tafaseer = qt.QLineEdit()
+        self.search_tafaseer.setFont(font)
+        self.search_tafaseer.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.search_tafaseer.setPlaceholderText("البحث في التفاسير")
+        self.search_tafaseer.textChanged.connect(lambda text: self.filter_combo(text, self.selectTafaseer, list(tafseer.tafaseers.keys())))
         self.selectTafaseer_laybol = qt.QLabel("اختر التفسير:")
         self.selectTafaseer = guiTools.QComboBox()
+        self.selectTafaseer.setFont(font)
         self.selectTafaseer.addItems(tafseer.tafaseers.keys())
         current_taf = tafseer.getTafaseerByIndex(settings_handler.get("tafaseer", "tafaseer"))
         if current_taf and current_taf in tafseer.tafaseers:
@@ -49,40 +60,67 @@ class TafaseerSettings(qt.QWidget):
         elif self.selectTafaseer.count() > 0:
             self.selectTafaseer.setCurrentIndex(0)
         self.selectTafaseer.setAccessibleName("اختر التفسير")
-        tafaseer_layout.addWidget(self.selectTafaseer)
-        tafaseer_layout.addWidget(self.selectTafaseer_laybol)
-        tafaseer_layout.addStretch()
-        group_layout.addLayout(tafaseer_layout)
+        self.selectTafaseer.setAccessibleDescription("لحذف أيا من التفاسير قم باستخدام زر التطبيقات")
+        self.selectTafaseer.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.selectTafaseer.customContextMenuRequested.connect(self.onDelete)
+        tafaseer_combo_layout = qt.QHBoxLayout()
+        tafaseer_combo_layout.setSpacing(10)
+        tafaseer_combo_layout.addWidget(self.selectTafaseer)
+        tafaseer_combo_layout.addWidget(self.selectTafaseer_laybol)
+        tafaseer_combo_layout.addStretch()
+        tafaseer_layout.addWidget(self.search_tafaseer)
+        tafaseer_layout.addLayout(tafaseer_combo_layout)
+        group_layout.addWidget(tafaseer_container)
 
-        lang_layout = qt.QHBoxLayout()
-        lang_layout.setSpacing(10)
+        lang_container = qt.QWidget()
+        lang_layout = qt.QVBoxLayout(lang_container)
+        lang_layout.setContentsMargins(0, 0, 0, 0)
+        lang_layout.setSpacing(6)
+        self.search_language = qt.QLineEdit()
+        self.search_language.setFont(font)
+        self.search_language.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.search_language.setPlaceholderText("البحث في اللغات")
+        self.search_language.textChanged.connect(lambda text: self.filter_language(text))
         self.selectLanguage_laybol = qt.QLabel("اختر اللغة:")
         self.selectLanguage = guiTools.QComboBox()
+        self.selectLanguage.setFont(font)
         self.selectLanguage.setAccessibleName("اختر اللغة")
         self.selectLanguage.setAccessibleDescription("لحذف جميع الترجمات للغة محددة، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.selectLanguage.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.selectLanguage.customContextMenuRequested.connect(self.onDeleteLanguage)
-        lang_layout.addWidget(self.selectLanguage)
-        lang_layout.addWidget(self.selectLanguage_laybol)
-        lang_layout.addStretch()
-        group_layout.addLayout(lang_layout)
+        lang_combo_layout = qt.QHBoxLayout()
+        lang_combo_layout.setSpacing(10)
+        lang_combo_layout.addWidget(self.selectLanguage)
+        lang_combo_layout.addWidget(self.selectLanguage_laybol)
+        lang_combo_layout.addStretch()
+        lang_layout.addWidget(self.search_language)
+        lang_layout.addLayout(lang_combo_layout)
+        group_layout.addWidget(lang_container)
 
-        translation_layout = qt.QHBoxLayout()
-        translation_layout.setSpacing(10)
+        translation_container = qt.QWidget()
+        translation_layout = qt.QVBoxLayout(translation_container)
+        translation_layout.setContentsMargins(0, 0, 0, 0)
+        translation_layout.setSpacing(6)
+        self.search_translation = qt.QLineEdit()
+        self.search_translation.setFont(font)
+        self.search_translation.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.search_translation.setPlaceholderText("البحث في الترجمات")
+        self.search_translation.textChanged.connect(lambda text: self.filter_combo(text, self.selecttranslation, sorted(self.lang_groups.get(self.selectLanguage.currentText(), []))))
         self.selecttranslation_laybol = qt.QLabel("اختر الترجمة:")
         self.selecttranslation = guiTools.QComboBox()
+        self.selecttranslation.setFont(font)
         self.selecttranslation.setAccessibleName("اختر الترجمة")
         self.selecttranslation.setAccessibleDescription("لحذف أيا من الترجمات، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.selecttranslation.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.selecttranslation.customContextMenuRequested.connect(self.onDelete1)
-        translation_layout.addWidget(self.selecttranslation)
-        translation_layout.addWidget(self.selecttranslation_laybol)
-        translation_layout.addStretch()
-        group_layout.addLayout(translation_layout)
-
-        self.selectTafaseer.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.selectTafaseer.customContextMenuRequested.connect(self.onDelete)
-        self.selectTafaseer.setAccessibleDescription("لحذف أيا من التفاسير قم باستخدام زر التطبيقات")
+        translation_combo_layout = qt.QHBoxLayout()
+        translation_combo_layout.setSpacing(10)
+        translation_combo_layout.addWidget(self.selecttranslation)
+        translation_combo_layout.addWidget(self.selecttranslation_laybol)
+        translation_combo_layout.addStretch()
+        translation_layout.addWidget(self.search_translation)
+        translation_layout.addLayout(translation_combo_layout)
+        group_layout.addWidget(translation_container)
 
         current_trans = translater.gettranslationByIndex(settings_handler.get("translation", "translation"))
         self.load_language_groups()
@@ -108,6 +146,43 @@ class TafaseerSettings(qt.QWidget):
         self.info.setStyleSheet("font-weight: bold;")
         main_layout.addWidget(self.info)
         main_layout.addStretch(1)
+
+    def filter_combo(self, text, combo, items_list):
+        current_selection = combo.currentText()
+        combo.blockSignals(True)
+        combo.clear()
+        tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+        clean_text = tashkeel_pattern.sub('', text.strip().lower())
+        for item in items_list:
+            clean_item = tashkeel_pattern.sub('', item.lower())
+            if clean_text in clean_item:
+                combo.addItem(item)
+        idx = combo.findText(current_selection)
+        if idx >= 0:
+            combo.setCurrentIndex(idx)
+        elif combo.count() > 0:
+            combo.setCurrentIndex(0)
+        combo.blockSignals(False)
+        self.adjust_combo_width(combo)
+
+    def filter_language(self, text):
+        current_selection = self.selectLanguage.currentText()
+        self.selectLanguage.blockSignals(True)
+        self.selectLanguage.clear()
+        tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+        clean_text = tashkeel_pattern.sub('', text.strip().lower())
+        for lang in getattr(self, 'sorted_langs', []):
+            clean_lang = tashkeel_pattern.sub('', lang.lower())
+            if clean_text in clean_lang:
+                self.selectLanguage.addItem(lang)
+        idx = self.selectLanguage.findText(current_selection)
+        if idx >= 0:
+            self.selectLanguage.setCurrentIndex(idx)
+        elif self.selectLanguage.count() > 0:
+            self.selectLanguage.setCurrentIndex(0)
+        self.selectLanguage.blockSignals(False)
+        self.adjust_combo_width(self.selectLanguage)
+        self.on_language_changed()
 
     def adjust_combo_width(self, combo):
         fm = combo.fontMetrics()
@@ -149,6 +224,10 @@ class TafaseerSettings(qt.QWidget):
 
     def update_languages_ui(self, preferred_lang=None, preferred_trans=None):
         self.load_language_groups()
+        if hasattr(self, 'search_language'):
+            self.search_language.blockSignals(True)
+            self.search_language.clear()
+            self.search_language.blockSignals(False)
         self.selectLanguage.blockSignals(True)
         self.selectLanguage.clear()
         self.selectLanguage.addItems(self.sorted_langs)
@@ -161,6 +240,10 @@ class TafaseerSettings(qt.QWidget):
         self.on_language_changed(preferred_trans=preferred_trans)
 
     def on_language_changed(self, preferred_trans=None):
+        if hasattr(self, 'search_translation'):
+            self.search_translation.blockSignals(True)
+            self.search_translation.clear()
+            self.search_translation.blockSignals(False)
         selected_lang = self.selectLanguage.currentText()
         trans_list = sorted(self.lang_groups.get(selected_lang, []))
         self.selecttranslation.blockSignals(True)
@@ -249,6 +332,10 @@ class TafaseerSettings(qt.QWidget):
                     name = tafseer.tafaseers[itemText]
                     os.remove(os.path.join(os.getenv('appdata'), app.appName, "tafaseer", name))
                     tafseer.reload_tafaseers()
+                    if hasattr(self, 'search_tafaseer'):
+                        self.search_tafaseer.blockSignals(True)
+                        self.search_tafaseer.clear()
+                        self.search_tafaseer.blockSignals(False)
                     self.selectTafaseer.blockSignals(True)
                     self.selectTafaseer.clear()
                     self.selectTafaseer.addItems(tafseer.tafaseers.keys())
