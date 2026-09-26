@@ -1,14 +1,13 @@
 from ..changeReciter import ChangeReciter
 from ..translations import translationViewer
 from ..tafaseer import TafaseerViewer
-import time,os,requests,subprocess,shutil,re,traceback
+import time,os,requests,subprocess,shutil,re,traceback, guiTools,settings,functions
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
-import guiTools,settings,functions
 from functions import audio_manager
 from .threads import DownloadThread, MergeThread, SaveThread
 

@@ -1,12 +1,6 @@
-import os
-import re
-import shutil
-import pyperclip
-import winsound
+import os,re, shutil, pyperclip, winsound, custom_errors, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
-import custom_errors
-import guiTools
 from .threads import MergeThread, SaveThread, PreMergeCheckThread, DownloadThread
 from functions.moton_data import get_moton_bayt_audio_path, get_moton_continuous_audio_path, get_moton_appdata_dir
 

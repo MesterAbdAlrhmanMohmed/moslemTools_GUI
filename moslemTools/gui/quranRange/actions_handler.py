@@ -1,6 +1,4 @@
-import functions
-import gui
-import guiTools
+import functions, gui, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2

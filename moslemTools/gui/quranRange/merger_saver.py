@@ -1,7 +1,4 @@
-import os
-import shutil
-import functions
-import guiTools
+import os, shutil, functions, guiTools
 import ujson as json
 import PyQt6.QtWidgets as qt
 from settings import settings_handler

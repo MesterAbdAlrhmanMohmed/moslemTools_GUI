@@ -1,5 +1,4 @@
-import os
-import calendar
+import os, calendar
 from datetime import datetime, date
 import ujson as json
 from settings import settings_handler

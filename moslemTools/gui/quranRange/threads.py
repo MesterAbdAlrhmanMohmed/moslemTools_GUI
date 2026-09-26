@@ -1,9 +1,5 @@
-import os
-import shutil
-import subprocess
-import requests
+import os, shutil, subprocess, requests, functions
 import PyQt6.QtCore as qt2
-import functions
 from settings.app import appName
 
 

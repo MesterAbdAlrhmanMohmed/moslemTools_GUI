@@ -1,12 +1,9 @@
-import sys
-import os
-import random
+import sys, guiTools, os, random
 import ujson as json
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QMediaPlayer
 from settings import settings_handler, formatDuration
 from functions import audio_manager
-import guiTools
 
 
 class AthkarMixin:

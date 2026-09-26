@@ -1,12 +1,8 @@
-import os
-import re
-import winsound
+import os, re, winsound, guiTools, settings
 import ujson as json
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 import PyQt6.QtWidgets as qt
-import guiTools
-import settings
 from settings import settings_handler
 from .threads import GoToBaytDialog, GoToCategoryDialog
 

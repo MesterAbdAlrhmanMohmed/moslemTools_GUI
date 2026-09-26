@@ -1,13 +1,8 @@
-import os
-import winsound
-import pyperclip
+import os, winsound, pyperclip, custom_errors, guiTools, settings
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
-import custom_errors
-import guiTools
-import settings
 from settings import settings_handler
 import ujson as json
 

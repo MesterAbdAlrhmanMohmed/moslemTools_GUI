@@ -1,5 +1,4 @@
-import os
-import re
+import os, re
 import PyQt6.QtWidgets as qt
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2

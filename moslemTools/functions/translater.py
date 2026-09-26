@@ -1,5 +1,4 @@
-import os
-import settings
+import os, settings
 import ujson as json
 
 _translations = None

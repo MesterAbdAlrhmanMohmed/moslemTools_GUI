@@ -1,12 +1,9 @@
-import os
-import datetime
-import ctypes
+import os, guiTools, datetime, ctypes
 from ctypes import wintypes
 from hijridate import Gregorian
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 from settings import settings_handler, app
-import guiTools
 from appTabs import AboutDeveloper
 from .display_name import get_smart_display_name
 

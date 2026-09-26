@@ -1,8 +1,4 @@
-import os
-import re
-import shutil
-import gui
-import guiTools
+import os,re, shutil, gui, guiTools
 from settings import settings_handler, app
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1

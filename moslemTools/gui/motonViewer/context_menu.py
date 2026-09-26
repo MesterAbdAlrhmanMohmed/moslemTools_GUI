@@ -1,10 +1,7 @@
-import re
-import pyperclip
-import winsound
+import re, pyperclip, winsound, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
-import guiTools
 from functions import text_actions
 import functions.notesManager as notesManager
 import functions.bookMarksManager as bookMarksManager

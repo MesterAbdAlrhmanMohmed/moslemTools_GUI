@@ -1,9 +1,5 @@
-import os
-import subprocess
-import shutil
-import requests
+import os, subprocess, shutil, requests, custom_errors
 import PyQt6.QtCore as qt2
-import custom_errors
 
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)

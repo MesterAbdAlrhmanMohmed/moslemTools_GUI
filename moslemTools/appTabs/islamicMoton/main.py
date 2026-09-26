@@ -1,8 +1,7 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
-import custom_errors
-import guiTools
+import custom_errors,guiTools
 from settings import settings_handler
 from .data_loader import MotonDataLoader
 from .favorites_manager import MotonFavoritesManager

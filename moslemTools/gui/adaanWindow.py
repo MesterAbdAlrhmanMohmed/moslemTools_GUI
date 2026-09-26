@@ -3,8 +3,8 @@ import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from .after_azaan import AfterAdaan
-import settings
 from functions import audio_manager
+import settings
 
 
 class AdaanDialog(qt.QDialog):

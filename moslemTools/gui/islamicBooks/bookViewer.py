@@ -1,12 +1,11 @@
 from gui import note_dialog
 import functions.notesManager as notesManager
-import guiTools, pyperclip, winsound, functions, settings
+import guiTools, pyperclip, winsound, functions, settings, re
 import PyQt6.QtWidgets as qt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
 from docx import Document
-import re
 from gui.quranViewer.threads import SearchModeDialog
 from .threads import SearchThread
 from .search_handler import BookSearchMixin

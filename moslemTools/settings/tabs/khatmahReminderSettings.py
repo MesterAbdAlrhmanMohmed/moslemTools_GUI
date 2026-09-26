@@ -1,8 +1,8 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
-import guiTools
 from .. import settings_handler
+import guiTools
 
 
 class KhatmahReminderSettings(qt.QWidget):

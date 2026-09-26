@@ -1,14 +1,8 @@
-import os
-import subprocess
-import shutil
-import requests
+import os, subprocess, shutil, requests, custom_errors, guiTools, settings
 import ujson as json
 import PyQt6.QtCore as qt2
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
-import custom_errors
-import guiTools
-import settings
 
 class DownloadThread(qt2.QThread):
     progress = qt2.pyqtSignal(int)

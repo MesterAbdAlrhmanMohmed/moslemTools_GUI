@@ -1,10 +1,9 @@
-import time,winsound,pyperclip,os,settings,json, functions
+import time,winsound,pyperclip,os,settings,json, functions, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput,QMediaPlayer
 from PyQt6.QtPrintSupport import QPrinter,QPrintDialog
-import guiTools
 from functions import audio_manager
 
 

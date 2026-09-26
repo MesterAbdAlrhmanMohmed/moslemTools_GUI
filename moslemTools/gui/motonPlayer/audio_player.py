@@ -1,11 +1,10 @@
-import os
+import os, guiTools
 import ujson as json
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 import PyQt6.QtWidgets as qt
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 import custom_errors
-import guiTools
 from settings import settings_handler
 from functions import audio_manager, text_actions
 from functions.moton_data import get_moton_bayt_audio_url, get_moton_continuous_audio_url

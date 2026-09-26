@@ -4,7 +4,7 @@ from ..changeReciter import ChangeReciter
 from ..translations import translationViewer
 from ..tafaseer import TafaseerViewer
 from ..quranPlayer import QuranPlayer
-import time, winsound, pyperclip, os, re, requests, subprocess, shutil, traceback
+import time, winsound, pyperclip, os, re, requests, subprocess, shutil, traceback, guiTools, settings, functions
 import ujson as json
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
@@ -12,7 +12,6 @@ import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt6.QtCore import QTimer
-import guiTools, settings, functions
 from functions import audio_manager
 from .threads import DownloadThread, MergeThread, PreMergeCheckThread, SaveThread, SajdaGoToDialog, AsbabAlnozoleGoToDialog, SajdaFinderThread, AsbabAlnozoleFinderThread, SearchModeDialog, GoToCategoryDialog
 

@@ -1,8 +1,8 @@
 from settings import settings_handler
-import guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+import guiTools
 
 
 class AthkarSettings(qt.QWidget):

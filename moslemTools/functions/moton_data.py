@@ -1,7 +1,4 @@
-import os
-import re
-import json
-import custom_errors
+import os, re, json, custom_errors
 
 _moton_texts_cache = None
 _moton_reciters_data = None

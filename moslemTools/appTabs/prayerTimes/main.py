@@ -1,6 +1,4 @@
-import os
-import pyperclip
-import winsound
+import os, pyperclip, winsound
 from datetime import datetime, timedelta
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1

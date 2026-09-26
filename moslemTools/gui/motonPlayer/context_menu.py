@@ -1,5 +1,4 @@
-import pyperclip
-import winsound
+import pyperclip, winsound
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import guiTools

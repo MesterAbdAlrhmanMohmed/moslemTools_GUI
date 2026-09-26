@@ -1,6 +1,4 @@
-import os
-import requests
-import geocoder
+import os, requests, geocoder
 from datetime import datetime
 import ujson as json
 import PyQt6.QtCore as qt2

@@ -1,12 +1,9 @@
-import os
-import re
+import os, re, guiTools, settings
 from collections import Counter
 import ujson as json
 import PyQt6.QtWidgets as qt
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
-import guiTools
-import settings
 
 
 class SelectBabDialog(qt.QDialog):

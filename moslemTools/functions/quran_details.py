@@ -1,5 +1,4 @@
-import os
-import re
+import os, re
 import ujson as json
 import functions.quranJsonControl
 

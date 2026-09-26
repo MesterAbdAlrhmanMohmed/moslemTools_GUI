@@ -1,12 +1,9 @@
-import os
-import winsound
+import os, winsound, custom_errors, guiTools
 import ujson as json
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 import PyQt6.QtWidgets as qt
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
-import custom_errors
-import guiTools
 from functions import audio_manager, text_actions
 from functions.moton_data import get_moton_bayt_audio_url, get_moton_continuous_audio_url
 

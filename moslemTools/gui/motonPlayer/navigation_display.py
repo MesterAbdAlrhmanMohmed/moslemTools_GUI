@@ -1,10 +1,7 @@
-import os
-import re
-import winsound
+import os, re, winsound, guiTools
 import PyQt6.QtCore as qt2
 import PyQt6.QtGui as qt1
 import PyQt6.QtWidgets as qt
-import guiTools
 from settings import settings_handler
 
 class MotonPlayerNavigationDisplayMixin:

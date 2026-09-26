@@ -1,7 +1,4 @@
-import os
-import shutil
-import time
-import guiTools
+import os, shutil, time, guiTools
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2

@@ -1,5 +1,5 @@
 from custom_errors import *
-import sys, subprocess, traceback, threading, random, os, shutil, datetime, webbrowser, requests, pyperclip, winsound, ctypes
+import sys, subprocess, traceback, threading, random, os, shutil, datetime, webbrowser, requests, pyperclip, winsound, ctypes, update
 from ctypes import wintypes
 import ujson as json
 from pynput import keyboard as p_key
@@ -12,7 +12,6 @@ from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from appTabs import *
 from functions import audio_manager
 import guiTools
-import update
 from .display_name import get_smart_display_name
 from .workers import MessageCheckWorker
 from .athkar_mixin import AthkarMixin

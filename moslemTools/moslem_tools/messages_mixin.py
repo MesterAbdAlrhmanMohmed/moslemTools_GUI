@@ -1,8 +1,4 @@
-import sys
-import os
-import threading
-import random
-import requests
+import sys, os, threading, random, requests
 import ujson as json
 from settings import settings_handler, app
 import guiTools

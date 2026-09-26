@@ -1,7 +1,4 @@
-import os
-import pyperclip
-import winsound
-import guiTools
+import os, pyperclip, winsound, guiTools
 from PyQt6 import QtWidgets as qt
 from PyQt6 import QtGui as qt1
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog

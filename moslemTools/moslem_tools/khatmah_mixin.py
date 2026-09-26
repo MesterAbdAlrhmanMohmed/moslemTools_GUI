@@ -1,9 +1,7 @@
-import os
-import datetime
+import os, datetime, guiTools
 import ujson as json
 from settings import settings_handler
 from .display_name import get_smart_display_name
-import guiTools
 
 
 class KhatmahMixin:

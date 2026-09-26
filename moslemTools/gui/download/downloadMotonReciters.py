@@ -1,8 +1,4 @@
-import os
-import re
-import socket
-import requests
-import custom_errors
+import os, re, socket, requests, custom_errors
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
