@@ -31,7 +31,7 @@ class ExitApp(qt.QDialog):
             "3. إعادة تشغيل البرنامج:\n"
             "يُستخدم لإعادة تشغيل البرنامج في حالة اكتشاف أي أخطاء تتطلب إعادة التشغيل."
         )
-        self.text_edit = QNavigableLabelAsTextEdit(content)
+        self.text_edit = QNavigableLabelAsTextEdit(content, parent=self, viewer_name="exitApp")
         layout.addWidget(self.text_edit)
         buttons_layout = qt.QHBoxLayout()
         self.btn_exit = QPushButton("إيقاف تشغيل البرنامج")

@@ -20,7 +20,7 @@ class QQuestionMessageBox(qt.QDialog):
         self.center()
         self.setWindowIcon(self.style().standardIcon(qt.QStyle.StandardPixmap.SP_MessageBoxQuestion))
         main_layout = qt.QVBoxLayout(self)
-        self.label = QNavigableLabelAsTextEdit(label)
+        self.label = QNavigableLabelAsTextEdit(label, parent=self, viewer_name="qMessageBox")
         main_layout.addWidget(self.label)
         buttons_widget = qt.QWidget()
         buttons_layout = qt.QHBoxLayout(buttons_widget)

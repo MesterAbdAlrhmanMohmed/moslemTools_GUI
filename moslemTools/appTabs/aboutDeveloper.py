@@ -18,8 +18,7 @@ class AboutDeveloper(qt.QDialog):
         font.setBold(True)
         self.info.setFont(font)
         self.info.itemClicked.connect(self.open_link)
-        self.info.addItem("عبد الرحمن محمد alcoder")
-        self.info.addItem("نبذة عن المطور")
+        self.info.addItem("عبد الرحمن محمد alcoder")        
         self.info.addItem("قناتي على YouTube")
         self.info.addItem("حسابي على telegram")
         self.info.addItem("حسابي على GitHub")
@@ -48,10 +47,8 @@ class AboutDeveloper(qt.QDialog):
     def open_link(self):
         current_item = self.info.currentItem()
         if current_item:
-            text = current_item.text()
-            if text == "نبذة عن المطور":
-                guiTools.MessageBox.view(self, "نبذة عن المطور", "نبذة عن المطور:\nعبد الرحمن محمد، باحث في علم مقارنة الأديان والمخطوطات التاريخية.\n\nالتخصص الفكري والبحثي:\nمتخصص في دراسة وتحليل العقائد والتشريعات وتاريخها اللاهوتي، وتتركز مؤلفاته وبحوثه المتعمقة على تفكيك وفحص العقيدة المسيحية والتفاسير الكنسية من جهة، وعلى التأصيل والدفاع عن الدين الإسلامي وبيان حقائقه من جهة أخرى.\n\nالمجال التقني والبرمجي:\nيعمل كمطور برمجيات بلغة بايثون (Python) ومدرس لأساسيات البرمجة وعلوم الحاسب، حيث يركز على هندسة وتطوير النظم البرمجية والتطبيقات المكتبية المتقدمة وأتمتة معالجة البيانات.\n\nالبيانات الشخصية والهدف:\nهو مِن مواليد 21 سبتمبر 2005، يجمع في مسيرته بين الكفاءة التقنية والشغف العقائدي؛ مدفوعاً برؤية غايتها خدمة الدين الإسلامي، ونشر الوعي الفكري، والدفاع عن الهوية الإسلامية بأسلوب علمي، أكاديمي، ومنهجي رصين، مستمسكاً بحب الله ورسله وتفنيد الشبهات بالدليل والبرهان.")
-            elif text == "قناتي على YouTube":
+            text = current_item.text()            
+            if text == "قناتي على YouTube":
                 webbrowser.open("https://youtube.com/@alcoder01?feature=shared")
             elif text == "حسابي على telegram":
                 webbrowser.open("https://t.me/P1_1_1")

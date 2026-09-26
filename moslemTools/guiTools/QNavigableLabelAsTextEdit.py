@@ -1,22 +1,43 @@
-from PyQt6.QtWidgets import QTextEdit, QFrame, QWidget
+from PyQt6.QtWidgets import QTextEdit, QFrame, QWidget, QPushButton, QDialog, QMenu
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextCursor, QTextOption
+from PyQt6.QtGui import QTextCursor, QTextOption, QKeySequence
+
+try:
+    from .QCustomContextMenu import QCustomContextMenu
+except ImportError:
+    try:
+        from guiTools.QCustomContextMenu import QCustomContextMenu
+    except ImportError:
+        QCustomContextMenu = QMenu
 
 
 class QNavigableLabelAsTextEdit(QTextEdit):
-    def __init__(self, text="", parent=None, *args, **kwargs):
+    def __init__(self, text="", parent=None, viewer_name=None, wrap=None, *args, **kwargs):
         if isinstance(text, QWidget) and parent is None:
             parent = text
             text = ""
-        super().__init__(parent)        
+        if viewer_name is None:
+            viewer_name = kwargs.pop("viewer_name", None)
+        if wrap is None:
+            wrap = kwargs.pop("wrap", None)
+
+        super().__init__(parent)
+        if viewer_name is None and parent is not None:
+            p_name = parent.__class__.__name__
+            if p_name in ("MessageBox", "QQuestionMessageBox", "MessageBoxForGame"):
+                viewer_name = "qMessageBox"
+            elif p_name == "ExitApp":
+                viewer_name = "exitApp"
+            elif p_name in ("download", "CheckForUpdate"):
+                viewer_name = "checkForUpdate"
+
+        self.viewer_name = viewer_name
         self.setTabChangesFocus(True)
         self.setFrameShape(QFrame.Shape.NoFrame)
         self.setFrameShadow(QFrame.Shadow.Plain)
         self.setLineWidth(0)
         self.setAcceptDrops(False)
         self.setAcceptRichText(False)
-        self.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
-        self.setWordWrapMode(QTextOption.WrapMode.WordWrap)
         self.document().setDefaultCursorMoveStyle(Qt.CursorMoveStyle.VisualMoveStyle)
         self.setStyleSheet("""
             QTextEdit {
@@ -25,9 +46,47 @@ class QNavigableLabelAsTextEdit(QTextEdit):
                 padding: 0px;
             }
         """)
-        self.selectionChanged.connect(self.deselect)
+
+        self.apply_wrap_mode(wrap)
+
         if text:
-            self.setText(text)
+            self.setText(str(text))
+
+    def setWrap(self, enable: bool):
+        if enable:
+            self.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
+            self.setWordWrapMode(QTextOption.WrapMode.WordWrap)
+        else:
+            self.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+
+    def apply_wrap_mode(self, wrap=None):
+        if wrap is True:
+            self.setWrap(True)
+        elif wrap is False:
+            self.setWrap(False)
+        else:
+            try:
+                from settings import settings_handler
+                v_name = self.viewer_name
+                if not v_name:
+                    win = self.window()
+                    win_name = win.__class__.__name__ if win else ""
+                    if win_name in ("MessageBox", "QQuestionMessageBox", "MessageBoxForGame"):
+                        v_name = "qMessageBox"
+                    elif win_name == "ExitApp":
+                        v_name = "exitApp"
+                    elif win_name in ("download", "CheckForUpdate"):
+                        v_name = "checkForUpdate"
+                    if v_name:
+                        self.viewer_name = v_name
+
+                wrap_val = settings_handler.get("font_wrap", v_name) if v_name else ""
+                if wrap_val == "True" or (wrap_val == "" and settings_handler.get("font", "wrap") == "True"):
+                    self.setWrap(True)
+                else:
+                    self.setWrap(False)
+            except Exception:
+                self.setWrap(False)
 
     def deselect(self):
         cursor = self.textCursor()
@@ -58,24 +117,42 @@ class QNavigableLabelAsTextEdit(QTextEdit):
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
-        self.deselect()
-        cursor = self.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.Start)
-        self.setTextCursor(cursor)
+        if event.reason() in (Qt.FocusReason.TabFocusReason, Qt.FocusReason.BacktabFocusReason):
+            cursor = self.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            self.setTextCursor(cursor)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.apply_wrap_mode()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             event.ignore()
             return
 
-        if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
+        if event.matches(QKeySequence.StandardKey.Copy):
+            self.copy()
+            event.accept()
+            return
+
+        if event.matches(QKeySequence.StandardKey.SelectAll):
+            self.selectAll()
+            event.accept()
+            return
+
+        if event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab):
+            super().keyPressEvent(event)
+            return
+
+        if event.key() == Qt.Key.Key_Menu or (event.key() == Qt.Key.Key_F10 and (event.modifiers() & Qt.KeyboardModifier.ShiftModifier)):
+            self.show_context_menu(self.mapToGlobal(self.rect().center()))
             event.accept()
             return
 
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             window = self.window()
             if window:
-                from PyQt6.QtWidgets import QPushButton, QDialog
                 default_btn = None
                 buttons = window.findChildren(QPushButton)
                 for btn in buttons:
@@ -118,34 +195,51 @@ class QNavigableLabelAsTextEdit(QTextEdit):
 
         event.accept()
 
-    def inputMethodEvent(self, event):
-        event.accept()
+    def show_context_menu(self, pos):
+        menu = QCustomContextMenu("الخيارات", self)
+        copy_action = menu.addAction("نسخ")
+        copy_action.setShortcut("Ctrl+C")
+        copy_action.setEnabled(self.textCursor().hasSelection())
+        copy_action.triggered.connect(self.copy)
+
+        select_all_action = menu.addAction("تحديد الكل")
+        select_all_action.setShortcut("Ctrl+A")
+        select_all_action.setEnabled(bool(self.toPlainText()))
+        select_all_action.triggered.connect(self.selectAll)
+
+        if pos.isNull() or pos.x() < 0 or pos.y() < 0:
+            pos = self.mapToGlobal(self.rect().center())
+        menu.exec(pos)
 
     def contextMenuEvent(self, event):
-        event.accept()
+        pos = event.globalPos()
+        if pos.isNull() or pos.x() < 0 or pos.y() < 0:
+            pos = self.mapToGlobal(self.rect().center())
+        self.show_context_menu(pos)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.MiddleButton:
             event.accept()
             return
         super().mousePressEvent(event)
-        self.deselect()
 
     def mouseDoubleClickEvent(self, event):
-        event.accept()
+        super().mouseDoubleClickEvent(event)
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-        self.deselect()
 
     def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+
+    def inputMethodEvent(self, event):
         event.accept()
 
     def dragEnterEvent(self, event):
-        event.accept()
+        event.ignore()
 
     def dragMoveEvent(self, event):
-        event.accept()
+        event.ignore()
 
     def dropEvent(self, event):
-        event.accept()
+        event.ignore()

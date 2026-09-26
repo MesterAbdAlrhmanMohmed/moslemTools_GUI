@@ -19,7 +19,7 @@ class MessageBox(qt.QDialog):
         self.setWindowTitle(title)
         self.center()
         layout = qt.QVBoxLayout(self)
-        self.label = QNavigableLabelAsTextEdit(label)
+        self.label = QNavigableLabelAsTextEdit(label, parent=self, viewer_name="qMessageBox")
         layout.addWidget(self.label)
         self.OKBTN = QPushButton("موافق")
         self.OKBTN.setDefault(True)

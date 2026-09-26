@@ -1,11 +1,23 @@
-from PyQt6.QtWidgets import QLineEdit
+from PyQt6.QtWidgets import QLineEdit, QWidget, QPushButton, QDialog, QMenu
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeySequence
+
+try:
+    from .QCustomContextMenu import QCustomContextMenu
+except ImportError:
+    try:
+        from guiTools.QCustomContextMenu import QCustomContextMenu
+    except ImportError:
+        QCustomContextMenu = QMenu
+
 
 class QNavigableLabel(QLineEdit):
     def __init__(self, text="", parent=None):
-        super().__init__(text, parent)
+        if isinstance(text, QWidget) and parent is None:
+            parent = text
+            text = ""
+        super().__init__(str(text) if text is not None else "", parent)
 
-        self.setText(text)
         self.setFrame(False)
         self.setAcceptDrops(False)
         self.setCursorPosition(0)
@@ -18,27 +30,40 @@ class QNavigableLabel(QLineEdit):
                 padding: 0px;
             }
         """)
-        
-        self.selectionChanged.connect(self.deselect)
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
-        self.deselect()
-        self.setCursorPosition(0)
+        if event.reason() in (Qt.FocusReason.TabFocusReason, Qt.FocusReason.BacktabFocusReason):
+            self.setCursorPosition(0)
+            self.deselect()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             event.ignore()
             return
 
-        if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
+        if event.matches(QKeySequence.StandardKey.Copy):
+            self.copy()
+            event.accept()
+            return
+
+        if event.matches(QKeySequence.StandardKey.SelectAll):
+            self.selectAll()
+            event.accept()
+            return
+
+        if event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab):
+            super().keyPressEvent(event)
+            return
+
+        if event.key() == Qt.Key.Key_Menu or (event.key() == Qt.Key.Key_F10 and (event.modifiers() & Qt.KeyboardModifier.ShiftModifier)):
+            self.show_context_menu(self.mapToGlobal(self.rect().center()))
             event.accept()
             return
 
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             window = self.window()
             if window:
-                from PyQt6.QtWidgets import QPushButton, QDialog
                 default_btn = None
                 buttons = window.findChildren(QPushButton)
                 for btn in buttons:
@@ -81,11 +106,27 @@ class QNavigableLabel(QLineEdit):
 
         event.accept()
 
-    def inputMethodEvent(self, event):
-        event.accept()
+    def show_context_menu(self, pos):
+        menu = QCustomContextMenu("الخيارات", self)
+        copy_action = menu.addAction("نسخ")
+        copy_action.setShortcut("Ctrl+C")
+        copy_action.setEnabled(self.hasSelectedText())
+        copy_action.triggered.connect(self.copy)
+
+        select_all_action = menu.addAction("تحديد الكل")
+        select_all_action.setShortcut("Ctrl+A")
+        select_all_action.setEnabled(bool(self.text()))
+        select_all_action.triggered.connect(self.selectAll)
+
+        if pos.isNull() or pos.x() < 0 or pos.y() < 0:
+            pos = self.mapToGlobal(self.rect().center())
+        menu.exec(pos)
 
     def contextMenuEvent(self, event):
-        event.accept()
+        pos = event.globalPos()
+        if pos.isNull() or pos.x() < 0 or pos.y() < 0:
+            pos = self.mapToGlobal(self.rect().center())
+        self.show_context_menu(pos)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.MiddleButton:
@@ -94,20 +135,22 @@ class QNavigableLabel(QLineEdit):
         super().mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
-        event.accept()
+        super().mouseDoubleClickEvent(event)
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+
+    def inputMethodEvent(self, event):
         event.accept()
 
     def dragEnterEvent(self, event):
-        event.accept()
+        event.ignore()
 
     def dragMoveEvent(self, event):
-        event.accept()
+        event.ignore()
 
     def dropEvent(self, event):
-        event.accept()
-        
+        event.ignore()
