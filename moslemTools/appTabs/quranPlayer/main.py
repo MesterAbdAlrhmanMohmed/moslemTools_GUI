@@ -58,7 +58,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.volume_timer = qt2.QTimer(self)
         self.volume_timer.setSingleShot(True)
         self.volume_timer.timeout.connect(self.restore_duration_text)
-        self.paused_position = None
+        self.pending_seek_resume = False
         self.bookmarksPosition = None
         self.isAMustToGoToBookmark = False
         self.startingPosition = None
@@ -174,6 +174,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.Slider.setRange(0, 100)
         self.Slider.setTracking(True)
         self.Slider.valueChanged.connect(self.set_position_from_slider)
+        self.Slider.sliderReleased.connect(self._check_seek_resume)
         self.Slider.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         self.Slider.customContextMenuRequested.connect(self.onAddNewBookmark)
         self.mp.durationChanged.connect(self.update_slider)

@@ -77,6 +77,12 @@ class PlayerPlaybackModesMixin:
             self.play_all_to_start.setEnabled(True)
 
     def handle_media_status_changed(self, status):
+        if getattr(self, 'pending_seek_resume', False):
+            if hasattr(self, 'Slider') and self.Slider.isSliderDown():
+                return
+            if status in (QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.LoadedMedia):
+                self.pending_seek_resume = False
+                self.mp.play()
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
             if self.repeat_surah_button.isChecked():
                 self.mp.setPosition(0)
@@ -140,7 +146,6 @@ class PlayerPlaybackModesMixin:
 
     def play_selected_audio(self):
         self.repeatFromPositionToPosition = False
-        self.paused_position = None
         try:
             selected_reciter_item = self.recitersListWidget.currentItem()
             if not selected_reciter_item:
@@ -149,17 +154,35 @@ class PlayerPlaybackModesMixin:
             selected_item = self.surahListWidget.currentItem()
             if selected_item:
                 surah_name = self.get_surah_name(selected_item)
-                self.current_playing_surah = surah_name
-                self.current_playing_reciter = reciter
                 audio_folder = os.path.join(os.getenv('appdata'), app.appName, "quran surah reciters", reciter)
                 audio_path = os.path.join(audio_folder, surah_name + ".mp3")
                 if os.path.exists(audio_path):
-                    self.mp.setSource(qt2.QUrl.fromLocalFile(audio_path))
-                    qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.mp.play(), self.update_playing_surah_item()))
+                    path = qt2.QUrl.fromLocalFile(audio_path)
                 else:
                     url = self.reciters_data[reciter][surah_name]
-                    self.mp.setSource(qt2.QUrl(url))
-                    qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.mp.play(), self.update_playing_surah_item()))
+                    path = qt2.QUrl(url)
+
+                is_same_surah = (getattr(self, 'current_playing_surah', None) == surah_name and 
+                                getattr(self, 'current_playing_reciter', None) == reciter and 
+                                self.mp.source() == path)
+
+                if is_same_surah:
+                    if self.mp.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+                        self.pending_seek_resume = False
+                        self.mp.pause()
+                        self.update_playing_surah_item()
+                        return
+                    elif self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+                        self.pending_seek_resume = False
+                        self.mp.play()
+                        self.update_playing_surah_item()
+                        return
+
+                self.current_playing_surah = surah_name
+                self.current_playing_reciter = reciter
+                if not self.mp.source() == path:
+                    self.mp.setSource(path)
+                qt2.QTimer.singleShot(80, lambda: (self.apply_speed(), self.mp.play(), self.update_playing_surah_item()))
                 self.update_playing_surah_item()
                 is_manual_playback = not self.play_all_to_end.isChecked() and not self.play_all_to_start.isChecked()
                 self.repeat_surah_button.setEnabled(is_manual_playback)
@@ -167,7 +190,7 @@ class PlayerPlaybackModesMixin:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", "حدث خطأ أثناء تشغيل المقطع:" + str(e))
 
     def on_reciter_selected(self):
-        self.paused_position = None
+        self.pending_seek_resume = False
         self.mp.stop()
         self.current_playing_surah = None
         self.surahListWidget.clear()

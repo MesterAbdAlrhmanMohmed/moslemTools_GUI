@@ -14,18 +14,38 @@ from .favorites import FavoritesManager
 
 
 class PlayerAudioControlsMixin:
+    def seek_position(self, new_position):
+        is_playing = self.mp.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+        if is_playing:
+            self.mp.pause()
+            self.pending_seek_resume = True
+        self.mp.setPosition(new_position)
+        if is_playing:
+            qt2.QTimer.singleShot(150, self._check_seek_resume)
+
+    def _check_seek_resume(self):
+        if getattr(self, 'pending_seek_resume', False):
+            if hasattr(self, 'Slider') and self.Slider.isSliderDown():
+                qt2.QTimer.singleShot(150, self._check_seek_resume)
+                return
+            if self.mp.mediaStatus() in (QMediaPlayer.MediaStatus.BufferedMedia, QMediaPlayer.MediaStatus.LoadedMedia):
+                self.pending_seek_resume = False
+                self.mp.play()
+            elif self.mp.mediaStatus() in (QMediaPlayer.MediaStatus.BufferingMedia, QMediaPlayer.MediaStatus.LoadingMedia, QMediaPlayer.MediaStatus.StalledMedia):
+                qt2.QTimer.singleShot(200, self._check_seek_resume)
+
     def play(self):
         if self.mp.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-            self.paused_position = self.mp.position()
+            self.pending_seek_resume = False
             self.mp.pause()
-        else:
-            if getattr(self, 'paused_position', None) is not None:
-                self.mp.setPosition(self.paused_position)
-                self.paused_position = None
+        elif self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+            self.pending_seek_resume = False
             self.mp.play()
+        else:
+            self.play_selected_audio()
 
     def stop_audio_completely(self):
-        self.paused_position = None
+        self.pending_seek_resume = False
         self.mp.stop()
         self.mp.setSource(qt2.QUrl())
         self.current_playing_surah = None
@@ -49,88 +69,64 @@ class PlayerAudioControlsMixin:
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
-        current_pos = self.paused_position if (self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState and getattr(self, 'paused_position', None) is not None) else self.mp.position()
-        new_position = min(self.mp.duration(), current_pos + 5000)
-        self.mp.setPosition(new_position)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_position
+        new_position = min(self.mp.duration(), self.mp.position() + 5000)
+        self.seek_position(new_position)
         speak("تقديم 5 ثواني")
 
     def skip_backward_5s(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
-        current_pos = self.paused_position if (self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState and getattr(self, 'paused_position', None) is not None) else self.mp.position()
-        new_position = max(0, current_pos - 5000)
-        self.mp.setPosition(new_position)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_position
+        new_position = max(0, self.mp.position() - 5000)
+        self.seek_position(new_position)
         speak("ترجيع 5 ثواني")
 
     def skip_forward_10s(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
-        current_pos = self.paused_position if (self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState and getattr(self, 'paused_position', None) is not None) else self.mp.position()
-        new_position = min(self.mp.duration(), current_pos + 10000)
-        self.mp.setPosition(new_position)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_position
+        new_position = min(self.mp.duration(), self.mp.position() + 10000)
+        self.seek_position(new_position)
         speak("تقديم 10 ثواني")
 
     def skip_backward_10s(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
-        current_pos = self.paused_position if (self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState and getattr(self, 'paused_position', None) is not None) else self.mp.position()
-        new_position = max(0, current_pos - 10000)
-        self.mp.setPosition(new_position)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_position
+        new_position = max(0, self.mp.position() - 10000)
+        self.seek_position(new_position)
         speak("ترجيع 10 ثواني")
 
     def skip_forward_30s(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
-        current_pos = self.paused_position if (self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState and getattr(self, 'paused_position', None) is not None) else self.mp.position()
-        new_position = min(self.mp.duration(), current_pos + 30000)
-        self.mp.setPosition(new_position)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_position
+        new_position = min(self.mp.duration(), self.mp.position() + 30000)
+        self.seek_position(new_position)
         speak("تقديم 30 ثانية")
 
     def skip_backward_30s(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
-        current_pos = self.paused_position if (self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState and getattr(self, 'paused_position', None) is not None) else self.mp.position()
-        new_position = max(0, current_pos - 30000)
-        self.mp.setPosition(new_position)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_position
+        new_position = max(0, self.mp.position() - 30000)
+        self.seek_position(new_position)
         speak("ترجيع 30 ثانية")
 
     def skip_forward_1m(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
-        current_pos = self.paused_position if (self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState and getattr(self, 'paused_position', None) is not None) else self.mp.position()
-        new_position = min(self.mp.duration(), current_pos + 60000)
-        self.mp.setPosition(new_position)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_position
+        new_position = min(self.mp.duration(), self.mp.position() + 60000)
+        self.seek_position(new_position)
         speak("تقديم دقيقة واحدة")
 
     def skip_backward_1m(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
-        current_pos = self.paused_position if (self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState and getattr(self, 'paused_position', None) is not None) else self.mp.position()
-        new_position = max(0, current_pos - 60000)
-        self.mp.setPosition(new_position)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_position
+        new_position = max(0, self.mp.position() - 60000)
+        self.seek_position(new_position)
         speak("ترجيع دقيقة واحدة")
 
     def t10(self):
@@ -138,90 +134,63 @@ class PlayerAudioControlsMixin:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.1)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.1))
 
     def t20(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.2)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.2))
 
     def t30(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.3)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.3))
 
     def t40(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.4)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.4))
 
     def t50(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.5)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.5))
 
     def t60(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.6)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.6))
 
     def t70(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.7)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.7))
 
     def t80(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.8)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.8))
 
     def t90(self):
         if self.mp.duration() == 0:
             speak("لا يوجد مقطع مشغل حالياً")
             return
         total_duration = self.mp.duration()
-        new_pos = int(total_duration * 0.9)
-        self.mp.setPosition(new_pos)
-        if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-            self.paused_position = new_pos
+        self.seek_position(int(total_duration * 0.9))
 
     def increase_volume(self):
         current_volume = self.au.volume()
@@ -269,9 +238,7 @@ class PlayerAudioControlsMixin:
         duration = self.mp.duration()
         if duration > 0:
             new_position = int((value / 100) * duration)
-            self.mp.setPosition(new_position)
-            if self.mp.playbackState() == QMediaPlayer.PlaybackState.PausedState:
-                self.paused_position = new_position
+            self.seek_position(new_position)
 
     def update_slider(self):
         if self.isAMustToGoToBookmark and self.mp.position() >= 3000:
@@ -352,7 +319,7 @@ class PlayerAudioControlsMixin:
 
     def change_speed(self, speed):
         is_playing = self.mp.playbackState() == QMediaPlayer.PlaybackState.PlayingState
-        pos = self.paused_position if (not is_playing and getattr(self, 'paused_position', None) is not None) else self.mp.position()
+        pos = self.mp.position()
         if is_playing:
             self.mp.pause()
         self.save_speed(speed)
@@ -362,11 +329,7 @@ class PlayerAudioControlsMixin:
         if self.mp.duration() > 0 and pos > 0:
             self.mp.setPosition(pos)
         if is_playing:
-            self.mp.play()
-            self.paused_position = None
-        else:
-            if pos > 0:
-                self.paused_position = pos
+            qt2.QTimer.singleShot(100, lambda: self.mp.play())
 
     def apply_speed(self):
         speed = self.load_speed()

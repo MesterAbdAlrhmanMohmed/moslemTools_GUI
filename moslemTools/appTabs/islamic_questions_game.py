@@ -86,23 +86,37 @@ class IslamicQuestionsGame(qt.QWidget):
         self.topics_widget = qt.QWidget()
         topics_layout = qt.QVBoxLayout(self.topics_widget)
         top_row = qt.QHBoxLayout()
-        self.search_bar = qt.QLineEdit()
-        self.search_bar.setPlaceholderText("ابحث عن قسم اختبار في فئة")
-        self.search_bar.textChanged.connect(self.on_topic_search)
-        self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.search_bar.setMinimumHeight(35)
-        top_row.addWidget(self.search_bar)
         topics_back_btn = guiTools.QPushButton("رجوع")
         topics_back_btn.setAccessibleDescription("Escape")
         topics_back_btn.setMinimumSize(120, 35)
         topics_back_btn.setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold; border-radius: 5px;")
         topics_back_btn.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.categories_widget))
         top_row.addWidget(topics_back_btn)
+        self.search_bar = qt.QLineEdit()
+        self.search_bar.setPlaceholderText("ابحث عن قسم اختبار في فئة")
+        self.search_bar.textChanged.connect(self.on_topic_search)
+        self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.search_bar.setMinimumHeight(35)
+        top_row.addWidget(self.search_bar, 1)
+        view_mode_v_layout = qt.QVBoxLayout()
+        self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
+        self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.view_mode_combo = guiTools.QComboBox()
+        self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.view_mode_combo.setAccessibleName("طريقة عرض العناصر")
+        self.view_mode_combo.addItems(["عمودي", "شبكي"])
+        grid_enabled = settings_handler.get("islamic_questions_game", "grid_view") == "True"
+        self.view_mode_combo.setCurrentIndex(1 if grid_enabled else 0)
+        self.view_mode_combo.currentIndexChanged.connect(self.on_view_mode_changed)
+        view_mode_v_layout.addWidget(self.view_mode_label)
+        view_mode_v_layout.addWidget(self.view_mode_combo)
+        top_row.addLayout(view_mode_v_layout)
         topics_layout.addLayout(top_row)
         self.topics_list = guiTools.QListWidget()
         self.topics_list.setSpacing(3)
         self.topics_list.itemActivated.connect(self.show_levels)
         topics_layout.addWidget(self.topics_list)
+        self.on_view_mode_changed(self.view_mode_combo.currentIndex())
         self.stacked_widget.addWidget(self.topics_widget)
         self.levels_widget = qt.QWidget()
         levels_layout = qt.QVBoxLayout(self.levels_widget)
@@ -193,6 +207,52 @@ class IslamicQuestionsGame(qt.QWidget):
         matches = [text for text in text_list if normalized_pattern in tashkeel_pattern.sub('', text)]
         return matches
 
+    def update_grid_size(self):
+        if self.view_mode_combo.currentIndex() != 1:
+            return
+        fm = self.topics_list.fontMetrics()
+        max_w = 0
+        for i in range(self.topics_list.count()):
+            txt = self.topics_list.item(i).text()
+            w = fm.horizontalAdvance(txt) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(txt).width()
+            if w > max_w:
+                max_w = w
+        cell_w = max(200, max_w + 60)
+        cell_h = max(60, fm.height() * 2 + 20)
+        self.topics_list.setGridSize(qt2.QSize(cell_w, cell_h))
+
+    def on_view_mode_changed(self, index):
+        is_grid = (index == 1)
+        settings_handler.set("islamic_questions_game", "grid_view", "True" if is_grid else "False")
+        if is_grid:
+            self.topics_list.setStyleSheet("""
+                QListWidget::item {
+                    padding: 10px 18px;
+                    margin: 4px;
+                    border-radius: 6px;
+                }
+                QListWidget::item:selected {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+                QListWidget::item:focus {
+                    background-color: #0066CC;
+                    color: white;
+                    border-radius: 6px;
+                }
+            """)
+            self.topics_list.setViewMode(qt.QListView.ViewMode.IconMode)
+            self.topics_list.setResizeMode(qt.QListView.ResizeMode.Adjust)
+            self.update_grid_size()
+            self.topics_list.setSpacing(6)
+        else:
+            self.topics_list.setStyleSheet("")
+            self.topics_list.setViewMode(qt.QListView.ViewMode.ListMode)
+            self.topics_list.setResizeMode(qt.QListView.ResizeMode.Fixed)
+            self.topics_list.setGridSize(qt2.QSize())
+            self.topics_list.setSpacing(3)
+
     def on_topic_search(self):
         search_text = self.search_bar.text().lower()
         self.topics_list.clear()
@@ -204,6 +264,7 @@ class IslamicQuestionsGame(qt.QWidget):
             if normalized_pattern in tashkeel_pattern.sub('', name.lower()):
                 self.topics_list.addItem(name)
                 self.filtered_topics_data.append(topic)
+        self.update_grid_size()
 
     def show_topics(self, category_key):
         self.current_category = category_key
