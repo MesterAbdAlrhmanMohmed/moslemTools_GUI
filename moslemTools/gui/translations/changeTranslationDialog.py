@@ -15,16 +15,12 @@ class ChangeTranslationDialog(qt.QDialog):
     def __init__(self, parent, current_index: str):
         super().__init__(parent)
         self.setWindowTitle("تغيير الترجمة")
-        self.setMinimumSize(360, 320)
-        self.resize(400, 360)
+        self.min_dialog_width = 400
+        self.setMinimumSize(self.min_dialog_width, 340)
+        self.resize(self.min_dialog_width, 340)
         self.selected_item = None
         self.lang_groups = {}
         self.all_translations = []
-
-        if parent:
-            frame_geometry = self.frameGeometry()
-            frame_geometry.moveCenter(parent.frameGeometry().center())
-            self.move(frame_geometry.topLeft())
 
         functions.translater.reload_translations()
         downloaded = functions.translater.translations
@@ -69,12 +65,11 @@ class ChangeTranslationDialog(qt.QDialog):
         layout.addWidget(self.search_lang)
 
         self.lang_combo = guiTools.QComboBox()
-        self.lang_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.lang_combo.setAccessibleName("اختر اللغة")
         self.lang_combo.setMinimumHeight(35)
         self.lang_combo.setStyleSheet("QComboBox { padding: 4px 12px; font-weight: bold; font-size: 13px; }")
         self.lang_combo.currentIndexChanged.connect(self.on_lang_changed)
-        layout.addWidget(self.lang_combo)
+        layout.addWidget(self.lang_combo, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
         self.trans_label = qt.QLabel("اختر الترجمة:")
         self.trans_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
@@ -89,11 +84,11 @@ class ChangeTranslationDialog(qt.QDialog):
         layout.addWidget(self.search_trans)
 
         self.trans_combo = guiTools.QComboBox()
-        self.trans_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.trans_combo.setAccessibleName("اختر الترجمة")
         self.trans_combo.setMinimumHeight(35)
         self.trans_combo.setStyleSheet("QComboBox { padding: 4px 12px; font-weight: bold; font-size: 13px; }")
-        layout.addWidget(self.trans_combo)
+        self.trans_combo.currentIndexChanged.connect(self.update_sizes)
+        layout.addWidget(self.trans_combo, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
         buttons_layout = qt.QHBoxLayout()
         buttons_layout.setSpacing(12)
@@ -137,6 +132,46 @@ class ChangeTranslationDialog(qt.QDialog):
             idx = self.trans_combo.findText(curr_trans_name)
             if idx >= 0:
                 self.trans_combo.setCurrentIndex(idx)
+
+        self.update_sizes()
+
+        if parent:
+            frame_geometry = self.frameGeometry()
+            frame_geometry.moveCenter(parent.frameGeometry().center())
+            self.move(frame_geometry.topLeft())
+
+    def update_combo_width(self, combo, min_w=180):
+        text = combo.currentText()
+        fm = combo.fontMetrics()
+        text_w = fm.horizontalAdvance(text) if text else 0
+        combo_w = max(min_w, text_w + 55)
+
+        screen_w = self.screen().availableGeometry().width() if self.screen() else 1200
+        combo_w = min(combo_w, screen_w - 60)
+        combo.setFixedWidth(combo_w)
+
+        max_item_w = 0
+        for i in range(combo.count()):
+            iw = fm.horizontalAdvance(combo.itemText(i))
+            if iw > max_item_w:
+                max_item_w = iw
+        popup_w = min(max(combo_w, max_item_w + 50), screen_w - 60)
+        combo.view().setMinimumWidth(popup_w)
+        return combo_w
+
+    def update_sizes(self):
+        w_lang = self.update_combo_width(self.lang_combo)
+        w_trans = self.update_combo_width(self.trans_combo)
+        max_combo_w = max(w_lang, w_trans)
+
+        screen_w = self.screen().availableGeometry().width() if self.screen() else 1200
+        target_w = min(max(self.min_dialog_width, max_combo_w + 40), screen_w - 40)
+        if target_w != self.width():
+            old_center = self.frameGeometry().center()
+            self.resize(target_w, self.height())
+            fg = self.frameGeometry()
+            fg.moveCenter(old_center)
+            self.move(fg.topLeft())
 
     def keyPressEvent(self, event):
         if event.key() in (qt2.Qt.Key.Key_Return, qt2.Qt.Key.Key_Enter):
@@ -199,6 +234,7 @@ class ChangeTranslationDialog(qt.QDialog):
         elif active_list:
             self.trans_combo.setCurrentIndex(0)
         self.trans_combo.blockSignals(False)
+        self.update_sizes()
 
     def on_search_trans(self):
         self.on_lang_changed()
