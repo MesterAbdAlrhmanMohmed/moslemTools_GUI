@@ -116,12 +116,8 @@ class SelectAhadeethItem(qt.QDialog):
 
 		layout = qt.QVBoxLayout(self)
 
-		search_label = qt.QLabel("البحث عن كتاب أحاديث")
-		search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		layout.addWidget(search_label)
-
 		self.search_bar = qt.QLineEdit()
-		self.search_bar.setAccessibleName("البحث عن كتاب أحاديث")
+		self.search_bar.setPlaceholderText("البحث عن كتاب أحاديث")
 		self.search_bar.textChanged.connect(self.onsearch)
 		self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.search_bar)

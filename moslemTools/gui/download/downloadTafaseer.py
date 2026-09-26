@@ -116,12 +116,8 @@ class SelectTafaseerItem(qt.QDialog):
 
 		layout = qt.QVBoxLayout(self)
 
-		search_label = qt.QLabel("البحث عن كتاب تفسير")
-		search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		layout.addWidget(search_label)
-
 		self.search_bar = qt.QLineEdit()
-		self.search_bar.setAccessibleName("البحث عن كتاب تفسير")
+		self.search_bar.setPlaceholderText("البحث عن كتاب تفسير")
 		self.search_bar.textChanged.connect(self.onsearch)
 		self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.search_bar)

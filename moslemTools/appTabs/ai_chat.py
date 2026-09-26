@@ -62,7 +62,7 @@ class SourcesDialog(qt.QDialog):
         self.setWindowTitle("المصادر والمراجع")
         lec = "اختر المصدر الذي تريد الذهاب إليه:"
         label = qt.QLabel(lec)
-        self.combo = qt.QComboBox()
+        self.combo = guiTools.QComboBox()
         self.combo.setMinimumHeight(60)
         self.combo.setAccessibleName(lec)
         font = qt1.QFont()

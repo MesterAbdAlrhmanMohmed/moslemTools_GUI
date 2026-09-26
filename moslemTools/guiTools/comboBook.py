@@ -1,9 +1,10 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 from settings import *
+from .QComboBox import QComboBox
 
 
-class ComboBook(qt.QComboBox):
+class ComboBook(QComboBox):
     def __init__(self):
         super().__init__()
         self.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)

@@ -1,6 +1,7 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+import guiTools
 from .. import settings_handler
 
 
@@ -42,7 +43,6 @@ class UserNameSettings(qt.QWidget):
         self.custom_name_input.setFont(font)
         self.custom_name_input.setPlaceholderText("اسمك في التذكير بالمناسبات")
         self.custom_name_input.setText(settings_handler.get("g", "user_name"))
-        self.custom_name_input.setAccessibleName("اسمك في التذكير بالمناسبات")
         self.custom_name_input.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         options_layout.addWidget(self.custom_name_input, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
@@ -51,7 +51,7 @@ class UserNameSettings(qt.QWidget):
         gender_layout.setSpacing(5)
         gender_label = qt.QLabel("اختر النوع:")
         gender_label.setFont(font)
-        self.gender_combo = qt.QComboBox()
+        self.gender_combo = guiTools.QComboBox()
         self.gender_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.gender_combo.setFont(font)
         self.gender_combo.addItems(["ذكر", "أنثى"])

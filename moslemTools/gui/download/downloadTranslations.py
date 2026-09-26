@@ -104,15 +104,8 @@ class SelectTranslationItem(qt.QDialog):
 		font_bold = qt1.QFont()
 		font_bold.setBold(True)
 
-		# 0. Language Search Bar before Language Combo Box
-		lang_search_label = qt.QLabel("بحث في اللغات:")
-		lang_search_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
-		lang_search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		lang_search_label.setFont(font_bold)
-		layout.addWidget(lang_search_label)
-
 		self.lang_search_bar = qt.QLineEdit()
-		self.lang_search_bar.setAccessibleName("بحث في اللغات")
+		self.lang_search_bar.setPlaceholderText("بحث في اللغات")
 		self.lang_search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.lang_search_bar.setMinimumHeight(32)
 		self.lang_search_bar.textChanged.connect(self.on_search_language)
@@ -122,7 +115,7 @@ class SelectTranslationItem(qt.QDialog):
 		lang_header_layout.setSpacing(10)
 		lang_header_layout.addStretch(1)
 
-		self.language_combo = qt.QComboBox()
+		self.language_combo = guiTools.QComboBox()
 		self.language_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
 		self.language_combo.setSizePolicy(qt.QSizePolicy.Policy.Minimum, qt.QSizePolicy.Policy.Fixed)
 		self.language_combo.setAccessibleName("اختيار اللغة")
@@ -140,15 +133,8 @@ class SelectTranslationItem(qt.QDialog):
 		lang_header_layout.addStretch(1)
 		layout.addLayout(lang_header_layout)
 
-		# 2. Search bar
-		search_label = qt.QLabel("بحث في الترجمات:")
-		search_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
-		search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		search_label.setFont(font_bold)
-		layout.addWidget(search_label)
-
 		self.search_bar = qt.QLineEdit()
-		self.search_bar.setAccessibleName("بحث في الترجمات")
+		self.search_bar.setPlaceholderText("بحث في الترجمات")
 		self.search_bar.textChanged.connect(self.onsearch)
 		self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.search_bar.setMinimumHeight(32)

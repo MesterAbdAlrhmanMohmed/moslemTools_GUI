@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import gui
 import guiTools
@@ -16,7 +17,7 @@ class QuranRecitersSettings(qt.QWidget):
         self.layout.setSpacing(10)
         self.layout.setContentsMargins(15, 15, 15, 15)
         self.setStyleSheet("""
-            QComboBox {
+            QComboBox, QLineEdit {
                 color: #e0e0e0;
                 border: 1px solid #555;
                 padding: 4px 8px;
@@ -33,8 +34,10 @@ class QuranRecitersSettings(qt.QWidget):
         self.delete_notice = guiTools.QNavigableLabel(self.default_notice_text)
         self.delete_notice.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.delete_notice.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        fm = self.delete_notice.fontMetrics()
+        self.delete_notice.setMinimumWidth(fm.horizontalAdvance(self.default_notice_text) + 30)
         self.layout.addSpacing(12)
-        self.layout.addWidget(self.delete_notice, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(self.delete_notice)
         self.layout.addStretch(1)
 
         self.notice_timer = qt2.QTimer(self)
@@ -53,7 +56,7 @@ class QuranRecitersSettings(qt.QWidget):
         font = qt1.QFont()
         font.setBold(True)
         label.setFont(font)
-        combo = qt.QComboBox()
+        combo = guiTools.QComboBox()
         combo.setFont(font)
         self.combos.append(combo)
         combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
@@ -66,10 +69,33 @@ class QuranRecitersSettings(qt.QWidget):
         combo.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
         combo.customContextMenuRequested.connect(lambda pos, c=combo: self.on_delete(c))
         combo.installEventFilter(self)
+        search_edit = qt.QLineEdit()
+        search_edit.setFont(font)
+        search_edit.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        search_edit.setPlaceholderText("البحث في القراء")
+        search_edit.textChanged.connect(lambda text, c=combo: self.filter_combo(text, c))
         row_layout.addWidget(label, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
+        row_layout.addWidget(search_edit)
         row_layout.addWidget(combo)
         self.layout.addWidget(container)
         return combo
+
+    def filter_combo(self, text, combo):
+        current_selection = combo.currentText()
+        combo.blockSignals(True)
+        combo.clear()
+        tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+        clean_text = tashkeel_pattern.sub('', text.strip().lower())
+        for reciter in self.reciters_list:
+            clean_reciter = tashkeel_pattern.sub('', reciter.lower())
+            if clean_text in clean_reciter:
+                combo.addItem(reciter)
+        idx = combo.findText(current_selection)
+        if idx >= 0:
+            combo.setCurrentIndex(idx)
+        elif combo.count() > 0:
+            combo.setCurrentIndex(0)
+        combo.blockSignals(False)
 
     def eventFilter(self, obj, event):
         if hasattr(self, 'combos') and obj in self.combos:
@@ -104,17 +130,26 @@ class QuranRecitersSettings(qt.QWidget):
         r_idx = int(settings_handler.get("quran_reciters", "researcher") or settings_handler.get("g", "reciter") or 0)
         p_idx = int(settings_handler.get("quran_reciters", "player") or settings_handler.get("g", "reciter") or 0)
         v_idx = int(settings_handler.get("quran_reciters", "viewer") or settings_handler.get("g", "reciter") or 0)
-        if 0 <= r_idx < self.researcher_combo.count():
-            self.researcher_combo.setCurrentIndex(r_idx)
-        if 0 <= p_idx < self.player_combo.count():
-            self.player_combo.setCurrentIndex(p_idx)
-        if 0 <= v_idx < self.viewer_combo.count():
-            self.viewer_combo.setCurrentIndex(v_idx)
+        if 0 <= r_idx < len(self.reciters_list):
+            idx = self.researcher_combo.findText(self.reciters_list[r_idx])
+            if idx >= 0:
+                self.researcher_combo.setCurrentIndex(idx)
+        if 0 <= p_idx < len(self.reciters_list):
+            idx = self.player_combo.findText(self.reciters_list[p_idx])
+            if idx >= 0:
+                self.player_combo.setCurrentIndex(idx)
+        if 0 <= v_idx < len(self.reciters_list):
+            idx = self.viewer_combo.findText(self.reciters_list[v_idx])
+            if idx >= 0:
+                self.viewer_combo.setCurrentIndex(idx)
 
     def save_settings(self):
-        r_idx = str(self.researcher_combo.currentIndex())
-        p_idx = str(self.player_combo.currentIndex())
-        v_idx = str(self.viewer_combo.currentIndex())
+        r_text = self.researcher_combo.currentText()
+        p_text = self.player_combo.currentText()
+        v_text = self.viewer_combo.currentText()
+        r_idx = str(self.reciters_list.index(r_text)) if r_text in self.reciters_list else str(self.researcher_combo.currentIndex())
+        p_idx = str(self.reciters_list.index(p_text)) if p_text in self.reciters_list else str(self.player_combo.currentIndex())
+        v_idx = str(self.reciters_list.index(v_text)) if v_text in self.reciters_list else str(self.viewer_combo.currentIndex())
         settings_handler.set("quran_reciters", "researcher", r_idx)
         settings_handler.set("quran_reciters", "player", p_idx)
         settings_handler.set("quran_reciters", "viewer", v_idx)

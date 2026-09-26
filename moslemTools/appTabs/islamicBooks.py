@@ -74,7 +74,7 @@ class EditCategoriesDialog(qt.QDialog):
         label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(label)
 
-        self.combo = qt.QComboBox()
+        self.combo = guiTools.QComboBox()
         self.combo.addItems(self.categories)
         layout.addWidget(self.combo)
 
@@ -104,7 +104,6 @@ class EditCategoriesDialog(qt.QDialog):
         if not cat:
             return
         prompt_text = f"قم بكتابة الاسم الجديد لتبويبة {cat}"
-        self.name_input.setAccessibleName(prompt_text)
         self.name_input.setPlaceholderText(prompt_text)
         self.name_input.blockSignals(True)
         if cat in self.session_edits:
@@ -140,13 +139,9 @@ class IslamicBooks(qt.QWidget):
         self.load_favorites()
         self.load_categories()
         qt1.QShortcut("f5",self).activated.connect(self.start_threaded_refresh)
-        self.search_label=qt.QLabel("البحث في كل الكتب")
-        self.search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.search_label)
         search_layout = qt.QHBoxLayout()
         self.search_bar=qt.QLineEdit()
         self.search_bar.setPlaceholderText("البحث في كل الكتب")
-        self.search_bar.setAccessibleName("البحث في كل الكتب")
         self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.fav_btn = guiTools.QPushButton("فتح قائمة المفضلة")
@@ -160,7 +155,7 @@ class IslamicBooks(qt.QWidget):
         view_mode_v_layout = qt.QVBoxLayout()
         self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
         self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.view_mode_combo = qt.QComboBox()
+        self.view_mode_combo = guiTools.QComboBox()
         self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.view_mode_combo.setAccessibleName("طريقة عرض العناصر")
         self.view_mode_combo.addItems(["عمودي", "شبكي"])
@@ -742,11 +737,8 @@ class IslamicBooks(qt.QWidget):
             prompt = "البحث في كل الكتب"
         else:
             prompt = f"البحث في فئة {current_tab_text}"
-        if hasattr(self, 'search_label'):
-            self.search_label.setText(prompt)
         if hasattr(self, 'search_bar'):
             self.search_bar.setPlaceholderText(prompt)
-            self.search_bar.setAccessibleName(prompt)
         filtered_books = []
         for book in all_books:
             if self.show_favorites_only:

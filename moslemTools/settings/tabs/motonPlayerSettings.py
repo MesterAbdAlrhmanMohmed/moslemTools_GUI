@@ -35,7 +35,7 @@ class MotonPlayerSettings(qt.QWidget):
         self.duration.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.duration.setInputMask("999")
         self.duration.setText(settings_handler.get("motonPlayer", "duration") or "0")
-        self.duration.setAccessibleName("مدة الانتظار بين التكرار بالثواني")
+        self.duration.setPlaceholderText("مدة الانتظار بين التكرار بالثواني")
         self.duration.setMinimumWidth(100)
         duration_layout.addWidget(self.duration)
         duration_layout.addWidget(self.duration_laybol)

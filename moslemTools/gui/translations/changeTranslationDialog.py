@@ -62,13 +62,13 @@ class ChangeTranslationDialog(qt.QDialog):
         layout.addWidget(self.lang_label)
 
         self.search_lang = qt.QLineEdit()
-        self.search_lang.setAccessibleName("ابحث عن لغة")
+        self.search_lang.setPlaceholderText("ابحث عن لغة")
         self.search_lang.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_lang.setMinimumHeight(30)
         self.search_lang.textChanged.connect(self.on_search_lang)
         layout.addWidget(self.search_lang)
 
-        self.lang_combo = qt.QComboBox()
+        self.lang_combo = guiTools.QComboBox()
         self.lang_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.lang_combo.setAccessibleName("اختر اللغة")
         self.lang_combo.setMinimumHeight(35)
@@ -82,13 +82,13 @@ class ChangeTranslationDialog(qt.QDialog):
         layout.addWidget(self.trans_label)
 
         self.search_trans = qt.QLineEdit()
-        self.search_trans.setAccessibleName("ابحث عن ترجمة")
+        self.search_trans.setPlaceholderText("ابحث عن ترجمة")
         self.search_trans.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_trans.setMinimumHeight(30)
         self.search_trans.textChanged.connect(self.on_search_trans)
         layout.addWidget(self.search_trans)
 
-        self.trans_combo = qt.QComboBox()
+        self.trans_combo = guiTools.QComboBox()
         self.trans_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.trans_combo.setAccessibleName("اختر الترجمة")
         self.trans_combo.setMinimumHeight(35)

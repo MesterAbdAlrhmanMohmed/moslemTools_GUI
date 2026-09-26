@@ -14,14 +14,10 @@ class brotcasts_of_translations(qt.QWidget):
 
         font = qt1.QFont()
         font.setBold(True)
-        self.search_label = qt.QLabel(f"البحث عن إذاعة في {category_name}")
-        self.search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.search_label.setFont(font)
         self.search_bar = qt.QLineEdit()
         self.search_bar.setFont(font)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_bar.setPlaceholderText(f"البحث عن إذاعة في {category_name}")
-        self.search_bar.setAccessibleName(f"البحث عن إذاعة في {category_name}")
         self.search_bar.textChanged.connect(self.on_search)
 
         style_sheet = "QListWidget::item { font-weight: bold; font-size: 12pt; }"
@@ -60,7 +56,6 @@ class brotcasts_of_translations(qt.QWidget):
         self.list_of_translations.addItems(self.all_stations)
 
         layout = qt.QVBoxLayout(self)
-        layout.addWidget(self.search_label)
         layout.addWidget(self.search_bar)
         layout.addWidget(self.list_of_translations)
         self.volume_up_shortcut = qt1.QShortcut(qt1.QKeySequence("Shift+Up"), self.list_of_translations)

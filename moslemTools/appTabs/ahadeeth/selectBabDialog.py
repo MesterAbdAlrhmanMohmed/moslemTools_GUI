@@ -55,13 +55,13 @@ class SelectBabDialog(qt.QDialog):
         layout.addWidget(self.label)
 
         self.search_bar = qt.QLineEdit()
-        self.search_bar.setAccessibleName("ابحث في الأبواب")
+        self.search_bar.setPlaceholderText("ابحث في الأبواب")
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_bar.setMinimumHeight(32)
         self.search_bar.textChanged.connect(self.on_search)
         layout.addWidget(self.search_bar)
 
-        self.bab_combo = qt.QComboBox()
+        self.bab_combo = guiTools.QComboBox()
         self.bab_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.bab_combo.setAccessibleName("اختر الباب")
         self.bab_combo.setMinimumHeight(35)

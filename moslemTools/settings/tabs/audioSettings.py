@@ -27,7 +27,7 @@ class AudioSettings(qt.QWidget):
             row_layout.setContentsMargins(0, 0, 0, 0)
             row_layout.setSpacing(10)
             label = qt.QLabel(label_text)
-            combo = qt.QComboBox()
+            combo = guiTools.QComboBox()
             combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
             combo.addItems(self.global_options if is_global else self.devices_list)
             combo.setAccessibleName(label_text)

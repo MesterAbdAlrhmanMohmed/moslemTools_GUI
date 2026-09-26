@@ -68,7 +68,7 @@ class LocationSettings(qt.QWidget):
         self.methodLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         font = qt1.QFont()
         font.setBold(True)
-        self.methodCombo = qt.QComboBox()
+        self.methodCombo = guiTools.QComboBox()
         self.methodCombo.setFont(font)
         self.methodCombo.setAccessibleName("طريقة حساب مواقيت الصلاة")
         self.methodCombo.setAccessibleDescription("اختر الهيئة المناسبة لبلدك لضمان دقة مواقيت الصلاة")

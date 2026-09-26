@@ -44,12 +44,10 @@ class hadeeth(qt.QWidget):
         top_layout = qt.QHBoxLayout()
 
         search_v_layout = qt.QVBoxLayout()
-        serch = qt.QLabel("البحث عن كتاب حديث")
-        serch.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_bar = qt.QLineEdit()
+        self.search_bar.setPlaceholderText("البحث عن كتاب حديث")
         self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        search_v_layout.addWidget(serch)
         search_v_layout.addWidget(self.search_bar)
 
         self.fav_btn = guiTools.QPushButton("فتح قائمة المفضلة")
@@ -59,7 +57,7 @@ class hadeeth(qt.QWidget):
         view_mode_v_layout = qt.QVBoxLayout()
         self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
         self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.view_mode_combo = qt.QComboBox()
+        self.view_mode_combo = guiTools.QComboBox()
         self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.view_mode_combo.setAccessibleName("طريقة عرض العناصر")
         self.view_mode_combo.addItems(["عمودي", "شبكي"])

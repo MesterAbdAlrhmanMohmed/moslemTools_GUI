@@ -39,13 +39,13 @@ class PartSelection(qt.QDialog):
         layout.addWidget(self.label)
 
         self.search_bar = qt.QLineEdit()
-        self.search_bar.setAccessibleName("ابحث في الأجزاء")
+        self.search_bar.setPlaceholderText("ابحث في الأجزاء")
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_bar.setMinimumHeight(32)
         self.search_bar.textChanged.connect(self.on_search)
         layout.addWidget(self.search_bar)
 
-        self.parts_combo = qt.QComboBox()
+        self.parts_combo = guiTools.QComboBox()
         self.parts_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.parts_combo.setAccessibleName("اختر الجزء")
         self.parts_combo.setMinimumHeight(35)

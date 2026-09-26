@@ -238,7 +238,7 @@ class SajdaGoToDialog(qt.QDialog):
         self.label = qt.QLabel(label)
         self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label)
-        self.combo = qt.QComboBox()
+        self.combo = guiTools.QComboBox()
         self.combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.combo.setAccessibleName(label)
         self.combo.addItems(items)
@@ -275,7 +275,7 @@ class AsbabAlnozoleGoToDialog(qt.QDialog):
         self.label = qt.QLabel(label)
         self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label)
-        self.combo = qt.QComboBox()
+        self.combo = guiTools.QComboBox()
         self.combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.combo.setAccessibleName(label)
         self.combo.addItems(items)
@@ -411,45 +411,106 @@ class SearchModeDialog(qt.QDialog):
 
 
 class GoToCategoryDialog(qt.QDialog):
-    def __init__(self,parent,title:str,label:str,items:list,selected_index:int):
+    def __init__(self, parent, title: str, label: str, items: list, selected_index: int, is_surah: bool = False):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.setMinimumSize(250,140)
-        self.resize(300,150)
-        self.selected_item=None
-        layout=qt.QVBoxLayout(self)
-        self.label=qt.QLabel(label)
-        self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.label)
-        self.list_widget=qt.QComboBox()
+        self.setMinimumSize(320, 200 if is_surah else 150)
+        self.resize(350, 220 if is_surah else 160)
+        self.selected_item = None
+        self.items = list(items)
+        self.is_surah = is_surah
+        layout = qt.QVBoxLayout(self)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
+        cat_name = label.replace("اختر ", "").strip()
+        self.search_input = qt.QLineEdit()
+        self.search_input.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.search_input.setPlaceholderText(f"البحث عن {cat_name}")
+        layout.addWidget(self.search_input)
+        self.list_widget = guiTools.QComboBox()
         self.list_widget.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
-        self.list_widget.addItems(items)
-        self.list_widget.setCurrentIndex(selected_index)
         self.list_widget.setAccessibleName(label)
         self.list_widget.setMinimumHeight(35)
         layout.addWidget(self.list_widget)
-        self.ok_button=guiTools.QPushButton("موافق")
+        if self.is_surah:
+            font = qt1.QFont()
+            font.setBold(True)
+            self.show_surah_number_cb = qt.QCheckBox("عرض رقم السورة")
+            self.show_surah_number_cb.setFont(font)
+            from settings import settings_handler
+            initial_checked = settings_handler.get("quran", "show_surah_number") != "False"
+            self.show_surah_number_cb.setChecked(initial_checked)
+            self.show_surah_number_cb.stateChanged.connect(self.filter_items)
+            cb_layout = qt.QHBoxLayout()
+            cb_layout.addStretch()
+            cb_layout.addWidget(self.show_surah_number_cb)
+            cb_layout.addStretch()
+            layout.addLayout(cb_layout)
+        self.ok_button = guiTools.QPushButton("موافق")
         self.ok_button.setStyleSheet("background-color:#006400;color:white;padding:5px;")
         self.ok_button.clicked.connect(self.on_ok)
         self.ok_button.setMinimumHeight(35)
-        self.cancel_button=guiTools.QPushButton("إلغاء")
+        self.cancel_button = guiTools.QPushButton("إلغاء")
         self.cancel_button.setStyleSheet("background-color:#8B0000;color:white;padding:5px;")
         self.cancel_button.clicked.connect(self.reject)
         self.cancel_button.setMinimumHeight(35)
-        buttons_layout=qt.QHBoxLayout()
+        buttons_layout = qt.QHBoxLayout()
         buttons_layout.addWidget(self.ok_button)
         buttons_layout.addWidget(self.cancel_button)
         layout.addLayout(buttons_layout)
+        self.search_input.textChanged.connect(self.filter_items)
+        self.search_input.returnPressed.connect(self.on_ok)
+        initial_target = self.items[selected_index] if (0 <= selected_index < len(self.items)) else None
+        self.filter_items(initial_target=initial_target)
+        self.search_input.setFocus()
+
+    def filter_items(self, *args, initial_target=None):
+        if initial_target is not None:
+            current_target = initial_target
+        elif self.list_widget.currentIndex() >= 0:
+            current_target = self.list_widget.itemData(self.list_widget.currentIndex())
+        else:
+            current_target = None
+        search_query = self.search_input.text().strip().lower()
+        tashkeel_pattern = re.compile(r'[\u0610-\u061A\u0640\u064B-\u065F\u0670\u06D6-\u06ED\u08C9-\u08FF]')
+        norm_query = tashkeel_pattern.sub('', search_query).replace('\u0671', '\u0627').replace('\u0625', '\u0627').replace('\u0623', '\u0627').replace('\u0622', '\u0627')
+        show_numbers = self.show_surah_number_cb.isChecked() if self.is_surah else False
+        self.list_widget.blockSignals(True)
+        self.list_widget.clear()
+        new_index = -1
+        idx = 0
+        for item in self.items:
+            orig_str = str(item)
+            if self.is_surah:
+                if show_numbers:
+                    display_text = orig_str
+                else:
+                    display_text = re.sub(r'^\d+[\s\.\-]*', '', orig_str)
+            else:
+                display_text = orig_str
+            norm_display = tashkeel_pattern.sub('', display_text.lower()).replace('\u0671', '\u0627').replace('\u0625', '\u0627').replace('\u0623', '\u0627').replace('\u0622', '\u0627')
+            norm_orig = tashkeel_pattern.sub('', orig_str.lower()).replace('\u0671', '\u0627').replace('\u0625', '\u0627').replace('\u0623', '\u0627').replace('\u0622', '\u0627')
+            if not norm_query or norm_query in norm_display or norm_query in norm_orig:
+                self.list_widget.addItem(display_text, orig_str)
+                if current_target is not None and orig_str == current_target:
+                    new_index = idx
+                idx += 1
+        if new_index >= 0:
+            self.list_widget.setCurrentIndex(new_index)
+        elif self.list_widget.count() > 0:
+            self.list_widget.setCurrentIndex(0)
+        self.list_widget.blockSignals(False)
 
     def on_ok(self):
-        if self.list_widget.currentText():
-            self.selected_item=self.list_widget.currentText()
+        curr_idx = self.list_widget.currentIndex()
+        if curr_idx >= 0:
+            self.selected_item = self.list_widget.itemData(curr_idx) or self.list_widget.currentText()
             self.accept()
-    @staticmethod
 
-    def getItem(parent,title:str,label:str,items:list,selected_index:int):
-        dialog=GoToCategoryDialog(parent,title,label,items,selected_index)
-        result=dialog.exec()
-        if result==qt.QDialog.DialogCode.Accepted:
-            return dialog.selected_item,True
-        return "",False
+    @staticmethod
+    def getItem(parent, title: str, label: str, items: list, selected_index: int, is_surah: bool = False):
+        dialog = GoToCategoryDialog(parent, title, label, items, selected_index, is_surah)
+        result = dialog.exec()
+        if result == qt.QDialog.DialogCode.Accepted and dialog.selected_item:
+            return dialog.selected_item, True
+        return "", False

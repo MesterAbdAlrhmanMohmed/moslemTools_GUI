@@ -40,30 +40,24 @@ class TafaseerSettings(qt.QWidget):
 
         tafaseer_layout = qt.QHBoxLayout()
         tafaseer_layout.setSpacing(10)
-        self.selectTafaseer_laybol = qt.QLabel("اختر تفسير للقرآن الكريم")
-        self.selectTafaseer = qt.QComboBox()
+        self.selectTafaseer_laybol = qt.QLabel("اختر التفسير:")
+        self.selectTafaseer = guiTools.QComboBox()
         self.selectTafaseer.addItems(tafseer.tafaseers.keys())
         current_taf = tafseer.getTafaseerByIndex(settings_handler.get("tafaseer", "tafaseer"))
         if current_taf and current_taf in tafseer.tafaseers:
             self.selectTafaseer.setCurrentText(current_taf)
         elif self.selectTafaseer.count() > 0:
             self.selectTafaseer.setCurrentIndex(0)
-        self.selectTafaseer.setAccessibleName("اختر تفسير للقرآن الكريم")
+        self.selectTafaseer.setAccessibleName("اختر التفسير")
         tafaseer_layout.addWidget(self.selectTafaseer)
         tafaseer_layout.addWidget(self.selectTafaseer_laybol)
         tafaseer_layout.addStretch()
         group_layout.addLayout(tafaseer_layout)
 
-        self.translation_header = guiTools.QNavigableLabel("اختيار ترجمة لمعاني القرآن الكريم")
-        self.translation_header.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
-        self.translation_header.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.translation_header.setStyleSheet("font-weight: bold; font-size: 14px;")
-        group_layout.addWidget(self.translation_header)
-
         lang_layout = qt.QHBoxLayout()
         lang_layout.setSpacing(10)
         self.selectLanguage_laybol = qt.QLabel("اختر اللغة:")
-        self.selectLanguage = qt.QComboBox()
+        self.selectLanguage = guiTools.QComboBox()
         self.selectLanguage.setAccessibleName("اختر اللغة")
         self.selectLanguage.setAccessibleDescription("لحذف جميع الترجمات للغة محددة، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.selectLanguage.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -76,7 +70,7 @@ class TafaseerSettings(qt.QWidget):
         translation_layout = qt.QHBoxLayout()
         translation_layout.setSpacing(10)
         self.selecttranslation_laybol = qt.QLabel("اختر الترجمة:")
-        self.selecttranslation = qt.QComboBox()
+        self.selecttranslation = guiTools.QComboBox()
         self.selecttranslation.setAccessibleName("اختر الترجمة")
         self.selecttranslation.setAccessibleDescription("لحذف أيا من الترجمات، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.selecttranslation.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -99,6 +93,12 @@ class TafaseerSettings(qt.QWidget):
                 break
         self.update_languages_ui(preferred_lang=target_lang, preferred_trans=current_trans)
         self.selectLanguage.currentIndexChanged.connect(lambda: self.on_language_changed())
+        self.selectTafaseer.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.selectTafaseer))
+        self.selectLanguage.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.selectLanguage))
+        self.selecttranslation.currentIndexChanged.connect(lambda: self.adjust_combo_width(self.selecttranslation))
+        self.adjust_combo_width(self.selectTafaseer)
+        self.adjust_combo_width(self.selectLanguage)
+        self.adjust_combo_width(self.selecttranslation)
 
         main_layout.addWidget(group_box)
         main_layout.addSpacing(25)
@@ -108,6 +108,20 @@ class TafaseerSettings(qt.QWidget):
         self.info.setStyleSheet("font-weight: bold;")
         main_layout.addWidget(self.info)
         main_layout.addStretch(1)
+
+    def adjust_combo_width(self, combo):
+        fm = combo.fontMetrics()
+        current_text = combo.currentText()
+        if not current_text:
+            return
+        text_width = fm.horizontalAdvance(current_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(current_text).width()
+        combo.setFixedWidth(text_width + 45)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.adjust_combo_width(self.selectTafaseer)
+        self.adjust_combo_width(self.selectLanguage)
+        self.adjust_combo_width(self.selecttranslation)
 
     def load_language_groups(self):
         translater.reload_translations()
@@ -143,6 +157,7 @@ class TafaseerSettings(qt.QWidget):
         elif self.selectLanguage.count() > 0:
             self.selectLanguage.setCurrentIndex(0)
         self.selectLanguage.blockSignals(False)
+        self.adjust_combo_width(self.selectLanguage)
         self.on_language_changed(preferred_trans=preferred_trans)
 
     def on_language_changed(self, preferred_trans=None):
@@ -156,6 +171,7 @@ class TafaseerSettings(qt.QWidget):
         elif self.selecttranslation.count() > 0:
             self.selecttranslation.setCurrentIndex(0)
         self.selecttranslation.blockSignals(False)
+        self.adjust_combo_width(self.selecttranslation)
 
     def onDelete1(self):
         selectedItem = self.selecttranslation.currentText()
@@ -238,4 +254,5 @@ class TafaseerSettings(qt.QWidget):
                     self.selectTafaseer.addItems(tafseer.tafaseers.keys())
                     self.selectTafaseer.blockSignals(False)
                     self.selectTafaseer.setCurrentText("الميصر")
+                    self.adjust_combo_width(self.selectTafaseer)
                     guiTools.speak("تم الحذف")

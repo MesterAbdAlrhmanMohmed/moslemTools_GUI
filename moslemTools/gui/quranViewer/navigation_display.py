@@ -528,10 +528,19 @@ class NavigationDisplayMixin:
             category_name = "حزب"
         dialog_title = f"الذهاب إلى {category_name}"
         dialog_label = f"اختر {category_name}"
-        category,OK=GoToCategoryDialog.getItem(self,dialog_title,dialog_label,list(self.typeResult.keys()), self.CurrentIndex)
+        category, OK = GoToCategoryDialog.getItem(self, dialog_title, dialog_label, list(self.typeResult.keys()), self.CurrentIndex, is_surah=(self.type == 0))
         if OK:
-            self.CurrentIndex=list(self.typeResult.keys()).index(category)
-            indexs=list(self.typeResult.keys())[self.CurrentIndex]
+            if category in self.typeResult:
+                self.CurrentIndex = list(self.typeResult.keys()).index(category)
+            else:
+                matched_index = None
+                for idx, k in enumerate(self.typeResult.keys()):
+                    if k == category or re.sub(r'^\d+[\s\.\-]*', '', k) == re.sub(r'^\d+[\s\.\-]*', '', category):
+                        matched_index = idx
+                        break
+                if matched_index is not None:
+                    self.CurrentIndex = matched_index
+            indexs = list(self.typeResult.keys())[self.CurrentIndex]
             formatted_name = self.format_category_name(self.type, indexs)
             self.category = indexs
             self.info.setText(formatted_name)

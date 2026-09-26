@@ -92,7 +92,7 @@ class SearchSettings(qt.QWidget):
         viewer_layout.setSpacing(10)
         viewer_layout.addStretch(1)
 
-        self.viewer_combo = qt.QComboBox()
+        self.viewer_combo = guiTools.QComboBox()
         self.viewer_combo.setFont(font)
         self.viewer_combo.setAccessibleName("تحديد العارض")
         for key, name in self.VIEWERS:

@@ -19,3 +19,4 @@ from .QCustomTabWidget import QCustomTabWidget, QCustomTabBar
 from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit
 from .internet import check_internet
 from .sound_player import play_page_turn_sound
+from .QComboBox import QComboBox

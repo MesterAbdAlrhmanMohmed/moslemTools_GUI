@@ -26,7 +26,7 @@ class LimitsDialog(qt.QDialog):
         font.setPointSize(14)
         self.label.setFont(font)
         layout.addWidget(self.label)
-        self.combo = qt.QComboBox()
+        self.combo = guiTools.QComboBox()
         self.combo.setAccessibleName("قائمة الحدود")
         self.combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.combo.setStyleSheet("QComboBox {min-height: 40px; font-size: 15px; font-weight: bold; padding: 4px 10px;}")

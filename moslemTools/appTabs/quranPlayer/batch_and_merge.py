@@ -507,7 +507,6 @@ class PlayerBatchAndMergeMixin:
         widgets_to_toggle = [
             self.recitersListWidget, self.surahListWidget,
             self.reciterSearchEdit, self.surahSearchEdit,
-            self.reciterSearchLabel, self.surahSearchLabel,
             self.view_favorites_btn,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
@@ -527,7 +526,6 @@ class PlayerBatchAndMergeMixin:
         widgets_to_toggle = [
             self.recitersListWidget, self.surahListWidget,
             self.reciterSearchEdit, self.surahSearchEdit,
-            self.reciterSearchLabel, self.surahSearchLabel,
             self.view_favorites_btn,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,

@@ -86,7 +86,6 @@ class QuranTabNavSearchMixin:
             else:
                 self.infoData = surah_keys
             self.search_bar.setPlaceholderText("البحث عن سورة")
-            self.search_bar.setAccessibleName("البحث عن سورة")
             self.info1.setText("لخيارات السورة المحددة، نستخدم مفتاح التطبيقات أو click الأيمن")
         else:
             self.show_surah_number_cb.setVisible(False)
@@ -94,25 +93,21 @@ class QuranTabNavSearchMixin:
                 for i in range(1, 605):
                     self.infoData.append(str(i))
                 self.search_bar.setPlaceholderText("البحث عن صفحة")
-                self.search_bar.setAccessibleName("البحث عن صفحة")
                 self.info1.setText("لخيارات الصفحة المحددة، نستخدم مفتاح التطبيقات أو click الأيمن")
             elif index == 2:
                 for i in range(1, 31):
                     self.infoData.append(str(i))
                 self.search_bar.setPlaceholderText("البحث عن جزء")
-                self.search_bar.setAccessibleName("البحث عن جزء")
                 self.info1.setText("لخيارات الجزء المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
             elif index == 3:
                 for i in range(1, 241):
                     self.infoData.append(str(i))
                 self.search_bar.setPlaceholderText("البحث عن ربع")
-                self.search_bar.setAccessibleName("البحث عن ربع")
                 self.info1.setText("لخيارات الربع المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
             elif index == 4:
                 for i in range(1, 61):
                     self.infoData.append(str(i))
                 self.search_bar.setPlaceholderText("البحث عن حزب")
-                self.search_bar.setAccessibleName("البحث عن حزب")
                 self.info1.setText("لخيارات الحزب المحدد، نستخدم مفتاح التطبيقات أو click الأيمن")
         self.info.addItems(self.infoData)
 

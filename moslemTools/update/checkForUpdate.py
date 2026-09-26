@@ -36,8 +36,7 @@ class download (qt .QDialog ):
         layout1 =qt .QHBoxLayout ()
         self .setWindowTitle ("جديد {} إصدار {}".format (settings .app .name ,str (version )))
         self .p =p 
-        whatsn =guiTools .QReadOnlyTextEdit (viewer_name ="checkForUpdate")
-        whatsn .setAccessibleName ("ما الجديد")
+        whatsn =guiTools .QReadOnlyTextEdit (viewer_name ="checkForUpdate")        
         whatsn .setText (whatsNew )
         self .URL =URL 
         self .download =qt .QPushButton ("تحميل")

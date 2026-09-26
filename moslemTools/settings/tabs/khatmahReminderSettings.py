@@ -1,6 +1,7 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
+import guiTools
 from .. import settings_handler
 
 
@@ -72,7 +73,7 @@ class KhatmahReminderSettings(qt.QWidget):
         self.period_label = qt.QLabel("الفترة:")
         self.period_label.setFont(font)
         self.period_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.period_combo = qt.QComboBox()
+        self.period_combo = guiTools.QComboBox()
         self.period_combo.setFont(font)
         self.period_combo.setFixedWidth(95)
         self.period_combo.addItems(["صباحاً", "مساءً"])

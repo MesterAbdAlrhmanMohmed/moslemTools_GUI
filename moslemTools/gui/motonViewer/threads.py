@@ -417,7 +417,7 @@ class GoToCategoryDialog(qt.QDialog):
         self.label = qt.QLabel(label)
         self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label)
-        self.list_widget = qt.QComboBox()
+        self.list_widget = guiTools.QComboBox()
         self.list_widget.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.list_widget.addItems(items)
         if 0 <= selected_index < len(items):

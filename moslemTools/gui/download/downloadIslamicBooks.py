@@ -104,15 +104,8 @@ class SelectIslamicBookItem(qt.QDialog):
 		font_bold = qt1.QFont()
 		font_bold.setBold(True)
 
-		# 0. Category Search Bar before Category Combo Box
-		cat_search_label = qt.QLabel("بحث في فئات الكتب:")
-		cat_search_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
-		cat_search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		cat_search_label.setFont(font_bold)
-		layout.addWidget(cat_search_label)
-
 		self.cat_search_bar = qt.QLineEdit()
-		self.cat_search_bar.setAccessibleName("بحث في فئات الكتب")
+		self.cat_search_bar.setPlaceholderText("بحث في فئات الكتب")
 		self.cat_search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.cat_search_bar.setMinimumHeight(32)
 		self.cat_search_bar.textChanged.connect(self.on_search_category)
@@ -122,7 +115,7 @@ class SelectIslamicBookItem(qt.QDialog):
 		cat_header_layout.setSpacing(10)
 		cat_header_layout.addStretch(1)
 
-		self.category_combo = qt.QComboBox()
+		self.category_combo = guiTools.QComboBox()
 		self.category_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
 		self.category_combo.setSizePolicy(qt.QSizePolicy.Policy.Minimum, qt.QSizePolicy.Policy.Fixed)
 		self.category_combo.setAccessibleName("اختيار الفئة")
@@ -140,15 +133,8 @@ class SelectIslamicBookItem(qt.QDialog):
 		cat_header_layout.addStretch(1)
 		layout.addLayout(cat_header_layout)
 
-		# 2. Search bar
-		search_label = qt.QLabel("بحث في الكتب:")
-		search_label.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
-		search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-		search_label.setFont(font_bold)
-		layout.addWidget(search_label)
-
 		self.search_bar = qt.QLineEdit()
-		self.search_bar.setAccessibleName("بحث في الكتب")
+		self.search_bar.setPlaceholderText("بحث في الكتب")
 		self.search_bar.textChanged.connect(self.onsearch)
 		self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.search_bar.setMinimumHeight(32)

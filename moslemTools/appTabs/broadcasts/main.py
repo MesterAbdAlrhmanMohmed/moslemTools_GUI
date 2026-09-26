@@ -115,7 +115,7 @@ class protcasts(qt.QWidget):
         view_mode_v_layout.setContentsMargins(5, 0, 5, 0)
         self.view_mode_label = qt.QLabel("طريقة عرض العناصر")
         self.view_mode_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.view_mode_combo = qt.QComboBox()
+        self.view_mode_combo = guiTools.QComboBox()
         self.view_mode_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.view_mode_combo.setAccessibleName("طريقة عرض العناصر")
         self.view_mode_combo.addItems(["عمودي", "شبكي"])
@@ -130,14 +130,10 @@ class protcasts(qt.QWidget):
 
         bold_font = qt1.QFont()
         bold_font.setBold(True)
-        self.fav_search_label = qt.QLabel("البحث عن إذاعة في المفضلة")
-        self.fav_search_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.fav_search_label.setFont(bold_font)
         self.fav_search_bar = qt.QLineEdit()
         self.fav_search_bar.setFont(bold_font)
         self.fav_search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.fav_search_bar.setPlaceholderText("البحث عن إذاعة في المفضلة")
-        self.fav_search_bar.setAccessibleName("البحث عن إذاعة في المفضلة")
         self.fav_search_bar.textChanged.connect(self.on_fav_search)
 
         self.fav_list_widget = qt.QListWidget()
@@ -175,7 +171,6 @@ class protcasts(qt.QWidget):
 
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.brotcasts_tab)
-        layout.addWidget(self.fav_search_label)
         layout.addWidget(self.fav_search_bar)
         layout.addWidget(self.fav_list_widget)
         layout.addSpacing(10)
@@ -277,12 +272,10 @@ class protcasts(qt.QWidget):
         self.update_favorites_list_widget()
         if self.show_favorites_only:
             self.brotcasts_tab.hide()
-            self.fav_search_label.show()
             self.fav_search_bar.show()
             self.fav_list_widget.show()
             self.fav_btn.setText("عرض جميع الإذاعات")
         else:
-            self.fav_search_label.hide()
             self.fav_search_bar.hide()
             self.fav_list_widget.hide()
             self.brotcasts_tab.show()

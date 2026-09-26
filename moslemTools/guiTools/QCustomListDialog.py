@@ -1,6 +1,7 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
 from .QPushButton import QPushButton
+from .QComboBox import QComboBox
 if not isinstance(QPushButton, type):
     QPushButton = QPushButton.QPushButton
 
@@ -14,7 +15,7 @@ class QCustomListDialog(qt.QDialog):
 		self.label = qt.QLabel(label)
 		self.label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.label)
-		self.list_widget = qt.QComboBox()
+		self.list_widget = QComboBox()
 		self.list_widget.addItems(items)
 		self.list_widget.setAccessibleName(label)
 		layout.addWidget(self.list_widget)

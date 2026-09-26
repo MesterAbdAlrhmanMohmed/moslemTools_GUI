@@ -12,15 +12,17 @@ class QInputDialog(qt.QDialog):
         self.resize(300, 150)
         self.setWindowTitle(title)
         layout = qt.QVBoxLayout(self)
-        self.label = qt.QLabel(label)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.label)
         self.text = widget
-        self.text.setAccessibleName(label)
         if isinstance(widget, qt.QLineEdit):
+            self.text.setPlaceholderText(label)
             self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        elif isinstance(widget, qt.QSpinBox):
-            self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        else:
+            self.label = qt.QLabel(label)
+            self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(self.label)
+            self.text.setAccessibleName(label)
+            if isinstance(widget, qt.QSpinBox):
+                self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.text.textChanged.connect(self.onTextChanged)
         layout.addWidget(self.text)
         self.OKBTN = QPushButton("موافق")

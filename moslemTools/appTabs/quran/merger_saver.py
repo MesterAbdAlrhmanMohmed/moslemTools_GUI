@@ -285,7 +285,7 @@ class QuranTabMergerSaverMixin:
         self.set_ui_for_operation(False)
 
     def set_ui_for_operation(self, is_active):
-        widgets_to_disable = [self.by, self.type, self.custom, self.serch, self.search_bar, self.info, self.info_of_quran, self.info1]
+        widgets_to_disable = [self.by, self.type, self.custom, self.search_bar, self.info, self.info_of_quran, self.info1]
         for widget in widgets_to_disable:
             widget.setEnabled(not is_active)
         self.merge_widget.setVisible(is_active)

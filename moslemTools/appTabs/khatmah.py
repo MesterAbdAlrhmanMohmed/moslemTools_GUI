@@ -143,8 +143,7 @@ class KhatmahTab(qt.QWidget):
         self.progress_bar.setAccessibleName("نسبة التقدم في الختمة")
         status_layout.addWidget(self.progress_bar)
 
-        self.info_text = guiTools.QNavigableLabelAsTextEdit(viewer_name="khatmahTab")
-        self.info_text.setAccessibleName("معلومات الختمة")
+        self.info_text = guiTools.QNavigableLabelAsTextEdit(viewer_name="khatmahTab")        
         status_layout.addWidget(self.info_text)
 
         main_layout.addWidget(self.status_group)

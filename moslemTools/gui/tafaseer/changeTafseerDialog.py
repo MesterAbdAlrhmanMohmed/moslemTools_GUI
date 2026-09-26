@@ -32,13 +32,13 @@ class ChangeTafseerDialog(qt.QDialog):
         layout.addWidget(self.label)
 
         self.search_bar = qt.QLineEdit()
-        self.search_bar.setAccessibleName("ابحث عن كتاب تفسير")
+        self.search_bar.setPlaceholderText("ابحث عن كتاب تفسير")
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.search_bar.setMinimumHeight(32)
         self.search_bar.textChanged.connect(self.on_search)
         layout.addWidget(self.search_bar)
 
-        self.tafseer_combo = qt.QComboBox()
+        self.tafseer_combo = guiTools.QComboBox()
         self.tafseer_combo.setSizeAdjustPolicy(qt.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.tafseer_combo.setAccessibleName("اختر التفسير")
         self.tafseer_combo.setMinimumHeight(35)

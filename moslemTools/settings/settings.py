@@ -31,7 +31,7 @@ class SectionContainer(qt.QWidget):
         self.header_layout.setContentsMargins(5, 5, 5, 10)
         self.header_layout.setSpacing(10)
         self.label = qt.QLabel("اختر الإعداد:")
-        self.combo = qt.QComboBox()
+        self.combo = guiTools.QComboBox()
         self.combo.setAccessibleName("اختر الإعداد")
         self.label.setBuddy(self.combo)
         for name, _ in self.tabs_list:
