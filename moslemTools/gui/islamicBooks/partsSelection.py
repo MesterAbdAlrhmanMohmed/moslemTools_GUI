@@ -3,7 +3,6 @@ import PyQt6.QtWidgets as qt
 from PyQt6 import QtGui as qt1
 from PyQt6 import QtCore as qt2
 import guiTools
-from .bookViewer import book_viewer
 
 
 class PartSelection(qt.QDialog):
@@ -14,6 +13,8 @@ class PartSelection(qt.QDialog):
         self.resize(360, 220)
         self.bookName = bookName
         self.content = content
+        self.selected_part_name = None
+        self.selected_part_content = None
 
         if p:
             frame_geometry = self.frameGeometry()
@@ -57,7 +58,7 @@ class PartSelection(qt.QDialog):
 
         self.select_button = guiTools.QPushButton("الذهاب")
         self.select_button.setStyleSheet("background-color:#006400;color:white;padding:5px 15px;font-weight:bold;border-radius:4px;min-height:35px;")
-        self.select_button.clicked.connect(self.openPart)
+        self.select_button.clicked.connect(self.on_select)
         self.select_button.setMinimumHeight(35)
 
         self.cancel_button = guiTools.QPushButton("إلغاء")
@@ -70,7 +71,7 @@ class PartSelection(qt.QDialog):
         layout.addLayout(buttons_layout)
 
         self.select_button.setDefault(True)
-        self.search_bar.returnPressed.connect(self.openPart)
+        self.search_bar.returnPressed.connect(self.on_select)
         qt1.QShortcut(qt1.QKeySequence("escape"), self).activated.connect(self.reject)
 
     def keyPressEvent(self, event):
@@ -79,7 +80,7 @@ class PartSelection(qt.QDialog):
                 self.cancel_button.click()
                 return
             else:
-                self.openPart()
+                self.on_select()
                 return
         super().keyPressEvent(event)
 
@@ -115,7 +116,7 @@ class PartSelection(qt.QDialog):
         if self.parts_combo.count() > 0:
             self.parts_combo.setCurrentIndex(0)
 
-    def openPart(self):
+    def on_select(self):
         if self.parts_combo.count() == 0:
             return
         partName = self.parts_combo.currentData()
@@ -123,6 +124,9 @@ class PartSelection(qt.QDialog):
             partName = self.parts_combo.currentText()
         if partName not in self.content:
             return
-        partContent = self.content[partName]
+        self.selected_part_name = partName
+        self.selected_part_content = self.content[partName]
         self.accept()
-        book_viewer(self.parent(), self.bookName, partName, partContent).exec()
+
+    def openPart(self):
+        self.on_select()

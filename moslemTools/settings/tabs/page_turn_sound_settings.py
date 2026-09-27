@@ -34,19 +34,32 @@ class PageTurnSoundSettings(qt.QWidget):
         self.viewer_checkboxes = {}
         self.updating_select_all = False
 
-        self.sounds_dir = os.path.join("data", "sounds")
-        if not os.path.exists(self.sounds_dir):
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            self.sounds_dir = os.path.join(base_dir, "data", "sounds")
+        self.sounds_dir = guiTools.get_sounds_dir()
 
         backup_next = os.path.join(self.sounds_dir, "default_next_page.wav")
         backup_prev = os.path.join(self.sounds_dir, "default_previous_page.wav")
         orig_next = os.path.join(self.sounds_dir, "next_page.wav")
         orig_prev = os.path.join(self.sounds_dir, "previous_page.wav")
         if os.path.exists(orig_next) and not os.path.exists(backup_next):
-            shutil.copy2(orig_next, backup_next)
+            try:
+                shutil.copy2(orig_next, backup_next)
+            except Exception:
+                pass
         if os.path.exists(orig_prev) and not os.path.exists(backup_prev):
-            shutil.copy2(orig_prev, backup_prev)
+            try:
+                shutil.copy2(orig_prev, backup_prev)
+            except Exception:
+                pass
+        if not os.path.exists(orig_next) and os.path.exists(backup_next):
+            try:
+                shutil.copy2(backup_next, orig_next)
+            except Exception:
+                pass
+        if not os.path.exists(orig_prev) and os.path.exists(backup_prev):
+            try:
+                shutil.copy2(backup_prev, orig_prev)
+            except Exception:
+                pass
 
         main_layout = qt.QVBoxLayout(self)
         main_layout.addStretch()

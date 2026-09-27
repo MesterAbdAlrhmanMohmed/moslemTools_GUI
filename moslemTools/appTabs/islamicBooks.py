@@ -701,7 +701,9 @@ class IslamicBooks(qt.QWidget):
                     partName=list(data.keys())[0]
                     gui.islamicBooks.book_viewer(self,bookName,partName,data[partName]).exec()
                 else:
-                    gui.islamicBooks.PartSelection(self,bookName,data).exec()
+                    dialog = gui.islamicBooks.PartSelection(self, bookName, data)
+                    if dialog.exec() == qt.QDialog.DialogCode.Accepted and dialog.selected_part_name:
+                        gui.islamicBooks.book_viewer(self, bookName, dialog.selected_part_name, dialog.selected_part_content).exec()
         except Exception as error:
             print(error)
             guiTools.qMessageBox.MessageBox.error(self,"خطأ","تعذر فتح الملف ")

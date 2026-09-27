@@ -18,5 +18,5 @@ from .QCustomContextMenu import QCustomContextMenu
 from .QCustomTabWidget import QCustomTabWidget, QCustomTabBar
 from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit
 from .internet import check_internet
-from .sound_player import play_page_turn_sound
+from .sound_player import play_page_turn_sound, get_sounds_dir
 from .QComboBox import QComboBox

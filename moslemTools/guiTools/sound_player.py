@@ -1,4 +1,5 @@
 import os
+import sys
 from PyQt6.QtCore import QUrl
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 
@@ -16,13 +17,44 @@ def _get_player():
     return _player
 
 
+def get_sounds_dir():
+    candidates = []
+    user_profile = os.environ.get("USERPROFILE")
+    if user_profile:
+        candidates.append(os.path.join(user_profile, "data", "sounds"))
+    if getattr(sys, "frozen", False):
+        exe_dir = os.path.dirname(sys.executable)
+        candidates.append(os.path.join(exe_dir, "data", "sounds"))
+        candidates.append(os.path.join(exe_dir, "_internal", "data", "sounds"))
+    if hasattr(sys, "_MEIPASS"):
+        candidates.append(os.path.join(sys._MEIPASS, "data", "sounds"))
+    candidates.append(os.path.join(os.getcwd(), "data", "sounds"))
+    cur = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(5):
+        candidates.append(os.path.join(cur, "data", "sounds"))
+        parent = os.path.dirname(cur)
+        if parent == cur:
+            break
+        cur = parent
+    for path in candidates:
+        if os.path.isdir(path) and os.path.exists(path):
+            return path
+    if user_profile:
+        fallback = os.path.join(user_profile, "data", "sounds")
+        try:
+            os.makedirs(fallback, exist_ok=True)
+            return fallback
+        except Exception:
+            pass
+    return candidates[0] if candidates else os.path.join("data", "sounds")
+
+
 def _get_sounds_dir():
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_dir, "data", "sounds")
+    return get_sounds_dir()
 
 
 def get_sound_file(direction):
-    sounds_dir = _get_sounds_dir()
+    sounds_dir = get_sounds_dir()
     setting_key = f"{direction}_page_file"
     try:
         from settings import settings_handler
@@ -54,6 +86,13 @@ def play_page_turn_sound(direction="next", viewer_key=None):
             pass
     sound_path = get_sound_file(direction)
     if sound_path and os.path.exists(sound_path):
+        if sound_path.lower().endswith(".wav"):
+            try:
+                import winsound
+                winsound.PlaySound(sound_path, winsound.SND_FILENAME | winsound.SND_ASYNC)
+                return
+            except Exception:
+                pass
         try:
             player = _get_player()
             player.stop()

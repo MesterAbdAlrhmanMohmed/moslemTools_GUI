@@ -31,7 +31,9 @@ class QComboBox(qt.QComboBox):
                     event.key() == qc.Qt.Key.Key_Tab and bool(event.modifiers() & qc.Qt.KeyboardModifier.ShiftModifier)
                 )
                 is_tab = (event.key() == qc.Qt.Key.Key_Tab and not bool(event.modifiers() & qc.Qt.KeyboardModifier.ShiftModifier))
-                if is_tab or is_backtab:
+                is_next = is_tab or event.key() == qc.Qt.Key.Key_Right
+                is_prev = is_backtab or event.key() == qc.Qt.Key.Key_Left
+                if is_next or is_prev:
                     count = self.count()
                     if count > 0:
                         cur = self.view().currentIndex().row()
@@ -39,7 +41,7 @@ class QComboBox(qt.QComboBox):
                             cur = self.currentIndex()
                         if cur < 0:
                             cur = 0
-                        next_row = (cur + 1) % count if is_tab else (cur - 1 + count) % count
+                        next_row = (cur + 1) % count if is_next else (cur - 1 + count) % count
                         idx = self.model().index(next_row, 0)
                         self.view().setCurrentIndex(idx)
                         self.view().scrollTo(idx)
@@ -53,7 +55,7 @@ class QComboBox(qt.QComboBox):
         try:
             if obj == self.view() and self.view().isVisible():
                 if event.type() == qc.QEvent.Type.ShortcutOverride:
-                    if event.key() in (qc.Qt.Key.Key_Tab, qc.Qt.Key.Key_Backtab):
+                    if event.key() in (qc.Qt.Key.Key_Tab, qc.Qt.Key.Key_Backtab, qc.Qt.Key.Key_Right, qc.Qt.Key.Key_Left):
                         event.accept()
                         return True
                 elif event.type() == qc.QEvent.Type.KeyPress:
@@ -61,7 +63,9 @@ class QComboBox(qt.QComboBox):
                         event.key() == qc.Qt.Key.Key_Tab and bool(event.modifiers() & qc.Qt.KeyboardModifier.ShiftModifier)
                     )
                     is_tab = (event.key() == qc.Qt.Key.Key_Tab and not bool(event.modifiers() & qc.Qt.KeyboardModifier.ShiftModifier))
-                    if is_tab or is_backtab:
+                    is_next = is_tab or event.key() == qc.Qt.Key.Key_Right
+                    is_prev = is_backtab or event.key() == qc.Qt.Key.Key_Left
+                    if is_next or is_prev:
                         count = self.count()
                         if count > 0:
                             cur = self.view().currentIndex().row()
@@ -69,7 +73,7 @@ class QComboBox(qt.QComboBox):
                                 cur = self.currentIndex()
                             if cur < 0:
                                 cur = 0
-                            next_row = (cur + 1) % count if is_tab else (cur - 1 + count) % count
+                            next_row = (cur + 1) % count if is_next else (cur - 1 + count) % count
                             idx = self.model().index(next_row, 0)
                             self.view().setCurrentIndex(idx)
                             self.view().scrollTo(idx)

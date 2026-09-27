@@ -1,6 +1,6 @@
 appName="moslemTools_GUI"
 appdirname="moslemTools"
-version=18.0
+version=19.0
 description="This program contains all the tools a Muslim needs"
 creater="abd alrhman mohamed alcoder,"
 name="moslem tools"
