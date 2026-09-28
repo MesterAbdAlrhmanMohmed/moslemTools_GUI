@@ -1,4 +1,4 @@
-import sys, subprocess
+import sys, subprocess, os
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
@@ -26,7 +26,7 @@ class ExitApp(qt.QDialog):
             "1. إيقاف تشغيل البرنامج:\n"
             "يُستخدم لإغلاق البرنامج تماماً وإنهاء كافة عملياته وإجراءاته.\n\n"
             "2. إخفاء البرنامج:\n"
-            "يُستخدم إذا كنت تريد أن تظل الأذكار والأذان والإجراءات التي تعمل في الخلفية قيد التشغيل، مع عدم عرض نافذة البرنامج على الشاشة.\n\n"
+            "يُستخدم إذا كنت تريد أن تظل الأذكار والأذان والإجراءات التي تعمل في الخلفية قيد التشغيل، مع عدم عرض نافذة البرنامج على الشاشة.\nونستخدم الاختصار windows+alt+h لإظهار البرنامج مرة أخرى\n\n"
             "3. إعادة تشغيل البرنامج:\n"
             "يُستخدم لإعادة تشغيل البرنامج في حالة اكتشاف أي أخطاء تتطلب إعادة التشغيل."
         )
@@ -111,7 +111,6 @@ class ExitApp(qt.QDialog):
         app_instance = qt.QApplication.instance()
         if app_instance:
             app_instance.quit()
-        import os
         os._exit(0)
 
     def on_hide(self):
@@ -134,13 +133,14 @@ class ExitApp(qt.QDialog):
                 pass
             if getattr(sys, 'frozen', False):
                 args = [sys.executable] + sys.argv[1:]
+                cwd = os.path.dirname(sys.executable)
             else:
-                args = [sys.executable] + sys.argv
-            subprocess.Popen(args)
+                args = [sys.executable, os.path.abspath(sys.argv[0])] + sys.argv[1:]
+                cwd = os.path.dirname(os.path.abspath(sys.argv[0]))
+            subprocess.Popen(args, cwd=cwd)
             app_instance = qt.QApplication.instance()
             if app_instance:
                 app_instance.quit()
-            import os
             os._exit(0)
 
     def on_back(self):

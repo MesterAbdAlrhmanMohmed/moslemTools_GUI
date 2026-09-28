@@ -126,9 +126,47 @@ class AfterAdaan(qt.QDialog):
         except Exception as e:
             guiTools.qMessageBox.MessageBox.error(self, "خطأ", str(e))
 
+    def keyPressEvent(self, event):
+        if event.key() == qt2.Qt.Key.Key_Escape:
+            self.closewindow()
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def reject(self):
+        self.closewindow()
+
+    def closeEvent(self, event):
+        if getattr(self, '_closed', False):
+            if event:
+                event.accept()
+            return
+        if event:
+            event.ignore()
+        self.closewindow()
+
     def closewindow(self):
-        if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-            self.media_player.stop()
-            qt2.QTimer.singleShot(100,self.accept)
-        else:
-            self.accept()
+        if getattr(self, '_is_closing', False):
+            return
+        self._is_closing = True
+        try:
+            self.media_player.mediaStatusChanged.disconnect()
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'audio_output') and self.audio_output:
+                self.audio_output.setVolume(0.0)
+        except Exception:
+            pass
+        try:
+            if self.media_player.playbackState() != QMediaPlayer.PlaybackState.StoppedState:
+                self.media_player.stop()
+            self.media_player.setSource(qt2.QUrl())
+        except Exception:
+            pass
+        self.hide()
+        qt2.QTimer.singleShot(100, self._finalize_close)
+
+    def _finalize_close(self):
+        self._closed = True
+        self.accept()

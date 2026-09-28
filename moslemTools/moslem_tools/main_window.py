@@ -277,7 +277,6 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
         app_instance = qt.QApplication.instance()
         if app_instance:
             app_instance.quit()
-        import os
         os._exit(0)
 
     def restart_application(self):
@@ -298,6 +297,5 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
             args = [sys.executable, os.path.abspath(sys.argv[0])] + sys.argv[1:]
             cwd = os.path.dirname(os.path.abspath(sys.argv[0]))
         subprocess.Popen(args, cwd=cwd)
-        import os
         os._exit(0)
 

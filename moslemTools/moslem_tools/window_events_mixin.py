@@ -72,7 +72,6 @@ class WindowEventsMixin:
                 app_instance = qt.QApplication.instance()
                 if app_instance:
                     app_instance.quit()
-                import os
                 os._exit(0)
 
     def open_developers_window(self):
