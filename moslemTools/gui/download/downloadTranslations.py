@@ -87,6 +87,7 @@ class TranslationDataLoaderThread(qt2.QThread):
 class SelectTranslationItem(qt.QDialog):
 	def __init__(self, p, fileName: str, dirName: str):
 		super().__init__(p)
+		self.setWindowTitle("تحميل ترجمات معاني القرآن الكريم")
 		self.setMinimumSize(650, 450)
 		self.resize(980, 580)
 		self.center()
