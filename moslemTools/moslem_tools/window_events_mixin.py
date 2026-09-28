@@ -33,6 +33,8 @@ class WindowEventsMixin:
         new_style = WS_CAPTION | WS_SYSMENU
         SetWindowLong(hwnd, GWL_STYLE, new_style)
         user32.SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0002 | 0x0001 | 0x0020)
+        if hasattr(self, "more_options_button"):
+            self.more_options_button.setFocus()
 
     def _restore(self):
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
@@ -45,6 +47,8 @@ class WindowEventsMixin:
             self.show()
             self.activateWindow()
             self.raise_()
+            if hasattr(self, "more_options_button"):
+                self.more_options_button.setFocus()
             self.show_action.setText("إخفاء البرنامج")
 
     def closeEvent(self, event):

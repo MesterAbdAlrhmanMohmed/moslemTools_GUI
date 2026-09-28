@@ -66,7 +66,9 @@ settingsConfig={
         "name_type":"custom_name",
         "theme":"dark",
         "startup_tab":"0",
-        "split_settings":"False"
+        "startup_tab_name":"مواقيت الصلاة والتاريخ",
+        "split_settings":"False",
+        "hidden_tabs":""
     },
     "quran_reciters":{
         "researcher":"0",

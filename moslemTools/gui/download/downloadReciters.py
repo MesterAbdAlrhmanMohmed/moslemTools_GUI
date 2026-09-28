@@ -7,6 +7,7 @@ import PyQt6.QtCore as qt2
 class SelectReciter(qt.QDialog):
     def __init__(self,p):
         super().__init__(p)
+        self.setWindowTitle("تحميل قراء القرآن الكريم")
         self.resize(900,500)
         layout=qt.QVBoxLayout(self)
         self.search_bar=qt.QLineEdit()

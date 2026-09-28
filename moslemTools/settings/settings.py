@@ -109,6 +109,7 @@ class settings(qt.QDialog):
         self.update = tabs.Update(self)
         self.layout1 = tabs.Genral(self)
         self.startupTabSettings = tabs.StartupTabSettings(self)
+        self.hiddenTabsSettings = tabs.HiddenTabsSettings(self)
         self.userNameSettings = tabs.UserNameSettings()
         self.fontSettings = tabs.FontSettings()
         self.pageTurnSoundSettings = tabs.PageTurnSoundSettings()
@@ -132,6 +133,7 @@ class settings(qt.QDialog):
         self.flat_tabs = [
             ("الإعدادات العامة", self.layout1),
             ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
+            ("إعدادات إخفاء وإظهار التبويبات", self.hiddenTabsSettings),
             ("إعدادات التذكير بالمناسبات واسم المستخدم", self.userNameSettings),
             ("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings),
             ("إعدادات صوت تقليب الصفحات في العارضات", self.pageTurnSoundSettings),
@@ -160,6 +162,7 @@ class settings(qt.QDialog):
                 [
                     ("الإعدادات العامة", self.layout1),
                     ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
+                    ("إعدادات إخفاء وإظهار التبويبات", self.hiddenTabsSettings),
                     ("إعدادات تحديد كرت الصوت", self.audioSettings),
                     ("إعدادات اختيار قارئ القرآن آية بآية", self.quranRecitersSettings),
                     ("إعدادات البحث", self.searchSettings),

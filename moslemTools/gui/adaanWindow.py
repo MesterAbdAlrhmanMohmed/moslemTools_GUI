@@ -8,8 +8,14 @@ import settings
 
 
 class AdaanDialog(qt.QDialog):
+    _instance = None
+    _after_azaan_instance = None
+
     def __init__(self, p, index: int, title: str, sound_path: str):
-        super().__init__(p)
+        super().__init__(None)
+        AdaanDialog._instance = self
+        self.setWindowFlags(qt2.Qt.WindowType.Window | qt2.Qt.WindowType.WindowMinimizeButtonHint | qt2.Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowModality(qt2.Qt.WindowModality.NonModal)
         self.resize(500, 600)
         self.setWindowTitle(title)
         self.lay = qt.QLabel(title)
@@ -23,20 +29,33 @@ class AdaanDialog(qt.QDialog):
         self.media_player.setAudioOutput(self.audio_output)
         self.media_player.setSource(qt2.QUrl.fromLocalFile(sound_path))
         self.media_player.play()
-        qt1.QShortcut("escape", self).activated.connect(lambda: self.closeEvent(None))
+        qt1.QShortcut("escape", self).activated.connect(self.close)
         layout = qt.QVBoxLayout(self)
         layout.addWidget(self.lay)
+
+    def exec(self):
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        return 1
 
     def closeEvent(self, event):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
-            qt2.QTimer.singleShot(100,self.accept)
-        else:
-            self.accept
+        self.accept()
+        AdaanDialog._instance = None
+        if event:
+            event.accept()
 
     def onStateChanged(self, state):
         if state == self.media_player.MediaStatus.EndOfMedia:
-            self.accept()
+            self.close()
+            AdaanDialog._instance = None
             if settings.settings_handler.get("prayerTimes", "playPrayerAfterAdhaan") == "True":
-                window = AfterAdaan(self)
-                window.exec()
+                window = AfterAdaan(None)
+                window.setWindowModality(qt2.Qt.WindowModality.NonModal)
+                AdaanDialog._after_azaan_instance = window
+                window.destroyed.connect(lambda: setattr(AdaanDialog, '_after_azaan_instance', None))
+                window.show()
+                window.raise_()
+                window.activateWindow()

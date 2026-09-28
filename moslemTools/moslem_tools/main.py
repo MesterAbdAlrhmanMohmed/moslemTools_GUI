@@ -57,8 +57,10 @@ def main_app():
     if shared.attach() or not shared.create(1):
         guiTools.qMessageBox.MessageBox.error(window, "تنبيه", "البرنامج يعمل بالفعل\nلإظهار البرنامج نستخدم الاختصار windows + alt + h أو نقوم بإظهاره من قائمة علبة النظان system tray")
         sys.exit(0)
+    App.shared_memory = shared
     App.aboutToQuit.connect(lambda: shared.detach())
     window.show()
+    window.more_options_button.setFocus()
     sys.exit(App.exec())
 
 

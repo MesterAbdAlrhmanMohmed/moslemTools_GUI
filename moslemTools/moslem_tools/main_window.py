@@ -96,7 +96,17 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
     (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),
     (DateConverter(), "محول التاريخ"),
 ]
-        for widget_class, label in tabs:
+        hidden_raw = settings_handler.get("g", "hidden_tabs") or ""
+        hidden_tabs = []
+        if hidden_raw:
+            try:
+                hidden_tabs = json.loads(hidden_raw)
+            except Exception:
+                hidden_tabs = [x.strip() for x in hidden_raw.split(",") if x.strip()]
+        visible_tabs = [(w, l) for w, l in tabs if l not in hidden_tabs]
+        if not visible_tabs:
+            visible_tabs = tabs
+        for widget_class, label in visible_tabs:
             scroll = qt.QScrollArea()
             scroll.setWidgetResizable(True)
             scroll.setFrameShape(qt.QFrame.Shape.NoFrame)
@@ -106,7 +116,22 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
             scroll.setWidget(widget_class)
             self.list_widget.add(label, scroll)
         try:
-            start_tab = int(settings_handler.get("g", "startup_tab"))
+            start_tab_val = settings_handler.get("g", "startup_tab") or "0"
+            start_name = settings_handler.get("g", "startup_tab_name") or ""
+            start_tab = 0
+            if start_name:
+                for i in range(self.list_widget.count()):
+                    if self.list_widget.item(i).text() == start_name:
+                        start_tab = i
+                        break
+            else:
+                try:
+                    start_tab = int(start_tab_val)
+                except ValueError:
+                    for i in range(self.list_widget.count()):
+                        if self.list_widget.item(i).text() == start_tab_val:
+                            start_tab = i
+                            break
             if 0 <= start_tab < self.list_widget.count():
                 self.list_widget.setCurrentIndex(start_tab)
             else:
@@ -231,6 +256,9 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
         self.khatmah_timer.start(5000)
         qt2.QTimer.singleShot(1000, self.check_scheduled_khatmah_reminder)
         qt2.QTimer.singleShot(1000, self.play_startup_athkar)
+        self.more_options_button.setFocus()
+        qt2.QTimer.singleShot(50, self.more_options_button.setFocus)
+        qt2.QTimer.singleShot(200, self.more_options_button.setFocus)
 
     def copy_download_link(self):
         def run():
@@ -255,19 +283,21 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
     def restart_application(self):
         app.exit = False
         try:
+            app_instance = qt.QApplication.instance()
+            if app_instance and hasattr(app_instance, "shared_memory"):
+                app_instance.shared_memory.detach()
             shared = qt2.QSharedMemory("com.MTC.moslemTools")
-            shared.attach()
-            shared.detach()
+            if shared.attach():
+                shared.detach()
         except Exception:
             pass
         if getattr(sys, 'frozen', False):
             args = [sys.executable] + sys.argv[1:]
+            cwd = os.path.dirname(sys.executable)
         else:
-            args = [sys.executable] + sys.argv
-        subprocess.Popen(args)
-        app_instance = qt.QApplication.instance()
-        if app_instance:
-            app_instance.quit()
+            args = [sys.executable, os.path.abspath(sys.argv[0])] + sys.argv[1:]
+            cwd = os.path.dirname(os.path.abspath(sys.argv[0]))
+        subprocess.Popen(args, cwd=cwd)
         import os
         os._exit(0)
 
