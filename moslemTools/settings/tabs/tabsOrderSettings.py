@@ -67,7 +67,7 @@ class TabsOrderSettings(qt.QWidget):
             guiTools.QListWidget.keyPressEvent(self.tab_list, event)
         self.tab_list.keyPressEvent = list_key_press
         layout.addWidget(self.tab_list)
-        self.hint_label = guiTools.QNavigableLabel("لمزيد من الخيارات نستخدم زر التطبيقات أو click الأيمن على تبويبة من التبويبات")
+        self.hint_label = guiTools.QNavigableLabel("لخيارات ترتيب التبويبات نستخدم زر التطبيقات أو click الأيمن على تبويبة من التبويبات")
         self.hint_label.setFont(font)
         self.hint_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
         self.hint_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
