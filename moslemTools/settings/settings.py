@@ -37,8 +37,8 @@ class SectionContainer(qt.QWidget):
         for name, _ in self.tabs_list:
             self.combo.addItem(name)
         self.header_layout.addStretch()
-        self.header_layout.addWidget(self.label)
         self.header_layout.addWidget(self.combo)
+        self.header_layout.addWidget(self.label)
         self.header_layout.addStretch()
         layout.addLayout(self.header_layout)
         self.sub_stack = DynamicStackedWidget()
