@@ -68,7 +68,8 @@ settingsConfig={
         "startup_tab":"0",
         "startup_tab_name":"مواقيت الصلاة والتاريخ",
         "split_settings":"False",
-        "hidden_tabs":""
+        "hidden_tabs":"",
+        "tabs_order":""
     },
     "quran_reciters":{
         "researcher":"0",

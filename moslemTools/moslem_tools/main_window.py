@@ -103,6 +103,23 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
                 hidden_tabs = json.loads(hidden_raw)
             except Exception:
                 hidden_tabs = [x.strip() for x in hidden_raw.split(",") if x.strip()]
+        tabs_order_raw = settings_handler.get("g", "tabs_order") or ""
+        tabs_order = []
+        if tabs_order_raw:
+            try:
+                tabs_order = json.loads(tabs_order_raw)
+            except Exception:
+                tabs_order = [x.strip() for x in tabs_order_raw.split(",") if x.strip()]
+        if tabs_order:
+            tabs_dict = {l: (w, l) for w, l in tabs}
+            ordered_tabs = []
+            for name in tabs_order:
+                if name in tabs_dict:
+                    ordered_tabs.append(tabs_dict[name])
+            for w, l in tabs:
+                if l not in tabs_order:
+                    ordered_tabs.append((w, l))
+            tabs = ordered_tabs
         visible_tabs = [(w, l) for w, l in tabs if l not in hidden_tabs]
         if not visible_tabs:
             visible_tabs = tabs

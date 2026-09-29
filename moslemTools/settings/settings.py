@@ -110,6 +110,7 @@ class settings(qt.QDialog):
         self.layout1 = tabs.Genral(self)
         self.startupTabSettings = tabs.StartupTabSettings(self)
         self.hiddenTabsSettings = tabs.HiddenTabsSettings(self)
+        self.tabsOrderSettings = tabs.TabsOrderSettings(self)
         self.userNameSettings = tabs.UserNameSettings()
         self.fontSettings = tabs.FontSettings()
         self.pageTurnSoundSettings = tabs.PageTurnSoundSettings()
@@ -134,6 +135,7 @@ class settings(qt.QDialog):
             ("الإعدادات العامة", self.layout1),
             ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
             ("إعدادات إخفاء وإظهار التبويبات", self.hiddenTabsSettings),
+            ("إعدادات ترتيب تبويبات البرنامج", self.tabsOrderSettings),
             ("إعدادات التذكير بالمناسبات واسم المستخدم", self.userNameSettings),
             ("إعدادات نوع الخط وحجمه للعارضات", self.fontSettings),
             ("إعدادات صوت تقليب الصفحات في العارضات", self.pageTurnSoundSettings),
@@ -161,12 +163,18 @@ class settings(qt.QDialog):
                 "الإعدادات الأساسية",
                 [
                     ("الإعدادات العامة", self.layout1),
-                    ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
-                    ("إعدادات إخفاء وإظهار التبويبات", self.hiddenTabsSettings),
                     ("إعدادات تحديد كرت الصوت", self.audioSettings),
                     ("إعدادات اختيار قارئ القرآن آية بآية", self.quranRecitersSettings),
                     ("إعدادات البحث", self.searchSettings),
                     ("إعدادات فنار (الذكاء الاصطناعي)", self.fanarSettings),
+                ]
+            ),
+            (
+                "إعدادات تبويبات البرنامج",
+                [
+                    ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
+                    ("إعدادات إخفاء وإظهار التبويبات", self.hiddenTabsSettings),
+                    ("إعدادات ترتيب تبويبات البرنامج", self.tabsOrderSettings),
                 ]
             ),
             (
@@ -489,6 +497,11 @@ class settings(qt.QDialog):
         settings_handler.set("audio", "moton_player", get_audio_val(self.audioSettings.features["moton_player"].currentText()))
         settings_handler.set("g", "exitDialog", str(self.layout1.ExitDialog.isChecked()))
         settings_handler.set("g", "startup_tab", str(self.startupTabSettings.tab_list.currentRow()))
+        if self.startupTabSettings.tab_list.currentItem():
+            settings_handler.set("g", "startup_tab_name", self.startupTabSettings.tab_list.currentItem().text())
+        self.tabsOrderSettings.save_order()
+        if self.tabsOrderSettings.order_changed or (self.tabsOrderSettings.initial_tabs_order != settings_handler.get("g", "tabs_order")):
+            restart_required = 1
         settings_handler.set("g", "randomMessageAtStartup", str(self.layout1.randomMessageAtStartup.isChecked()))
         settings_handler.set("g", "split_settings", str(self.split_btn.isChecked()))
         settings_handler.set("g", "use_name_in_occasions", str(self.userNameSettings.use_name_checkbox.isChecked()))
