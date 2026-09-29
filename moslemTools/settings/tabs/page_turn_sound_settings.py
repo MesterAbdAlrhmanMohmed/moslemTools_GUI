@@ -65,8 +65,7 @@ class PageTurnSoundSettings(qt.QWidget):
         main_layout.addStretch()
 
         self.info_label = guiTools.QNavigableLabel("يمكنكم من هنا تفعيل أو تعطيل صوت تقليب الصفحات للعارضات المحددة")
-        self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         main_layout.addWidget(self.info_label)
         main_layout.addSpacing(25)
 

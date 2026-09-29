@@ -174,7 +174,7 @@ class settings(qt.QDialog):
                 [
                     ("إعدادات تبويبة بدء التشغيل", self.startupTabSettings),
                     ("إعدادات إخفاء وإظهار التبويبات", self.hiddenTabsSettings),
-                    ("إعدادات ترتيب تبويبات البرنامج", self.tabsOrderSettings),
+                    ("إعدادات ترتيب التبويبات", self.tabsOrderSettings),
                 ]
             ),
             (

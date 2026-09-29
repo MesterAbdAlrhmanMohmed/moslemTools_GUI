@@ -2,11 +2,8 @@ import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
 import PyQt6.QtCore as qt2
 from .. import settings_handler
-import guiTools
+import guiTools, os, subprocess, sys
 import ujson as json
-import os
-import subprocess
-import sys
 
 
 class HiddenTabsSettings(qt.QWidget):
@@ -39,14 +36,12 @@ class HiddenTabsSettings(qt.QWidget):
         font = qt1.QFont()
         font.setBold(True)
         self.title_label = guiTools.QNavigableLabel("اختر التبويبات التي تريد إخفاءها أو إظهارها في البرنامج:")
-        self.title_label.setFont(font)
-        self.title_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.title_label.setFont(font)        
         self.title_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.title_label)
         self.tab_list = guiTools.QListWidget()
         self.tab_list.setSpacing(3)
         self.tab_list.setFont(font)
-        self.populate_list()
         def list_key_press(event):
             if event.key() == qt2.Qt.Key.Key_Return or event.key() == qt2.Qt.Key.Key_Enter:
                 if self.tab_list.currentItem():
@@ -57,6 +52,17 @@ class HiddenTabsSettings(qt.QWidget):
         self.tab_list.keyPressEvent = list_key_press
         self.tab_list.clicked.connect(self.on_item_selected)
         layout.addWidget(self.tab_list)
+
+        self.stats_label = guiTools.QNavigableLabel()
+        self.stats_label.setFont(font)        
+        self.stats_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.stats_label)
+
+        self.populate_list()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.populate_list()
 
     def get_hidden_tabs(self):
         val = settings_handler.get("g", "hidden_tabs") or ""
@@ -70,6 +76,18 @@ class HiddenTabsSettings(qt.QWidget):
     def save_hidden_tabs(self, tabs_list):
         settings_handler.set("g", "hidden_tabs", json.dumps(tabs_list, ensure_ascii=False))
 
+    def update_stats(self):
+        if not hasattr(self, "stats_label"):
+            return
+        hidden_tabs = self.get_hidden_tabs()
+        hidden_count = sum(1 for name in self.ALL_TABS if name in hidden_tabs)
+        total_count = len(self.ALL_TABS)
+        visible_count = total_count - hidden_count
+        self.stats_label.setText(
+            f"عدد التبويبات المخفية: {hidden_count}، عدد التبويبات الظاهرة: {visible_count}، إجمالي عدد التبويبات: {total_count}"
+        )
+        self.stats_label.setCursorPosition(0)
+
     def populate_list(self):
         self.tab_list.clear()
         hidden_tabs = self.get_hidden_tabs()
@@ -78,6 +96,7 @@ class HiddenTabsSettings(qt.QWidget):
                 self.tab_list.addItem(f"{name}: تم الإخفاء")
             else:
                 self.tab_list.addItem(name)
+        self.update_stats()
 
     def on_item_selected(self, index=None):
         row = self.tab_list.currentRow()
@@ -89,6 +108,7 @@ class HiddenTabsSettings(qt.QWidget):
             hidden_tabs.remove(tab_name)
             self.save_hidden_tabs(hidden_tabs)
             self.tab_list.item(row).setText(tab_name)
+            self.update_stats()
             mb = guiTools.QQuestionMessageBox.view(
                 self,
                 "إعادة تشغيل البرنامج",
@@ -121,6 +141,7 @@ class HiddenTabsSettings(qt.QWidget):
             hidden_tabs.append(tab_name)
             self.save_hidden_tabs(hidden_tabs)
             self.tab_list.item(row).setText(f"{tab_name}: تم الإخفاء")
+            self.update_stats()
             mb = guiTools.QQuestionMessageBox.view(
                 self,
                 "إعادة تشغيل البرنامج",

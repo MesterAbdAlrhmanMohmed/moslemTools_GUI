@@ -124,8 +124,7 @@ class LocationSettings(qt.QWidget):
         layout.addWidget(self.dl_app1)
         layout.addSpacing(12)
         self.info=guiTools.QNavigableLabel("تنبيه هام، عند تحديد الموقع الجغرافي يجب إعادة تحميل مواقيت الصلاة")
-        self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         layout.addWidget(self.info)
         layout.addStretch(1)
 

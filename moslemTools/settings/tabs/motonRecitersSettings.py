@@ -110,8 +110,7 @@ class MotonRecitersSettings(qt.QWidget):
 
         self.default_notice_text = "لحذف قارئ، نستخدم زر التطبيقات أو click الأيمن على قائمة القراء"
         self.delete_notice = guiTools.QNavigableLabel(self.default_notice_text)
-        self.delete_notice.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.delete_notice.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.delete_notice.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         layout.addSpacing(25)
         layout.addWidget(self.delete_notice)
         layout.addStretch(1)

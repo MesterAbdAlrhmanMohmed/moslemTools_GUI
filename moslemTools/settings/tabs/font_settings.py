@@ -75,8 +75,7 @@ class FontSettings(qt.QWidget):
 
         self.info_label = guiTools.QNavigableLabelAsTextEdit()
         self.info_label.setText("تحديد العارضات لتشغيل أو إيقاف وضع التفاف النص:\nهذا الخيار يعرض المحتوة الطويل على أكثر من سطر، وهذا الخيار للمبصرين فقط")
-        self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.info_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         self.info_label.setFixedHeight(55)
         main_layout.addWidget(self.info_label)
         main_layout.addSpacing(25)

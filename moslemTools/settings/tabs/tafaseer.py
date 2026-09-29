@@ -140,8 +140,7 @@ class TafaseerSettings(qt.QWidget):
 
         main_layout.addWidget(group_box)
         main_layout.addSpacing(25)
-        self.info = guiTools.QNavigableLabel("لحذف أيا من التفاسير أو الترجمات، نستخدم مفتاح التطبيقات أو click الأيمن، ولحذف جميع الترجمات للغة محددة، نستخدم نفس المفاتيح على قائمة اللغات")
-        self.info.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
+        self.info = guiTools.QNavigableLabel("لحذف أيا من التفاسير أو الترجمات، نستخدم مفتاح التطبيقات أو click الأيمن، ولحذف جميع الترجمات للغة محددة، نستخدم نفس المفاتيح على قائمة اللغات")        
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.info.setStyleSheet("font-weight: bold;")
         main_layout.addWidget(self.info)
