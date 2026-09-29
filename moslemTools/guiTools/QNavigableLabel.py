@@ -1,14 +1,6 @@
-from PyQt6.QtWidgets import QLineEdit, QWidget, QPushButton, QDialog, QMenu
+from PyQt6.QtWidgets import QLineEdit, QWidget, QPushButton, QDialog
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeySequence
-
-try:
-    from .QCustomContextMenu import QCustomContextMenu
-except ImportError:
-    try:
-        from guiTools.QCustomContextMenu import QCustomContextMenu
-    except ImportError:
-        QCustomContextMenu = QMenu
 
 
 class QNavigableLabel(QLineEdit):
@@ -22,6 +14,7 @@ class QNavigableLabel(QLineEdit):
         self.setAcceptDrops(False)
         self.setCursorPosition(0)
         self.setCursorMoveStyle(Qt.CursorMoveStyle.VisualMoveStyle)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
 
         self.setStyleSheet("""
             QLineEdit {
@@ -42,12 +35,12 @@ class QNavigableLabel(QLineEdit):
             event.ignore()
             return
 
-        if event.matches(QKeySequence.StandardKey.Copy):
+        if event.matches(QKeySequence.StandardKey.Copy) or (event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_C):
             self.copy()
             event.accept()
             return
 
-        if event.matches(QKeySequence.StandardKey.SelectAll):
+        if event.matches(QKeySequence.StandardKey.SelectAll) or (event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_A):
             self.selectAll()
             event.accept()
             return
@@ -57,7 +50,6 @@ class QNavigableLabel(QLineEdit):
             return
 
         if event.key() == Qt.Key.Key_Menu or (event.key() == Qt.Key.Key_F10 and (event.modifiers() & Qt.KeyboardModifier.ShiftModifier)):
-            self.show_context_menu(self.mapToGlobal(self.rect().center()))
             event.accept()
             return
 
@@ -106,27 +98,8 @@ class QNavigableLabel(QLineEdit):
 
         event.accept()
 
-    def show_context_menu(self, pos):
-        menu = QCustomContextMenu("الخيارات", self)
-        copy_action = menu.addAction("نسخ")
-        copy_action.setShortcut("Ctrl+C")
-        copy_action.setEnabled(self.hasSelectedText())
-        copy_action.triggered.connect(self.copy)
-
-        select_all_action = menu.addAction("تحديد الكل")
-        select_all_action.setShortcut("Ctrl+A")
-        select_all_action.setEnabled(bool(self.text()))
-        select_all_action.triggered.connect(self.selectAll)
-
-        if pos.isNull() or pos.x() < 0 or pos.y() < 0:
-            pos = self.mapToGlobal(self.rect().center())
-        menu.exec(pos)
-
     def contextMenuEvent(self, event):
-        pos = event.globalPos()
-        if pos.isNull() or pos.x() < 0 or pos.y() < 0:
-            pos = self.mapToGlobal(self.rect().center())
-        self.show_context_menu(pos)
+        event.accept()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.MiddleButton:

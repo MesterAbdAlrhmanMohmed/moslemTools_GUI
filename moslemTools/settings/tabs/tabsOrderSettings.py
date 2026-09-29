@@ -159,7 +159,25 @@ class TabsOrderSettings(qt.QWidget):
         act_reset.triggered.connect(self.reset_to_default_order)
         menu.exec(qt1.QCursor.pos())
 
+    def is_default_order(self):
+        hidden_tabs = self.get_hidden_tabs()
+        default_order = [t for t in self.ALL_TABS if t not in hidden_tabs]
+        current_order = [self.tab_list.item(i).text() for i in range(self.tab_list.count())]
+        return current_order == default_order
+
     def reset_to_default_order(self):
+        if self.is_default_order():
+            if settings_handler.get("g", "tabs_order") != "":
+                settings_handler.set("g", "tabs_order", "")
+                if self.initial_tabs_order != "":
+                    self.order_changed = True
+            guiTools.MessageBox.view(
+                self,
+                "تنبيه",
+                "الترتيب الافتراضي لتبويبات البرنامج هو المعمول به بالفعل."
+            )
+            return
+
         mb = guiTools.QQuestionMessageBox.view(
             self,
             "تأكيد استعادة الترتيب الافتراضي",
@@ -193,7 +211,12 @@ class TabsOrderSettings(qt.QWidget):
         for t in self.ALL_TABS:
             if t not in full_order:
                 full_order.append(t)
-        new_order = json.dumps(full_order, ensure_ascii=False)
+        if full_order == self.ALL_TABS:
+            new_order = ""
+        else:
+            new_order = json.dumps(full_order, ensure_ascii=False)
         if new_order != self.initial_tabs_order:
             self.order_changed = True
+        else:
+            self.order_changed = False
         settings_handler.set("g", "tabs_order", new_order)
