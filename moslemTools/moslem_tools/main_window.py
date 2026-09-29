@@ -87,7 +87,7 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
     (self.askAI, "اسأل الذكاء الاصطناعي"),
     (IslamicQuestionsGame(), "لعبة الأسئلة الإسلامية"),
     (IslamicBooks(), "الكتب الإسلامية"),
-    (IslamicMoton(), "المتون الإسلامية المكتوبة"),
+    (IslamicMoton(), "المتون الإسلامية"),
     (protcasts(), "إذاعات الراديو الإسلامية"),
     (Athker(), "الأذكار والأدعية"),
     (sibha(), "السبحة الإلكترونية"),

@@ -208,7 +208,7 @@ class settings(qt.QDialog):
                 ]
             ),
             (
-                "إعدادات تبويبة المتون الإسلامية المكتوبة",
+                "إعدادات تبويبة المتون الإسلامية",
                 [
                     ("إعدادات اختيار القارئ", self.motonRecitersSettings),
                     ("إعدادات مشغل المتون", self.motonPlayerTimes),
