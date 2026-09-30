@@ -47,6 +47,24 @@ class QComboBox(qt.QComboBox):
                         self.view().scrollTo(idx)
                     event.accept()
                     return
+            elif not self.isEditable():
+                modifiers = event.modifiers()
+                has_ctrl_or_alt = bool(modifiers & (qc.Qt.KeyboardModifier.ControlModifier | qc.Qt.KeyboardModifier.AltModifier))
+                if not has_ctrl_or_alt:
+                    is_next = event.key() == qc.Qt.Key.Key_Right
+                    is_prev = event.key() == qc.Qt.Key.Key_Left
+                    if is_next or is_prev:
+                        count = self.count()
+                        if count > 0:
+                            cur = self.currentIndex()
+                            if cur < 0:
+                                cur = 0
+                            next_row = (cur + 1) % count if is_next else (cur - 1 + count) % count
+                            if next_row != cur:
+                                self.setCurrentIndex(next_row)
+                                self.activated.emit(next_row)
+                        event.accept()
+                        return
         except Exception:
             pass
         super().keyPressEvent(event)
