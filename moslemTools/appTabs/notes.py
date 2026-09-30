@@ -89,7 +89,7 @@ class NotesDialog(qt.QDialog):
         buttons_layout.addWidget(self.dl_all_all)
         layout.addLayout(buttons_layout)
         self.sectian.currentRowChanged.connect(self.load_notes)
-        self.all_notes_in_current_category = [[] for _ in range(len(categories))]
+        self.all_notes_in_current_category = [[] for _ in range(len(self.categories))]
         self.sectian.setCurrentRow(0)
 
     def on_item_activated(self, item, tab_index):
