@@ -99,7 +99,20 @@ class SelectTranslationItem(qt.QDialog):
 		self.custom_download_list = []
 		self.fileName = fileName
 
-		layout = qt.QVBoxLayout(self)
+		main_layout = qt.QVBoxLayout(self)
+		main_layout.setContentsMargins(0, 0, 0, 0)
+		main_layout.setSpacing(0)
+
+		self.scroll_area = qt.QScrollArea()
+		self.scroll_area.setWidgetResizable(True)
+		self.scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		self.scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+		self.scroll_area.horizontalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		self.scroll_area.verticalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+
+		content_widget = qt.QWidget()
+		content_widget.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		layout = qt.QVBoxLayout(content_widget)
 		layout.setSpacing(8)
 
 		font_bold = qt1.QFont()
@@ -141,7 +154,6 @@ class SelectTranslationItem(qt.QDialog):
 		self.search_bar.setMinimumHeight(32)
 		layout.addWidget(self.search_bar)
 
-		# 3. Translation Items List
 		self.item = guiTools.QListWidget()
 		self.item.setSpacing(3)
 		self.item.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -149,7 +161,6 @@ class SelectTranslationItem(qt.QDialog):
 		self.item.setFont(font_bold)
 		layout.addWidget(self.item)
 
-		# 4. Info and Selection Status Labels
 		self.info_label = guiTools.QNavigableLabel("لمزيد من خيارات التحميل، قم بالضغط على عنصر من القائمة باستخدام زر التطبيقات أو click الأيمن")
 		self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.info_label.setStyleSheet("color: white; font-weight: bold; font-size: 13px; margin: 5px;")
@@ -170,6 +181,9 @@ class SelectTranslationItem(qt.QDialog):
 		self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.loading_label)
+
+		self.scroll_area.setWidget(content_widget)
+		main_layout.addWidget(self.scroll_area)
 
 		self.item.setVisible(False)
 		self.onLoad()

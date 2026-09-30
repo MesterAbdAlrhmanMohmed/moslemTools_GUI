@@ -114,7 +114,20 @@ class SelectAhadeethItem(qt.QDialog):
 		self.custom_download_list = []
 		self.fileName = fileName
 
-		layout = qt.QVBoxLayout(self)
+		main_layout = qt.QVBoxLayout(self)
+		main_layout.setContentsMargins(0, 0, 0, 0)
+		main_layout.setSpacing(0)
+
+		self.scroll_area = qt.QScrollArea()
+		self.scroll_area.setWidgetResizable(True)
+		self.scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		self.scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+		self.scroll_area.horizontalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		self.scroll_area.verticalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+
+		content_widget = qt.QWidget()
+		content_widget.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		layout = qt.QVBoxLayout(content_widget)
 
 		self.search_bar = qt.QLineEdit()
 		self.search_bar.setPlaceholderText("البحث عن كتاب أحاديث")
@@ -151,6 +164,9 @@ class SelectAhadeethItem(qt.QDialog):
 		self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.loading_label)
+
+		self.scroll_area.setWidget(content_widget)
+		main_layout.addWidget(self.scroll_area)
 
 		self.item.setVisible(False)
 		self.onLoad()

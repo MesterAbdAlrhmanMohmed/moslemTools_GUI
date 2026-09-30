@@ -90,15 +90,30 @@ class SelectIslamicBookItem(qt.QDialog):
 		self.setMinimumSize(650, 450)
 		self.resize(980, 580)
 		self.center()
-		self.all_data = {}  # { display_name: rel_path }
-		self.cat_groups = {}  # { cat_folder: { display_name: rel_path } }
+		self.all_data = {}
+		self.cat_groups = {}
+		self.book_to_cat = {}
+		self.item_to_book_name = {}
 		self.current_filtered_data = {}
 		self.dirName = dirName
 		self.start_selection_index = None
 		self.custom_download_list = []
 		self.fileName = fileName
 
-		layout = qt.QVBoxLayout(self)
+		main_layout = qt.QVBoxLayout(self)
+		main_layout.setContentsMargins(0, 0, 0, 0)
+		main_layout.setSpacing(0)
+
+		self.scroll_area = qt.QScrollArea()
+		self.scroll_area.setWidgetResizable(True)
+		self.scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		self.scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+		self.scroll_area.horizontalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		self.scroll_area.verticalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+
+		content_widget = qt.QWidget()
+		content_widget.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+		layout = qt.QVBoxLayout(content_widget)
 		layout.setSpacing(8)
 
 		font_bold = qt1.QFont()
@@ -140,7 +155,6 @@ class SelectIslamicBookItem(qt.QDialog):
 		self.search_bar.setMinimumHeight(32)
 		layout.addWidget(self.search_bar)
 
-		# 3. Book Items List
 		self.item = guiTools.QListWidget()
 		self.item.setSpacing(3)
 		self.item.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -148,7 +162,6 @@ class SelectIslamicBookItem(qt.QDialog):
 		self.item.setFont(font_bold)
 		layout.addWidget(self.item)
 
-		# 4. Info and Selection Status Labels
 		self.info_label = guiTools.QNavigableLabel("لمزيد من خيارات التحميل، قم بالضغط على عنصر من القائمة باستخدام زر التطبيقات أو click الأيمن")
 		self.info_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		self.info_label.setStyleSheet("color: white; font-weight: bold; font-size: 13px; margin: 5px;")
@@ -169,6 +182,9 @@ class SelectIslamicBookItem(qt.QDialog):
 		self.loading_label.setFocusPolicy(qt2.Qt.FocusPolicy.StrongFocus)
 		self.loading_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.loading_label)
+
+		self.scroll_area.setWidget(content_widget)
+		main_layout.addWidget(self.scroll_area)
 
 		self.item.setVisible(False)
 		self.onLoad()
@@ -225,10 +241,10 @@ class SelectIslamicBookItem(qt.QDialog):
 		self.populate_categories(self.cat_search_bar.text())
 
 	def onDataLoaded(self, jsonContent):
-		self.all_data = jsonContent  # { display_name: rel_path }
+		self.all_data = jsonContent
 		self.cat_groups = {}
+		self.book_to_cat = {}
 
-		# Group by category folder name
 		for display_name, rel_path in self.all_data.items():
 			norm_path = rel_path.replace("\\", "/")
 			parts = norm_path.split("/")
@@ -239,6 +255,7 @@ class SelectIslamicBookItem(qt.QDialog):
 			else:
 				cat_folder = "أخرى"
 			self.cat_groups.setdefault(cat_folder, {})[display_name] = rel_path
+			self.book_to_cat[display_name] = cat_folder
 
 		self.populate_categories(self.cat_search_bar.text())
 
@@ -265,12 +282,20 @@ class SelectIslamicBookItem(qt.QDialog):
 
 	def update_filtered_books(self):
 		selected_data = self.category_combo.currentData()
+		self.item_to_book_name = {}
 		if selected_data == "ALL" or not selected_data:
-			self.current_filtered_data = dict(self.all_data)
+			self.current_filtered_data = {}
+			for k, v in self.all_data.items():
+				cat = self.book_to_cat.get(k, "أخرى")
+				item_text = f"{k}: {cat}"
+				self.current_filtered_data[item_text] = v
+				self.item_to_book_name[item_text] = k
 		else:
-			self.current_filtered_data = dict(self.cat_groups.get(selected_data, {}))
+			cat_dict = self.cat_groups.get(selected_data, {})
+			self.current_filtered_data = dict(cat_dict)
+			for k in cat_dict:
+				self.item_to_book_name[k] = k
 
-		# Apply search filter if active
 		search_text = self.search_bar.text().lower()
 		self.item.clear()
 		if search_text:
@@ -278,6 +303,17 @@ class SelectIslamicBookItem(qt.QDialog):
 			self.item.addItems(result)
 		else:
 			self.item.addItems(self.current_filtered_data.keys())
+
+	def get_book_name(self, text):
+		if text in self.item_to_book_name:
+			return self.item_to_book_name[text]
+		if text in self.all_data:
+			return text
+		if ": " in text:
+			candidate = text.rsplit(": ", 1)[0]
+			if candidate in self.all_data:
+				return candidate
+		return text
 
 	def search(self, pattern, text_list):
 		try:
@@ -387,8 +423,13 @@ class SelectIslamicBookItem(qt.QDialog):
 	def download_custom_list(self):
 		if not self.custom_download_list:
 			return
-		file_keys = [self.all_data[text] for text in self.custom_download_list if text in self.all_data]
-		display_names = [text for text in self.custom_download_list if text in self.all_data]
+		file_keys = []
+		display_names = []
+		for text in self.custom_download_list:
+			book_name = self.get_book_name(text)
+			if book_name in self.all_data:
+				file_keys.append(self.all_data[book_name])
+				display_names.append(book_name)
 		self.custom_download_list.clear()
 		self.update_selection_ui()
 		if file_keys:
@@ -428,9 +469,11 @@ class SelectIslamicBookItem(qt.QDialog):
 		display_names = []
 		for i in range(start_index, end_index + 1):
 			it = self.item.item(i)
-			if it and it.text() in self.all_data:
-				file_keys.append(self.all_data[it.text()])
-				display_names.append(it.text())
+			if it:
+				book_name = self.get_book_name(it.text())
+				if book_name in self.all_data:
+					file_keys.append(self.all_data[book_name])
+					display_names.append(book_name)
 		self.start_selection_index = None
 		self.update_selection_ui()
 		if file_keys:
@@ -455,9 +498,11 @@ class SelectIslamicBookItem(qt.QDialog):
 				self.download_custom_list()
 			else:
 				curr = self.item.currentItem()
-				if curr and curr.text() in self.all_data:
-					StartDownloadingIslamicBooks(self, self.all_data[curr.text()], self.dirName, curr.text()).exec()
-					self.refresh_after_download()
+				if curr:
+					book_name = self.get_book_name(curr.text())
+					if book_name in self.all_data:
+						StartDownloadingIslamicBooks(self, self.all_data[book_name], self.dirName, book_name).exec()
+						self.refresh_after_download()
 		except Exception as e:
 			log_error("SelectIslamicBookItem.on_item_clicked", e)
 

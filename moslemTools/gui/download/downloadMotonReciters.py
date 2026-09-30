@@ -181,7 +181,18 @@ class DownloadMotonReciters(qt.QDialog):
         self.total_verses = 0
         self.is_downloading = False
 
-        layout = qt.QVBoxLayout(self)
+        main_layout = qt.QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        self.scroll_area = qt.QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        self.scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
+        self.scroll_area.horizontalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        self.scroll_area.verticalScrollBar().setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        content_widget = qt.QWidget()
+        content_widget.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
+        layout = qt.QVBoxLayout(content_widget)
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
         font = qt1.QFont()
@@ -265,6 +276,9 @@ class DownloadMotonReciters(qt.QDialog):
         self.pause.setDefault(False)
         self.pause.setVisible(False)
         layout.addWidget(self.pause)
+
+        self.scroll_area.setWidget(content_widget)
+        main_layout.addWidget(self.scroll_area)
 
         self.category_combo.currentIndexChanged.connect(self.on_category_changed)
         self.matn_combo.currentIndexChanged.connect(self.on_matn_changed)
