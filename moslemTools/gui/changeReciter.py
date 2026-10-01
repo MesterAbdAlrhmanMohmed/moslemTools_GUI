@@ -1,6 +1,7 @@
 import re
 import PyQt6.QtWidgets as qt
 import PyQt6.QtCore as qt2
+import guiTools
 
 
 class ChangeReciter(qt.QDialog):
@@ -15,7 +16,7 @@ class ChangeReciter(qt.QDialog):
         self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.search_bar)
-        self.recitersListWidget=qt.QListWidget()
+        self.recitersListWidget=guiTools.QListWidget()
         self.recitersListWidget.addItems(self.reciters)
         self.recitersListWidget.setCurrentRow(selectedReciter)
         self.recitersListWidget.itemActivated.connect(self.accept)

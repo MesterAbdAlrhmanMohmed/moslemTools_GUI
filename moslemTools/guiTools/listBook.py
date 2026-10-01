@@ -1,5 +1,6 @@
 import PyQt6.QtWidgets as qt
 import PyQt6.QtGui as qt1
+from .QListWidget import QListWidget
 
 
 class DynamicStackedWidget(qt.QStackedWidget):
@@ -16,7 +17,7 @@ class DynamicStackedWidget(qt.QStackedWidget):
         return super().minimumSizeHint()
 
 
-class listBook(qt.QListWidget):
+class listBook(QListWidget):
     def __init__(self):
         super().__init__()
         self.w = DynamicStackedWidget()

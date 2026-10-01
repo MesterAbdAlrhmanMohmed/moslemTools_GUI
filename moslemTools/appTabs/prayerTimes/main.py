@@ -6,7 +6,7 @@ import PyQt6.QtCore as qt2
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 
 import gui
-from guiTools import speak, QReadOnlyTextEdit, QNavigableLabel, QNavigableLabelAsTextEdit
+from guiTools import speak, QReadOnlyTextEdit, QNavigableLabel, QNavigableLabelAsTextEdit, QListWidget
 from guiTools.qMessageBox import MessageBox
 from settings import settings_handler
 from functions import audio_manager
@@ -44,7 +44,7 @@ class prayer_times(qt.QWidget):
         self.current_day_check = datetime.now().day
         self.countdown_timer = qt2.QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdowns)
-        self.information = qt.QListWidget()
+        self.information = QListWidget()
         self.information.setSpacing(3)
         self.worning = QNavigableLabel("F5: لإعادة تحميل مواقيت الصلاة")        
         self.worning.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
