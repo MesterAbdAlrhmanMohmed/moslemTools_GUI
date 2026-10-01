@@ -84,7 +84,7 @@ class SectionContainer(qt.QWidget):
 class settings(qt.QDialog):
     def __init__(self, p):
         super().__init__(p)                
-        self.setWindowTitle("الإعدادات")
+        self.setWindowTitle("إعدادات moslem tools")
         self.setWindowState(qt2.Qt.WindowState.WindowMaximized)
         self.p = p
         layout = qt.QVBoxLayout()
