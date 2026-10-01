@@ -29,6 +29,11 @@ class PrayerTimesWorker(qt2.QObject):
                 method = "5"
             else:
                 method = str(method)
+            asr_method = settings_handler.get("location", "asrCalculationMethod")
+            if not asr_method:
+                asr_method = "0"
+            else:
+                asr_method = str(asr_method)
 
             cache_data = None
             cache_hit = False
@@ -42,9 +47,10 @@ class PrayerTimesWorker(qt2.QObject):
             if not self.force_refresh and cache_data and isinstance(cache_data, dict):
                 cached_year = cache_data.get("year")
                 cached_method = str(cache_data.get("method", ""))
+                cached_asr_method = str(cache_data.get("asr_method", "0"))
                 timings_dict = cache_data.get("timings", {})
 
-                if cached_year == current_year and today_str in timings_dict and cached_method == method:
+                if cached_year == current_year and today_str in timings_dict and cached_method == method and cached_asr_method == asr_method:
                     if is_auto_detect:
                         if cache_data.get("auto_detect") is True:
                             cache_hit = True
@@ -96,7 +102,7 @@ class PrayerTimesWorker(qt2.QObject):
                 longitude = float(settings_handler.get("location", "LT1"))
 
             url = f"http://api.aladhan.com/v1/calendar/{current_year}"
-            response = requests.get(url, params={'latitude': latitude, 'longitude': longitude, 'method': int(method)}, timeout=15)
+            response = requests.get(url, params={'latitude': latitude, 'longitude': longitude, 'method': int(method), 'school': int(asr_method)}, timeout=15)
             if response.status_code == 200:
                 raw_months = response.json().get('data', {})
                 new_timings = {}
@@ -120,6 +126,7 @@ class PrayerTimesWorker(qt2.QObject):
                     "latitude": latitude,
                     "longitude": longitude,
                     "method": method,
+                    "asr_method": asr_method,
                     "auto_detect": is_auto_detect,
                     "last_updated": datetime.now().isoformat(),
                     "timings": new_timings

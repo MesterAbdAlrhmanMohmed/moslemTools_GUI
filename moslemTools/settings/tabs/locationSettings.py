@@ -66,6 +66,8 @@ class LocationSettings(qt.QWidget):
         method_layout.setSpacing(6)
         self.methodLabel = qt.QLabel("طريقة حساب مواقيت الصلاة:")
         self.methodLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
+        self.methodDescLabel = qt.QLabel("اختر الهيئة المناسبة لبلدك لضمان دقة مواقيت الصلاة")
+        self.methodDescLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         font = qt1.QFont()
         font.setBold(True)
         self.methodCombo = guiTools.QComboBox()
@@ -103,8 +105,28 @@ class LocationSettings(qt.QWidget):
             if method_id == current_method_id:
                 index_to_select = i
         self.methodCombo.setCurrentIndex(index_to_select)
+        asr_layout = qt.QHBoxLayout()
+        asr_layout.setSpacing(10)
+        self.asrCombo = guiTools.QComboBox()
+        self.asrCombo.setFont(font)
+        self.asrCombo.setAccessibleName("طريقة حساب صلاة العصر")
+        self.asrCombo.addItem("مذهب الجمهور (إذا صار ظل الشيء مثله)", "0")
+        self.asrCombo.addItem("المذهب الحنفي (إذا صار ظل الشيء مثليه، أي ضعف طوله)", "1")
+        current_asr_method = settings_handler.get("location", "asrCalculationMethod")
+        if not current_asr_method: current_asr_method = "0"
+        asr_index = self.asrCombo.findData(current_asr_method)
+        if asr_index != -1:
+            self.asrCombo.setCurrentIndex(asr_index)
+        self.asrCombo.currentIndexChanged.connect(self.adjust_asr_combo_width)
+        self.adjust_asr_combo_width()
+        self.asrLabel = qt.QLabel("طريقة حساب صلاة العصر:")
+        asr_layout.addWidget(self.asrCombo)
+        asr_layout.addWidget(self.asrLabel)
+        asr_layout.addStretch()
         method_layout.addWidget(self.methodLabel)
+        method_layout.addWidget(self.methodDescLabel)
         method_layout.addWidget(self.methodCombo)
+        method_layout.addLayout(asr_layout)
         layout.addLayout(method_layout)
         layout.addSpacing(12)
         def copy_and_beep(link):
@@ -123,10 +145,24 @@ class LocationSettings(qt.QWidget):
         self.dl_app1.setVisible(p.cbts(settings_handler.get("location","autoDetect"))==False)
         layout.addWidget(self.dl_app1)
         layout.addSpacing(12)
-        self.info=guiTools.QNavigableLabel("تنبيه هام، عند تحديد الموقع الجغرافي يجب إعادة تحميل مواقيت الصلاة")
+        self.info=guiTools.QNavigableLabel("تنبيه هام: عند تحديد الموقع الجغرافي أو تغيير المذهب يجب إعادة تحميل مواقيت الصلاة في تبويبة مواقيت الصلاة والتاريخ")
         self.info.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)        
         layout.addWidget(self.info)
         layout.addStretch(1)
+
+    def adjust_asr_combo_width(self):
+        text = self.asrCombo.currentText()
+        if not text:
+            return
+        fm = self.asrCombo.fontMetrics()
+        width = fm.horizontalAdvance(text) + 50
+        self.asrCombo.setFixedWidth(width)
+        max_popup_w = max([fm.horizontalAdvance(self.asrCombo.itemText(i)) for i in range(self.asrCombo.count())], default=width) + 50
+        self.asrCombo.view().setMinimumWidth(max_popup_w)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.adjust_asr_combo_width()
 
     def onStateChanged(self,state):
         self.LT1.setVisible(state==False)

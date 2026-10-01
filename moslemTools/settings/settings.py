@@ -536,6 +536,7 @@ class settings(qt.QDialog):
         settings_handler.set("location","LT1",str(self.locationSettings.LT1.value()))
         settings_handler.set("location","LT2",str(self.locationSettings.LT2.value()))
         settings_handler.set("location", "calculationMethod", str(self.locationSettings.methodCombo.currentData()))
+        settings_handler.set("location", "asrCalculationMethod", str(self.locationSettings.asrCombo.currentData()))
         settings_handler.set("prayerTimes","remindBeforeAdaan",str(self.prayerTimesSettings.before.currentIndex()))
         settings_handler.set("prayerTimes", "remindAfterAdaan", str(self.prayerTimesSettings.iqamaTime.currentIndex()))
         settings_handler.set("prayerTimes", "iqamaVolume", str(self.prayerTimesSettings.iqamaVolumeSlider.value()))

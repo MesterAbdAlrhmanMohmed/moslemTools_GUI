@@ -131,7 +131,8 @@ settingsConfig={
         "autoDetect":"True",
         "LT1":"33",
         "LT2":"33",
-        "calculationMethod":"5"
+        "calculationMethod":"5",
+        "asrCalculationMethod":"0"
     },
     "update":{
         "autoCheck":"True",
