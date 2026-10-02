@@ -25,6 +25,7 @@ class NotesDialog(qt.QDialog):
         layout = qt.QVBoxLayout(self)
         h_layout = qt.QHBoxLayout()
         self.sectian = guiTools.listBook()
+        self.sectian.setIconSize(qt2.QSize(22, 22))
         self.sectian.setSpacing(3)
         self.sectian.setFocus()
         font = qt1.QFont()
@@ -62,7 +63,8 @@ class NotesDialog(qt.QDialog):
             notes_list.setFont(font)
             tab_layout.addWidget(search_bar)
             tab_layout.addWidget(notes_list)
-            self.sectian.add(category, tab)
+            category_icon = guiTools.theme.get_tab_icon(category)
+            self.sectian.add(category, tab, category_icon)
             self.tabs.append(tab)
             self.notes_lists.append(notes_list)
             notes_list.setContextMenuPolicy(qt2.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -82,7 +84,22 @@ class NotesDialog(qt.QDialog):
         for btn in [self.dl_all_current, self.dl_all_all]:
             btn.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Minimum)
             btn.setMinimumHeight(40)
-            btn.setStyleSheet("background-color: #5C0000; color: white; padding: 6px 8px; font-weight: bold;")
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #c42b1c;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 6px 8px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #b1272c;
+                }
+                QPushButton:pressed {
+                    background-color: #8e1f24;
+                }
+            """)
         buttons_layout = qt.QHBoxLayout()
         buttons_layout.setSpacing(6)
         buttons_layout.addWidget(self.dl_all_current)

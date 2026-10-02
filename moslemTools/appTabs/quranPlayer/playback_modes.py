@@ -200,6 +200,10 @@ class PlayerPlaybackModesMixin:
         if selected_reciter_item and selected_reciter_item.text() != "لا يوجد قراء في قائمة المفضلة" and selected_reciter_item.text() in self.reciters_data:
             self.merge_all_from_start_button.setVisible(True)
             self.merge_all_from_end_button.setVisible(True)
+            if hasattr(self, 'merge_menu_btn'):
+                self.merge_menu_btn.setEnabled(True)
+            if hasattr(self, 'download_menu_btn'):
+                self.download_menu_btn.setEnabled(True)
             reciter = selected_reciter_item.text()
             for surah, link in self.reciters_data[reciter].items():
                 item = qt.QListWidgetItem(surah)
@@ -210,6 +214,10 @@ class PlayerPlaybackModesMixin:
         else:
             self.merge_all_from_start_button.setVisible(False)
             self.merge_all_from_end_button.setVisible(False)
+            if hasattr(self, 'merge_menu_btn'):
+                self.merge_menu_btn.setEnabled(False)
+            if hasattr(self, 'download_menu_btn'):
+                self.download_menu_btn.setEnabled(False)
 
     def onChangeStartingPosition(self):
         if self.mp.duration() == 0:

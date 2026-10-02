@@ -22,17 +22,21 @@ class book_marcks(qt.QDialog):
         self.dl.setShortcut("delete")
         self.dl.setAccessibleDescription("delete")
         self.dl.setStyleSheet("""
-    QPushButton {
-        background-color: #8B0000;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 5px;
-    }
-    QPushButton:hover {
-        background-color: #A52A2A;
-    }
-""")
+            QPushButton {
+                background-color: #c42b1c;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #b1272c;
+            }
+            QPushButton:pressed {
+                background-color: #8e1f24;
+            }
+        """)
         self.dl.clicked.connect(self.onRemove)
         layout=qt.QVBoxLayout(self)
         self.search_bar=qt.QLineEdit()

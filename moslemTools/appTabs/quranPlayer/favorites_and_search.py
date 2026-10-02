@@ -100,6 +100,8 @@ class PlayerFavoritesAndSearchMixin:
         return False
 
     def update_button_style(self, button, checked):
+        if not hasattr(button, 'setStyleSheet'):
+            return
         if checked:
             button.setStyleSheet("""
                 QPushButton {

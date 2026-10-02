@@ -494,12 +494,14 @@ class PlayerBatchAndMergeMixin:
             self.view_favorites_btn,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
+            getattr(self, 'download_menu_btn', None), getattr(self, 'merge_menu_btn', None), getattr(self, 'playback_options_btn', None),
             self.Slider, self.openBookmarks, self.User_guide,
             self.merge_action_button, self.merge_all_from_start_button,
             self.merge_all_from_end_button
         ]
         for widget in widgets_to_toggle:
-            widget.setEnabled(enabled)
+            if widget is not None:
+                widget.setEnabled(enabled)
         if not enabled:
             self.batch_download_action_button.setEnabled(True)
 
@@ -510,6 +512,7 @@ class PlayerBatchAndMergeMixin:
             self.view_favorites_btn,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
+            getattr(self, 'download_menu_btn', None), getattr(self, 'merge_menu_btn', None), getattr(self, 'playback_options_btn', None),
             self.Slider, self.openBookmarks, self.User_guide,
             self.merge_all_from_start_button, self.merge_all_from_end_button,
             self.recitersLabel, self.surahsLabel,
@@ -518,7 +521,8 @@ class PlayerBatchAndMergeMixin:
             self.batch_download_action_button
         ]
         for widget in widgets_to_toggle:
-            widget.setEnabled(enabled)
+            if widget is not None:
+                widget.setEnabled(enabled)
         if not enabled:
             self.merge_action_button.setEnabled(True)
 
@@ -529,6 +533,7 @@ class PlayerBatchAndMergeMixin:
             self.view_favorites_btn,
             self.dl_all, self.dl_all_app, self.delete,
             self.play_all_to_end, self.play_all_to_start, self.repeat_surah_button,
+            getattr(self, 'download_menu_btn', None), getattr(self, 'merge_menu_btn', None), getattr(self, 'playback_options_btn', None),
             self.Slider, self.openBookmarks, self.User_guide,
             self.merge_all_from_start_button, self.merge_all_from_end_button,
             self.recitersLabel, self.surahsLabel,
@@ -537,7 +542,8 @@ class PlayerBatchAndMergeMixin:
             self.batch_download_action_button
         ]
         for widget in widgets_to_toggle:
-            widget.setEnabled(enabled)
+            if widget is not None:
+                widget.setEnabled(enabled)
         self.progressBar.setVisible(not enabled)
         self.progress_text_label.setVisible(not enabled)
         self.cancel_download_button.setVisible(False)

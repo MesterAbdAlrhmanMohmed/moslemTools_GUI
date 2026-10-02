@@ -10,9 +10,11 @@ ICONS_SETTINGS_DIR = os.path.join(BASE_DIR, "data", "icons", "settings")
 TAB_ICONS_MAP = {
     "مواقيت الصلاة والتاريخ": "prayer_times.png",
     "القرآن الكريم مكتوب": "quran_read.png",
+    "القرآن الكريم": "quran_read.png",
     "القرآن الكريم صوتي": "quran_listen.png",
     "متابع الختمة القرآنية": "khatmah.png",
     "الأحاديث النبوية والقدسية": "hadith.png",
+    "الأحاديث": "hadith.png",
     "الباحث في القرآن والأحاديث": "search.png",
     "اسأل الذكاء الاصطناعي": "ai_chat.png",
     "لعبة الأسئلة الإسلامية": "questions_game.png",
@@ -24,6 +26,7 @@ TAB_ICONS_MAP = {
     "أسماء الله الحُسْنى": "names_of_allah.png",
     "القصص الإسلامية": "prophet_stories.png",
     "مواضيع إسلامية مختلفة": "islamic_topics.png",
+    "المواضيع الإسلامية المختلفة": "islamic_topics.png",
     "محول التاريخ": "date_converter.png",
     "المزيد من الخيارات": "more_options.png"
 }

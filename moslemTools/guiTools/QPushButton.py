@@ -10,6 +10,9 @@ class QPushButton(qt.QPushButton):
             qt2.Qt.Key.Key_Enter,
         }:
             if self.isEnabled():
+                if self.menu():
+                    self.showMenu()
+                    return
                 if self.isCheckable():
                     self.toggle()          # يغير الحالة On/Off
                 self.clicked.emit()        # يبعث الإشارة عادي

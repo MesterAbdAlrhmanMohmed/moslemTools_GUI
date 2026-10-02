@@ -271,13 +271,23 @@ class settings(qt.QDialog):
         self.cancel.clicked.connect(self.fcancel)
         self.cancel.setStyleSheet("""
             QPushButton {
+                background-color: #4a5568;
+                color: #ffffff;
                 padding: 10px 22px;
                 font-weight: bold;
+                border: 1px solid #5a6578;
                 border-radius: 6px;
                 font-size: 14px;
             }
+            QPushButton:hover {
+                background-color: #5a6578;
+                border-color: #6a768c;
+            }
+            QPushButton:pressed {
+                background-color: #3b4453;
+            }
             QPushButton:focus {
-                border: 1px solid #777777;
+                border: 1px solid #a0aec0;
             }
         """)
         self.ok.setAutoDefault(False)
@@ -328,13 +338,23 @@ class settings(qt.QDialog):
         else:
             self.split_btn.setStyleSheet("""
                 QPushButton {
+                    background-color: #173860;
+                    color: #ffffff;
                     padding: 10px 22px;
                     font-weight: bold;
+                    border: 1px solid #234c7a;
                     border-radius: 6px;
                     font-size: 14px;
                 }
+                QPushButton:hover {
+                    background-color: #204875;
+                    border-color: #2a5a8f;
+                }
+                QPushButton:pressed {
+                    background-color: #102642;
+                }
                 QPushButton:focus {
-                    border: 1px solid #777777;
+                    border: 1px solid #3b82f6;
                 }
             """)
 
