@@ -14,8 +14,6 @@ class QuranRecitersSettings(qt.QWidget):
         self.layout.setContentsMargins(15, 15, 15, 15)
         self.setStyleSheet("""
             QComboBox, QLineEdit {
-                color: #e0e0e0;
-                border: 1px solid #555;
                 padding: 4px 8px;
                 font-size: 13px;
             }

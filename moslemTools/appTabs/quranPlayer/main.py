@@ -83,6 +83,27 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.download_thread = None
         self.is_loaded = False
         self.reciters_data = {}
+        self.setStyleSheet("""
+            QPushButton {
+                background-color: #0056b3;
+                color: #ffffff;
+                border: none;
+                border-radius: 6px;
+                padding: 7px 14px;
+                font-weight: bold;
+                min-height: 24px;
+            }
+            QPushButton:hover {
+                background-color: #004085;
+            }
+            QPushButton:pressed {
+                background-color: #002752;
+            }
+            QPushButton:disabled {
+                background-color: #4a5568;
+                color: #a0aec0;
+            }
+        """)
         self.recitersLabel = qt.QLabel("اختيار قارئ")
         self.recitersLabel.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.reciterSearchEdit = qt.QLineEdit()
@@ -123,13 +144,13 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.pause_download_button.setAccessibleDescription("control plus p")
         self.pause_download_button.setVisible(False)
         self.pause_download_button.clicked.connect(self.toggle_download_pause)
-        self.pause_download_button.setStyleSheet("QPushButton {background-color: #0000AA;color: white;border: none;padding: 5px 10px;border-radius: 5px;}QPushButton:hover {background-color: #0000CC;}")
+        self.pause_download_button.setStyleSheet("QPushButton {background-color: #0056b3;color: white;border: none;padding: 6px 12px;border-radius: 6px;}QPushButton:hover {background-color: #004085;}")
         self.cancel_download_button = guiTools.QPushButton("إلغاء التنزيل")
         self.cancel_download_button.setShortcut("ctrl+c")
         self.cancel_download_button.setAccessibleDescription("control plus c")
         self.cancel_download_button.setVisible(False)
         self.cancel_download_button.clicked.connect(self.cancel_current_download)
-        self.cancel_download_button.setStyleSheet("QPushButton {background-color: #8B0000;color: white;border: none;padding: 5px 10px;border-radius: 5px;}QPushButton:hover {background-color: #A52A2A;}")
+        self.cancel_download_button.setStyleSheet("QPushButton {background-color: #c42b1c;color: white;border: none;padding: 6px 12px;border-radius: 6px;}QPushButton:hover {background-color: #b1272c;}")
         self.mp = QMediaPlayer()
         self.apply_speed()
         self.au = QAudioOutput()
@@ -154,22 +175,25 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.play_all_to_end.setAccessibleDescription("control plus A")
         self.play_all_to_end.setCheckable(True)
         self.play_all_to_end.setShortcut("ctrl+a")
+        self.update_button_style(self.play_all_to_end, False)
         self.play_all_to_end.toggled.connect(lambda checked: self.update_button_style(self.play_all_to_end, checked))
         self.play_all_to_end.toggled.connect(self.handle_play_all_toggled)
         self.play_all_to_start = guiTools.QPushButton("تشغيل كل السور من السورة المحددة إلى البداية")
         self.play_all_to_start.setAccessibleDescription("control plus shift plus A")
         self.play_all_to_start.setCheckable(True)
         self.play_all_to_start.setShortcut("ctrl+shift+a")
+        self.update_button_style(self.play_all_to_start, False)
         self.play_all_to_start.toggled.connect(lambda checked: self.update_button_style(self.play_all_to_start, checked))
         self.play_all_to_start.toggled.connect(self.handle_play_all_start_toggled)
         self.repeat_surah_button = guiTools.QPushButton("تكرار تشغيل السورة المحددة")
         self.repeat_surah_button.setAccessibleDescription("control plus R")
         self.repeat_surah_button.setCheckable(True)
         self.repeat_surah_button.setShortcut("ctrl+r")
+        self.update_button_style(self.repeat_surah_button, False)
         self.repeat_surah_button.toggled.connect(lambda checked: self.update_button_style(self.repeat_surah_button, checked))
         self.repeat_surah_button.toggled.connect(self.handle_repeat_toggled)
         self.Slider = qt.QSlider(qt2.Qt.Orientation.Horizontal)
-        self.Slider.setStyleSheet("QSlider{min-height:30px; margin: 5px 0;} QSlider::groove:horizontal{height:10px;background:#000000;border-radius:5px;} QSlider::sub-page:horizontal{background:#0066CC;border-radius:5px;} QSlider::add-page:horizontal{background:#000000;border-radius:5px;} QSlider::handle:horizontal{background:#FFFFFF;width:24px;height:24px;margin:-7px 0;border-radius:12px;}")
+        self.Slider.setStyleSheet("QSlider{min-height:30px; margin: 5px 0;} QSlider::groove:horizontal{height:8px;background:#2a2a2a;border-radius:4px;} QSlider::sub-page:horizontal{background:#0056b3;border-radius:4px;} QSlider::add-page:horizontal{background:#2a2a2a;border-radius:4px;} QSlider::handle:horizontal{background:#FFFFFF;width:20px;height:20px;margin:-6px 0;border-radius:10px;}")
         self.Slider.setAccessibleName("التحكم في تقدم السورة")
         self.Slider.setRange(0, 100)
         self.Slider.setTracking(True)
@@ -189,7 +213,7 @@ class QuranPlayer(PlayerContextMenuMixin, PlayerFavoritesAndSearchMixin, PlayerD
         self.dl_all = guiTools.QPushButton("تحميل جميع السور المتاحة لهذا القارئ في الجهاز")
         self.dl_all.clicked.connect(self.download_all_soar)
         self.delete = guiTools.QPushButton("حذف كل السور للقارئ الحالي من التطبيق")
-        self.delete.setStyleSheet("background-color: #8B0000; color: white;")
+        self.delete.setStyleSheet("background-color: #c42b1c; color: white; border-radius: 6px; padding: 6px 12px;")
         self.delete.setVisible(False)
         self.delete.clicked.connect(lambda: self.delete_surah())
         self.info_menu = guiTools.QNavigableLabel("لخيارات السورة، نستخدم مفتاح التطبيقات أو click الأيمن")

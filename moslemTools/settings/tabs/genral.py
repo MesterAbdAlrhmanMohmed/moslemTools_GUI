@@ -12,13 +12,7 @@ startUpPath = os.path.join(os.getenv('appdata'), "Microsoft", "Windows", "Start 
 class Genral(qt.QWidget):
     def __init__(self, p):
         super().__init__()
-        self.setStyleSheet("""
-            QComboBox, QCheckBox {
-                color: #e0e0e0;
-                border: 1px solid #555;
-                padding: 4px;
-            }
-        """)
+
         main_layout = qt.QVBoxLayout(self)
         self.ExitDialog = qt.QCheckBox("عرض نافذة خيارات تشغيل البرنامج عند إغلاق البرنامج")
         self.ExitDialog.setChecked(p.cbts(settings_handler.get("g", "exitDialog")))
@@ -118,14 +112,15 @@ class Genral(qt.QWidget):
             self.themeButton.setText("تفعيل الوضع الداكن")
             self.themeButton.setStyleSheet("""
                 QPushButton {
-                    background-color: #1e1e1e;
+                    background-color: #252525;
                     color: #ffffff;
                     font-weight: bold;
+                    border: 1px solid #383838;
                     border-radius: 6px;
                     padding: 10px;
                 }
                 QPushButton:hover {
-                    background-color: #333333;
+                    background-color: #323232;
                 }
             """)
         else:

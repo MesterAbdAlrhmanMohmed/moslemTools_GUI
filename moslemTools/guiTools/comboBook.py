@@ -13,9 +13,12 @@ class ComboBook(QComboBox):
         qt1.QShortcut("ctrl+tab",self).activated.connect(self.Nexttab)
         qt1.QShortcut("ctrl+shift+tab",self).activated.connect(self.previousTab)
 
-    def add(self,text,tabWidget):
+    def add(self, text, tabWidget, icon=None):
         self.w.addWidget(tabWidget)
-        self.addItem(text)
+        if icon is not None and not icon.isNull():
+            self.addItem(icon, text)
+        else:
+            self.addItem(text)
 
     def changeI(self,index):
         self.w.setCurrentIndex(index)

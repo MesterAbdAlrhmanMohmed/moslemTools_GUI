@@ -13,18 +13,6 @@ class SectionContainer(qt.QWidget):
     def __init__(self, title, tabs_list, parent=None):
         super().__init__(parent)
         self.tabs_list = tabs_list
-        self.setStyleSheet("""
-            QLabel {
-                font-weight: bold;
-            }
-            QComboBox {
-                border: 1px solid #5c5c5c;
-                border-radius: 4px;
-                padding: 6px;
-                font-weight: bold;
-                min-height: 36px;
-            }
-        """)
         layout = qt.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         self.header_layout = qt.QHBoxLayout()
@@ -32,10 +20,15 @@ class SectionContainer(qt.QWidget):
         self.header_layout.setSpacing(10)
         self.label = qt.QLabel("اختر الإعداد:")
         self.combo = guiTools.QComboBox()
+        self.combo.setIconSize(qt2.QSize(20, 20))
         self.combo.setAccessibleName("اختر الإعداد")
         self.label.setBuddy(self.combo)
         for name, _ in self.tabs_list:
-            self.combo.addItem(name)
+            item_icon = guiTools.theme.get_settings_item_icon(name)
+            if item_icon and not item_icon.isNull():
+                self.combo.addItem(item_icon, name)
+            else:
+                self.combo.addItem(name)
         self.header_layout.addStretch()
         self.header_layout.addWidget(self.combo)
         self.header_layout.addWidget(self.label)
@@ -53,8 +46,8 @@ class SectionContainer(qt.QWidget):
         if not text:
             return
         fm = self.combo.fontMetrics()
-        width = fm.horizontalAdvance(text) + 65
-        self.combo.setFixedWidth(max(width, 160))
+        width = fm.horizontalAdvance(text) + 95
+        self.combo.setFixedWidth(max(width, 180))
 
     def on_combo_change(self, index):
         self.adjust_combo_width()
@@ -90,13 +83,13 @@ class settings(qt.QDialog):
         layout = qt.QVBoxLayout()
         h_layout = qt.QHBoxLayout()
         self.sectian = guiTools.listBook()
+        self.sectian.setIconSize(qt2.QSize(24, 24))
         self.sectian.setFocus()
         font = qt1.QFont()
         font.setBold(True)
-        self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر قسم")
         self.sectian.setFont(font)
-        self.sectian.setMinimumWidth(360)
+        self.sectian.setMinimumWidth(380)
         h_layout.addWidget(self.sectian)
         self.scroll_area = qt.QScrollArea()
         self.scroll_area.setFocusPolicy(qt2.Qt.FocusPolicy.NoFocus)
@@ -236,28 +229,65 @@ class settings(qt.QDialog):
         self.ok.clicked.connect(self.fok)
         self.ok.setStyleSheet("""
             QPushButton {
-                background-color: #008000;
-                color: white;
-                padding: 12px;
+                background-color: #107c41;
+                color: #ffffff;
+                padding: 10px 22px;
                 font-weight: bold;
-                border-radius: 4px;
+                border: 1px solid #0f703b;
+                border-radius: 6px;
                 font-size: 14px;
             }
             QPushButton:hover {
-                background-color: #006600;
+                background-color: #0f703b;
+                border-color: #0d5c31;
             }
             QPushButton:pressed {
-                background-color: #006600;
+                background-color: #0c582f;
             }
         """)
         self.defolt = guiTools.QPushButton("استعادة الإعدادات الافتراضية")
         self.defolt.clicked.connect(self.default)
-        self.defolt.setStyleSheet("background-color: #8B0000; color: #e0e0e0; padding: 12px; font-weight: bold;")
+        self.defolt.setStyleSheet("""
+            QPushButton {
+                background-color: #c42b1c;
+                color: #ffffff;
+                padding: 10px 22px;
+                font-weight: bold;
+                border: 1px solid #b1272c;
+                border-radius: 6px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #b1272c;
+                border-color: #8e1f24;
+            }
+            QPushButton:pressed {
+                background-color: #8e1f24;
+            }
+        """)
         self.split_btn = guiTools.QPushButton("تصنيف الإعدادات")
         self.split_btn.setCheckable(True)
         self.cancel = guiTools.QPushButton("إلغاء")
         self.cancel.clicked.connect(self.fcancel)
-        self.cancel.setStyleSheet("background-color: #333333; color: #e0e0e0; padding: 12px; font-weight: bold;")
+        self.cancel.setStyleSheet("""
+            QPushButton {
+                padding: 10px 22px;
+                font-weight: bold;
+                border-radius: 6px;
+                font-size: 14px;
+            }
+            QPushButton:focus {
+                border: 1px solid #777777;
+            }
+        """)
+        self.ok.setAutoDefault(False)
+        self.ok.setDefault(False)
+        self.defolt.setAutoDefault(False)
+        self.defolt.setDefault(False)
+        self.split_btn.setAutoDefault(False)
+        self.split_btn.setDefault(False)
+        self.cancel.setAutoDefault(False)
+        self.cancel.setDefault(False)
         buttonsLayout.addWidget(self.ok)
         buttonsLayout.addWidget(self.defolt)
         buttonsLayout.addWidget(self.split_btn)
@@ -277,9 +307,36 @@ class settings(qt.QDialog):
 
     def update_split_btn_style(self, checked):
         if checked:
-            self.split_btn.setStyleSheet("QPushButton { background-color: #0056b3; color: white; padding: 12px; font-weight: bold; border-radius: 4px; } QPushButton:hover { background-color: #003d80; } QPushButton:pressed { background-color: #003d80; }")
+            self.split_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #0056b3;
+                    color: #ffffff;
+                    padding: 10px 22px;
+                    font-weight: bold;
+                    border: 1px solid #004494;
+                    border-radius: 6px;
+                    font-size: 14px;
+                }
+                QPushButton:hover {
+                    background-color: #004085;
+                    border-color: #004085;
+                }
+                QPushButton:pressed {
+                    background-color: #002752;
+                }
+            """)
         else:
-            self.split_btn.setStyleSheet("QPushButton { background-color: #0000AA; color: #e0e0e0; padding: 12px; font-weight: bold; border-radius: 4px; } QPushButton:hover { background-color: #0000CC; } QPushButton:pressed { background-color: #000088; }")
+            self.split_btn.setStyleSheet("""
+                QPushButton {
+                    padding: 10px 22px;
+                    font-weight: bold;
+                    border-radius: 6px;
+                    font-size: 14px;
+                }
+                QPushButton:focus {
+                    border: 1px solid #777777;
+                }
+            """)
 
     def get_current_active_tab(self):
         if self.is_currently_split:
@@ -324,7 +381,8 @@ class settings(qt.QDialog):
             for sec_idx, (title, container, tabs_list) in enumerate(self.section_containers):
                 for sub_name, widget in tabs_list:
                     container.sub_stack.addWidget(widget)
-                self.sectian.add(title, container)
+                sec_icon = guiTools.theme.get_settings_section_icon(title)
+                self.sectian.add(title, container, sec_icon)
                 sub_sel = 0
                 if not found and active_widget is not None:
                     for sub_idx, (_, widget) in enumerate(tabs_list):
@@ -349,7 +407,8 @@ class settings(qt.QDialog):
         else:
             target_row = 0
             for i, (title, widget) in enumerate(self.flat_tabs):
-                self.sectian.add(title, widget)
+                item_icon = guiTools.theme.get_settings_item_icon(title)
+                self.sectian.add(title, widget, item_icon)
                 if active_widget is not None and widget == active_widget:
                     target_row = i
             self.sectian.setCurrentRow(target_row)

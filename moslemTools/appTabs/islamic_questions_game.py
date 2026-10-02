@@ -232,12 +232,12 @@ class IslamicQuestionsGame(qt.QWidget):
                     border-radius: 6px;
                 }
                 QListWidget::item:selected {
-                    background-color: #0066CC;
+                    background-color: #0056b3;
                     color: white;
                     border-radius: 6px;
                 }
                 QListWidget::item:focus {
-                    background-color: #0066CC;
+                    background-color: #0056b3;
                     color: white;
                     border-radius: 6px;
                 }

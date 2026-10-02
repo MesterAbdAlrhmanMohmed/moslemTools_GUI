@@ -29,10 +29,10 @@ class LimitInputDialog(qt.QDialog):
         self.OKBTN = guiTools.QPushButton("موافق")
         self.OKBTN.setDisabled(True)
         self.OKBTN.clicked.connect(self.accept)
-        self.OKBTN.setStyleSheet("QPushButton {background-color: black; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
+        self.OKBTN.setStyleSheet("QPushButton {background-color: #6c757d; color: #d3d3d3; border-radius: 6px; padding: 8px 20px; font-size: 14px;}")
         self.cancelBTN = guiTools.QPushButton("إلغاء")
         self.cancelBTN.clicked.connect(self.reject)
-        self.cancelBTN.setStyleSheet("QPushButton {background-color: #8B0000; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
+        self.cancelBTN.setStyleSheet("QPushButton {background-color: #c42b1c; color: white; border-radius: 6px; padding: 8px 20px; font-size: 14px;} QPushButton:hover {background-color: #b1272c;}")
         buttonsLayout = qt.QHBoxLayout()
         buttonsLayout.addWidget(self.OKBTN)
         buttonsLayout.addWidget(self.cancelBTN)
@@ -49,9 +49,9 @@ class LimitInputDialog(qt.QDialog):
         is_valid = name_valid and value_valid
         self.OKBTN.setDisabled(not is_valid)
         if is_valid:
-            self.OKBTN.setStyleSheet("QPushButton {background-color: #008000; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
+            self.OKBTN.setStyleSheet("QPushButton {background-color: #107c41; color: white; border-radius: 6px; padding: 8px 20px; font-size: 14px;} QPushButton:hover {background-color: #0f703b;}")
         else:
-            self.OKBTN.setStyleSheet("QPushButton {background-color: black; color: white; border-radius: 4px; padding: 8px 20px; font-size: 14px;}")
+            self.OKBTN.setStyleSheet("QPushButton {background-color: #6c757d; color: #d3d3d3; border-radius: 6px; padding: 8px 20px; font-size: 14px;}")
 
     def closeEvent(self, event):
         self.reject()

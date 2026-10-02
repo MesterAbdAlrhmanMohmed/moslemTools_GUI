@@ -5,6 +5,7 @@ import PyQt6.QtCore as qc
 class QComboBox(qt.QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setView(qt.QListView(self))
         try:
             self.view().installEventFilter(self)
         except Exception:

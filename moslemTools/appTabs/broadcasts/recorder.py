@@ -261,7 +261,7 @@ class SchedulingDialog(qt.QDialog):
         
         self.start_label = qt.QLabel("█ وقت بدء التسجيل █")
         self.start_label.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
-        self.start_label.setStyleSheet("font-weight: bold; color: #0078d7;")
+        self.start_label.setStyleSheet("font-weight: bold; color: #0056b3;")
         start_v_layout.addWidget(self.start_label)
         
         self.start_h_label = qt.QLabel("بدء التسجيل بعد: بالساعات")

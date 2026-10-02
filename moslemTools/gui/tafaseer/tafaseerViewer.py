@@ -57,7 +57,7 @@ class TafaseerViewer(qt.QDialog):
         bottomLayout = qt.QHBoxLayout()
         bottomLayout.addSpacing(15)
         self.changeTafaseer = qt.QPushButton("تغيير التفسير")
-        self.changeTafaseer.setStyleSheet("background-color: #0000AA; color: white; padding: 8px 18px; font-weight: bold; border-radius: 6px; min-width: 130px; min-height: 38px;")
+        self.changeTafaseer.setStyleSheet("background-color: #0056b3; color: white; padding: 8px 18px; font-weight: bold; border-radius: 6px; min-width: 130px; min-height: 38px;")
         self.changeTafaseer.setAccessibleDescription("control plus g")
         self.changeTafaseer.clicked.connect(self.on_change_tafaseer)
         bottomLayout.addWidget(self.changeTafaseer, 0, qt2.Qt.AlignmentFlag.AlignCenter)

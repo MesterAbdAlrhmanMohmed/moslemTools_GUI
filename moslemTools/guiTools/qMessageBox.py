@@ -26,11 +26,18 @@ class MessageBox(qt.QDialog):
         self.OKBTN.clicked.connect(self.accept)
         self.OKBTN.setStyleSheet("""
             QPushButton {
-                background-color: #0000AA;
-                color: #e0e0e0;
-                border-radius: 4px;
+                background-color: #0056b3;
+                color: #ffffff;
+                border-radius: 6px;
                 padding: 8px 20px;
                 font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #004085;
+            }
+            QPushButton:pressed {
+                background-color: #002752;
             }
         """)
         self.OKBTN.setSizePolicy(qt.QSizePolicy.Policy.Minimum, qt.QSizePolicy.Policy.Fixed)

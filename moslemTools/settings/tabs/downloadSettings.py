@@ -7,7 +7,6 @@ import PyQt6.QtCore as qt2
 class Download(qt.QDialog):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet("QListWidget, QLineEdit {color: #e0e0e0;border: 1px solid #555;padding: 4px;}")
         layout = qt.QVBoxLayout(self)
         self.types = guiTools.QListWidget()
         font = qt1.QFont()

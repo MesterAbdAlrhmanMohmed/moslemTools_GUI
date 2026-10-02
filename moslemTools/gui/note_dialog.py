@@ -54,7 +54,7 @@ class NoteDialog(qt.QDialog):
             self.edit_button = qt.QPushButton("تعديل الملاحظة")
             self.edit_button.setStyleSheet("""
                 QPushButton {
-                    background-color: #0000AA;
+                    background-color: #0056b3;
                     color: white;
                     border-radius: 4px;
                     padding: 6px 18px;

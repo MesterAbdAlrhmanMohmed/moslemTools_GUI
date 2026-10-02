@@ -145,7 +145,7 @@ class IslamicBooks(qt.QWidget):
         self.search_bar.textChanged.connect(self.onsearch)
         self.search_bar.setAlignment(qt2.Qt.AlignmentFlag.AlignCenter)
         self.fav_btn = guiTools.QPushButton("فتح قائمة المفضلة")
-        self.fav_btn.setStyleSheet("background-color: #0000AA; color: white; min-height: 50px; padding: 0 20px; font-weight: bold;")
+        self.fav_btn.setStyleSheet("background-color: #0056b3; color: white; min-height: 50px; padding: 0 20px; font-weight: bold;")
         self.fav_btn.clicked.connect(self.toggle_favorites)
 
         self.cat_btn = guiTools.QPushButton("إضافة فئة")
@@ -175,9 +175,9 @@ class IslamicBooks(qt.QWidget):
         self.category_tabs.setElideMode(qt2.Qt.TextElideMode.ElideNone)
         self.category_tabs.setExpanding(False)
         if settings_handler.get("g", "theme") == "light":
-            self.category_tabs.setStyleSheet("""QTabBar::tab { background: #e0e0e0; color: #1e1e1e; padding: 10px 20px; border: 1px solid #ccc; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; font-weight: bold; } QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } QTabBar::tab:hover { background: #d0d0d0; }""")
+            self.category_tabs.setStyleSheet("""QTabBar::tab { background: #e0e0e0; color: #1e1e1e; padding: 10px 20px; border: 1px solid #ccc; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; font-weight: bold; } QTabBar::tab:selected { background: #0056b3; color: white; border: 1px solid #0056b3; } QTabBar::tab:hover { background: #d0d0d0; }""")
         else:
-            self.category_tabs.setStyleSheet("""QTabBar::tab { background: #2b2b2b; color: white; padding: 10px 20px; border: 1px solid #444; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; font-weight: bold; } QTabBar::tab:selected { background: #0078d7; color: white; border: 1px solid #0078d7; } QTabBar::tab:hover { background: #3a3a3a; }""")
+            self.category_tabs.setStyleSheet("""QTabBar::tab { background: #202020; color: white; padding: 10px 20px; border: 1px solid #2c2c2c; border-top-left-radius: 8px; border-top-right-radius: 8px; margin: 2px; font-weight: bold; } QTabBar::tab:selected { background: #0056b3; color: white; border: 1px solid #0056b3; } QTabBar::tab:hover { background: #2a2a2a; }""")
         self.category_tabs.currentChanged.connect(self.on_tab_changed)
         layout.addWidget(self.category_tabs)
 
@@ -255,12 +255,12 @@ class IslamicBooks(qt.QWidget):
                     border-radius: 6px;
                 }
                 QListWidget::item:selected {
-                    background-color: #0066CC;
+                    background-color: #0056b3;
                     color: white;
                     border-radius: 6px;
                 }
                 QListWidget::item:focus {
-                    background-color: #0066CC;
+                    background-color: #0056b3;
                     color: white;
                     border-radius: 6px;
                 }

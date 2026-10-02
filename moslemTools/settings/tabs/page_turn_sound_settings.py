@@ -23,12 +23,18 @@ class PageTurnSoundSettings(qt.QWidget):
                 font-size: 14px;
             }
             QPushButton {
-                background-color: #0000AA;
-                color: #e0e0e0;
-                border: 1px solid #555;
+                background-color: #0056b3;
+                color: #ffffff;
                 padding: 10px 24px;
-                border-radius: 4px;
+                border-radius: 6px;
                 font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #004085;
+            }
+            QPushButton:pressed {
+                background-color: #002752;
             }
         """)
         self.viewer_checkboxes = {}

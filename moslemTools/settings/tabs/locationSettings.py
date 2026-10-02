@@ -11,16 +11,18 @@ class LocationSettings(qt.QWidget):
     def __init__(self, p):
         super().__init__()
         self.setStyleSheet("""
-            QCheckBox, QLineEdit {
-                color: #e0e0e0;
-                border: 1px solid #555;
-                padding: 4px;
-            }
             QPushButton {
-                background-color: #0000AA;
-                color: #e0e0e0;
-                border: 1px solid #555;
-                padding: 10px;
+                background-color: #0056b3;
+                color: #ffffff;
+                border-radius: 6px;
+                padding: 10px 20px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #004085;
+            }
+            QPushButton:pressed {
+                background-color: #002752;
             }
         """)
         layout = qt.QVBoxLayout(self)

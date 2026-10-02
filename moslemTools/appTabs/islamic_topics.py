@@ -47,9 +47,9 @@ class IslamicTopicsTab(qt.QWidget):
                     font-weight: bold;
                 }
                 QTabBar::tab:selected {
-                    background: #0078d7;
+                    background: #0056b3;
                     color: white;
-                    border: 1px solid #0078d7;
+                    border: 1px solid #0056b3;
                 }
                 QTabBar::tab:hover {
                     background: #d0d0d0;
@@ -58,15 +58,15 @@ class IslamicTopicsTab(qt.QWidget):
         else:
             self.tabs.setStyleSheet("""
                 QTabWidget::pane {
-                    border: 1px solid #444;
+                    border: 1px solid #2c2c2c;
                     border-radius: 6px;
-                    background-color: #1e1e1e;
+                    background-color: #181818;
                 }
                 QTabBar::tab {
-                    background: #2b2b2b;
+                    background: #202020;
                     color: white;
                     padding: 10px 20px;
-                    border: 1px solid #444;
+                    border: 1px solid #2c2c2c;
                     border-top-left-radius: 8px;
                     border-top-right-radius: 8px;
                     margin-right: 2px;
@@ -74,12 +74,12 @@ class IslamicTopicsTab(qt.QWidget):
                     font-weight: bold;
                 }
                 QTabBar::tab:selected {
-                    background: #0078d7;
+                    background: #0056b3;
                     color: white;
-                    border: 1px solid #0078d7;
+                    border: 1px solid #0056b3;
                 }
                 QTabBar::tab:hover {
-                    background: #3a3a3a;
+                    background: #2a2a2a;
                 }
             """)
         self.tabs.addTab(self.create_islamiyat_tab(), "إسلاميات")

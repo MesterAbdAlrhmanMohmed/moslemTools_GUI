@@ -72,13 +72,13 @@ class SourcesDialog(qt.QDialog):
             self.combo.addItem(f"المصدر {i+1}\n{url}", url)
         self.ok = qt.QPushButton("الذهاب")
         self.ok.setDefault(True)
-        self.ok.setStyleSheet("background-color: #008000; color: #e0e0e0; font-weight: bold;")
+        self.ok.setStyleSheet("background-color: #107c41; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 8px 16px;")
         self.ok.clicked.connect(self.go_to_source)
         self.copy_btn = qt.QPushButton("نسخ رابط المصدر")
-        self.copy_btn.setStyleSheet("background-color: #0000AA; color: #e0e0e0; font-weight: bold;")
+        self.copy_btn.setStyleSheet("background-color: #0056b3; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 8px 16px;")
         self.copy_btn.clicked.connect(self.copy_source_link)
         self.cancel = qt.QPushButton("خروج")
-        self.cancel.setStyleSheet("background-color: #AA0000; color: #e0e0e0; font-weight: bold;")
+        self.cancel.setStyleSheet("background-color: #c42b1c; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 8px 16px;")
         self.cancel.clicked.connect(self.reject)
         layout = qt.QVBoxLayout()
         layout.addWidget(label)
@@ -150,8 +150,8 @@ class AskAI(qt.QWidget):
         self.current_urls = []
         self.setStyleSheet("""
             QPushButton#sendButton {
-                background-color: #28a745;
-                color: white;
+                background-color: #107c41;
+                color: #ffffff;
                 border: none;
                 border-radius: 6px;
                 padding: 10px 15px;
@@ -159,18 +159,18 @@ class AskAI(qt.QWidget):
                 font-weight: bold;
             }
             QPushButton#sendButton:hover {
-                background-color: #218838;
+                background-color: #0f703b;
             }
             QPushButton#sendButton:pressed {
-                background-color: #218838;
+                background-color: #0c582f;
             }
             QPushButton#sendButton:disabled {
                 background-color: #6c757d;
                 color: #d3d3d3;
             }
             QPushButton#clearButton {
-                background-color: #dc3545;
-                color: white;
+                background-color: #c42b1c;
+                color: #ffffff;
                 border: none;
                 border-radius: 6px;
                 padding: 10px 15px;
@@ -179,10 +179,10 @@ class AskAI(qt.QWidget):
                 outline: none;
             }
             QPushButton#clearButton:hover {
-                background-color: #c82333;
+                background-color: #b1272c;
             }
             QPushButton#clearButton:pressed {
-                background-color: #bd2130;
+                background-color: #8e1f24;
             }
             QPushButton#clearButton:disabled {
                 background-color: #6c757d;
@@ -190,7 +190,7 @@ class AskAI(qt.QWidget):
             }
             QPushButton#sourcesButton {
                 background-color: #0056b3;
-                color: white;
+                color: #ffffff;
                 border: none;
                 border-radius: 6px;
                 padding: 10px 15px;
@@ -198,17 +198,14 @@ class AskAI(qt.QWidget):
                 font-weight: bold;
             }
             QPushButton#sourcesButton:hover {
-                background-color: #003d80;
+                background-color: #004085;
             }
             QPushButton#sourcesButton:pressed {
-                background-color: #003d80;
+                background-color: #002752;
             }
             QTextEdit#inputBox {
-                color: #e0e0e0;
-                border: 1px solid #555;
-                border-radius: 4px;
-                padding: 5px;
-                background-color: #1E1E1E;
+                border-radius: 6px;
+                padding: 8px;
             }
         """)
         self.init_ui()

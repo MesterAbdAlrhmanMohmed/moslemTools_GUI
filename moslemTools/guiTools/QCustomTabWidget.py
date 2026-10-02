@@ -28,6 +28,34 @@ class QCustomTabBar(qt.QTabBar):
             return
         self.setCurrentIndex(tabs[-1])
 
+    def _go_next(self):
+        tabs = self._navigation_tabs()
+        if not tabs:
+            return
+        current = self.currentIndex()
+        if current not in tabs:
+            self.setCurrentIndex(tabs[0])
+            return
+        idx = tabs.index(current)
+        if idx == len(tabs) - 1:
+            self.setCurrentIndex(tabs[0])
+        else:
+            self.setCurrentIndex(tabs[idx + 1])
+
+    def _go_previous(self):
+        tabs = self._navigation_tabs()
+        if not tabs:
+            return
+        current = self.currentIndex()
+        if current not in tabs:
+            self.setCurrentIndex(tabs[-1])
+            return
+        idx = tabs.index(current)
+        if idx == 0:
+            self.setCurrentIndex(tabs[-1])
+        else:
+            self.setCurrentIndex(tabs[idx - 1])
+
     def _page_size(self):
         tabs = self._navigation_tabs()
         if not tabs:
@@ -76,6 +104,16 @@ class QCustomTabBar(qt.QTabBar):
     def keyPressEvent(self, event: QKeyEvent):
         key = event.key()
 
+        if key == Qt.Key.Key_Right:
+            self._go_next()
+            event.accept()
+            return
+
+        if key == Qt.Key.Key_Left:
+            self._go_previous()
+            event.accept()
+            return
+
         if key == Qt.Key.Key_Home:
             self._go_home()
             event.accept()
@@ -120,6 +158,16 @@ class QCustomTabWidget(qt.QTabWidget):
         if isinstance(tab_bar, QCustomTabBar):
             is_ctrl = bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
             if self.hasFocus() or tab_bar.hasFocus() or is_ctrl:
+                if key == Qt.Key.Key_Right and not is_ctrl:
+                    tab_bar._go_next()
+                    event.accept()
+                    return
+
+                if key == Qt.Key.Key_Left and not is_ctrl:
+                    tab_bar._go_previous()
+                    event.accept()
+                    return
+
                 if key == Qt.Key.Key_Home and not is_ctrl:
                     tab_bar._go_home()
                     event.accept()

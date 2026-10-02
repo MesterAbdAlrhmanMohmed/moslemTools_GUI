@@ -30,10 +30,10 @@ class QInputDialog(qt.QDialog):
         self.OKBTN.clicked.connect(self.accept)
         self.OKBTN.setStyleSheet("""
             QPushButton {
-                background-color: black;
-                color: white;
-                border-radius: 4px;
-                padding: 8px 20px;
+                background-color: #6c757d;
+                color: #d3d3d3;
+                border-radius: 6px;
+                padding: 8px 22px;
                 font-size: 14px;
             }
         """)
@@ -41,11 +41,17 @@ class QInputDialog(qt.QDialog):
         self.cancelBTN.clicked.connect(self.reject)
         self.cancelBTN.setStyleSheet("""
             QPushButton {
-                background-color: #8B0000;
-                color: white;
-                border-radius: 4px;
-                padding: 8px 20px;
+                background-color: #c42b1c;
+                color: #ffffff;
+                border-radius: 6px;
+                padding: 8px 22px;
                 font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #b1272c;
+            }
+            QPushButton:pressed {
+                background-color: #8e1f24;
             }
         """)
         buttonsLayout = qt.QHBoxLayout()
@@ -66,21 +72,27 @@ class QInputDialog(qt.QDialog):
             self.OKBTN.setDisabled(False)
             self.OKBTN.setStyleSheet("""
                 QPushButton {
-                    background-color: #008000;
-                    color: white;
-                    border-radius: 4px;
-                    padding: 8px 20px;
+                    background-color: #107c41;
+                    color: #ffffff;
+                    border-radius: 6px;
+                    padding: 8px 22px;
                     font-size: 14px;
+                }
+                QPushButton:hover {
+                    background-color: #0f703b;
+                }
+                QPushButton:pressed {
+                    background-color: #0c582f;
                 }
             """)
         else:
             self.OKBTN.setDisabled(True)
             self.OKBTN.setStyleSheet("""
                 QPushButton {
-                    background-color: black;
-                    color: white;
-                    border-radius: 4px;
-                    padding: 8px 20px;
+                    background-color: #6c757d;
+                    color: #d3d3d3;
+                    border-radius: 6px;
+                    padding: 8px 22px;
                     font-size: 14px;
                 }
             """)

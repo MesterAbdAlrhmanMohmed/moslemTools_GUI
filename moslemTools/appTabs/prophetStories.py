@@ -32,7 +32,7 @@ class ProphetStories(qt.QWidget):
         cat_v_layout.addWidget(self.selectCategory, alignment=qt2.Qt.AlignmentFlag.AlignCenter)
 
         self.fav_btn = guiTools.QPushButton("فتح قائمة المفضلة")
-        self.fav_btn.setStyleSheet("background-color: #0000AA; color: white; min-height: 50px; padding: 0 20px; font-weight: bold;")
+        self.fav_btn.setStyleSheet("background-color: #0056b3; color: white; min-height: 50px; padding: 0 20px; font-weight: bold;")
         self.fav_btn.clicked.connect(self.toggle_favorites)
 
         view_mode_v_layout = qt.QVBoxLayout()

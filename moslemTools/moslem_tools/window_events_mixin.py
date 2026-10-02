@@ -176,7 +176,7 @@ class WindowEventsMixin:
         fm = qt1.QFontMetrics(self.list_widget.font())
         current_text = self.list_widget.currentText()
         text_width = fm.horizontalAdvance(current_text) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(current_text).width()
-        self.list_widget.setFixedWidth(text_width + 65)
+        self.list_widget.setFixedWidth(text_width + 95)
 
     def open_error_log_file(self):
         log_path = os.path.join(os.getenv('appdata'), settings_handler.appName, "error.log")

@@ -151,7 +151,7 @@ class DownloadMotonReciters(qt.QDialog):
                 font-weight: bold;
             }
             QProgressBar::chunk {
-                background-color: #0078d7;
+                background-color: #0056b3;
                 border-radius: 4px;
             }
             QSpinBox {
@@ -245,7 +245,7 @@ class DownloadMotonReciters(qt.QDialog):
         self.download_button = guiTools.QPushButton("تحميل القارئ")
         self.download_button.setFont(font)
         self.download_button.setAccessibleName("تحميل القارئ")
-        self.download_button.setStyleSheet("background-color: #0000AA; color: white;")
+        self.download_button.setStyleSheet("background-color: #0056b3; color: white;")
         self.download_button.setAutoDefault(False)
         self.download_button.setDefault(False)
         layout.addWidget(self.download_button)
@@ -271,7 +271,7 @@ class DownloadMotonReciters(qt.QDialog):
         self.pause = guiTools.QPushButton("إيقاف مؤقت")
         self.pause.setFont(font)
         self.pause.setAccessibleName("إيقاف مؤقت")
-        self.pause.setStyleSheet("background-color: #0000AA; color: white;")
+        self.pause.setStyleSheet("background-color: #0056b3; color: white;")
         self.pause.setAutoDefault(False)
         self.pause.setDefault(False)
         self.pause.setVisible(False)

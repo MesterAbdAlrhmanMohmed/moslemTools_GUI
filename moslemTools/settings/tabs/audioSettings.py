@@ -11,8 +11,6 @@ class AudioSettings(qt.QWidget):
         self.setLayout(self.layout)
         self.setStyleSheet("""
             QComboBox {
-                color: #e0e0e0;
-                border: 1px solid #555;
                 padding: 4px 8px;
                 font-size: 13px;
             }

@@ -30,11 +30,18 @@ class QQuestionMessageBox(qt.QDialog):
         self.OKBTN.clicked.connect(self.onOk)
         self.OKBTN.setStyleSheet("""
             QPushButton {
-                background-color: #0000AA;
-                color: #e0e0e0;
-                border-radius: 4px;
+                background-color: #0056b3;
+                color: #ffffff;
+                border-radius: 6px;
                 padding: 8px 12px;
                 font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #004085;
+            }
+            QPushButton:pressed {
+                background-color: #002752;
             }
         """)
         self.OKBTN.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)
@@ -43,11 +50,18 @@ class QQuestionMessageBox(qt.QDialog):
         self.noBTN.clicked.connect(self.reject)
         self.noBTN.setStyleSheet("""
             QPushButton {
-                background-color: #0000AA;
-                color: #e0e0e0;
-                border-radius: 4px;
+                background-color: #0056b3;
+                color: #ffffff;
+                border-radius: 6px;
                 padding: 8px 12px;
                 font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #004085;
+            }
+            QPushButton:pressed {
+                background-color: #002752;
             }
         """)
         self.noBTN.setSizePolicy(qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Fixed)

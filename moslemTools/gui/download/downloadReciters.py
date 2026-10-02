@@ -176,7 +176,7 @@ class DownloadReciter(qt.QDialog):
         self.pause=guiTools.QPushButton("إيقاف مؤقت")
         self.pause.setAutoDefault(False)
         self.pause.setDefault(False)
-        self.pause.setStyleSheet("background-color: #0000AA; color: white;")
+        self.pause.setStyleSheet("background-color: #0056b3; color: white;")
         layout=qt.QVBoxLayout(self)
         layout.addWidget(self.progress)
         layout.addWidget(self.lay)

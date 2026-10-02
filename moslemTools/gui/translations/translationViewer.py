@@ -57,7 +57,7 @@ class translationViewer(qt.QDialog):
         bottomLayout = qt.QHBoxLayout()
         bottomLayout.addSpacing(15)
         self.changeTranslation = qt.QPushButton("تغيير الترجمة")
-        self.changeTranslation.setStyleSheet("background-color: #0000AA; color: white; padding: 8px 18px; font-weight: bold; border-radius: 6px; min-width: 130px; min-height: 38px;")
+        self.changeTranslation.setStyleSheet("background-color: #0056b3; color: white; padding: 8px 18px; font-weight: bold; border-radius: 6px; min-width: 130px; min-height: 38px;")
         self.changeTranslation.setAccessibleDescription("control plus g")
         self.changeTranslation.clicked.connect(self.on_change_translation)
         bottomLayout.addWidget(self.changeTranslation, 0, qt2.Qt.AlignmentFlag.AlignCenter)

@@ -12,17 +12,13 @@ class FanarSettings(qt.QWidget):
         self.setStyleSheet("""
             QLabel {
                 font-size: 14px;
-                color: #e0e0e0;
             }
             QLineEdit {
-                color: #e0e0e0;
-                border: 1px solid #555;
                 padding: 8px;
                 font-size: 13px;
-                background-color: #1E1E1E;
+                border-radius: 6px;
             }
             QCheckBox {
-                color: #e0e0e0;
                 font-size: 13px;
             }
         """)
@@ -40,7 +36,7 @@ class FanarSettings(qt.QWidget):
         api_key_layout.addWidget(self.show_key_checkbox)
         main_layout.addLayout(api_key_layout)
         self.get_api_button = guiTools.QPushButton("الحصول على مفتاح الـ API")
-        self.get_api_button.setStyleSheet("background-color: #0000AA; color: #e0e0e0; font-weight: bold;")
+        self.get_api_button.setStyleSheet("background-color: #0056b3; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 10px 20px;")
         self.get_api_button.setAutoDefault(False)
         self.get_api_button.clicked.connect(lambda: webbrowser.open("https://api.fanar.qa/request/ar"))
         main_layout.addWidget(self.get_api_button)

@@ -101,9 +101,40 @@ class PlayerFavoritesAndSearchMixin:
 
     def update_button_style(self, button, checked):
         if checked:
-            button.setStyleSheet("background-color: blue; color: white;")
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: #0056b3;
+                    color: #ffffff;
+                    border: 2px solid #5ba2e6;
+                    border-radius: 6px;
+                    padding: 7px 14px;
+                    font-weight: bold;
+                    min-height: 24px;
+                }
+                QPushButton:hover {
+                    background-color: #004085;
+                }
+            """)
         else:
-            button.setStyleSheet("")
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: #2c3e50;
+                    color: #ffffff;
+                    border: 1px solid #415b76;
+                    border-radius: 6px;
+                    padding: 7px 14px;
+                    font-weight: bold;
+                    min-height: 24px;
+                }
+                QPushButton:hover {
+                    background-color: #34495e;
+                }
+                QPushButton:disabled {
+                    background-color: #1a2530;
+                    color: #667788;
+                    border-color: #253342;
+                }
+            """)
 
     def search(self, search_text, data):
         return [item for item in data if search_text in item.lower()]

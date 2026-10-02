@@ -229,7 +229,7 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
         self.search_button = guiTools.QPushButton("البحث")
         self.search_button.setObjectName("startButton")
         self.search_button.setAutoDefault(False)
-        self.search_button.setStyleSheet("background-color: #0000AA; color: white; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; min-height: 30px;")
+        self.search_button.setStyleSheet("background-color: #0056b3; color: white; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; min-height: 30px;")
         self.search_button.clicked.connect(self.perform_search)
 
         self.search_mode_button = guiTools.QPushButton("نمط البحث")
@@ -279,7 +279,7 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
 
         self.resume_download_button = guiTools.QPushButton("استئناف")
         self.resume_download_button.setAutoDefault(False)
-        self.resume_download_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
+        self.resume_download_button.setStyleSheet("QPushButton {background-color: #0056b3; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
         self.resume_download_button.setVisible(False)
         self.resume_download_button.clicked.connect(self.resume_current_download)
 
@@ -308,7 +308,7 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
         self.changeCurrentReciterButton.setAutoDefault(False)
         self.changeCurrentReciterButton.clicked.connect(self.on_change_reciter)
         self.changeCurrentReciterButton.setAccessibleDescription("control plus shift plus r")
-        self.changeCurrentReciterButton.setStyleSheet("background-color: #0000AA; color: white;")
+        self.changeCurrentReciterButton.setStyleSheet("background-color: #0056b3; color: white;")
         buttonsLayout.addWidget(self.changeCurrentReciterButton)
 
         if not self.is_full_matn:
@@ -316,11 +316,11 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
             self.previous.setAutoDefault(False)
             self.previous.clicked.connect(self.onPreviouse)
             self.previous.setAccessibleDescription("alt زائد السهم الأيسر")
-            self.previous.setStyleSheet("background-color: #0000AA; color: white;")
+            self.previous.setStyleSheet("background-color: #0056b3; color: white;")
 
             self.changeCategory = guiTools.QPushButton("تغيير الباب")
             self.changeCategory.setAutoDefault(False)
-            self.changeCategory.setStyleSheet("background-color: #0000AA; color: white;")
+            self.changeCategory.setStyleSheet("background-color: #0056b3; color: white;")
             self.changeCategory.setAccessibleDescription("control plus alt plus g")
             self.changeCategory.clicked.connect(self.onChangeCategory)
 
@@ -328,7 +328,7 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
             self.next.setAutoDefault(False)
             self.next.clicked.connect(self.onNext)
             self.next.setAccessibleDescription("alt زائد السهم الأيمن")
-            self.next.setStyleSheet("background-color: #0000AA; color: white;")
+            self.next.setStyleSheet("background-color: #0056b3; color: white;")
 
             buttonsLayout.addWidget(self.previous)
             buttonsLayout.addWidget(self.changeCategory)
@@ -341,13 +341,13 @@ class MotonViewer(MotonContextMenuMixin, MotonNotesBookmarksMixin, MotonSearchHa
         search_btn_text = "البحث في المتن" if self.is_full_matn else "البحث في الباب"
         self.toggle_search_button = guiTools.QPushButton(search_btn_text)
         self.toggle_search_button.setAutoDefault(False)
-        self.toggle_search_button.setStyleSheet("background-color: #0000AA; color: white;")
+        self.toggle_search_button.setStyleSheet("background-color: #0056b3; color: white;")
         self.toggle_search_button.clicked.connect(self.toggle_search_bar)
         self.toggle_search_button.setAccessibleDescription("control plus shift plus q")
 
         self.numbering_button = guiTools.QPushButton("طريقة عرض الأبيات")
         self.numbering_button.setAutoDefault(False)
-        self.numbering_button.setStyleSheet("background-color: #0000AA; color: white;")
+        self.numbering_button.setStyleSheet("background-color: #0056b3; color: white;")
         self.numbering_button.setAccessibleDescription("control plus shift plus s")
         self.numbering_button.clicked.connect(self._show_numbering_options)
 

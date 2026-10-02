@@ -152,7 +152,7 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
 
         self.resume_download_button = guiTools.QPushButton("استئناف")
         self.resume_download_button.setAutoDefault(False)
-        self.resume_download_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
+        self.resume_download_button.setStyleSheet("QPushButton {background-color: #0056b3; color: white; border: none; padding: 5px 10px; border-radius: 5px;} QPushButton:hover {background-color: #0000CC;}")
         self.resume_download_button.setVisible(False)
         self.resume_download_button.clicked.connect(self.resume_current_download)
 
@@ -186,7 +186,7 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
 
         self.N_bayt = guiTools.QPushButton("البيت التالي")
         self.N_bayt.setAutoDefault(False)
-        self.N_bayt.setStyleSheet("background-color: #0000AA; color: white;")
+        self.N_bayt.setStyleSheet("background-color: #0056b3; color: white;")
         self.N_bayt.clicked.connect(self.onNextBayt)
         self.N_bayt.setAccessibleDescription("alt زائد السهم الأيمن")
 
@@ -194,29 +194,29 @@ class MotonPlayer(MotonPlayerContextMenuMixin, MotonPlayerNavigationDisplayMixin
         self.PPS.setAutoDefault(False)
         self.PPS.setAccessibleDescription("space")
         self.PPS.clicked.connect(self.on_play)
-        self.PPS.setStyleSheet("background-color: #0000AA; color: white;")
+        self.PPS.setStyleSheet("background-color: #0056b3; color: white;")
 
         self.P_bayt = guiTools.QPushButton("البيت السابق")
         self.P_bayt.setAutoDefault(False)
-        self.P_bayt.setStyleSheet("background-color: #0000AA; color: white;")
+        self.P_bayt.setStyleSheet("background-color: #0056b3; color: white;")
         self.P_bayt.clicked.connect(self.onPreviousBayt)
         self.P_bayt.setAccessibleDescription("alt زائد السهم الأيسر")
 
         self.changeCurrentReciterButton = guiTools.QPushButton("تغيير القارئ")
         self.changeCurrentReciterButton.setAutoDefault(False)
         self.changeCurrentReciterButton.clicked.connect(self.on_change_reciter)
-        self.changeCurrentReciterButton.setStyleSheet("background-color: #0000AA; color: white;")
+        self.changeCurrentReciterButton.setStyleSheet("background-color: #0056b3; color: white;")
         self.changeCurrentReciterButton.setAccessibleDescription("control plus shift plus R")
 
         self.mergeButton = guiTools.QPushButton("دمج الأبيات")
         self.mergeButton.setAutoDefault(False)
-        self.mergeButton.setStyleSheet("background-color: #0000AA; color: white;")
+        self.mergeButton.setStyleSheet("background-color: #0056b3; color: white;")
         self.mergeButton.clicked.connect(self.merge_all_verses)
         self.mergeButton.setAccessibleDescription("control plus alt plus d")
 
         self.saveAllButton = guiTools.QPushButton("حفظ الأبيات")
         self.saveAllButton.setAutoDefault(False)
-        self.saveAllButton.setStyleSheet("background-color: #0000AA; color: white;")
+        self.saveAllButton.setStyleSheet("background-color: #0056b3; color: white;")
         self.saveAllButton.clicked.connect(self.save_all_verses_audio)
         self.saveAllButton.setAccessibleDescription("control plus alt plus h")
 

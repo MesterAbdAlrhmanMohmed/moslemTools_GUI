@@ -154,7 +154,7 @@ class KhatmahTab(qt.QWidget):
 
         self.btn_read_today = guiTools.QPushButton("قراءة ورد اليوم")
         self.btn_read_today.setFont(font_bold)
-        self.btn_read_today.setStyleSheet("background-color: #0000AA; color: white;")
+        self.btn_read_today.setStyleSheet("background-color: #0056b3; color: white;")
         self.btn_read_today.setShortcut("ctrl+r")
         self.btn_read_today.setAccessibleDescription("control plus r")
         self.btn_read_today.clicked.connect(self.read_today_ward)
@@ -183,7 +183,7 @@ class KhatmahTab(qt.QWidget):
 
         self.btn_manual_page = guiTools.QPushButton("تحديث الصفحة يدوياً")
         self.btn_manual_page.setFont(font_bold)
-        self.btn_manual_page.setStyleSheet("QPushButton {background-color: #0000AA; color: white;} QPushButton:hover {background-color: #0000CC;} QPushButton:pressed {background-color: #000088;}")
+        self.btn_manual_page.setStyleSheet("QPushButton {background-color: #0056b3; color: white;} QPushButton:hover {background-color: #0000CC;} QPushButton:pressed {background-color: #000088;}")
         self.btn_manual_page.setShortcut("ctrl+u")
         self.btn_manual_page.setAccessibleDescription("control plus u")
         self.btn_manual_page.clicked.connect(self.update_page_manually)

@@ -304,7 +304,7 @@ class PlayerBatchAndMergeMixin:
         self.merge_action_button.setVisible(True)
         self.merge_action_button.setEnabled(True)
         self.merge_action_button.setText("إلغاء الدمج")
-        self.merge_action_button.setStyleSheet("background-color: #8B0000; color: white;")
+        self.merge_action_button.setStyleSheet("background-color: #c42b1c; color: white;")
         self.merge_thread = MergeThread(self, self.ffmpeg_path, input_files, output_file)
         self.merge_thread.finished.connect(self.on_merge_finished)
         self.merge_thread.start()
@@ -416,7 +416,7 @@ class PlayerBatchAndMergeMixin:
         self.batch_download_action_button.setVisible(count > 0)
         if self.is_downloading_batch:
             self.batch_download_action_button.setText("إلغاء تحميل الدفعة")
-            self.batch_download_action_button.setStyleSheet("background-color: #8B0000; color: white;")
+            self.batch_download_action_button.setStyleSheet("background-color: #c42b1c; color: white;")
         else:
             self.batch_download_action_button.setText("بدء تحميل السور المحددة")
             self.batch_download_action_button.setStyleSheet("")

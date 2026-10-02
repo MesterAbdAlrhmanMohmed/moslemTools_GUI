@@ -464,7 +464,7 @@ class StartDownloadingTafaseer(qt.QDialog):
 		self.pause_button = guiTools.QPushButton("إيقاف مؤقت")
 		self.pause_button.setAutoDefault(False)
 		self.pause_button.setDefault(False)
-		self.pause_button.setStyleSheet("QPushButton {background-color: #0000AA; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #0000CC;}")
+		self.pause_button.setStyleSheet("QPushButton {background-color: #0056b3; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; min-height: 35px;} QPushButton:hover {background-color: #0000CC;}")
 		self.pause_button.clicked.connect(self.toggle_pause)
 		btns_layout.addWidget(self.pause_button)
 

@@ -11,11 +11,8 @@ class AthkarSettings(qt.QWidget):
         self.setStyleSheet("""
             QLabel {
                 font-size: 14px;
-                color: #e0e0e0;
             }
             QComboBox, QSpinBox, QSlider, QLineEdit {
-                color: #e0e0e0;
-                border: 1px solid #555;
                 padding: 4px;
                 font-size: 13px;
             }

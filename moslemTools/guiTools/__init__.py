@@ -20,3 +20,4 @@ from .QNavigableLabelAsTextEdit import QNavigableLabelAsTextEdit
 from .internet import check_internet
 from .sound_player import play_page_turn_sound, get_sounds_dir
 from .QComboBox import QComboBox
+from . import theme

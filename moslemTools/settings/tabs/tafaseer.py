@@ -13,14 +13,11 @@ class TafaseerSettings(qt.QWidget):
         translater.reload_translations()
         self.setStyleSheet("""
             QComboBox, QLineEdit, QLabel {
-                color: #e0e0e0;
-                border: 1px solid #555;
                 padding: 4px;
                 font-size: 13px;
             }
             QGroupBox {
-                border: 1px solid #555;
-                border-radius: 5px;
+                border-radius: 6px;
                 margin-top: 10px;
                 font-weight: bold;
             }

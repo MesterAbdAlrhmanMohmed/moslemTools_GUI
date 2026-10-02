@@ -8,8 +8,6 @@ class QuranPlayerSettings(qt.QWidget):
         super().__init__()
         self.setStyleSheet("""
             QSpinBox, QLineEdit, QCheckBox, QLabel {
-                color: #e0e0e0;
-                border: 1px solid #555;
                 padding: 4px;
                 font-size: 13px;
             }

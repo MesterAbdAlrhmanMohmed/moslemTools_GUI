@@ -38,18 +38,20 @@ class ExitApp(qt.QDialog):
         self.btn_exit.setAutoDefault(False)
         self.btn_exit.setStyleSheet("""
             QPushButton {
-                background-color: #8B1A1A;
-                color: white;
-                padding: 8px 16px;
+                background-color: #c42b1c;
+                color: #ffffff;
+                padding: 10px 20px;
                 font-weight: bold;
-                border-radius: 4px;
+                border: 1px solid #b1272c;
+                border-radius: 6px;
                 font-size: 14px;
             }
             QPushButton:hover {
-                background-color: #A02828;
+                background-color: #b1272c;
+                border-color: #8e1f24;
             }
             QPushButton:pressed {
-                background-color: #661010;
+                background-color: #8e1f24;
             }
         """)
         self.btn_exit.clicked.connect(self.on_exit)
@@ -59,17 +61,19 @@ class ExitApp(qt.QDialog):
         self.btn_hide.setStyleSheet("""
             QPushButton {
                 background-color: #0056b3;
-                color: white;
-                padding: 8px 16px;
+                color: #ffffff;
+                padding: 10px 20px;
                 font-weight: bold;
-                border-radius: 4px;
+                border: 1px solid #004494;
+                border-radius: 6px;
                 font-size: 14px;
             }
             QPushButton:hover {
-                background-color: #003d80;
+                background-color: #004085;
+                border-color: #004085;
             }
             QPushButton:pressed {
-                background-color: #002b5c;
+                background-color: #002752;
             }
         """)
         self.btn_hide.clicked.connect(self.on_hide)
@@ -78,18 +82,20 @@ class ExitApp(qt.QDialog):
         self.btn_restart.setAutoDefault(False)
         self.btn_restart.setStyleSheet("""
             QPushButton {
-                background-color: #006400;
-                color: #e0e0e0;
-                padding: 8px 16px;
+                background-color: #107c41;
+                color: #ffffff;
+                padding: 10px 20px;
                 font-weight: bold;
-                border-radius: 4px;
+                border: 1px solid #0f703b;
+                border-radius: 6px;
                 font-size: 14px;
             }
             QPushButton:hover {
-                background-color: #008000;
+                background-color: #0f703b;
+                border-color: #0d5c31;
             }
             QPushButton:pressed {
-                background-color: #004d00;
+                background-color: #0c582f;
             }
         """)
         self.btn_restart.clicked.connect(self.on_restart)
