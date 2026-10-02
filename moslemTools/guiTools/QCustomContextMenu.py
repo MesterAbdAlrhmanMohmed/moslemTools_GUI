@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QKeyEvent
-from PyQt6.QtWidgets import QMenu, QWidgetAction
+from PyQt6.QtWidgets import QMenu, QWidgetAction, QApplication
 
 
 class QCustomContextMenu(QMenu):
@@ -12,6 +12,13 @@ class QCustomContextMenu(QMenu):
         else:
             super().__init__(*args, **kwargs)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        app = QApplication.instance()
+        if app and not app.styleSheet():
+            try:
+                from . import theme
+                theme.apply_theme(app)
+            except Exception:
+                pass
 
     def addMenu(self, *args):
         if len(args) == 1 and isinstance(args[0], str):
