@@ -37,6 +37,8 @@ class ContextMenuMixin:
         self.saved_text = self.text.toPlainText()
         temp_cursor = self.text.textCursor()
         current_line_text = temp_cursor.block().text()
+        if self.blank_line_between_verses and not current_line_text.strip():
+            current_line_text = self._get_line_text_for_action(self.saved_ayah_index) or ""
         no_tashkeel_text = self._remove_tashkeel_from_text(current_line_text)
         if current_line_text == no_tashkeel_text:
             ayah_tashkeel_text = "إظهار التشكيل للآية"

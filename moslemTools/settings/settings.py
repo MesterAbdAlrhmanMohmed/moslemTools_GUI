@@ -140,9 +140,9 @@ class settings(qt.QDialog):
             ("إعدادات مشغل القرآن لتبويبة القرآن الكريم مكتوب", self.quranPlayerTimes),
             ("إعدادات عرض الآيات في عارض القرآن الكريم", self.quranDisplaySettings),
             ("إعدادات البحث", self.searchSettings),
-            ("إعدادات اختيار القارئ للمتون الإسلامية", self.motonRecitersSettings),
-            ("إعدادات مشغل المتون الإسلامية", self.motonPlayerTimes),
-            ("إعدادات عرض الأبيات في عارض المتون الإسلامية", self.motonDisplaySettings),
+            ("إعدادات اختيار القارئ للمتون", self.motonRecitersSettings),
+            ("إعدادات مشغل المتون", self.motonPlayerTimes),
+            ("إعدادات عرض الأبيات في عارض المتون", self.motonDisplaySettings),
             ("إعدادات الأذكار العشوائية", self.athkar),
             ("إعدادات فنار (الذكاء الاصطناعي)", self.fanarSettings),
             ("إعدادات تحديد كرت الصوت", self.audioSettings),
@@ -201,7 +201,7 @@ class settings(qt.QDialog):
                 ]
             ),
             (
-                "إعدادات تبويبة المتون الإسلامية",
+                "إعدادات تبويبة المتون",
                 [
                     ("إعدادات اختيار القارئ", self.motonRecitersSettings),
                     ("إعدادات مشغل المتون", self.motonPlayerTimes),
@@ -290,14 +290,11 @@ class settings(qt.QDialog):
                 border: 1px solid #a0aec0;
             }
         """)
-        self.ok.setAutoDefault(False)
-        self.ok.setDefault(False)
-        self.defolt.setAutoDefault(False)
-        self.defolt.setDefault(False)
-        self.split_btn.setAutoDefault(False)
-        self.split_btn.setDefault(False)
-        self.cancel.setAutoDefault(False)
-        self.cancel.setDefault(False)
+        self.ok.setAutoDefault(True)
+        self.ok.setDefault(True)
+        self.defolt.setAutoDefault(True)
+        self.split_btn.setAutoDefault(True)
+        self.cancel.setAutoDefault(True)
         buttonsLayout.addWidget(self.ok)
         buttonsLayout.addWidget(self.defolt)
         buttonsLayout.addWidget(self.split_btn)
@@ -600,8 +597,10 @@ class settings(qt.QDialog):
         settings_handler.set("moton_search", "ignore_hamza", str(self.searchSettings.moton_hamza_checkbox.isChecked()))
         settings_handler.set("moton_search", "ignore_symbols", str(self.searchSettings.moton_symbols_checkbox.isChecked()))
         settings_handler.set("quran_display", "verse_numbering_mode", self.quranDisplaySettings.get_selected_mode())
+        settings_handler.set("quran_display", "blank_line_between_verses", str(self.quranDisplaySettings.blank_line_checkbox.isChecked()))
         settings_handler.set("quran_display", "remove_tashkeel", str(self.quranDisplaySettings.remove_tashkeel_checkbox.isChecked()))
         settings_handler.set("motonViewer", "verse_numbering_mode", self.motonDisplaySettings.get_selected_mode())
+        settings_handler.set("motonViewer", "blank_line_between_verses", str(self.motonDisplaySettings.blank_line_checkbox.isChecked()))
         settings_handler.set("motonViewer", "remove_tashkeel", str(self.motonDisplaySettings.remove_tashkeel_checkbox.isChecked()))
         settings_handler.set("motonPlayer", "times", str(self.motonPlayerTimes.times.value()))
         settings_handler.set("motonPlayer", "duration", self.motonPlayerTimes.duration.text())

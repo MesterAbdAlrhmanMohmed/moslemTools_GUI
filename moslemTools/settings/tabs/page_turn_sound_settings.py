@@ -8,11 +8,11 @@ from .. import settings_handler
 class PageTurnSoundSettings(qt.QWidget):
     VIEWERS = [
         ("quranViewer", "عارض القرآن الكريم"),
-        ("bookViewer", "عارض الكتب الإسلامية"),
+        ("bookViewer", "عارض الكتب"),
         ("hadeethViewer", "عارض الأحاديث النبوية"),
         ("athkerDialog", "عارض الأذكار"),
-        ("motonViewer", "عارض المتون الإسلامية"),
-        ("storyViewer", "عارض قصص الأنبياء"),
+        ("motonViewer", "عارض المتون"),
+        ("storyViewer", "عارض قصص الأنبياء وقصص القرآن الكريم"),
         ("islamicTopicViewer", "عارض الموضوعات الإسلامية"),
     ]
 

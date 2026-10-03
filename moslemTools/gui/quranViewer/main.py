@@ -68,6 +68,7 @@ class QuranViewer(ContextMenuMixin, NavigationDisplayMixin, AudioPlayerMixin, Se
         self.current_download_url = None
         self.verse_numbering_mode = settings.settings_handler.get("quran_display", "verse_numbering_mode") or "by_surah"
         self.remove_tashkeel = settings.settings_handler.get("quran_display", "remove_tashkeel") == "True"
+        self.blank_line_between_verses = settings.settings_handler.get("quran_display", "blank_line_between_verses") == "True"
         self.text_cache = {"by_surah": self.original_quran_text}
         self.is_counting_sajdas = False
         self.is_counting_asbab_alnozole = False
@@ -103,7 +104,7 @@ class QuranViewer(ContextMenuMixin, NavigationDisplayMixin, AudioPlayerMixin, Se
             QPushButton#clearResultsButton:pressed, QPushButton#cancelButton:pressed { background-color: #bd2130; }
         """)
         self.text=guiTools.QReadOnlyTextEdit(viewer_name="quranViewer")
-        if self.verse_numbering_mode != "by_surah" or self.remove_tashkeel:
+        if self.verse_numbering_mode != "by_surah" or self.remove_tashkeel or self.blank_line_between_verses:
             self._update_display_text()
         else:
             self._set_text_with_delay(text)

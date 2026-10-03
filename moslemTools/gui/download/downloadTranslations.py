@@ -84,6 +84,51 @@ class TranslationDataLoaderThread(qt2.QThread):
 			self.loading_error.emit(str(e))
 
 
+class TranslationFilterThread(qt2.QThread):
+	filter_done = qt2.pyqtSignal(int, object, list)
+
+	def __init__(self, request_id, selected_data, all_data, lang_groups, search_text, parent=None):
+		super().__init__(parent)
+		self.request_id = request_id
+		self.selected_data = selected_data
+		self.all_data = all_data
+		self.lang_groups = lang_groups
+		self.search_text = search_text
+		self.is_cancelled = False
+
+	def cancel(self):
+		self.is_cancelled = True
+
+	def run(self):
+		try:
+			if self.selected_data == "ALL" or not self.selected_data:
+				filtered_data = dict(self.all_data)
+			else:
+				filtered_data = dict(self.lang_groups.get(self.selected_data, {}))
+
+			if self.is_cancelled:
+				return
+
+			if self.search_text:
+				tashkeel_pattern = re.compile(r'[\u0617-\u061A\u064B-\u0652\u0670]')
+				normalized_pattern = tashkeel_pattern.sub('', self.search_text)
+				keys = list(filtered_data.keys())
+				matches = []
+				for text in keys:
+					if self.is_cancelled:
+						return
+					if normalized_pattern in tashkeel_pattern.sub('', text).lower():
+						matches.append(text)
+				items_to_show = matches
+			else:
+				items_to_show = list(filtered_data.keys())
+
+			if not self.is_cancelled:
+				self.filter_done.emit(self.request_id, filtered_data, items_to_show)
+		except Exception as e:
+			log_error("TranslationFilterThread.run", e)
+
+
 class SelectTranslationItem(qt.QDialog):
 	def __init__(self, p, fileName: str, dirName: str):
 		super().__init__(p)
@@ -91,13 +136,15 @@ class SelectTranslationItem(qt.QDialog):
 		self.setMinimumSize(650, 450)
 		self.resize(980, 580)
 		self.center()
-		self.all_data = {}  # { display_name: rel_path }
-		self.lang_groups = {}  # { lang_folder: { display_name: rel_path } }
+		self.all_data = {}
+		self.lang_groups = {}
 		self.current_filtered_data = {}
 		self.dirName = dirName
 		self.start_selection_index = None
 		self.custom_download_list = []
 		self.fileName = fileName
+		self.filter_request_id = 0
+		self.filter_thread = None
 
 		main_layout = qt.QVBoxLayout(self)
 		main_layout.setContentsMargins(0, 0, 0, 0)
@@ -262,6 +309,9 @@ class SelectTranslationItem(qt.QDialog):
 		self.accept()
 
 	def closeEvent(self, a0):
+		if hasattr(self, 'filter_thread') and self.filter_thread and self.filter_thread.isRunning():
+			self.filter_thread.cancel()
+			self.filter_thread.wait(500)
 		if hasattr(self, 'loader_thread') and self.loader_thread and self.loader_thread.isRunning():
 			self.loader_thread.quit()
 			self.loader_thread.wait(1000)
@@ -274,20 +324,28 @@ class SelectTranslationItem(qt.QDialog):
 		self.update_filtered_translations()
 
 	def update_filtered_translations(self):
+		self.filter_request_id += 1
+		if hasattr(self, 'filter_thread') and self.filter_thread and self.filter_thread.isRunning():
+			self.filter_thread.cancel()
 		selected_data = self.language_combo.currentData()
-		if selected_data == "ALL" or not selected_data:
-			self.current_filtered_data = dict(self.all_data)
-		else:
-			self.current_filtered_data = dict(self.lang_groups.get(selected_data, {}))
-
-		# Apply search filter if active
 		search_text = self.search_bar.text().lower()
+		self.filter_thread = TranslationFilterThread(
+			self.filter_request_id,
+			selected_data,
+			self.all_data,
+			self.lang_groups,
+			search_text,
+			self
+		)
+		self.filter_thread.filter_done.connect(self.on_filter_finished)
+		self.filter_thread.start()
+
+	def on_filter_finished(self, request_id, filtered_data, items_to_show):
+		if request_id != self.filter_request_id:
+			return
+		self.current_filtered_data = filtered_data
 		self.item.clear()
-		if search_text:
-			result = self.search(search_text, list(self.current_filtered_data.keys()))
-			self.item.addItems(result)
-		else:
-			self.item.addItems(self.current_filtered_data.keys())
+		self.item.addItems(items_to_show)
 
 	def search(self, pattern, text_list):
 		try:
@@ -307,10 +365,7 @@ class SelectTranslationItem(qt.QDialog):
 			self.start_selection_index = None
 			self.custom_download_list.clear()
 			self.update_selection_ui()
-			search_text = self.search_bar.text().lower()
-			self.item.clear()
-			result = self.search(search_text, list(self.current_filtered_data.keys()))
-			self.item.addItems(result)
+			self.update_filtered_translations()
 		except Exception as e:
 			log_error("onsearch", e)
 

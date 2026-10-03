@@ -296,12 +296,7 @@ class TafseerAndInfoMixin:
         dialog = SajdaGoToDialog(self, "السجدات", "اختر آية للذهاب إليها", items, selected_index)
         if dialog.exec() == qt.QDialog.DialogCode.Accepted:
             target_index = sajda_verses[dialog.selected_index]['index']
-            cursor = self.text.textCursor()
-            cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
-            for _ in range(target_index):
-                cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
-            self.text.setTextCursor(cursor)
-            self.text.setFocus()
+            self._go_to_specific_ayah(target_index)
 
     def showAsbabAlnozoleVerses(self):
         if self.is_search_view:
@@ -336,12 +331,7 @@ class TafseerAndInfoMixin:
         dialog = AsbabAlnozoleGoToDialog(self, "أسباب النزول", "اختر آية للذهاب إليها", items, selected_index)
         if dialog.exec() == qt.QDialog.DialogCode.Accepted:
             target_index = asbab_verses[dialog.selected_index]['index']
-            cursor = self.text.textCursor()
-            cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
-            for _ in range(target_index):
-                cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
-            self.text.setTextCursor(cursor)
-            self.text.setFocus()
+            self._go_to_specific_ayah(target_index)
 
     def getCurentAyahIArab(self):
         if self._is_invalid_search_line():

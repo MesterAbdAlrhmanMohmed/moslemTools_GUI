@@ -84,6 +84,65 @@ class IslamicBookDataLoaderThread(qt2.QThread):
 			self.loading_error.emit(str(e))
 
 
+class IslamicBookFilterThread(qt2.QThread):
+	filter_done = qt2.pyqtSignal(int, object, object, list)
+
+	def __init__(self, request_id, selected_data, all_data, cat_groups, book_to_cat, search_text, parent=None):
+		super().__init__(parent)
+		self.request_id = request_id
+		self.selected_data = selected_data
+		self.all_data = all_data
+		self.cat_groups = cat_groups
+		self.book_to_cat = book_to_cat
+		self.search_text = search_text
+		self.is_cancelled = False
+
+	def cancel(self):
+		self.is_cancelled = True
+
+	def run(self):
+		try:
+			item_to_book_name = {}
+			filtered_data = {}
+			if self.selected_data == "ALL" or not self.selected_data:
+				for k, v in self.all_data.items():
+					if self.is_cancelled:
+						return
+					cat = self.book_to_cat.get(k, "أخرى")
+					item_text = f"{k}: {cat}"
+					filtered_data[item_text] = v
+					item_to_book_name[item_text] = k
+			else:
+				cat_dict = self.cat_groups.get(self.selected_data, {})
+				filtered_data = dict(cat_dict)
+				for k in cat_dict:
+					if self.is_cancelled:
+						return
+					item_to_book_name[k] = k
+
+			if self.is_cancelled:
+				return
+
+			if self.search_text:
+				tashkeel_pattern = re.compile(r'[ؗ-ًؚ-ْٰ]')
+				normalized_pattern = tashkeel_pattern.sub('', self.search_text)
+				keys = list(filtered_data.keys())
+				matches = []
+				for text in keys:
+					if self.is_cancelled:
+						return
+					if normalized_pattern in tashkeel_pattern.sub('', text).lower():
+						matches.append(text)
+				items_to_show = matches
+			else:
+				items_to_show = list(filtered_data.keys())
+
+			if not self.is_cancelled:
+				self.filter_done.emit(self.request_id, filtered_data, item_to_book_name, items_to_show)
+		except Exception as e:
+			log_error("IslamicBookFilterThread.run", e)
+
+
 class SelectIslamicBookItem(qt.QDialog):
 	def __init__(self, p, fileName: str, dirName: str):
 		super().__init__(p)
@@ -99,6 +158,8 @@ class SelectIslamicBookItem(qt.QDialog):
 		self.start_selection_index = None
 		self.custom_download_list = []
 		self.fileName = fileName
+		self.filter_request_id = 0
+		self.filter_thread = None
 
 		main_layout = qt.QVBoxLayout(self)
 		main_layout.setContentsMargins(0, 0, 0, 0)
@@ -269,6 +330,9 @@ class SelectIslamicBookItem(qt.QDialog):
 		self.accept()
 
 	def closeEvent(self, a0):
+		if hasattr(self, 'filter_thread') and self.filter_thread and self.filter_thread.isRunning():
+			self.filter_thread.cancel()
+			self.filter_thread.wait(500)
 		if hasattr(self, 'loader_thread') and self.loader_thread and self.loader_thread.isRunning():
 			self.loader_thread.quit()
 			self.loader_thread.wait(1000)
@@ -281,28 +345,30 @@ class SelectIslamicBookItem(qt.QDialog):
 		self.update_filtered_books()
 
 	def update_filtered_books(self):
+		self.filter_request_id += 1
+		if hasattr(self, 'filter_thread') and self.filter_thread and self.filter_thread.isRunning():
+			self.filter_thread.cancel()
 		selected_data = self.category_combo.currentData()
-		self.item_to_book_name = {}
-		if selected_data == "ALL" or not selected_data:
-			self.current_filtered_data = {}
-			for k, v in self.all_data.items():
-				cat = self.book_to_cat.get(k, "أخرى")
-				item_text = f"{k}: {cat}"
-				self.current_filtered_data[item_text] = v
-				self.item_to_book_name[item_text] = k
-		else:
-			cat_dict = self.cat_groups.get(selected_data, {})
-			self.current_filtered_data = dict(cat_dict)
-			for k in cat_dict:
-				self.item_to_book_name[k] = k
-
 		search_text = self.search_bar.text().lower()
+		self.filter_thread = IslamicBookFilterThread(
+			self.filter_request_id,
+			selected_data,
+			self.all_data,
+			self.cat_groups,
+			self.book_to_cat,
+			search_text,
+			self
+		)
+		self.filter_thread.filter_done.connect(self.on_filter_finished)
+		self.filter_thread.start()
+
+	def on_filter_finished(self, request_id, filtered_data, item_to_book_name, items_to_show):
+		if request_id != self.filter_request_id:
+			return
+		self.current_filtered_data = filtered_data
+		self.item_to_book_name = item_to_book_name
 		self.item.clear()
-		if search_text:
-			result = self.search(search_text, list(self.current_filtered_data.keys()))
-			self.item.addItems(result)
-		else:
-			self.item.addItems(self.current_filtered_data.keys())
+		self.item.addItems(items_to_show)
 
 	def get_book_name(self, text):
 		if text in self.item_to_book_name:
@@ -333,10 +399,7 @@ class SelectIslamicBookItem(qt.QDialog):
 			self.start_selection_index = None
 			self.custom_download_list.clear()
 			self.update_selection_ui()
-			search_text = self.search_bar.text().lower()
-			self.item.clear()
-			result = self.search(search_text, list(self.current_filtered_data.keys()))
-			self.item.addItems(result)
+			self.update_filtered_books()
 		except Exception as e:
 			log_error("onsearch", e)
 

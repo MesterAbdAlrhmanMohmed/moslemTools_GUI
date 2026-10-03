@@ -88,10 +88,12 @@ settingsConfig={
     },
     "quran_display":{
         "verse_numbering_mode":"by_surah",
+        "blank_line_between_verses":"False",
         "remove_tashkeel":"False"
     },
     "motonViewer":{
         "verse_numbering_mode":"by_chapter",
+        "blank_line_between_verses":"True",
         "remove_tashkeel":"False"
     },
     "motonPlayer":{

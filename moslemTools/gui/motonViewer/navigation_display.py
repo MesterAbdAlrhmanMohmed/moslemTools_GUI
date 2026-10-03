@@ -9,6 +9,7 @@ from .threads import GoToBaytDialog, GoToCategoryDialog
 class MotonNavigationDisplayMixin:
     def init_navigation_display(self):
         self.verse_numbering_mode = settings_handler.get("motonViewer", "verse_numbering_mode") or "by_chapter"
+        self.blank_line_between_verses = settings_handler.get("motonViewer", "blank_line_between_verses") != "False"
         self.remove_tashkeel = settings_handler.get("motonViewer", "remove_tashkeel") == "True"
         self.font_size = int(settings_handler.get("font", "motonViewer_size") or settings_handler.get("font", "size") or 18)
         self.font_is_bold = settings_handler.get("font", "bold") == "True"
@@ -24,6 +25,10 @@ class MotonNavigationDisplayMixin:
     def _toggle_tashkeel(self, checked):
         self.remove_tashkeel = checked
         settings_handler.set("motonViewer", "remove_tashkeel", str(checked))
+        self._update_display_text()
+
+    def _toggle_blank_line(self, checked):
+        self.blank_line_between_verses = checked
         self._update_display_text()
 
     def toggleTashkeelView(self):
@@ -155,6 +160,11 @@ class MotonNavigationDisplayMixin:
         menu.addAction(none_action)
         menu.addSeparator()
 
+        self.blank_line_action = qt1.QAction("وضع سطر فارغ بين الأبيات", self, checkable=True)
+        self.blank_line_action.setChecked(self.blank_line_between_verses)
+        self.blank_line_action.triggered.connect(self._toggle_blank_line)
+        menu.addAction(self.blank_line_action)
+
         self.remove_tashkeel_action = qt1.QAction("إزالة التشكيل", self, checkable=True)
         self.remove_tashkeel_action.setChecked(self.remove_tashkeel)
         self.remove_tashkeel_action.triggered.connect(self._toggle_tashkeel)
@@ -199,8 +209,9 @@ class MotonNavigationDisplayMixin:
                     if line2:
                         self.line_to_bayt_map[len(lines_out)] = {"type": "verse", "verse": v, "line_part": 2}
                         lines_out.append(line2)
-                    self.line_to_bayt_map[len(lines_out)] = {"type": "empty"}
-                    lines_out.append("")
+                    if self.blank_line_between_verses:
+                        self.line_to_bayt_map[len(lines_out)] = {"type": "empty"}
+                        lines_out.append("")
         else:
             sec = self.parsed_sections[self.chapter_index] if 0 <= self.chapter_index < len(self.parsed_sections) else {"title": "", "verses": []}
             chap_counter = 0
@@ -219,8 +230,9 @@ class MotonNavigationDisplayMixin:
                 if line2:
                     self.line_to_bayt_map[len(lines_out)] = {"type": "verse", "verse": v, "line_part": 2}
                     lines_out.append(line2)
-                self.line_to_bayt_map[len(lines_out)] = {"type": "empty"}
-                lines_out.append("")
+                if self.blank_line_between_verses:
+                    self.line_to_bayt_map[len(lines_out)] = {"type": "empty"}
+                    lines_out.append("")
 
         if lines_out and lines_out[-1] == "":
             lines_out.pop()
@@ -252,6 +264,10 @@ class MotonNavigationDisplayMixin:
         info = self.line_to_bayt_map.get(block_num)
         if info and info.get("type") == "verse":
             return info.get("verse")
+        if info and info.get("type") == "empty" and block_num > 0:
+            prev_info = self.line_to_bayt_map.get(block_num - 1)
+            if prev_info and prev_info.get("type") == "verse":
+                return prev_info.get("verse")
         return None
 
     def handle_invalid_line_action(self):

@@ -79,24 +79,32 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
         self.researcher = Albaheth()
         self.askAI = AskAI()
         tabs = [
-    (prayer_times(self), "مواقيت الصلاة والتاريخ"),
-    (Quran(), "القرآن الكريم مكتوب"),
-    (self.quranPlayer, "القرآن الكريم صوتي"),
-    (KhatmahTab(self), "متابع الختمة القرآنية"),
-    (hadeeth(), "الأحاديث النبوية والقدسية"),
-    (self.researcher, "الباحث في القرآن والأحاديث"),
-    (self.askAI, "اسأل الذكاء الاصطناعي"),
-    (IslamicQuestionsGame(), "لعبة الأسئلة الإسلامية"),
-    (IslamicBooks(), "الكتب الإسلامية"),
-    (IslamicMoton(), "المتون الإسلامية"),
-    (protcasts(), "إذاعات الراديو الإسلامية"),
-    (Athker(), "الأذكار والأدعية"),
-    (sibha(), "السبحة الإلكترونية"),
-    (NamesOfAllah(), "أسماء الله الحُسْنى"),
-    (ProphetStories(), "القصص الإسلامية"),
-    (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),
-    (DateConverter(), "محول التاريخ"),
-]
+            (prayer_times(self), "مواقيت الصلاة والتاريخ"),
+            (Quran(), "القرآن الكريم مكتوب"),
+            (self.quranPlayer, "القرآن الكريم صوتي"),
+            (KhatmahTab(self), "متابع الختمة القرآنية"),
+            (hadeeth(), "الأحاديث النبوية والقدسية"),
+            (self.researcher, "الباحث في القرآن والأحاديث"),
+            (self.askAI, "اسأل الذكاء الاصطناعي"),
+            (IslamicQuestionsGame(), "اختبر نفسك"),
+            (IslamicBooks(), "الكتب"),
+            (IslamicMoton(), "المتون"),
+            (protcasts(), "إذاعات الراديو"),
+            (Athker(), "الأذكار والأدعية"),
+            (sibha(), "السبحة الإلكترونية"),
+            (NamesOfAllah(), "أسماء الله الحُسْنى"),
+            (ProphetStories(), "قصص الأنبياء وقصص القرآن الكريم"),
+            (IslamicTopicsTab(), "مواضيع إسلامية مختلفة"),
+            (DateConverter(), "محول التاريخ"),
+        ]
+        tab_name_map = {
+            "لعبة الأسئلة الإسلامية": "اختبر نفسك",
+            "الكتب الإسلامية": "الكتب",
+            "المتون الإسلامية": "المتون",
+            "المتون الإسلامية المكتوبة": "المتون",
+            "إذاعات الراديو الإسلامية": "إذاعات الراديو",
+            "القصص الإسلامية": "قصص الأنبياء وقصص القرآن الكريم",
+        }
         hidden_raw = settings_handler.get("g", "hidden_tabs") or ""
         hidden_tabs = []
         if hidden_raw:
@@ -104,6 +112,7 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
                 hidden_tabs = json.loads(hidden_raw)
             except Exception:
                 hidden_tabs = [x.strip() for x in hidden_raw.split(",") if x.strip()]
+        hidden_tabs = [tab_name_map.get(x, x) for x in hidden_tabs]
         tabs_order_raw = settings_handler.get("g", "tabs_order") or ""
         tabs_order = []
         if tabs_order_raw:
@@ -111,6 +120,7 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
                 tabs_order = json.loads(tabs_order_raw)
             except Exception:
                 tabs_order = [x.strip() for x in tabs_order_raw.split(",") if x.strip()]
+        tabs_order = [tab_name_map.get(x, x) for x in tabs_order]
         if tabs_order:
             tabs_dict = {l: (w, l) for w, l in tabs}
             ordered_tabs = []
@@ -137,6 +147,7 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
         try:
             start_tab_val = settings_handler.get("g", "startup_tab") or "0"
             start_name = settings_handler.get("g", "startup_tab_name") or ""
+            start_name = tab_name_map.get(start_name, start_name)
             start_tab = 0
             if start_name:
                 for i in range(self.list_widget.count()):
@@ -147,6 +158,7 @@ class main(AthkarMixin, KhatmahMixin, MessagesMixin, WindowEventsMixin, qt.QMain
                 try:
                     start_tab = int(start_tab_val)
                 except ValueError:
+                    start_tab_val = tab_name_map.get(start_tab_val, start_tab_val)
                     for i in range(self.list_widget.count()):
                         if self.list_widget.item(i).text() == start_tab_val:
                             start_tab = i

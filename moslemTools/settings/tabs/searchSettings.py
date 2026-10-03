@@ -17,8 +17,8 @@ class SearchSettings(qt.QWidget):
     VIEWERS = [
         ("quran_search", "عارض القرآن الكريم"),
         ("researcher_search", "تبويبة الباحث في القرآن والأحاديث"),
-        ("islamic_books_search", "عارض الكتب الإسلامية"),
-        ("moton_search", "عارض المتون الإسلامية"),
+        ("islamic_books_search", "عارض الكتب"),
+        ("moton_search", "عارض المتون"),
     ]
 
     def __init__(self):

@@ -33,7 +33,7 @@ class NotesDialog(qt.QDialog):
         self.sectian.setStyleSheet("color: #e0e0e0;")
         self.sectian.setAccessibleName("اختر فئة")
         self.sectian.setFont(font)
-        self.categories = ["القرآن الكريم", "الأحاديث", "الكتب الإسلامية", "القصص الإسلامية", "المواضيع الإسلامية المختلفة", "المتون الإسلامية"]
+        self.categories = ["القرآن الكريم", "الأحاديث", "الكتب", "قصص الأنبياء وقصص القرآن الكريم", "المواضيع الإسلامية المختلفة", "المتون"]
         fm = self.sectian.fontMetrics()
         max_w = max(fm.horizontalAdvance(cat) if hasattr(fm, 'horizontalAdvance') else fm.boundingRect(cat).width() for cat in self.categories)
         calc_w = max(340, max_w + 70)

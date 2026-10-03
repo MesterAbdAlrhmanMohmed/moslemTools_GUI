@@ -15,17 +15,26 @@ class StartupTabSettings(qt.QWidget):
         "الأحاديث النبوية والقدسية",
         "الباحث في القرآن والأحاديث",
         "اسأل الذكاء الاصطناعي",
-        "لعبة الأسئلة الإسلامية",
-        "الكتب الإسلامية",
-        "المتون الإسلامية المكتوبة",
-        "إذاعات الراديو الإسلامية",
+        "اختبر نفسك",
+        "الكتب",
+        "المتون",
+        "إذاعات الراديو",
         "الأذكار والأدعية",
         "السبحة الإلكترونية",
         "أسماء الله الحُسْنى",
-        "القصص الإسلامية",
+        "قصص الأنبياء وقصص القرآن الكريم",
         "مواضيع إسلامية مختلفة",
         "محول التاريخ"
     ]
+
+    TAB_NAME_MAP = {
+        "لعبة الأسئلة الإسلامية": "اختبر نفسك",
+        "الكتب الإسلامية": "الكتب",
+        "المتون الإسلامية": "المتون",
+        "المتون الإسلامية المكتوبة": "المتون",
+        "إذاعات الراديو الإسلامية": "إذاعات الراديو",
+        "القصص الإسلامية": "قصص الأنبياء وقصص القرآن الكريم",
+    }
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -50,6 +59,7 @@ class StartupTabSettings(qt.QWidget):
                 hidden_tabs = json.loads(hidden_raw)
             except Exception:
                 hidden_tabs = [x.strip() for x in hidden_raw.split(",") if x.strip()]
+        hidden_tabs = [self.TAB_NAME_MAP.get(x, x) for x in hidden_tabs]
 
         tabs_names = [t for t in self.ALL_TABS if t not in hidden_tabs]
         if not tabs_names:
@@ -57,6 +67,8 @@ class StartupTabSettings(qt.QWidget):
 
         saved_val = settings_handler.get("g", "startup_tab") or "0"
         saved_name = settings_handler.get("g", "startup_tab_name") or ""
+        saved_name = self.TAB_NAME_MAP.get(saved_name, saved_name)
+        saved_val = self.TAB_NAME_MAP.get(saved_val, saved_val)
         is_saved_hidden = False
         if saved_name and saved_name in hidden_tabs:
             is_saved_hidden = True

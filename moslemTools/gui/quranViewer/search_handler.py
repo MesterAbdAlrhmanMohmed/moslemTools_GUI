@@ -113,8 +113,11 @@ class SearchHandlerMixin:
         self.numbering_button.setVisible(True)
         self.enableBookmarks = self.initial_enableBookmarks
         self.quranText = self.original_quran_text
-        self.text.setText(self.original_quran_text)
-        self.update_font_size()
+        if self.verse_numbering_mode != "by_surah" or self.remove_tashkeel or self.blank_line_between_verses:
+            self._update_display_text()
+        else:
+            self.text.setText(self.original_quran_text)
+            self.update_font_size()
         self.clear_results_button.hide()
         self.search_input.clear()
         guiTools.speak("تمت العودة إلى العرض الأصلي")

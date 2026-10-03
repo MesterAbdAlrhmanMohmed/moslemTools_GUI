@@ -95,6 +95,10 @@ class NavigationDisplayMixin:
         self.remove_tashkeel = checked
         self._update_display_text()
 
+    def _toggle_blank_line(self, checked):
+        self.blank_line_between_verses = checked
+        self._update_display_text()
+
     def _show_numbering_options(self):
         if self.is_search_view:
             self._handle_search_view_restriction()
@@ -127,6 +131,10 @@ class NavigationDisplayMixin:
         menu.addAction(quran_wide_action)
         menu.addAction(none_action)
         menu.addSeparator()
+        self.blank_line_action = qt1.QAction("وضع سطر فارغ بين الآيات", self, checkable=True)
+        self.blank_line_action.setChecked(self.blank_line_between_verses)
+        self.blank_line_action.triggered.connect(self._toggle_blank_line)
+        menu.addAction(self.blank_line_action)
         self.remove_tashkeel_action = qt1.QAction("إزالة التشكيل", self, checkable=True)
         self.remove_tashkeel_action.setChecked(self.remove_tashkeel)
         self.remove_tashkeel_action.triggered.connect(self._toggle_tashkeel)
@@ -196,8 +204,10 @@ class NavigationDisplayMixin:
             self.text_cache[self.verse_numbering_mode] = formatted_text
         self.quranText = formatted_text
         display_text = formatted_text
+        if self.blank_line_between_verses:
+            display_text = "\n\n".join(display_text.split('\n'))
         if self.remove_tashkeel:
-            display_text = self._remove_tashkeel_from_text(formatted_text)
+            display_text = self._remove_tashkeel_from_text(display_text)
         self._set_text_with_delay(display_text)
 
     def format_category_name(self, category_type, category_value):
@@ -269,6 +279,8 @@ class NavigationDisplayMixin:
         ayah_index = 0
         if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):
             ayah_index = block_num - 2
+        elif self.blank_line_between_verses:
+            ayah_index = block_num // 2
         else:
             ayah_index = block_num
         if ayah_index < 0:
@@ -281,8 +293,13 @@ class NavigationDisplayMixin:
             return
         line_text = block.text()
         if not line_text.strip():
-            self.resume_after_action()
-            return
+            if self.blank_line_between_verses and block_num % 2 == 1:
+                target_cursor.movePosition(qt1.QTextCursor.MoveOperation.Up)
+                block = target_cursor.block()
+                line_text = block.text()
+            if not line_text.strip():
+                self.resume_after_action()
+                return
         no_tashkeel_text = self._remove_tashkeel_from_text(line_text)
         lines = self.original_quran_text.split('\n')
         if ayah_index < 0 or ayah_index >= len(lines):
@@ -326,6 +343,8 @@ class NavigationDisplayMixin:
             self._handle_invalid_search_line_action()
             return
         a = self.text.textCursor().block().text()
+        if not a.strip() and self.blank_line_between_verses and not self.is_search_view:
+            a = self._get_line_text_for_action(self.getCurrentAyah()) or ""
         if a:
             pyperclip.copy(a)
             winsound.Beep(1000,100)
@@ -334,7 +353,8 @@ class NavigationDisplayMixin:
     def _go_to_specific_ayah(self, ayah_index):
         cursor = self.text.textCursor()
         cursor.movePosition(qt1.QTextCursor.MoveOperation.Start)
-        for _ in range(ayah_index):
+        steps = ayah_index * 2 if (self.blank_line_between_verses and not self.is_search_view) else ayah_index
+        for _ in range(steps):
             cursor.movePosition(qt1.QTextCursor.MoveOperation.Down)
         self.text.setTextCursor(cursor)
         self.text.setFocus()
@@ -377,8 +397,12 @@ class NavigationDisplayMixin:
 
     def getCurrentAyah(self):
         if self.is_search_view and self.text.toPlainText().startswith("عدد نتائج البحث"):
-            return self.text.textCursor().blockNumber() - 2
-        return self.text.textCursor().blockNumber()
+            return max(0, self.text.textCursor().blockNumber() - 2)
+        total_ayahs = len(self.original_quran_text.split('\n'))
+        if self.blank_line_between_verses and not self.is_search_view:
+            idx = self.text.textCursor().blockNumber() // 2
+            return min(total_ayahs - 1, max(0, idx))
+        return min(total_ayahs - 1, max(0, self.text.textCursor().blockNumber()))
 
     def on_set(self, ayah_index=None):
         if ayah_index is None:
@@ -740,11 +764,7 @@ class NavigationDisplayMixin:
         self.resume_after_action()
 
     def _set_initial_ayah_position(self):
-        cerser = self.text.textCursor()
-        cerser.movePosition(cerser.MoveOperation.Start)
-        for i in range(self.initial_ayah_index):
-            cerser.movePosition(cerser.MoveOperation.Down)
-        self.text.setTextCursor(cerser)
+        self._go_to_specific_ayah(self.initial_ayah_index)
 
     def copy_current_selection(self):
         functions.text_actions.copy_current_selection(self, self.text, fallback_func=self.copyAya)
@@ -754,7 +774,10 @@ class NavigationDisplayMixin:
             self._handle_search_view_restriction()
             return
         self.pause_for_action()
-        allVerses = self.text.toPlainText().split("\n")
+        if self.blank_line_between_verses:
+            allVerses = [v for v in self.text.toPlainText().split("\n") if v.strip()]
+        else:
+            allVerses = self.text.toPlainText().split("\n")
         total_ayahs = len(allVerses)
         FromVers, ok = guiTools.QInputDialog.getInt(self, "نسخ من الآية", "النسخ من", self.getCurrentAyah() + 1, 1, total_ayahs)
         if ok:
@@ -764,7 +787,8 @@ class NavigationDisplayMixin:
                 end_index = toVers
                 verses_to_copy = allVerses[start_index:end_index]
                 if verses_to_copy:
-                    text_to_copy = "\n".join(verses_to_copy)
+                    sep = "\n\n" if self.blank_line_between_verses else "\n"
+                    text_to_copy = sep.join(verses_to_copy)
                     pyperclip.copy(text_to_copy)
                     winsound.Beep(1000, 100)
                     guiTools.speak(f"تم نسخ {len(verses_to_copy)} آيات بنجاح")

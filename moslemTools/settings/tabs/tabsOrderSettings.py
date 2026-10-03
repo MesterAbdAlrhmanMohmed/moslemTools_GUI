@@ -15,17 +15,26 @@ class TabsOrderSettings(qt.QWidget):
         "الأحاديث النبوية والقدسية",
         "الباحث في القرآن والأحاديث",
         "اسأل الذكاء الاصطناعي",
-        "لعبة الأسئلة الإسلامية",
-        "الكتب الإسلامية",
-        "المتون الإسلامية المكتوبة",
-        "إذاعات الراديو الإسلامية",
+        "اختبر نفسك",
+        "الكتب",
+        "المتون",
+        "إذاعات الراديو",
         "الأذكار والأدعية",
         "السبحة الإلكترونية",
         "أسماء الله الحُسْنى",
-        "القصص الإسلامية",
+        "قصص الأنبياء وقصص القرآن الكريم",
         "مواضيع إسلامية مختلفة",
         "محول التاريخ"
     ]
+
+    TAB_NAME_MAP = {
+        "لعبة الأسئلة الإسلامية": "اختبر نفسك",
+        "الكتب الإسلامية": "الكتب",
+        "المتون الإسلامية": "المتون",
+        "المتون الإسلامية المكتوبة": "المتون",
+        "إذاعات الراديو الإسلامية": "إذاعات الراديو",
+        "القصص الإسلامية": "قصص الأنبياء وقصص القرآن الكريم",
+    }
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -88,18 +97,20 @@ class TabsOrderSettings(qt.QWidget):
         if not hidden_raw:
             return []
         try:
-            return json.loads(hidden_raw)
+            tabs = json.loads(hidden_raw)
         except Exception:
-            return [x.strip() for x in hidden_raw.split(",") if x.strip()]
+            tabs = [x.strip() for x in hidden_raw.split(",") if x.strip()]
+        return [self.TAB_NAME_MAP.get(x, x) for x in tabs]
 
     def get_saved_order(self):
         order_raw = settings_handler.get("g", "tabs_order") or ""
         if not order_raw:
             return []
         try:
-            return json.loads(order_raw)
+            tabs = json.loads(order_raw)
         except Exception:
-            return [x.strip() for x in order_raw.split(",") if x.strip()]
+            tabs = [x.strip() for x in order_raw.split(",") if x.strip()]
+        return [self.TAB_NAME_MAP.get(x, x) for x in tabs]
 
     def populate_list(self):
         current_selection = None

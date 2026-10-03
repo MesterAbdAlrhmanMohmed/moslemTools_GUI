@@ -570,7 +570,8 @@ class MotonMergerSaverMixin:
                             bayt_text = self._remove_tashkeel_from_text(bayt_text)
                     lines_to_copy.append(bayt_text)
                 if lines_to_copy:
-                    full_copy = "\n\n".join(lines_to_copy)
+                    sep = "\n\n" if getattr(self, "blank_line_between_verses", True) else "\n"
+                    full_copy = sep.join(lines_to_copy)
                     pyperclip.copy(full_copy)
                     winsound.Beep(1000, 100)
                     guiTools.speak(f"تم نسخ {len(verses_slice)} أبيات بنجاح")

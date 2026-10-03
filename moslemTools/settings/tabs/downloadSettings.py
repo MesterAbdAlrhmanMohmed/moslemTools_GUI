@@ -9,9 +9,21 @@ class Download(qt.QDialog):
         super().__init__()
         layout = qt.QVBoxLayout(self)
         self.types = guiTools.QListWidget()
+        self.types.setIconSize(qt2.QSize(24, 24))
         font = qt1.QFont()
         font.setBold(True)
-        self.types.addItems(["كتاب تفسير لتبويبة القرآن الكريم مكتوب", "ترجمة لمعاني القرآن الكريم لتبويبة القرآن الكريم مكتوب", "كتاب حديث", "قارئ قرآن آية بآية", "قارئ للمتون الإسلامية", "أذكار وأدعية صوتية لتبويبة الأذكار", "الكتب الإسلامية"])
+        items_data = [
+            ("كتاب تفسير لتبويبة القرآن الكريم مكتوب", "القرآن الكريم مكتوب"),
+            ("ترجمة لمعاني القرآن الكريم لتبويبة القرآن الكريم مكتوب", "القرآن الكريم مكتوب"),
+            ("كتاب حديث", "الأحاديث"),
+            ("قارئ قرآن آية بآية", "القرآن الكريم مكتوب"),
+            ("قارئ للمتون", "المتون"),
+            ("أذكار وأدعية صوتية لتبويبة الأذكار", "الأذكار والأدعية"),
+            ("الكتب", "الكتب"),
+        ]
+        for text, tab_name in items_data:
+            item = qt.QListWidgetItem(guiTools.theme.get_tab_icon(tab_name), text)
+            self.types.addItem(item)
         self.types.setFont(font)
         self.types.clicked.connect(self.onItemClicked)
         self.types.setSpacing(3)

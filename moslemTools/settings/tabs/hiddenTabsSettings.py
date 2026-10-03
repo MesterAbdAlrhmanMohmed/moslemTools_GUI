@@ -15,17 +15,26 @@ class HiddenTabsSettings(qt.QWidget):
         "الأحاديث النبوية والقدسية",
         "الباحث في القرآن والأحاديث",
         "اسأل الذكاء الاصطناعي",
-        "لعبة الأسئلة الإسلامية",
-        "الكتب الإسلامية",
-        "المتون الإسلامية المكتوبة",
-        "إذاعات الراديو الإسلامية",
+        "اختبر نفسك",
+        "الكتب",
+        "المتون",
+        "إذاعات الراديو",
         "الأذكار والأدعية",
         "السبحة الإلكترونية",
         "أسماء الله الحُسْنى",
-        "القصص الإسلامية",
+        "قصص الأنبياء وقصص القرآن الكريم",
         "مواضيع إسلامية مختلفة",
         "محول التاريخ"
     ]
+
+    TAB_NAME_MAP = {
+        "لعبة الأسئلة الإسلامية": "اختبر نفسك",
+        "الكتب الإسلامية": "الكتب",
+        "المتون الإسلامية": "المتون",
+        "المتون الإسلامية المكتوبة": "المتون",
+        "إذاعات الراديو الإسلامية": "إذاعات الراديو",
+        "القصص الإسلامية": "قصص الأنبياء وقصص القرآن الكريم",
+    }
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -69,9 +78,10 @@ class HiddenTabsSettings(qt.QWidget):
         if not val:
             return []
         try:
-            return json.loads(val)
+            tabs = json.loads(val)
         except Exception:
-            return [x.strip() for x in val.split(",") if x.strip()]
+            tabs = [x.strip() for x in val.split(",") if x.strip()]
+        return [self.TAB_NAME_MAP.get(x, x) for x in tabs]
 
     def save_hidden_tabs(self, tabs_list):
         settings_handler.set("g", "hidden_tabs", json.dumps(tabs_list, ensure_ascii=False))
