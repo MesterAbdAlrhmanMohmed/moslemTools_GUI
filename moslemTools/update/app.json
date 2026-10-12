@@ -1,7 +1,7 @@
 {
 "name": "moslem tools",
-"version": 23.0,
-"what is new": "الجديد للإصدار 23.0\nإضافة إمكانية عرض السور المكية فقط أو السور المدنية فقط في تبويبة القرآن الكريم مكتوب\nإصلاح أخطاء مهمة في البرنامج\n\nالجديد للإصدار 22.0 لمن وصله التحديث متأخرا\nإعادة تصميم البرنامج بشكلا كامل: تم إضافة أيقونات للإجراءات والتبويبات والإعدادات\nإتاحة استخدام مربعات التحديد checkboxs بمفتاح الenter\nإتاحة التنقل بجميع مفاتيح الأسهم في القوائم والقوائم المنسدلة\nإصلاح الكثير من الأخطاء، وحل الكثير من المشاكل",
-"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_23.0/moslem_tools_version_23.0.exe",
+"version": 24.0,
+"what is new": "الجديد للإصدار 24.0\nإضافة ميزة اختبار الحفظ للسور في تبويبة القرآن الكريم مكتوب، ملاحظة، هذه الميزة موجودة في قائمة سياق الفئة للسور فقط\nإصلاح أخطاء مهمة جدا في البرنامج\n\nملاحظة مهمة جدا:\nتحديث هذا الإصدار أمر بالغ الأهمية",
+"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_24.0/moslem_tools_version_24.0.exe",
 "is_beta": false
 }
