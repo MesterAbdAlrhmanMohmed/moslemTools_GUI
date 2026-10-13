@@ -1,7 +1,7 @@
 {
 "name": "moslem tools",
-"version": 24.0,
-"what is new": "الجديد للإصدار 24.0\nإضافة ميزة اختبار الحفظ للسور في تبويبة القرآن الكريم مكتوب، ملاحظة، هذه الميزة موجودة في قائمة سياق الفئة للسور فقط\nإصلاح أخطاء مهمة جدا في البرنامج\n\nملاحظة مهمة جدا:\nتحديث هذا الإصدار أمر بالغ الأهمية",
-"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_24.0/moslem_tools_version_24.0.exe",
+"version": 25.0,
+"what is new": "الجديد للإصدار 25.0\nإتاحة إمكانية إضافة أكثر من موقع في إعدادات تحديد الموقع لمواقيت الصلاة\nإتاحة أنواع أسئلة جديدة في اختبار الحفظ في تبويبة القرآن الكريم مكتوب\nاحتساب الإجابة صحيحة إذا كان الخطأ طفيفا وفي الحروف الصوتية فقط وتنبيه المستخدم بها في اختبار الحفظ\nإصلاح أخطاء",
+"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_25.0/moslem_tools_version_25.0.exe",
 "is_beta": false
 }
