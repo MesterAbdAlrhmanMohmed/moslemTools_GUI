@@ -1,7 +1,7 @@
 {
 "name": "moslem tools",
-"version": 30.0,
-"what is new": "الجديد للإصدار 30.0\nإصلاح مشاكل وتحسين أداء البرنامج بشكلٍ ملحوظ",
-"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_30.0/moslem_tools_version_30.0.exe",
+"version": 31.0,
+"what is new": "الجديد للإصدار 31.0\nتغييرات بسيطة في تخطيط البرنامج\nإضافة 14 قارئ لتبويبة القرآن الكريم صوتي\nإضافة قارئ واحد لتبويبة القرآن الكريم مكتوب\nإصلاح أخطاء هامة جدا\n\nملاحظة:\nعند مشاركة ملف الEXE الخاص بالبرنامج، يرجى مشاركة الإصدار 31.0 فما أعلى",
+"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_31.0/moslem_tools_version_31.0.exe",
 "is_beta": false
 }
