@@ -1,7 +1,7 @@
 {
 "name": "moslem tools",
-"version": 32.0,
-"what is new": "الجديد للإصدار 32.0\nإصلاح أخطاء مهمة",
-"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_32.0/moslem_tools_version_32.0.exe",
+"version": 33.0,
+"what is new": "الجديد للإصدار 33.0\nإزالة 23 ترجمة شيعية من ترجامات معاني القرآن الكريم، عدد الترجمات الآن: 297 ترجمة ل105 لغة\nإضافة أسباب النزول ل66 آية لم تكن موجودة في البرنامج\nإصلاح أخطاء مهمة",
+"download": "https://github.com/MesterAbdAlrhmanMohmed/moslemTools_GUI/releases/download/moslem_tools_version_33.0/moslem_tools_version_33.0.exe",
 "is_beta": false
 }
